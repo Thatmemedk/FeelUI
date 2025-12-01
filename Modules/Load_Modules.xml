@@ -1,0 +1,80 @@
+﻿<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<!-- AFK -->
+	<Script file="AFK\Core.lua"/>
+	<!-- Panels -->
+	<Script file="Panels\Core.lua"/>
+	<!-- ActionBars -->
+	<Script file="ActionBars\Core.lua"/>
+	<Script file="ActionBars\Skin.lua"/>
+	<Script file="ActionBars\Bar1.lua"/>
+	<Script file="ActionBars\Bar2.lua"/>
+	<Script file="ActionBars\Bar3.lua"/>
+	<Script file="ActionBars\Bar4.lua"/>
+	<Script file="ActionBars\Bar5.lua"/>
+	<Script file="ActionBars\PetBar.lua"/>
+	<Script file="ActionBars\StanceBar.lua"/>
+	<Script file="ActionBars\Extra.lua"/>
+	<Script file="ActionBars\Vehicle.lua"/>
+	<Script file="ActionBars\ToggleButtons.lua"/>
+	<Script file="ActionBars\Range.lua"/>
+	<Script file="ActionBars\Glow.lua"/>
+	<!-- Auras -->
+	<Script file="Auras\Core.lua"/>
+	<!-- Chat -->
+	<Script file="Chat\Core.lua"/>
+	<Script file="Chat\CopyChat.lua"/>
+	<Script file="Chat\CopyURL.lua"/>
+	<Script file="Chat\CombatLog.lua"/>
+	<!-- Cooldown -->
+	<Script file="Cooldowns\Core.lua"/>
+	<Script file="Cooldowns\CooldownManager.lua"/>
+	<!-- DataBars -->
+	<Script file="DataBars\ClassPowerBar.lua"/>
+	<Script file="DataBars\ExperienceBar.lua"/>
+	<Script file="DataBars\PowerBar.lua"/>
+	<Script file="DataBars\RuneBar.lua"/>
+	<Script file="DataBars\StaggerBar.lua"/>
+	<Script file="DataBars\TotemBar.lua"/>
+	<Script file="DataBars\SoulFragmentsBar.lua"/>
+	<!-- DataTexts -->
+	<Script file="DataTexts\Date.lua"/>
+	<Script file="DataTexts\Durability.lua"/>
+	<Script file="DataTexts\Memory.lua"/>
+	<Script file="DataTexts\System.lua"/>
+	<Script file="DataTexts\Time.lua"/>
+	<!-- Bags -->
+	<Script file="Bags\Core.lua"/>	
+	<!-- Loot -->
+	<Script file="Loot\Core.lua"/>
+	<!-- Maps -->
+	<Script file="Maps\Core.lua"/>
+	<Script file="Maps\MinimapButtonsBar.lua"/>
+	<!-- Misc -->
+	<Script file="Misc\Blizzard.lua"/>
+	<Script file="Misc\ErrorFilter.lua"/>
+	<Script file="Misc\LossControl.lua"/>
+	<Script file="Misc\Merchant.lua"/>
+	<Script file="Misc\MirrorTimers.lua"/>
+	<Script file="Misc\ObjectiveTracker.lua"/>
+	<Script file="Misc\TimeTrackers.lua"/>
+	<!-- Skins Blizzard -->
+	<Script file="Skins\Blizzard\Bubbles.lua"/>
+	<Script file="Skins\Blizzard\GameMenu.lua"/>
+	<Script file="Skins\Blizzard\GhostFrame.lua"/>
+	<Script file="Skins\Blizzard\StackSplitFrame.lua"/>
+	<Script file="Skins\Blizzard\TalkingHead.lua"/>
+	<Script file="Skins\Blizzard\DeathRecap.lua"/>
+	<Script file="Skins\Blizzard\DamageMeter.lua"/>
+	<!-- Tooltip -->
+	<Script file="Tooltip\Core.lua"/>
+	<!-- UnitFrames -->
+	<Script file="UnitFrames\Core.lua"/>
+	<Script file="UnitFrames\Elements\Auras.lua"/>
+	<Script file="UnitFrames\Elements\Castbar.lua"/>
+	<Script file="UnitFrames\Elements\Health.lua"/>
+	<Script file="UnitFrames\Elements\Highlight.lua"/>
+	<Script file="UnitFrames\Elements\Portraits.lua"/>
+	<Script file="UnitFrames\Elements\Texts.lua"/>
+	<Script file="UnitFrames\Elements\HealthPred.lua"/>
+	<Script file="UnitFrames\Elements\Icons.lua"/>
+</Ui>

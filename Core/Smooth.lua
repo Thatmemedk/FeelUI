@@ -1,0 +1,143 @@
+local UI, DB, Media, Language = select(2, ...):Call()
+
+--[[
+## Animation for Smooth StatusBars from Lightspark
+## https://www.wowinterface.com/downloads/info22662-lsUI.html
+--]]
+
+local abs, next, Lerp = abs, next, Lerp
+local tonumber, assert = tonumber, assert
+local activeObjects = {}
+local handledObjects = {}
+local TARGET_FPS = 60
+local AMOUNT = 0.33
+local frame = CreateFrame('Frame')
+
+function UI:Smoothing_Clamp(v, min, max)
+    if not min then min = 0 end
+    if not max then max = 1 end
+
+    if v > max then
+        return max
+    elseif v < min then
+        return min
+    end
+
+    return v
+end
+
+function UI:Smoothing_IsCloseEnough(new, target, range)
+    if range > 0 then
+        return abs((new - target) / range) <= 0.001
+    end
+
+    return true
+end
+
+function UI:Smoothing_OnUpdate(elapsed)
+    for object, target in next, activeObjects do
+        local new = Lerp(object._value, target, UI:Smoothing_Clamp(AMOUNT * elapsed * TARGET_FPS))
+        if UI:Smoothing_IsCloseEnough(new, target, object._max - object._min) then
+            new = target
+
+            activeObjects[object] = nil
+        end
+
+        object:SetValue_(new)
+        object._value = new
+    end
+end
+
+function UI:Smoothing_SetSmoothedValue(value)
+    value = tonumber(value)
+
+    assert(value, 'bar_SetSmoothedValue requires (value) to be a number.')
+
+    self._value = self:GetValue()
+    activeObjects[self] = UI:Smoothing_Clamp(value, self._min, self._max)
+end
+
+function UI:Smoothing_SetSmoothedMinMaxValues(min, max)
+    min, max = tonumber(min), tonumber(max)
+
+    assert(min and max, 'bar_SetSmoothedMinMaxValues requires (min and max) to be a number.')
+
+    self:SetMinMaxValues_(min, max)
+
+    if self._max and self._max ~= max then
+        local ratio = 1
+        if max ~= 0 and self._max and self._max ~= 0 then
+            ratio = max / (self._max or max)
+        end
+
+        local target = activeObjects[self]
+        if target then
+            activeObjects[self] = target * ratio
+        end
+
+        local cur = self._value
+        if cur then
+            self:SetValue_(cur * ratio)
+            self._value = cur * ratio
+        end
+    end
+
+    self._min = min
+    self._max = max
+end
+
+function UI:Smoothing_Enable(bar)
+    bar._min, bar._max = bar:GetMinMaxValues()
+    bar._value = bar:GetValue()
+
+    if not bar.SetValue_ then
+        bar.SetValue_ = bar.SetValue
+        bar.SetValue = UI.Smoothing_SetSmoothedValue
+    end
+    if not bar.SetMinMaxValues_ then
+        bar.SetMinMaxValues_ = bar.SetMinMaxValues
+        bar.SetMinMaxValues = UI.Smoothing_SetSmoothedMinMaxValues
+    end
+
+    if not frame:GetScript('OnUpdate') then
+        frame:SetScript('OnUpdate', UI.Smoothing_OnUpdate)
+    end
+
+    handledObjects[bar] = true
+end
+
+function UI:Smoothing_Disable(bar)
+    if activeObjects[bar] then
+        bar:SetValue_(activeObjects[bar])
+        activeObjects[bar] = nil
+    end
+
+    if handledObjects[bar] then
+        handledObjects[bar] = nil
+    end
+
+    if bar.SetValue_ then
+        bar.SetValue = bar.SetValue_
+        bar.SetValue_ = nil
+    end
+    if bar.SetMinMaxValues_ then
+        bar.SetMinMaxValues = bar.SetMinMaxValues_
+        bar.SetMinMaxValues_ = nil
+    end
+
+    if not next(handledObjects) then
+        frame:SetScript('OnUpdate', nil)
+    end
+end
+
+function UI:SetSmoothingAmount(amount)
+    AMOUNT = UI:Smoothing_Clamp(amount, 0.2, 0.8)
+end
+
+function UI:SetSmoothing(bar, enable)
+    if enable then
+        UI:Smoothing_Enable(bar)
+    else
+        UI:Smoothing_Disable(bar)
+    end
+end

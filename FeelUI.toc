@@ -1,0 +1,19 @@
+## Title: F|CFF00AAFFeelUI|r
+## Notes: Lightweight User Interface.
+## Author: Thatmemedk
+## Version: 1.03
+## SavedVariables: FeelDB
+## SavedVariablesPerCharacter: FeelCharacterDB
+## Interface: 120000
+## IconTexture: Interface\AddOns\FeelUI\Media\Logo\Logo
+## Category-enUS: FeelUI
+## Group: FeelUI
+
+Engine\Load_Engine.xml
+Libs\Load_Libs.xml
+Language\Load_Language.xml
+Core\Load_Core.xml
+Media\Load_Media.xml
+Settings\Load_Settings.xml
+Modules\Load_Modules.xml
+Dev\Load_Dev.xml

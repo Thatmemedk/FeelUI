@@ -1,0 +1,505 @@
+local UI, DB, Media, Language = select(2, ...):Call()
+
+-- Call Modules
+local B = UI:RegisterModule("Bags")
+
+-- Libs Globals
+local _G = _G
+local unpack = unpack
+local select = select
+
+-- WoW Globals
+local C_Container = _G.C_Container
+local C_Item = _G.C_Item
+local SetItemSearch = C_Container.SetItemSearch
+local GetContainerNumSlots = GetContainerNumSlots or (C_Container and C_Container.GetContainerNumSlots)
+local GetContainerItemInfo = GetContainerItemInfo or (C_Container and C_Container.GetContainerItemInfo)
+local GetContainerItemQuestInfo = GetContainerItemQuestInfo or (C_Container and C_Container.GetContainerItemQuestInfo)
+local SetSortBagsRightToLeft = C_Container and C_Container.SetSortBagsRightToLeft or SetSortBagsRightToLeft
+local SetInsertItemsLeftToRight = C_Container and C_Container.SetInsertItemsLeftToRight or SetSortBagsRightToLeft
+
+-- Locals
+B.ButtonWidth = 32
+B.ButtonHeight = 22
+B.ButtonSpacing = 4
+B.ButtonsPerRow = 12
+
+-- Locals
+B.ItemNameCache = {}
+B.BagSlots = {}
+B.ReagentSlots = {}
+
+-- Locals
+local SlotTables = {
+    B.BagSlots,
+    B.ReagentSlots,
+}
+
+function B:DisableBlizzard()
+    for i = 1, _G.NUM_CONTAINER_FRAMES or 13 do
+        local Frame = _G["ContainerFrame"..i]
+
+        if (Frame) then
+            Frame:UnregisterAllEvents()
+            Frame:Hide()
+        end
+    end
+
+    if (_G.BankFrame) then 
+        _G.BankFrame:UnregisterAllEvents()
+        _G.BankFrame:Hide() 
+    end
+
+    if (_G.ReagentBankFrame) then 
+        _G.ReagentBankFrame:UnregisterAllEvents()
+        _G.ReagentBankFrame:Hide() 
+    end
+end
+
+function B:GetCachedItemName(ItemID)
+    if not ItemID then 
+        return "" 
+    end
+
+    if not B.ItemNameCache[ItemID] then
+        B.ItemNameCache[ItemID] = C_Item.GetItemNameByID(ItemID) or ""
+    end
+
+    return B.ItemNameCache[ItemID]
+end
+
+function B:GetContainerItemInfo(bag, slot)
+    if _G.GetContainerItemInfo then
+        local info = {}
+        info.iconFileID, info.stackCount, info.isLocked, info.quality, info.isReadable, info.hasLoot, info.hyperlink, info.isFiltered, info.hasNoValue, info.itemID, info.isBound = GetContainerItemInfo(bag, slot)
+        return info
+    else
+        return GetContainerItemInfo(bag, slot) or {}
+    end
+end
+
+function B:GetContainerItemQuestInfo(bag, slot)
+    if _G.GetContainerItemQuestInfo then
+        local info = {}
+        info.isQuestItem, info.questID, info.isActive = GetContainerItemQuestInfo(bag, slot)
+        return info
+    else
+        return GetContainerItemQuestInfo(bag, slot)
+    end
+end
+
+function B:UpdateBorderColors(Button)
+    if (Button.ButtonPanel) then
+        if (Button.type and Button.type == QUESTS_LABEL) then
+            Button.ButtonPanel:SetColorTemplate(1, 0.82, 0)
+        elseif (Button.quality) then
+            local R, G, B = GetItemQualityColor(Button.quality)
+
+            Button.ButtonPanel:SetColorTemplate(R, G, B)
+        else
+            Button.ButtonPanel:SetColorTemplate(unpack(DB.Global.General.BorderColor))
+        end
+    end
+end
+
+function B:CreateContainer()
+    local Container = CreateFrame("Frame", "FeelUI_Bag", _G.UIParent)
+    Container:SetFrameStrata("LOW")
+    Container:SetFrameLevel(50)
+    Container:Size(448, 418)
+    Container:Point("BOTTOMRIGHT", _G.UIParent, -6, 224)
+    Container:CreateBackdrop()
+    Container:CreateShadow()
+    Container:Hide()
+
+    -- CLOSE BUTTON
+    local CloseButton = CreateFrame("Button", nil, Container)
+    CloseButton:Size(22, 22)
+    CloseButton:Point("TOPRIGHT", Container)
+    CloseButton:HandleCloseButton(-6, -8, 16)
+    CloseButton:SetScript("OnMouseUp", function()
+        CloseAllBags()
+        PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
+    end)
+
+    -- SEARCH BOX
+    local SearchBox = CreateFrame("EditBox", nil, Container)
+    SearchBox:SetFrameLevel(Container:GetFrameLevel() + 10)
+    SearchBox:Size(Container:GetWidth()-28, 22)
+    SearchBox:Point("BOTTOM", Container, 0, 10)
+    SearchBox:SetFontTemplate("Default")
+    SearchBox:SetMultiLine(false)
+    SearchBox:EnableMouse(true)
+    SearchBox:SetAutoFocus(false)
+
+    SearchBox.Title = SearchBox:CreateFontString(nil, "OVERLAY")
+    SearchBox.Title:Point("LEFT", SearchBox, 0, 0)
+    SearchBox.Title:SetFontTemplate("Default")
+    SearchBox.Title:SetText("Search")
+    SearchBox.Title:SetTextColor(0.5, 0.5, 0.5)
+
+    SearchBox:SetScript("OnEscapePressed", function(self) self:ClearFocus(); self:SetText(""); if SetItemSearch then SetItemSearch("") end end)
+    SearchBox:SetScript("OnEnterPressed", function(self) self:ClearFocus(); self:SetText("") end)
+    SearchBox:SetScript("OnEditFocusLost", function(self) self.Title:Show(); if SetItemSearch then SetItemSearch("") end end)
+    SearchBox:SetScript("OnEditFocusGained", function(self) self:SetText(""); self.Title:Hide() end)
+
+    SearchBox:SetScript("OnTextChanged", function(self)
+        local text = (self:GetText() or ""):lower()
+
+        if (SetItemSearch) then
+            SetItemSearch(text)
+        end
+
+        for _, slotTable in ipairs(SlotTables) do
+            for _, btn in ipairs(slotTable) do
+                local info = (C_Container and C_Container.GetContainerItemInfo) and C_Container.GetContainerItemInfo(btn.bag, btn.slot)
+                local name = B:GetCachedItemName(info and info.itemID)
+                btn:SetAlpha((text == "" or name:find(text)) and 1 or 0.5)
+            end
+        end
+    end)
+
+    SearchBox.CloseButton = CreateFrame("Button", nil, SearchBox)
+    SearchBox.CloseButton:Size(12, 12)
+    SearchBox.CloseButton:Point("RIGHT", SearchBox)
+    SearchBox.CloseButton:EnableMouse(true)
+    SearchBox.CloseButton:HandleCloseButton()
+    SearchBox.CloseButton:SetScript("OnMouseUp", function()
+        if SetItemSearch then SetItemSearch("") end
+        SearchBox:ClearFocus()
+        SearchBox:SetText("")
+    end)
+
+    SearchBox.Overlay = CreateFrame("Frame", nil, SearchBox)
+    SearchBox.Overlay:SetFrameLevel(SearchBox:GetFrameLevel() + 1)
+    SearchBox.Overlay:Size(SearchBox:GetWidth()+10, SearchBox:GetHeight())
+    SearchBox.Overlay:Point("CENTER", SearchBox, 0, 0)
+    SearchBox.Overlay:SetTemplate()
+    SearchBox.Overlay:CreateShadow()
+
+    SearchBox.Backdrop = CreateFrame("Frame", nil, SearchBox, "BackdropTemplate")
+    SearchBox.Backdrop:SetFrameLevel(SearchBox:GetFrameLevel() - 1)
+    SearchBox.Backdrop:Size(SearchBox:GetWidth()+10, SearchBox:GetHeight())
+    SearchBox.Backdrop:Point("CENTER", SearchBox, 0, 0)
+    SearchBox.Backdrop:SetBackdrop({ bgFile = Media.Global.Texture })
+    SearchBox.Backdrop:SetBackdropColor(unpack(DB.Global.General.PanelColor))
+
+    -- GOLD TEXT
+    local MoneyText = Container:CreateFontString(nil, "OVERLAY")
+    MoneyText:Point("TOPLEFT", Container, "TOPLEFT", 10, -12)
+    MoneyText:SetFontTemplate("Default", 12)
+
+    self.Container = Container
+    self.Container.CloseButton = CloseButton
+    self.Container.SearchBox = SearchBox
+    self.Container.MoneyText = MoneyText
+end
+
+function B:CreateReagentContainer()
+    local ReagentContainer = CreateFrame("Frame", "FeelUI_ReagentBag", _G.UIParent)
+    ReagentContainer:Size(158, 258)
+    ReagentContainer:Point("LEFT", B.Container, -166, 67)
+    ReagentContainer:SetFrameStrata("LOW")
+    ReagentContainer:SetFrameLevel(50)
+    ReagentContainer:CreateBackdrop()
+    ReagentContainer:CreateShadow()
+    ReagentContainer:Hide()
+
+    local InvisFrame = CreateFrame("Frame", nil, ReagentContainer)
+    InvisFrame:SetFrameLevel(ReagentContainer:GetFrameLevel() + 10)
+    InvisFrame:SetInside()
+
+    --ReagentContainer.Title = InvisFrame:CreateFontString(nil, "OVERLAY")
+    --ReagentContainer.Title:Point("TOP", ReagentContainer, 0, 8)
+    --ReagentContainer.Title:SetFontTemplate("Default", 16)
+    --ReagentContainer.Title:SetText("Reagent")
+    --ReagentContainer.Title:SetTextColor(1, 0.82, 0)
+
+    self.ReagentContainer = ReagentContainer
+end
+
+function B:CreateItemSlot(ID)
+    local Button = CreateFrame("Button", nil, ID, "SecureActionButtonTemplate")
+    Button:SetFrameLevel(ID:GetFrameLevel() + 10)
+    Button:Size(B.ButtonWidth, B.ButtonHeight)
+    Button:CreateButtonPanel()
+    Button:CreateButtonBackdrop()
+    Button:CreateShadow()
+    Button:StyleButton()
+    Button:SetShadowOverlay()
+    -- Add Clicks
+    Button:EnableMouse(true)
+    Button:RegisterForClicks("AnyUp")
+    Button:SetAttribute("type", "item")
+
+    Button.Icon = Button:CreateTexture(nil, "ARTWORK")
+    Button.Icon:SetInside(Button, 1, 1)
+    UI:KeepAspectRatio(Button, Button.Icon)
+
+    Button.Count = Button:CreateFontString(nil, "OVERLAY")
+    Button.Count:Point("BOTTOMRIGHT", Button, -1, 3)
+    Button.Count:SetFontTemplate("Default")
+
+    Button.Cooldown = CreateFrame("Cooldown", nil, Button, "CooldownFrameTemplate")
+    Button.Cooldown:SetInside()
+    Button.Cooldown:SetReverse(false)
+    Button.Cooldown:SetDrawBling(false)
+    Button.Cooldown:SetDrawEdge(false)
+
+    Button.NewItemTexture = Button:CreateTexture(nil, "OVERLAY", nil, 1)
+    Button.NewItemTexture:SetAtlas("bags-glow-white", true)
+    Button.NewItemTexture:SetBlendMode("ADD")
+    Button.NewItemTexture:SetInside(Button, 1, 1)
+    Button.NewItemTexture:Hide()
+
+    Button.NewItemAnimation = Button.NewItemTexture:CreateAnimationGroup()
+    Button.NewItemAnimation:SetLooping("BOUNCE")
+
+    Button.NewItemAnimation.FadeOut = Button.NewItemAnimation:CreateAnimation("Alpha")
+    Button.NewItemAnimation.FadeOut:SetFromAlpha(1)
+    Button.NewItemAnimation.FadeOut:SetToAlpha(0.5)
+    Button.NewItemAnimation.FadeOut:SetDuration(0.5)
+    Button.NewItemAnimation.FadeOut:SetSmoothing("IN_OUT")
+
+    -- Tooltips
+    Button:HookScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetBagItem(self.bag, self.slot)
+        GameTooltip:Show()
+
+        if C_NewItems and C_NewItems.IsNewItem(self.bag, self.slot) then
+            C_NewItems.RemoveNewItem(self.bag, self.slot)
+            if self.NewItemTexture then self.NewItemTexture:Hide() end
+            if self.NewItemAnimation and self.NewItemAnimation:IsPlaying() then
+                self.NewItemAnimation:Stop()
+            end
+        end
+    end)
+
+    Button:HookScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+
+    -- Shift-click to chat link
+    Button:SetScript("OnMouseDown", function(self)
+        if IsShiftKeyDown() then
+            local ItemID = GetContainerItemID(self.bag, self.slot)
+            if ItemID then
+                local ItemLink = GetItemLink(ItemID)
+                if ItemLink then
+                    ChatEdit_InsertLink(ItemLink)
+                end
+            end
+        end
+    end)
+
+    return Button
+end
+
+function B:UpdateItemSlots(BagID, StartIndex, SlotTable, ParentFrame, isReagent)
+    local NumSlots = C_Container.GetContainerNumSlots(BagID)
+    local Index = StartIndex
+
+    for Slot = 1, NumSlots do
+        local Button = SlotTable[Index]
+
+        if not Button then
+            Button = B:CreateItemSlot(ParentFrame)
+            SlotTable[Index] = Button
+        end
+
+        -- Assign bag and slot
+        Button.bag, Button.slot = BagID, Slot
+
+        -- Set secure item location for proper click handling
+        local il = ItemLocation:CreateFromBagAndSlot(BagID, Slot)
+        if Button.SetItemLocation then
+            Button:SetItemLocation(il)
+        else
+            Button.itemLocation = il
+        end
+
+        -- Get item info
+        local Info = B:GetContainerItemInfo(BagID, Slot)
+        local Quest = B:GetContainerItemQuestInfo(BagID, Slot)
+        Button.ItemID, Button.ItemLink = Info.itemID, Info.hyperlink
+
+        -- Hide Battlepay texture if present
+        if Button.BattlepayItemTexture then
+            Button.BattlepayItemTexture:Hide()
+        end
+
+        -- Update visuals
+        if Button.ItemLink then
+            Button.Icon:SetTexture(Info.iconFileID)
+            if Info.stackCount and Info.stackCount > 1 then
+                Button.Count:Show()
+                Button.Count:SetText(Info.stackCount)
+            else
+                Button.Count:Hide()
+            end
+
+            Button.name, _, Button.quality, _, _, Button.type = GetItemInfo(Button.ItemLink)
+            if not Button.quality then Button.quality = Info.quality end
+        else
+            Button.name, Button.quality, Button.type = nil, nil, nil
+            Button.Icon:SetTexture(nil)
+            Button.Count:Hide()
+        end
+
+        if Quest and (Quest.questID or Quest.isQuestItem) then
+            Button.type = QUESTS_LABEL
+        end
+
+        B:UpdateBorderColors(Button)
+
+        -- New item glow
+        if C_NewItems and C_NewItems.IsNewItem(BagID, Slot) then
+            local quality = Button.quality or Info.quality or 0
+            local atlas
+            if quality >= Enum.ItemQuality.Epic then
+                atlas = "bags-glow-purple"
+            elseif quality >= Enum.ItemQuality.Rare then
+                atlas = "bags-glow-blue"
+            elseif quality >= Enum.ItemQuality.Uncommon then
+                atlas = "bags-glow-green"
+            else
+                atlas = "bags-glow-white"
+            end
+
+            Button.NewItemTexture:SetAtlas(atlas)
+            Button.NewItemTexture:Show()
+            if Button.NewItemAnimation and not Button.NewItemAnimation:IsPlaying() then
+                Button.NewItemAnimation:Play()
+            end
+        else
+            Button.NewItemTexture:Hide()
+            if Button.NewItemAnimation and Button.NewItemAnimation:IsPlaying() then
+                Button.NewItemAnimation:Stop()
+            end
+        end
+
+        -- Position
+        Button:Show()
+        Button:ClearAllPoints()
+        if isReagent then
+            local rows = math.floor((Slot - 1) / 4)
+            local cols = (Slot - 1) % 4
+            Button:Point("TOPLEFT", ParentFrame, "TOPLEFT", 10 + cols * (B.ButtonWidth + B.ButtonSpacing), -42 - rows * (B.ButtonHeight + B.ButtonSpacing))
+        else
+            local rows = math.floor((Index - 1) / B.ButtonsPerRow)
+            local cols = (Index - 1) % B.ButtonsPerRow
+            Button:Point("TOPLEFT", ParentFrame, "TOPLEFT", 10 + cols * (B.ButtonWidth + B.ButtonSpacing), -42 - rows * (B.ButtonHeight + B.ButtonSpacing))
+        end
+
+        Index = Index + 1
+    end
+
+    return Index
+end
+
+function B:UpdateBags()
+    local Index = 1
+    local ReagentIndex = 1
+
+    for Bag = 0, 4 do
+        Index = B:UpdateItemSlots(Bag, Index, B.BagSlots, B.Container, false)
+    end
+
+    for i = Index, #B.BagSlots do
+        B.BagSlots[i]:Hide()
+    end
+
+    ReagentIndex = B:UpdateItemSlots(5, ReagentIndex, B.ReagentSlots, B.ReagentContainer, true)
+
+    for i = ReagentIndex, #B.ReagentSlots do
+        B.ReagentSlots[i]:Hide()
+    end
+end
+
+function B:ToggleStandaloneBag()
+    if B.Container:IsShown() then
+        B.Container:Hide()
+        B.ReagentContainer:Hide()
+    else
+        B.Container:Show()
+        B.ReagentContainer:Show()
+        B:UpdateBags()
+    end
+end
+
+function B:CloseAllBags()
+    B.Container:Hide()
+    B.ReagentContainer:Hide()
+end
+
+function B:UpdateMoneyText()
+    B.Container.MoneyText:SetText(UI:FormatMoney(GetMoney(), true))
+end
+
+function B:OnEvent(event, ...)
+    if event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_MONEY" or event == "PLAYER_TRADE_MONEY" or event == "TRADE_MONEY_CHANGED" then
+        self:UpdateMoneyText()
+    end
+
+    if event == "BAG_UPDATE" or event == "BAG_UPDATE_DELAYED" or event == "PLAYERBANKSLOTS_CHANGED" or event == "BANKFRAME_OPENED" or event == "BANKFRAME_CLOSED" then
+        self:UpdateBags()
+    end
+end
+
+function B:OpenBags()
+    OpenAllBags = function() end
+    OpenBackpack = function() end
+    ToggleBag = function() end
+    ToggleBackpack = function() end
+    ToggleAllBags = function() end
+
+    hooksecurefunc("OpenBackpack", function() B:ToggleStandaloneBag() end)
+    hooksecurefunc("CloseBackpack", function() B:CloseAllBags() end)
+    hooksecurefunc("ToggleBackpack", function() B:ToggleStandaloneBag() end)
+    hooksecurefunc("OpenAllBags", function() B:ToggleStandaloneBag() end)
+    hooksecurefunc("CloseAllBags", function() B:CloseAllBags() end)
+    hooksecurefunc("ToggleAllBags", function() B:ToggleStandaloneBag() end)
+end
+
+function B:Update()
+    self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self:RegisterEvent("BAG_UPDATE")
+    self:RegisterEvent("BAG_UPDATE_DELAYED")
+    self:RegisterEvent("BAG_CLOSED")
+    self:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
+    self:RegisterEvent("BANKFRAME_CLOSED")
+    self:RegisterEvent("BANKFRAME_OPENED")
+    self:RegisterEvent("MERCHANT_CLOSED")
+    self:RegisterEvent("MAIL_CLOSED")
+    self:RegisterEvent("PLAYER_MONEY")
+    self:RegisterEvent("PLAYER_TRADE_MONEY")
+    self:RegisterEvent("TRADE_MONEY_CHANGED")
+    self:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
+    self:RegisterEvent("SOULBIND_FORGE_INTERACTION_STARTED")
+    self:RegisterEvent("SOULBIND_FORGE_INTERACTION_ENDED")
+
+    self:SetScript("OnEvent", function(_, event, ...) 
+        self:OnEvent(event, ...) 
+    end)
+end
+
+function B:SortBags()
+    SetSortBagsRightToLeft(false)
+    SetInsertItemsLeftToRight(false)
+end
+
+function B:Initialize()
+    if (not DB.Global.Bags.Enable) then 
+        return 
+    end
+
+    --[[
+    self:DisableBlizzard()
+    self:CreateContainer()
+    self:CreateReagentContainer()
+    self:Update()
+    self:OpenBags()
+    self:SortBags()
+    --]]
+end
