@@ -333,7 +333,7 @@ function TT:Initialize()
 	self:CreateAnchor()
 	self:SetTooltipAnchor()
 	self:StyleHealthBar()
-	self:StyleTooltips()
+	--self:StyleTooltips()
 	self:StyleCloseButton()
 	--self:SetTooltipSetUnitUpdate()
 end

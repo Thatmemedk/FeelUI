@@ -46,7 +46,7 @@ function ObjectiveTracker:Disable()
 	end
 end
 
-function ObjectiveTracker:SkinHeaders(Frame)
+function ObjectiveTracker:Skin(Frame)
 	local HeaderBar = CreateFrame("StatusBar", nil, Frame)
 	HeaderBar:Size(232, 6)
 	HeaderBar:Point("TOP", Frame, -16, -18)
@@ -59,14 +59,14 @@ function ObjectiveTracker:SkinHeaders(Frame)
 	HeaderBar.FrameRaised:SetFrameLevel(Frame:GetFrameLevel() - 1)
 end
 
-function ObjectiveTracker:Skin()
+function ObjectiveTracker:SkinHeaders()
 	if (self.HeaderIsSkinned) then 
 		return 
 	end
 
 	for _, Header in ipairs(Headers) do
 		if (Header) then
-			self:SkinHeaders(Header)
+			self:Skin(Header)
 		end
 	end
 
@@ -96,8 +96,18 @@ function ObjectiveTracker:SetPoint()
 	end)
 end
 
-function ObjectiveTracker:RegisterState()
-	RegisterStateDriver(ObjectiveTrackerFrame, "visibility", "[combat] hide; show")
+function ObjectiveTracker:ToggleButtonOnEvent(event)
+	if InCombatLockdown() then
+		return UI:Print(ERR_NOT_IN_COMBAT)
+	end
+
+	if (event == "PLAYER_REGEN_DISABLED") then
+		ObjectiveTrackerFrame:SetParent(UI.HiddenParent)
+		ObjectiveTrackerFrame:SetAlpha(0)
+	elseif (event == "PLAYER_REGEN_ENABLED") then
+		ObjectiveTrackerFrame:SetParent(_G.UIParent)
+		ObjectiveTrackerFrame:SetAlpha(1)
+	end
 end
 
 function ObjectiveTracker:ToggleButtonOnClick()
@@ -106,14 +116,14 @@ function ObjectiveTracker:ToggleButtonOnClick()
 	end
 	
 	if (ObjectiveTrackerFrame:IsVisible()) then
-		UnregisterStateDriver(ObjectiveTrackerFrame, "visibility")
-		ObjectiveTrackerFrame:Hide()
+		ObjectiveTrackerFrame:SetParent(UI.HiddenParent)
+		ObjectiveTrackerFrame:SetAlpha(0)
 
 		self.Texture:Point("CENTER", self, 2, 0)
 		self.Texture:SetTexture(Media.Global.PowerArrowLeft)
 	else
-		RegisterStateDriver(ObjectiveTrackerFrame, "visibility", "[combat] hide; show")
-		ObjectiveTrackerFrame:Show()
+		ObjectiveTrackerFrame:SetParent(_G.UIParent)
+		ObjectiveTrackerFrame:SetAlpha(1)
 
 		self.Texture:Point("CENTER", self, -2, 0)
 		self.Texture:SetTexture(Media.Global.PowerArrowRight)
@@ -126,7 +136,10 @@ function ObjectiveTracker:CreateToggleButtons()
     ToggleButton:Point("RIGHT", _G.UIParent, -6, 0)
     ToggleButton:HandleButton()
     ToggleButton:RegisterForClicks("AnyUp")
+    ToggleButton:RegisterEvent("PLAYER_REGEN_ENABLED")
+	ToggleButton:RegisterEvent("PLAYER_REGEN_DISABLED")
     ToggleButton:SetScript("OnClick", self.ToggleButtonOnClick)
+    ToggleButton:SetScript("OnEvent", self.ToggleButtonOnEvent)
     ToggleButton:SetAlpha(0)
 
     ToggleButton.Texture = ToggleButton:CreateTexture(nil, "OVERLAY", nil, 7)
@@ -151,7 +164,6 @@ function ObjectiveTracker:Initialize()
 
 	self:SetPoint()
 	self:Disable()
-	self:RegisterState()
 	self:CreateToggleButtons()
-	self:Skin()
+	self:SkinHeaders()
 end
