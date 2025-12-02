@@ -17,7 +17,6 @@ function ChatBubbles:SkinBubbles(Bubbles)
 		Frame:SetScale(Scale)
 		Frame:CreateBackdrop()
 		Frame:CreateShadow()
-		Frame:DisableBackdrop()
 
 		Frame.Center:Hide()
 		Frame.TopEdge:Hide()

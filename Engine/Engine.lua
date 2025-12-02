@@ -38,8 +38,11 @@ Engine[1].ScreenResolution = Resolution or (Windowed and GetCVar("gxWindowedReso
 Engine[1].WoWPatch, Engine[1].WoWBuild, Engine[1].WoWPatchReleaseDate, Engine[1].TocVersion = GetBuildInfo()
 -- WoW Clients	
 Engine[1].Retail = WOW_PROJECT_ID == _G.WOW_PROJECT_MAINLINE
-Engine[1].TBC = WOW_PROJECT_ID == _G.WOW_PROJECT_BURNING_CRUSADE_CLASSIC
 Engine[1].Classic = WOW_PROJECT_ID == _G.WOW_PROJECT_CLASSIC
+Engine[1].TBC = WOW_PROJECT_ID == _G.WOW_PROJECT_BURNING_CRUSADE_CLASSIC
+Engine[1].Wrath = WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC
+Engine[1].Cata = WOW_PROJECT_ID == _G.WOW_PROJECT_CATACLYSM_CLASSIC
+Engine[1].Mists = WOW_PROJECT_ID == _G.WOW_PROJECT_CATACLYSM_CLASSIC
 -- Player
 Engine[1].MyName = UnitName("player")
 Engine[1].MyClass = select(2, UnitClass("player"))
