@@ -234,15 +234,14 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
             Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
         end
 
+        --[[
         if (Button.Cooldown) then
             Button.Cooldown:Hide()
 
-            if (Duration and ExpirationTime) then 
+            if (Duration) then 
                 local SecretOK = pcall(function()
-                    local StartTime = ExpirationTime - Duration
-
                     if (Duration > 0) then
-                        Button.Cooldown:SetCooldown(StartTime, Duration)
+                        Button.Cooldown:SetCooldown(ExpirationTime - Duration, Duration)
                     end
                 end)
 
@@ -251,6 +250,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
                 end
             end
         end
+        --]]
 
         Button:ClearAllPoints()
         Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, (ActiveButtons) * (Size + Spacing) * (IsDebuff and -1 or 1), 0)
@@ -447,6 +447,7 @@ function UF:Spawn(Unit, Width, Height, Orientation)
     --self:CreateOnEnterLeave(Frame)
     self:CreatePanels(Frame)
     self:CreateHightlight(Frame)
+    self:CreateFadeInOut(Frame)
     self:CreateHealth(Frame, Height, Orientation)
     self:CreateRaidIcon(Frame)
 
@@ -948,7 +949,7 @@ end
 function UF:UpdateFrame(Unit)
     local Frame = self.Frames[Unit]
 
-    if not Frame then 
+    if (not Frame) then 
         return 
     end
 
@@ -989,21 +990,6 @@ end
 -- SECURE UPDATES
 
 function UF:SecureUpdate()
-    for Unit, Frame in pairs(UF.Frames) do
-        if UnitExists(Unit) then
-            UF:UpdateHealth(Frame)
-            UF:UpdatePower(Frame)
-            UF:UpdateHealthTextCur(Frame)
-            UF:UpdateHealthTextPer(Frame)
-
-            if (Unit == "target" or Unit:match("^boss%d$")) then
-                UF:UpdateTargetNameLevel(Frame)
-            else
-                UF:UpdateName(Frame)
-            end
-        end
-    end
-
     if (not UF._onupdate_set) then
         UF.SecureFrame:SetScript("OnUpdate", function(_, elapsed)
             for _, Frame in pairs(UF.Frames) do

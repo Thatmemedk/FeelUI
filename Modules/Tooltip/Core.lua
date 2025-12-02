@@ -235,6 +235,9 @@ function TT:StyleHealthBar()
 	GameTooltipStatusBar:SetStatusBarTexture(Media.Global.Texture)
 	GameTooltipStatusBar:CreateBackdrop()
 	GameTooltipStatusBar:CreateShadow()
+    GameTooltipStatusBar:ClearAllPoints()
+    GameTooltipStatusBar:Point("TOPLEFT", GameTooltip, "BOTTOMLEFT", 0, -2)
+    GameTooltipStatusBar:Point("TOPRIGHT", GameTooltip, "BOTTOMRIGHT", 0, 0)
 end
 
 function TT:SetBackdropStyle(tt)
@@ -266,7 +269,6 @@ function TT:StyleTooltips()
         _G.QuestScrollFrame.CampaignTooltip,
         _G.QuickKeybindTooltip,
         _G.LibDBIconTooltip,
-        _G.SettingsTooltip,
     }
 
     for _, Tooltips in pairs(TTList) do
@@ -309,10 +311,6 @@ function TT:TooltipAnchorUpdate(tt, parent)
 		self:SetOwner(Anchor)
 		self:SetAnchorType("ANCHOR_TOPRIGHT", 0, 18)
 	end
-	
-	GameTooltipStatusBar:ClearAllPoints()
-	GameTooltipStatusBar:Point("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
-	GameTooltipStatusBar:Point("TOPRIGHT", self, "BOTTOMRIGHT", 0, 0)
 end
 
 function TT:SetTooltipAnchor()
@@ -333,7 +331,7 @@ function TT:Initialize()
 	self:CreateAnchor()
 	self:SetTooltipAnchor()
 	self:StyleHealthBar()
-	--self:StyleTooltips()
+	self:StyleTooltips()
 	self:StyleCloseButton()
 	--self:SetTooltipSetUnitUpdate()
 end

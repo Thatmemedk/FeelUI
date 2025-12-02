@@ -54,5 +54,5 @@ function ChatBubbles:OnUpdate(Elapsed)
 end
 
 function ChatBubbles:Initialize()
-	self:SetScript("OnUpdate", self.OnUpdate)
+	--self:SetScript("OnUpdate", self.OnUpdate) -- Disable for now seems to give taints.
 end

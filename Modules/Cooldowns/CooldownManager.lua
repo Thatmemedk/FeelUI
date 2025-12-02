@@ -33,7 +33,7 @@ function CooldownManager:SkinIcons(Button)
 
 	select(3, Button:GetRegions()):Hide()
 
-	Button:Size(36, 18)
+	Button:Size(unpack(DB.Global.CooldownManager.ButtonSize))
 	Button:CreateButtonPanel()
 	Button:CreateButtonBackdrop()
 	Button:CreateShadow()
@@ -79,5 +79,9 @@ function CooldownManager:RegisterEvents()
 end
 
 function CooldownManager:Initialize()
+	if (not DB.Global.CooldownManager.Enable) then
+		return
+	end
+
 	self:RegisterEvents()
 end

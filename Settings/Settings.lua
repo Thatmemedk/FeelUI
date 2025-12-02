@@ -75,10 +75,6 @@ DB.Global = {
 	Chat = {
 		Enable = true,
 	},
-	
-	Loot = {
-		Enable = true,
-	},
 
 	Cooldowns = {
 		Enable = true,
@@ -87,6 +83,11 @@ DB.Global = {
 		ExpireColor = { 1, 0, 0 },
 		SecondsColor = { 1, 0.42, 0 },
 		SecondsColor2 = { 1, 0.82, 0 },
+	},
+
+	CooldownManager = {
+		Enable = true,
+		ButtonSize = { 36, 18 },
 	},
 
 	DataBars = {
@@ -121,6 +122,10 @@ DB.Global = {
 		Enable = true,
 		-- Colors Settings
 		TextColor = { 1, 1, 1 },
+	},
+
+	Loot = {
+		Enable = true,
 	},
 
 	Merchant = {

@@ -7,6 +7,32 @@ local UF = UI:CallModule("UnitFrames")
 local select = select
 local unpack = unpack
 
+function UF:OnHide()
+    if not self:IsShown() then
+        self:SetAlpha(0)
+    end
+
+    UI:UIFrameFadeOut(self, UF.FadeInTime, self:GetAlpha(), 0)
+end
+
+function UF:OnShow()
+    if not self:IsShown() then
+        self:SetAlpha(0)
+    end
+
+    UI:UIFrameFadeIn(self, UF.FadeInTime, self:GetAlpha(), 1)
+end
+
+function UF:CreateFadeInOut(Frame)
+    Frame:SetScript("OnShow", UF.OnShow)
+    Frame:SetScript("OnHide", UF.OnHide)
+end
+
+function UF:CreateOnEnterLeave(Frame)
+    Frame:SetScript("OnEnter", _G.UnitFrame_OnEnter)
+    Frame:SetScript("OnLeave", _G.UnitFrame_OnLeave)
+end
+
 function UF:CreatePanels(Frame, EnableGlow, GlowScale, GlowSize)
     local Panel = CreateFrame("Frame", nil, Frame)
     Panel:SetFrameLevel(Frame:GetFrameLevel() - 1)
@@ -74,11 +100,6 @@ function UF:CreateHightlight(Frame)
     Frame:HookScript("OnLeave", self.HighlightOnMouse)
     
     Frame.Highlight = Highlight
-end
-
-function UF:CreateOnEnterLeave(Frame)
-    Frame:SetScript("OnEnter", _G.UnitFrame_OnEnter)
-    Frame:SetScript("OnLeave", _G.UnitFrame_OnLeave)
 end
 
 function UF:NPCreateTargetIndicator(Frame, Unit)
