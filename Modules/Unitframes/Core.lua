@@ -949,42 +949,54 @@ end
 function UF:UpdateFrame(Unit)
     local Frame = self.Frames[Unit]
 
-    if (not Frame) then 
-        return 
+    if (not Frame or not UnitExists(Unit)) then
+        return
     end
 
+    -- HEALTH
+    if (Frame.Health) then self:UpdateHealth(Frame) end
+    if (Frame.HealthTextCur) then self:UpdateHealthTextCur(Frame) end
+    if (Frame.HealthTextPer) then self:UpdateHealthTextPer(Frame) end
+    -- POWER
+    if (Frame.PowerText) then self:UpdatePower(Frame) end
+    -- AURAS
+    if (Frame.Buffs) then self:UpdateAuras(Frame, Unit, false) end
+    if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
+    -- NAME
     if (Frame.Name) then self:UpdateName(Frame) end
     if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame) end
+    -- PORTRAITS
     if (Frame.Portrait) then self:UpdatePortrait(Frame) end
+    -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame) end
     if (Frame.CombatIcon) then self:UpdateCombatIcon(Frame) end
     if (Frame.RestingIcon) then self:UpdateRestingIcon(Frame) end
-    if (Frame.Buffs) then self:UpdateAuras(Frame, Unit, false) end
-    if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
-
-    if UnitExists(Unit) then
-        if (Frame.Health) then self:UpdateHealth(Frame) end
-        if (Frame.PowerText) then self:UpdatePower(Frame) end
-        if (Frame.Name) then self:UpdateName(Frame) end
-        if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame) end
-        if (Frame.HealthTextCur) then self:UpdateHealthTextCur(Frame) end
-        if (Frame.HealthTextPer) then self:UpdateHealthTextPer(Frame) end
-        if (Frame.UpdateHealthPred)then self:UpdateHealthPred(Frame) end
+    -- HEALTH PRED
+    if (Frame.UpdateHealthPred)then self:UpdateHealthPred(Frame) end
+    -- THREAT
+    if (Unit == "player") then
+        if (Frame.Panel.Glow) then Frame.Panel.Glow:SetBackdropBorderColor(0, 0, 0, 0) end
+    elseif Unit:find("raid") or Unit:find("party") then
+        if (Frame.Panel.Glow) then self:UpdateThreatHighlightRaid(Frame) end
+    else
+        if (Frame.Panel.Glow) then self:UpdateThreatHighlight(Frame) end
     end
 end
 
 function UF:UpdateNameplate(Frame, Unit)
-    if (not Frame or not UnitExists(Unit)) then 
+    if (not Frame or not UnitExists(Unit)) then
         return 
     end
 
+    -- HEALTH
     if (Frame.Health) then self:NPUpdateHealth(Frame, Unit) end
     if (Frame.HealthText) then self:NPUpdateHealthText(Frame, Unit) end
-    --if (Frame.Name) then self:NPUpdateName(Frame, Unit) end
-
-    if (Frame.TargetIndLeft and Frame.TargetIndRight) then
-        self:NPHighlightOnNameplateTarget(Frame, Unit)
-    end
+    -- NAME
+    if (Frame.Name) then self:NPUpdateName(Frame, Unit) end
+    -- TARGET INDICATORS
+    if (Frame.TargetIndicatorLeft and Frame.TargetIndicatorRight) then self:NPHighlightOnNameplateTarget(Frame, Unit) end
+    -- THREAT
+    if (Frame.Panel.Glow) then self:UpdateThreatHighlight(Frame) end
 end
 
 -- SECURE UPDATES
@@ -1088,6 +1100,13 @@ function UF:OnEvent(event, arg1)
     elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_MAXPOWER") then
         if (FramesUF) then
             UF:UpdatePower(FramesUF)
+        end
+
+        -- THREAT
+    elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
+        if (FramesUF) then
+            UF:UpdateThreatHighlight(FramesUF)
+            UF:UpdateThreatHighlightRaid(FramesUF)
         end
 
         -- NAME UPDATE
@@ -1218,6 +1237,9 @@ function UF:CallEvents()
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_FAILED")
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+    -- THREAT
+    SecureEventFrame:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE")
+    SecureEventFrame:RegisterEvent("UNIT_THREAT_LIST_UPDATE")
     -- NAME
     SecureEventFrame:RegisterEvent("UNIT_NAME_UPDATE")
     -- LEVEL

@@ -103,30 +103,30 @@ function UF:CreateHightlight(Frame)
 end
 
 function UF:NPCreateTargetIndicator(Frame, Unit)
-    local TargetIndLeft = Frame.InvisFrame:CreateTexture(nil, "OVERLAY")
-    TargetIndLeft:Size(14, 14)
-    TargetIndLeft:Point("LEFT", Frame.Health, -18, -12)
-    TargetIndLeft:SetTexture(Media.Global.PowerArrowRight)
-    TargetIndLeft:SetVertexColor(77/255, 179/255, 255/255)
-    TargetIndLeft:Hide()
+    local TargetIndicatorLeft = Frame.InvisFrame:CreateTexture(nil, "OVERLAY")
+    TargetIndicatorLeft:Size(14, 14)
+    TargetIndicatorLeft:Point("LEFT", Frame.Health, -18, -12)
+    TargetIndicatorLeft:SetTexture(Media.Global.PowerArrowRight)
+    TargetIndicatorLeft:SetVertexColor(77/255, 179/255, 255/255)
+    TargetIndicatorLeft:Hide()
 
-    local TargetIndRight = Frame.InvisFrame:CreateTexture(nil, "OVERLAY")
-    TargetIndRight:Size(14, 14)
-    TargetIndRight:Point("RIGHT", Frame.Health, 18, -12)
-    TargetIndRight:SetTexture(Media.Global.PowerArrowLeft)
-    TargetIndRight:SetVertexColor(77/255, 179/255, 255/255)
-    TargetIndRight:Hide()
+    local TargetIndicatorRight = Frame.InvisFrame:CreateTexture(nil, "OVERLAY")
+    TargetIndicatorRight:Size(14, 14)
+    TargetIndicatorRight:Point("RIGHT", Frame.Health, 18, -12)
+    TargetIndicatorRight:SetTexture(Media.Global.PowerArrowLeft)
+    TargetIndicatorRight:SetVertexColor(77/255, 179/255, 255/255)
+    TargetIndicatorRight:Hide()
 
-    Frame.TargetIndLeft = TargetIndLeft
-    Frame.TargetIndRight = TargetIndRight
+    Frame.TargetIndicatorLeft = TargetIndicatorLeft
+    Frame.TargetIndicatorRight = TargetIndicatorRight
 end
 
 function UF:NPHighlightOnNameplateTarget(Frame, Unit)
     if UnitIsUnit("target", Unit) then
-        Frame.TargetIndLeft:Show()
-        Frame.TargetIndRight:Show()
+        Frame.TargetIndicatorLeft:Show()
+        Frame.TargetIndicatorRight:Show()
     else
-        Frame.TargetIndLeft:Hide()
-        Frame.TargetIndRight:Hide()
+        Frame.TargetIndicatorLeft:Hide()
+        Frame.TargetIndicatorRight:Hide()
     end
 end

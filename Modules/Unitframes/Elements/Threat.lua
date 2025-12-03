@@ -11,12 +11,12 @@ local unpack = unpack
 local UnitThreatSituation = UnitThreatSituation
 local GetThreatStatusColor = GetThreatStatusColor
 
-function UF:UpdateThreatHighlight(Unit)
-    if (unit ~= self.unit) then
+function UF:UpdateThreatHighlight(Frame)
+    if (Frame ~= Frame.unit) then
         return
     end
 
-    local Threat = UnitThreatSituation("player", unit)
+    local Threat = UnitThreatSituation("player", Frame)
     
     if (Threat and Threat > 0) then
         local R, G, B = GetThreatStatusColor(Threat)
@@ -26,12 +26,12 @@ function UF:UpdateThreatHighlight(Unit)
     end
 end
 
-function UF:UpdateThreatHighlightRaid(Unit)
-    if (unit ~= self.unit) then
+function UF:UpdateThreatHighlightRaid(Frame)
+    if (Frame ~= self.Frame) then
         return
     end
 
-    local Threat = UnitThreatSituation(unit)
+    local Threat = UnitThreatSituation(Frame)
 
     if (Threat and Threat > 0) then
         local R, G, B = GetThreatStatusColor(Threat)
