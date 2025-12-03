@@ -51,13 +51,15 @@ function TalkingHead:Skin()
 end
 
 function TalkingHead:Initialize()
-	if not (DB.Global.Theme.Enable) then 
+	if (not DB.Global.Theme.Enable) then 
 		return
 	end
 
+	--[[
 	if not IsAddOnLoaded("Blizzard_TalkingHeadUI") then
 		LoadAddOn("Blizzard_TalkingHeadUI")
 	end
 	
 	self:Skin()
+	--]]
 end

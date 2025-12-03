@@ -66,7 +66,7 @@ function GameMenu:Skin()
 end
 
 function GameMenu:Initialize()
-	if not (DB.Global.Theme.Enable) then 
+	if (not DB.Global.Theme.Enable) then 
 		return
 	end
 

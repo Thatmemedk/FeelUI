@@ -66,9 +66,9 @@ function GhostFrameBlizz:Skin()
 end
 
 function GhostFrameBlizz:Initialize()
-	if not (DB.Global.Theme.Enable) then 
+	if (not DB.Global.Theme.Enable) then 
 		return
 	end
 	
-	self:Skin()
+	--self:Skin()
 end

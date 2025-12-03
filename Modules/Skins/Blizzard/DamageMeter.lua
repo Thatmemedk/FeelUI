@@ -27,7 +27,7 @@ function DamageMeter:Skin()
 end
 
 function DamageMeter:Initialize()
-	if not (DB.Global.Theme.Enable) then 
+	if (not DB.Global.Theme.Enable) then 
 		return
 	end
 

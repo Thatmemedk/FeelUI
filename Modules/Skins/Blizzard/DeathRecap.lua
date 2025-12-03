@@ -62,13 +62,15 @@ function DeathRecap:Skin()
 end
 
 function DeathRecap:Initialize()
-	if not (DB.Global.Theme.Enable) then
+	if (not DB.Global.Theme.Enable) then
 		return
 	end
 	
+	--[[
 	if not IsAddOnLoaded("Blizzard_DeathRecap") then
 		LoadAddOn("Blizzard_DeathRecap")
 	end
 	
 	self:Skin()
+	--]]
 end
