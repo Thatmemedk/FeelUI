@@ -34,8 +34,9 @@
 	<Script file="DataBars\PowerBar.lua"/>
 	<Script file="DataBars\RuneBar.lua"/>
 	<Script file="DataBars\StaggerBar.lua"/>
-	<Script file="DataBars\TotemBar.lua"/>
 	<Script file="DataBars\SoulFragmentsBar.lua"/>
+	<Script file="DataBars\MaelstormBar.lua"/>
+	<Script file="DataBars\TotemBar.lua"/>
 	<!-- DataTexts -->
 	<Script file="DataTexts\Date.lua"/>
 	<Script file="DataTexts\Durability.lua"/>
@@ -77,4 +78,5 @@
 	<Script file="UnitFrames\Elements\Texts.lua"/>
 	<Script file="UnitFrames\Elements\HealthPred.lua"/>
 	<Script file="UnitFrames\Elements\Icons.lua"/>
+	<Script file="UnitFrames\Elements\Threat.lua"/>
 </Ui>

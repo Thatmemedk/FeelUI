@@ -23,7 +23,6 @@ function StaggerBar:CreateBar()
 	Bar:Size(222, 8)
 	Bar:Point(unpack(DB.Global.DataBars.StaggerBarPoint))
 	Bar:SetStatusBarTexture(Media.Global.Texture)
-	Bar:SetStatusBarColor(0.52, 1, 0.52)
 	Bar:CreateBackdrop()
 	Bar:CreateShadow()
 	Bar:Hide()
@@ -47,24 +46,21 @@ end
 
 function StaggerBar:Update()
 	local Min, Max = UnitStagger("player"), UnitHealthMax("player")
+	local Percent = Min/Max
 
 	self.Bar:SetMinMaxValues(0, Max)
-	self.Bar:SetValue(Min)
-	
-	--local Percent = Min/Max
+	self.Bar:SetValue(Min, UI.SmoothBars)
 
-	--if (Percent >= STAGGER_RED_TRANSITION) then
-	--	self.Bar:SetStatusBarColor(1, 0.52, 0.52)
-	--elseif (Percent > STAGGER_YELLOW_TRANSITION) then
-	--	self.Bar:SetStatusBarColor(1, 0.82, 0.52)
-	--else
-	--	self.Bar:SetStatusBarColor(0.52, 1, 0.52)
-	--end
+	if (Percent >= STAGGER_RED_TRANSITION) then
+		self.Bar:SetStatusBarColor(1, 0.52, 0.52)
+	elseif (Percent > STAGGER_YELLOW_TRANSITION) then
+		self.Bar:SetStatusBarColor(1, 0.82, 0.52)
+	else
+		self.Bar:SetStatusBarColor(0.52, 1, 0.52)
+	end
 
 	self.Text:SetText(Min)
-	--self.TextPer:SetText(floor(Min/Max*1000)/10 .. "%")
-
-	--UI:SetSmoothing(self.Bar, DB.Global.General.Smoothbars)
+	self.TextPer:SetText(floor(Min/Max*1000)/10 .. "%")
 end
 
 function StaggerBar:UpdateSpec(event)

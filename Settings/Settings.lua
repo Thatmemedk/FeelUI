@@ -22,9 +22,6 @@ DB.Global = {
 		BackdropColor = { 0.1, 0.1, 0.1, 0.70 },
 		PanelColor = { 0.2, 0.2, 0.2, 0.70 },
 		ShadowColor = { 0.05, 0.05, 0.05, 0.50 },
-		-- Smooth Settings
-		SmoothingAmount = 0.25,
-		SmoothBars = true,
 	},
 
 	ActionBars = {
@@ -98,13 +95,15 @@ DB.Global = {
 		RuneBarSpecColor = false,
 		StaggerBar = true,
 		SoulFragmentsBar = true,
+		MaelstromBar = true,
 		TotemBar = true,
 		-- Points Settings
 		PowerBarPoint = { "BOTTOM", _G.UIParent, 0, 250 },
 		ClassPowerPoint = { "BOTTOM", _G.UIParent, 0, 266 },
 		RuneBarPoint = { "BOTTOM", _G.UIParent, 0, 266 },
-		SoulFragmentsBarPoint = { "BOTTOM", _G.UIParent, 0, 266 },
 		StaggerBarPoint = { "BOTTOM", _G.UIParent, 0, 266 },
+		SoulFragmentsBarPoint = { "BOTTOM", _G.UIParent, 0, 266 },
+		MaelstromBarPoint = { "BOTTOM", _G.UIParent, 0, 266 },
 		TotemBarPoint = { "BOTTOM", _G.UIParent, 0, 282 },
 	},
 

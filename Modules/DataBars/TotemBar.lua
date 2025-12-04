@@ -63,7 +63,7 @@ function TotemBar:OnEvent(event)
         local TotemBars = self.Buttons[i]
         local PlayerHaveTotem, Name, Start, Duration, Icon = GetTotemInfo(i)
 
-        if (Name) then
+        if (PlayerHaveTotem and Duration) then
             TotemBars.Icon:SetTexture(Icon)
 
             if (Duration and Start) then

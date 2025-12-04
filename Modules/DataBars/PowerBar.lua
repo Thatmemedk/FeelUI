@@ -25,8 +25,7 @@ function PowerBar:CreateBar()
 	Bar:SetStatusBarTexture(Media.Global.Texture)
 	Bar:CreateBackdrop()
 	Bar:CreateShadow()
-	--Bar:CreateSpark()
-
+	
 	local InvisFrame = CreateFrame("Frame", nil, Bar)
 	InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
 	InvisFrame:SetInside()
@@ -52,32 +51,12 @@ function PowerBar:Update()
 	local PowerColor = UI.Colors.Power[PowerToken]
 
 	self.Bar:SetMinMaxValues(0, Max)
-	self.Bar:SetValue(Min)
-	--self.Text:SetText(floor(Min/Max*100))
+	self.Bar:SetValue(Min, UI.SmoothBars)
 	self.Text:SetText(AbbreviateNumbers(Min))
 
 	if (PowerColor) then
 		self.Bar:SetStatusBarColor(unpack(PowerColor))
 	end
-	
-	--if (PowerToken == "MANA") then
-	--	self.Text:SetText(floor(Min/Max*100))
-	--else
-	--	self.Text:SetText(Min)
-	--end
-	
-	--if (Min ~= Max) then
-	--	self.Bar.Spark:Show()
-	--else
-	--	self.Bar.Spark:Hide()
-	--end
-	
-	--if (Min == 0) then
-	--	self.Bar.Spark:Hide()
-	--end
-
-	-- Update Smoothing Bar.
-	--UI:SetSmoothing(self.Bar, DB.Global.General.SmoothBars)
 end
 
 function PowerBar:OnEvent(event)

@@ -39,10 +39,6 @@ function UF:CreatePanels(Frame, EnableGlow, GlowScale, GlowSize)
     Panel:SetInside()
     Panel:CreateShadow()
     
-    if (EnableGlow) then
-        Panel:CreateGlow(GlowScale or 2.5, GlowSize or 3, 0, 0, 0, 0)
-    end
-    
     local InvisFrame = CreateFrame("Frame", nil, Frame)
     InvisFrame:SetFrameLevel(Frame:GetFrameLevel() + 8)
     InvisFrame:SetInside()
@@ -62,7 +58,6 @@ function UF:NPCreatePanels(Frame)
     Panel:Size(Frame:GetWidth(), 14)
     Panel:Point("CENTER", Frame, 0, -12)
     Panel:CreateShadow()
-    --Panel:CreateGlow(3, 3, 0, 0, 0, 0)
     
     local InvisFrame = CreateFrame("Frame", nil, Frame)
     InvisFrame:SetFrameLevel(Frame:GetFrameLevel() + 8)

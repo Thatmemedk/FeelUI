@@ -301,13 +301,13 @@ function UF:UpdateCastBars(Frame)
     Castbar.Delay = Castbar.Delay or 0
 
     if not (Castbar.Channeling) then
-        Castbar:SetValue(Elapsed)
+        Castbar:SetValue(Elapsed, Enum.StatusBarInterpolation.ExponentialEaseOut)
 
         if (Castbar.CustomTimeText) then
             Castbar:CustomTimeText(Elapsed)
         end
     else
-        Castbar:SetValue(Remaining)
+        Castbar:SetValue(Remaining, Enum.StatusBarInterpolation.ExponentialEaseOut)
 
         if (Castbar.CustomTimeText) then
             Castbar:CustomTimeText(Remaining)
@@ -466,18 +466,23 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         --self:CreateTargetCastbar(Frame)
         self:CreateBuffs(Frame)
         self:CreateDebuffs(Frame)
+        self:CreateThreatHighlight(Frame)
     elseif (Unit == "targettarget") then
         self:CreateNameTextCenter(Frame)
+        self:CreateThreatHighlight(Frame)
         --self:CreatePortrait(Frame)
     elseif (Unit == "pet") then
         self:CreateNameTextCenter(Frame)
+        self:CreateThreatHighlight(Frame)
         --self:CreatePortrait(Frame)
         --self:CreatePetCastbar(Frame)
     elseif (Unit == "focus") then
         self:CreateNameTextCenter(Frame)
+        self:CreateThreatHighlight(Frame)
         --self:CreateFocusCastbar(Frame)
     elseif (Unit:match("^boss%d$")) then
         self:CreateTargetTexts(Frame)
+        self:CreateThreatHighlight(Frame)
         --self:CreatePortrait(Frame)
         --self:CreateBossCastbar(Frame)
     end
@@ -518,7 +523,7 @@ function UF:UpdateHealth(Frame)
     end
 
     Frame.Health:SetMinMaxValues(0, Max)
-    Frame.Health:SetValue(Min)
+    Frame.Health:SetValue(Min, Enum.StatusBarInterpolation.ExponentialEaseOut)
 
     if not (UnitIsConnected(Unit)) then
         Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
@@ -546,7 +551,7 @@ function UF:NPUpdateHealth(Frame, Unit)
 
     local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
     Frame.Health:SetMinMaxValues(0, Max)
-    Frame.Health:SetValue(Min)
+    Frame.Health:SetValue(Min, Enum.StatusBarInterpolation.ExponentialEaseOut)
 
     local Reaction = UnitReaction and UnitReaction(Unit, "player") or 5
     local Color = UI.Colors and UI.Colors.Reaction and UI.Colors.Reaction[Reaction]
@@ -619,7 +624,7 @@ function UF:UpdateHealthPred(Frame)
         local TotalHeight = Frame.Health:GetHeight()
 
         Frame.AbsorbBar:SetMinMaxValues(0, Max)
-        Frame.AbsorbBar:SetValue(AbsorbAmount)
+        Frame.AbsorbBar:SetValue(AbsorbAmount, Enum.StatusBarInterpolation.ExponentialEaseOut)
 
         Frame.AbsorbBar:SetOrientation(HealthOrientation)
         Frame.AbsorbBar:SetParent(Frame.Health)
@@ -896,6 +901,50 @@ function UF:UpdateRaidIcon(Frame)
     end
 end
 
+-- THREAT
+
+function UF:UpdateThreatHighlight(Frame)
+    local Unit = Frame.unit
+
+    if (not Unit) then
+        return
+    end
+
+    if (not Frame.Threat) then
+        return
+    end
+
+    local Threat = UnitThreatSituation("player", Unit)
+    
+    if (Threat and Threat > 0) then
+        local R, G, B = GetThreatStatusColor(Threat)
+        Frame.Threat.Glow:SetBackdropBorderColor(R * 0.55, G * 0.55, B * 0.55, 0.8)
+    else
+        Frame.Threat.Glow:SetBackdropBorderColor(0, 0, 0, 0)
+    end
+end
+
+function UF:UpdateThreatHighlightRaid(Frame)
+    local Unit = Frame.unit
+
+    if (not Unit) then
+        return
+    end
+
+    if (not Frame.Threat) then
+        return
+    end
+
+    local Threat = UnitThreatSituation(Unit)
+
+    if (Threat and Threat > 0) then
+        local R, G, B = GetThreatStatusColor(Threat)
+        Frame.ThreatRaid.Glow:SetBackdropBorderColor(R * 0.55, G * 0.55, B * 0.55, 0.8)
+    else
+        Frame.ThreatRaid.Glow:SetBackdropBorderColor(0, 0, 0, 0)
+    end
+end
+
 -- SPAWN THE UNITFRAMES
 
 function UF:CreateUF()
@@ -974,13 +1023,8 @@ function UF:UpdateFrame(Unit)
     -- HEALTH PRED
     if (Frame.UpdateHealthPred)then self:UpdateHealthPred(Frame) end
     -- THREAT
-    if (Unit == "player") then
-        if (Frame.Panel.Glow) then Frame.Panel.Glow:SetBackdropBorderColor(0, 0, 0, 0) end
-    elseif Unit:find("raid") or Unit:find("party") then
-        if (Frame.Panel.Glow) then self:UpdateThreatHighlightRaid(Frame) end
-    else
-        if (Frame.Panel.Glow) then self:UpdateThreatHighlight(Frame) end
-    end
+    if (Frame.Threat) then self:UpdateThreatHighlight(Frame) end
+    if (Frame.ThreatRaid) then self:UpdateThreatHighlightRaid(Frame) end
 end
 
 function UF:UpdateNameplate(Frame, Unit)
@@ -996,7 +1040,7 @@ function UF:UpdateNameplate(Frame, Unit)
     -- TARGET INDICATORS
     if (Frame.TargetIndicatorLeft and Frame.TargetIndicatorRight) then self:NPHighlightOnNameplateTarget(Frame, Unit) end
     -- THREAT
-    if (Frame.Panel.Glow) then self:UpdateThreatHighlight(Frame) end
+    if (Frame.Threat) then self:UpdateThreatHighlight(Frame) end
 end
 
 -- SECURE UPDATES

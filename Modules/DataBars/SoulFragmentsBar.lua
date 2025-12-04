@@ -44,7 +44,7 @@ function SoulFragmentsBar:Update()
     local Current = DemonHunterSoulFragmentsBar:GetValue() 
 
     self.Bar:SetMinMaxValues(0, Max)
-    self.Bar:SetValue(Current)
+    self.Bar:SetValue(Current, UI.SmoothBars)
     self.Text:SetText(Current)
 end
 

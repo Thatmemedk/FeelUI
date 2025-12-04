@@ -22,6 +22,12 @@ local ChatConfigFrameDefaultButton = _G.ChatConfigFrameDefaultButton
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
 
+function CH:HideButtons()
+	ChatFrameMenuButton:Kill()
+	ChatConfigFrameDefaultButton:Kill()
+	QuickJoinToastButton:Kill()
+end
+
 function CH:StyleFrames(Frame)
 	if (Frame.ChatIsSkinned) then
 		return
@@ -36,23 +42,20 @@ function CH:StyleFrames(Frame)
 	local TabText = _G[FrameName.."Tab"].Text or _G[FrameName.."TabText"]
 	local Scroll = Frame.ScrollBar
 	local ScrollBottom = Frame.ScrollToBottomButton
-	local ScrollTex = _G[FrameName.."ThumbTexture"]
 	local MinimizeButton = _G[FrameName.."ButtonFrameMinimizeButton"]
 
-	Chat:StripTexture()
 	Chat:SetClampRectInsets(0, 0, 0, 0)
 	Chat:SetClampedToScreen(false)
-	Chat:SetFading(false)
+	--Chat:SetFading(false)
 	
+	EditBox:Size(Panels.ChatPanelLeft:GetWidth(), 22)
 	EditBox:ClearAllPoints()
 	EditBox:Point("TOPLEFT", Panels.ChatPanelLeft, 0, 26)
-	EditBox:Size(Panels.ChatPanelLeft:GetWidth(), 22)
 	EditBox:CreateBackdrop()
 	EditBox:SetBackdropColorTemplate(0.1, 0.1, 0.1, 0.90)
 	EditBox:CreateShadow()
 	EditBox:SetAltArrowKeyMode(false)
 	EditBox:Hide()
-
 	EditBox:HookScript("OnEditFocusLost", function(Frame)
 		Frame:Hide()
 	end)
@@ -65,27 +68,22 @@ function CH:StyleFrames(Frame)
 	for i = 1, #CHAT_FRAME_TEXTURES do
 		_G[FrameName..CHAT_FRAME_TEXTURES[i]]:SetTexture(nil)
 	end
-	
+
+	Chat:StripTexture()
 	Tab:StripTexture()
-
-	_G[format("ChatFrame%sButtonFrameMinimizeButton", ID)]:Kill()
+	
 	_G[format("ChatFrame%sButtonFrame", ID)]:Kill()
-
 	_G[format("ChatFrame%sEditBoxFocusLeft", ID)]:SetAlpha(0)
 	_G[format("ChatFrame%sEditBoxFocusMid", ID)]:SetAlpha(0)
 	_G[format("ChatFrame%sEditBoxFocusRight", ID)]:SetAlpha(0)
-
 	_G[format("ChatFrame%sEditBoxLeft", ID)]:SetAlpha(0)
 	_G[format("ChatFrame%sEditBoxMid", ID)]:SetAlpha(0)
 	_G[format("ChatFrame%sEditBoxRight", ID)]:SetAlpha(0)
 
-	if (Scroll) then
-		Scroll:Kill()
-		ScrollBottom:Kill()
-	end
+	if (Scroll) then Scroll:Kill() end
+	if (ScrollBottom) then ScrollBottom:Kill() end
+	if (MinimizeButton) then MinimizeButton:Kill() end
 
-	MinimizeButton:Kill()
-	
 	Frame.ChatIsSkinned = true
 end
 
@@ -153,14 +151,11 @@ function CH:SetupChat()
 end
 
 function CH:Initialize()
-	if not (DB.Global.Chat.Enable) then
+	if (not DB.Global.Chat.Enable) then
 		return
 	end
-	
-	ChatFrameMenuButton:Kill()
-	ChatConfigFrameDefaultButton:Kill()
-	QuickJoinToastButton:Kill()
 
+	self:HideButtons()
 	self:SetupChat()
 	self:AddChatMenu()
 	self:AddHooks()

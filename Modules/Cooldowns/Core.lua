@@ -10,7 +10,7 @@ local unpack = unpack
 local min, floor = math.min, math.floor
 
 function Cooldown:GetFontScale(CD)
-    if not CD then 
+    if (not CD) then 
     	return 16 
     end
 

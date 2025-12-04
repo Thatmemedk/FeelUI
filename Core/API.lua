@@ -38,6 +38,7 @@ UI.Texts = {}
 UI.ClearTexture = UI.Retail and 0 or ""
 UI.Noop = function() return end
 UI.TexCoords = { 0.08, 0.92, 0.08, 0.92 }
+UI.SmoothBars = Enum.StatusBarInterpolation.ExponentialEaseOut
 
 -- Print
 function UI:Print(...)
@@ -229,16 +230,10 @@ function FeelUI:UpdateClassColors()
 	_G.RAID_CLASS_COLORS["PRIEST"].b = 1.00
 end
 
--- Update Smooth Amount
-function FeelUI:UpdateSmoothAmount()
-	UI:SetSmoothingAmount(DB.Global.General.SmoothingAmount)
-end
-
 -- Initialize The Core
 function FeelUI:Initialize()
 	self:SetUIScale()
 	self:UpdateMedia()
 	self:UpdateClassColors()
 	self:LoadCommands()
-	self:UpdateSmoothAmount()
 end

@@ -11,32 +11,18 @@ local unpack = unpack
 local UnitThreatSituation = UnitThreatSituation
 local GetThreatStatusColor = GetThreatStatusColor
 
-function UF:UpdateThreatHighlight(Frame)
-    if (Frame ~= Frame.unit) then
-        return
-    end
+function UF:CreateThreatHighlight(Frame)
+    local Threat = CreateFrame("Frame", nil, Frame)
+    Threat:SetInside()
+    Threat:CreateGlow(2.5, 3, 0, 0, 0, 0)
 
-    local Threat = UnitThreatSituation("player", Frame)
-    
-    if (Threat and Threat > 0) then
-        local R, G, B = GetThreatStatusColor(Threat)
-        self.Panel.Glow:SetBackdropBorderColor(R * 0.55, G * 0.55, B * 0.55, 0.8)
-    else
-        self.Panel.Glow:SetBackdropBorderColor(0, 0, 0, 0)
-    end
+    Frame.Threat = Threat
 end
 
 function UF:UpdateThreatHighlightRaid(Frame)
-    if (Frame ~= self.Frame) then
-        return
-    end
+    local ThreatRaid = CreateFrame("Frame", nil, Frame)
+    ThreatRaid:SetInside()
+    ThreatRaid:CreateGlow(2.5, 3, 0, 0, 0, 0)
 
-    local Threat = UnitThreatSituation(Frame)
-
-    if (Threat and Threat > 0) then
-        local R, G, B = GetThreatStatusColor(Threat)
-        self.Panel.Glow:SetBackdropBorderColor(R * 0.55, G * 0.55, B * 0.55, 0.8)
-    else
-        self.Panel.Glow:SetBackdropBorderColor(0, 0, 0, 0)
-    end
+    Frame.ThreatRaid = ThreatRaid
 end
