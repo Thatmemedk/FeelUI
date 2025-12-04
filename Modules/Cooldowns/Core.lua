@@ -51,13 +51,6 @@ function Cooldown:IsActionBarParent(CD)
     return Name:match("ActionButton") or Name:match("MultiBar")
 end
 
-function Cooldown:IsNameplateAuraParent(CD)
-    local Parent = CD:GetParent()
-    local Name = Parent and Parent:GetName() or ""
-    
-    return Name:match("NamePlate")
-end
-
 function Cooldown:UpdateCooldown(start, duration, enable, charges, maxcharges, forceShowdrawedge)
 	local Enabled = GetCVar("countdownForCooldowns")
 
@@ -88,8 +81,6 @@ function Cooldown:UpdateCooldown(start, duration, enable, charges, maxcharges, f
 
                 if (Cooldown:IsActionBarParent(self)) then
                     Region:Point("CENTER", InvisFrame, 0, 0)
-                elseif (Cooldown:IsNameplateAuraParent(self)) then
-                    Region:Point("CENTER", InvisFrame, 0, 7)
                 else
                 	Region:Point("CENTER", InvisFrame, 0, -7)
                 end

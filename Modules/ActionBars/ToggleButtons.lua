@@ -28,6 +28,12 @@ function AB:ToggleButtonOnClick()
 		self:Point("LEFT", _G.UIParent, 6, 0)
 		self.Texture:Point("CENTER", self, -2, 0)
 		self.Texture:SetTexture(Media.Global.PowerArrowRight)
+
+		if (DB.Global.UnitFrames.RaidFrames) then
+			if (FeelUI_Raid) then
+				FeelUI_Raid:Point("LEFT", _G.UIParent, 6, 1)
+			end
+		end
 	else
 		RegisterStateDriver(Bar, "visibility", "[combat][vehicleui][petbattle][overridebar] hide; show")
 		Bar:Show()
@@ -35,6 +41,12 @@ function AB:ToggleButtonOnClick()
 		self:Point("LEFT", _G.UIParent, 54, 0)
 		self.Texture:Point("CENTER", self, 2, 0)
 		self.Texture:SetTexture(Media.Global.PowerArrowLeft)
+
+		if (DB.Global.UnitFrames.RaidFrames) then
+			if (FeelUI_Raid) then
+				FeelUI_Raid:Point("LEFT", _G.UIParent, 78, 1)
+			end
+		end
 	end
 end
 
@@ -45,6 +57,12 @@ function AB:ToggleButtonOnEvent(event)
 
 	if (event == "PLAYER_REGEN_DISABLED") then
 		self:Point("LEFT", _G.UIParent, 6, 0)
+
+		if (DB.Global.UnitFrames.RaidFrames) then
+			if (FeelUI_Raid) then
+				FeelUI_Raid:Point("LEFT", _G.UIParent, 6, 1)
+			end
+		end
 	elseif (event == "PLAYER_REGEN_ENABLED") then
 		self:Point("LEFT", _G.UIParent, 54, 0)
 	end
@@ -52,6 +70,7 @@ end
 
 function AB:CreateToggleButtons()
     local ToggleButton = CreateFrame("Button", "FeelUI_ActionBarToggle", _G.UIParent)
+    ToggleButton:SetFrameStrata("HIGH")
     ToggleButton:Size(16, 352)
     ToggleButton:Point("LEFT", _G.UIParent, 54, 0)
     ToggleButton:HandleButton()

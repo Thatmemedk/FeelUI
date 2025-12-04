@@ -87,13 +87,14 @@ function UF:CreateBuffs(Frame)
     Buffs.NumAuras = 7
     Buffs.Spacing = 9
     Buffs.InitialAnchor = "TOPLEFT"
+    Buffs.Direction = "RIGHT"
     Buffs.Buttons = {}
 
-    -- Pre-allocate buttons to avoid creation in combat
     for i = 1, Buffs.NumAuras do
-        local btn = UF:CreateAuraButton(Buffs)
-        btn:Hide()
-        Buffs.Buttons[i] = btn
+        local Button = UF:CreateAuraButton(Buffs)
+        Button:Hide()
+
+        Buffs.Buttons[i] = Button
     end
 
     Frame.Buffs = Buffs
@@ -106,13 +107,34 @@ function UF:CreateDebuffs(Frame)
     Debuffs.NumAuras = 7
     Debuffs.Spacing = 9
     Debuffs.InitialAnchor = "TOPRIGHT"
+    Debuffs.Direction = "LEFT"
     Debuffs.Buttons = {}
 
-    -- Pre-allocate buttons to avoid creation in combat
     for i = 1, Debuffs.NumAuras do
-        local btn = UF:CreateAuraButton(Debuffs)
-        btn:Hide()
-        Debuffs.Buttons[i] = btn
+        local Button = UF:CreateAuraButton(Debuffs)
+        Button:Hide()
+
+        Debuffs.Buttons[i] = Button
+    end
+
+    Frame.Debuffs = Debuffs
+end
+
+function UF:CreatePartyDebuffs(Frame)
+    local Debuffs = CreateFrame("Frame", nil, Frame)
+    Debuffs:Size(32, 18)
+    Debuffs:Point("RIGHT", Frame, 40, 0)
+    Debuffs.NumAuras = 7
+    Debuffs.Spacing = 9
+    Debuffs.InitialAnchor = "TOPLEFT"
+    Debuffs.Direction = "RIGHT"
+    Debuffs.Buttons = {}
+
+    for i = 1, Debuffs.NumAuras do
+        local Button = UF:CreateAuraButton(Debuffs)
+        Button:Hide()
+
+        Debuffs.Buttons[i] = Button
     end
 
     Frame.Debuffs = Debuffs

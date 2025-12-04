@@ -33,13 +33,6 @@ function PowerBar:CreateBar()
 	local Text = InvisFrame:CreateFontString(nil, "OVERLAY")
 	Text:Point("CENTER", Bar, 0, 6)
 	Text:SetFontTemplate("Default", 16)
-
-	self:RegisterEvent("PLAYER_ENTERING_WORLD")
-	self:RegisterEvent("UNIT_POWER_FREQUENT")
-	self:RegisterEvent("UNIT_MAXPOWER")
-	self:RegisterEvent("UNIT_POWER_UPDATE")
-	self:RegisterEvent("UNIT_DISPLAYPOWER")
-	self:SetScript("OnEvent", self.OnEvent)
 	
 	self.Bar = Bar
 	self.Text = Text

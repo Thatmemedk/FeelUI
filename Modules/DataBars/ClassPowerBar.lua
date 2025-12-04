@@ -189,14 +189,14 @@ function ClassPowerBar:Update()
                 UI:UIFrameFadeIn(Segment, 0.25, Segment:GetAlpha(), 1)
             end
         else
+            --Segment:SetMinMaxValues(0, 1)
+            --Segment:SetValue(i <= Min and 1 or 0, UI.SmoothBars)
+
             if (i <= Min) then
                 UI:UIFrameFadeIn(Segment, 0.25, Segment:GetAlpha(), 1)
             else
                 UI:UIFrameFadeOut(Segment, 0.25, Segment:GetAlpha(), 0)
             end
-
-            --Segment:SetMinMaxValues(0, 1)
-            --Segment:SetValue(i <= Min and 1 or 0, UI.SmoothBars)
         end
 
         self.Bar[i] = Segment
@@ -230,13 +230,13 @@ function ClassPowerBar:OnEvent(event)
 end
 
 function ClassPowerBar:RegisterEvents()
-    self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-    self:RegisterEvent("PLAYER_TALENT_UPDATE")
-    self:RegisterEvent("SPELLS_CHANGED")
+    self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("UNIT_DISPLAYPOWER")
     self:RegisterEvent("UNIT_MAXPOWER")
     self:RegisterEvent("UNIT_POWER_FREQUENT")
-    self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+    self:RegisterEvent("PLAYER_TALENT_UPDATE")
+    self:RegisterEvent("SPELLS_CHANGED")
     self:SetScript("OnEvent", self.OnEvent)
 end
 

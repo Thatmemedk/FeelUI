@@ -1,9 +1,9 @@
 local UI, DB, Media, Language = select(2, ...):Call()
 
+-- Call Modules
 local MaelstromBar = UI:RegisterModule("MaelstromBar")
-local Panels = UI:CallModule("Panels")
 
--- Lib Globals
+-- WoW Globals
 local CreateFrame = CreateFrame
 local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
 local UnitClass = UnitClass
@@ -13,11 +13,18 @@ local GetSpecialization = GetSpecialization
 local Class = select(2, UnitClass("player"))
 
 -- Colors
+local R, G, B = unpack(UI.GetClassColors)
+
+-- Colors
 local Mult = 0.5
 
 function MaelstromBar:Update()
-    local Maelstorm = GetPlayerAuraBySpellID(344179)
-    local Stacks = Maelstorm and Maelstorm.applications or 0
+    if not self.Bar or not self.Bar:IsShown() then 
+        return 
+    end
+
+    local Maelstrom = GetPlayerAuraBySpellID(344179)
+    local Stacks = Maelstrom and Maelstrom.applications or 0
     local Max = 10
     local Spacing = 2
     local BarWidth = (222 - (Max - 1) * Spacing) / Max
@@ -25,12 +32,14 @@ function MaelstromBar:Update()
     self.Text:SetText(Stacks == 0 and "" or Stacks)
 
     for i = 1, Max do
-        local Bar = self.Bar[i]
-        local Backdrop = self.Backdrop[i]
+        local Bar = self.Bars[i]
+        local Backdrop = self.Backdrops[i]
 
         if (not Bar) then
             Bar = CreateFrame("StatusBar", nil, self.Bar)
             Bar:SetStatusBarTexture(Media.Global.Texture)
+
+            self.Bars[i] = Bar
         end
 
         if (not Backdrop) then
@@ -38,6 +47,8 @@ function MaelstromBar:Update()
             Backdrop:SetStatusBarTexture(Media.Global.Texture)
             Backdrop:CreateBackdrop()
             Backdrop:CreateShadow()
+
+            self.Backdrops[i] = Backdrop
         end
 
         Bar:Size(BarWidth, 12)
@@ -47,22 +58,18 @@ function MaelstromBar:Update()
             Bar:Point("LEFT", self.Bar, "LEFT", 0, 0)
             Backdrop:Point("LEFT", self.Backdrop, "LEFT", 0, 0)
         else
-            Bar:Point("LEFT", self.Bar[i-1], "RIGHT", Spacing, 0)
-            Backdrop:Point("LEFT", self.Backdrop[i-1], "RIGHT", Spacing, 0)
+            Bar:Point("LEFT", self.Bars[i-1], "RIGHT", Spacing, 0)
+            Backdrop:Point("LEFT", self.Backdrops[i-1], "RIGHT", Spacing, 0)
         end
 
-        local R, G, B = unpack(UI.GetClassColors)
         Bar:SetStatusBarColor(R, G, B)
         Backdrop:SetStatusBarColor(R * Mult, G * Mult, B * Mult, 0.5)
 
-        if (i <= Stacks) then
-            UI:UIFrameFadeIn(Bar, 0.25, Bar:GetAlpha(), 1)
-        else
-            UI:UIFrameFadeOut(Bar, 0.25, Bar:GetAlpha(), 0)
+        if (i <= Stacks) then 
+            UI:UIFrameFadeIn(Bar, 0.25, Bar:GetAlpha(), 1) 
+        else 
+            UI:UIFrameFadeOut(Bar, 0.25, Bar:GetAlpha(), 0) 
         end
-
-        self.Bar[i] = Bar
-        self.Backdrop[i] = Backdrop
     end
 
     self.Bar.Max = Max
@@ -71,21 +78,20 @@ end
 function MaelstromBar:UpdateSpec()
     local Spec = GetSpecialization()
 
-    if (Class == "SHAMAN") then
-        if (Spec == 2) then
-            self.Bar:Show()
-            self.Backdrop:Show()
-        else
-            self.Bar:Hide()
-            self.Backdrop:Hide()
-        end
+    if (Class == "SHAMAN" and Spec == 2) then
+        self.Bar:Show()
+        self.Backdrop:Show()
     else
         self.Bar:Hide()
         self.Backdrop:Hide()
     end
 end
 
-function MaelstromBar:OnEvent(event)
+function MaelstromBar:OnEvent(event, unit)
+    if (event == "UNIT_AURA" and unit ~= "player") then 
+        return 
+    end
+
     if (event == "PLAYER_ENTERING_WORLD" or event == "UNIT_AURA" or event == "SPELL_UPDATE_COOLDOWN") then
         self:Update()
     end
@@ -119,21 +125,23 @@ function MaelstromBar:CreateBar()
     self.Bar = Bar
     self.Backdrop = Backdrop
     self.Text = Text
+    self.Bars = {}
+    self.Backdrops = {}
 end
 
 function MaelstromBar:RegisterEvents()
+    self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("UNIT_AURA")
     self:RegisterEvent("SPELL_UPDATE_COOLDOWN")
     self:RegisterEvent("SPELLS_CHANGED")
     self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
     self:RegisterEvent("PLAYER_TALENT_UPDATE")
-    self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:SetScript("OnEvent", self.OnEvent)
 end
 
 function MaelstromBar:Initialize()
     if (not DB.Global.DataBars.MaelstromBar or Class ~= "SHAMAN") then
-        return 
+        return
     end
 
     --self:CreateBar()

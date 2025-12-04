@@ -16,46 +16,51 @@ local Class = select(2, UnitClass("player"))
 TotemBar.Buttons = {}
 
 function TotemBar:CreateBar()
-	for i = 1, _G.MAX_TOTEMS do
-		local Totem = CreateFrame("Frame", nil, _G.UIParent)
-		Totem:SetID(i)
-		Totem:Size(36, 16)
-		Totem:SetTemplate()
-		Totem:CreateShadow()
-		Totem:SetShadowOverlay()
-		Totem:SetAlpha(0)
-		
-		if (i == 1) then
-			Totem:Point(unpack(DB.Global.DataBars.TotemBarPoint))
-		else
-			Totem:Point("LEFT", self.Buttons[i-1], "RIGHT", 3, 0)
-		end
-		
-		local Icon = Totem:CreateTexture(nil, "OVERLAY")
-		Icon:SetInside()
-		UI:KeepAspectRatio(Totem, Icon)
-		
-		local Cooldown = CreateFrame("Cooldown", nil, Totem, "CooldownFrameTemplate")
-		Cooldown:SetInside()
-		Cooldown:SetReverse(false)
-		Cooldown:SetDrawBling(false)
-		Cooldown:SetDrawEdge(false)
+    local TotemSize = 36
+    local Spacing = 2
+    local TotalWidth = (TotemSize * _G.MAX_TOTEMS) + (Spacing * (_G.MAX_TOTEMS - 1))
+    local StartX = -TotalWidth/2
 
-		if (Class == "SHAMAN") then
-			local Destroy = CreateFrame("Button", nil, Totem, "SecureUnitButtonTemplate")
-			Destroy:SetFrameLevel(Totem:GetFrameLevel() + 5)
-			Destroy:RegisterForClicks("RightButtonUp")
-			Destroy:SetAllPoints(Totem)
-			Destroy:SetID(i)
-			Destroy:SetAttribute("type2", "destroytotem")
-			Destroy:SetAttribute("*totem-slot*", i)
-			Destroy:StyleButton()
-		end
-		
-		self.Buttons[i] = Totem
-		self.Buttons[i].Icon = Icon
-		self.Buttons[i].Cooldown = Cooldown
-	end
+    for i = 1, _G.MAX_TOTEMS do
+        local Totem = CreateFrame("Frame", nil, _G.UIParent)
+        Totem:SetID(i)
+        Totem:Size(TotemSize, 16)
+        Totem:SetTemplate()
+        Totem:CreateShadow()
+        Totem:SetShadowOverlay()
+        Totem:SetAlpha(0)
+
+        if (i == 1) then
+            Totem:Point("BOTTOMLEFT", _G.UIParent, "BOTTOM", StartX, 282)
+        else
+            Totem:Point("LEFT", self.Buttons[i-1], "RIGHT", Spacing, 0)
+        end
+
+        local Icon = Totem:CreateTexture(nil, "OVERLAY")
+        Icon:SetInside()
+        UI:KeepAspectRatio(Totem, Icon)
+
+        local Cooldown = CreateFrame("Cooldown", nil, Totem, "CooldownFrameTemplate")
+        Cooldown:SetInside()
+        Cooldown:SetReverse(false)
+        Cooldown:SetDrawBling(false)
+        Cooldown:SetDrawEdge(false)
+
+        if (Class == "SHAMAN") then
+            local Destroy = CreateFrame("Button", nil, Totem, "SecureUnitButtonTemplate")
+            Destroy:SetFrameLevel(Totem:GetFrameLevel() + 5)
+            Destroy:RegisterForClicks("RightButtonUp")
+            Destroy:SetAllPoints(Totem)
+            Destroy:SetID(i)
+            Destroy:SetAttribute("type2", "destroytotem")
+            Destroy:SetAttribute("*totem-slot*", i)
+            Destroy:StyleButton()
+        end
+
+        self.Buttons[i] = Totem
+        self.Buttons[i].Icon = Icon
+        self.Buttons[i].Cooldown = Cooldown
+    end
 end
 
 function TotemBar:OnEvent(event)
@@ -63,17 +68,19 @@ function TotemBar:OnEvent(event)
         local TotemBars = self.Buttons[i]
         local PlayerHaveTotem, Name, Start, Duration, Icon = GetTotemInfo(i)
 
-        if (PlayerHaveTotem and Duration) then
-            TotemBars.Icon:SetTexture(Icon)
+        if (PlayerHaveTotem) then
+            UI:UIFrameFadeIn(TotemBars, 0.25, TotemBars:GetAlpha(), 1)
+
+            if (Icon) then
+                TotemBars.Icon:SetTexture(Icon)
+            end
 
             if (Duration and Start) then
                 TotemBars.Cooldown:SetCooldown(Start, Duration)
             end
-
-            UI:UIFrameFadeIn(TotemBars, 0.5, TotemBars:GetAlpha(), 1)
-        else
-            UI:UIFrameFadeOut(TotemBars, 0.5, TotemBars:GetAlpha(), 0)
-      	end
+      	else
+            UI:UIFrameFadeOut(TotemBars, 0.25, TotemBars:GetAlpha(), 0)
+        end
     end
 end
 

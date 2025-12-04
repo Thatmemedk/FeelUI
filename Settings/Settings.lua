@@ -104,7 +104,6 @@ DB.Global = {
 		StaggerBarPoint = { "BOTTOM", _G.UIParent, 0, 266 },
 		SoulFragmentsBarPoint = { "BOTTOM", _G.UIParent, 0, 266 },
 		MaelstromBarPoint = { "BOTTOM", _G.UIParent, 0, 266 },
-		TotemBarPoint = { "BOTTOM", _G.UIParent, 0, 282 },
 	},
 
 	DataTexts = {
@@ -157,6 +156,8 @@ DB.Global = {
 	UnitFrames = {
 		Enable = true,
 		BossFrames = true,
+		PartyFrames = false,
+		RaidFrames = true,
 		-- Health / Power
 		HealthBarColor = { 0.1, 0.1, 0.1 },
 		-- Castbar
@@ -165,7 +166,10 @@ DB.Global = {
 		-- Points Settings
 		PlayerPoint = { "BOTTOMLEFT", _G.UIParent, 482, 244 },
 		TargetPoint = { "BOTTOMRIGHT", _G.UIParent, -482, 244 },
-		BossPoint = { "RIGHT", _G.UIParent, -272, -122 },
+		BossPoint = { "RIGHT", _G.UIParent, -252, -122 },
+		PartyPoint = { "LEFT", _G.UIParent, 219, 1 },
+		RaidPoint = { "LEFT", _G.UIParent, 78, -1 },
+		-- CastBars
 		CastBarPlayerPoint = { "CENTER", _G.UIParent, 0, -282 },
 	},
 }

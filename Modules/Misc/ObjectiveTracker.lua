@@ -132,6 +132,7 @@ end
 
 function ObjectiveTracker:CreateToggleButtons()
     local ToggleButton = CreateFrame("Button", "FeelUI_ObjectiveTrackerToggle", _G.UIParent)
+    ToggleButton:SetFrameStrata("HIGH")
     ToggleButton:Size(16, 352)
     ToggleButton:Point("RIGHT", _G.UIParent, -6, 0)
     ToggleButton:HandleButton()

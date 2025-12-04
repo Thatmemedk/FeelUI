@@ -88,24 +88,22 @@ function RuneBar:Update()
             Bar.Duration = Elapsed
             Bar.Max = Duration
             Bar:SetMinMaxValues(0, Duration)
-            Bar:SetValue(Elapsed)
+            Bar:SetValue(Elapsed, UI.SmoothBars)
 
             if (RuneIsReady) then
                 Bar:SetScript("OnUpdate", nil)
-                Bar:SetValue(Duration)
+                Bar:SetValue(Duration, UI.SmoothBars)
 
                 UI:UIFrameFadeIn(Bar, 0.25, Bar:GetAlpha(), 1)
             else
                 Bar:SetScript("OnUpdate", self.OnUpdate)
 
-                UI:UIFrameFadeOut(Bar, 0.25, Bar:GetAlpha(), 0.5)
+                UI:UIFrameFadeOut(Bar, 0.25, Bar:GetAlpha(), 0.50)
             end
         else
             Bar:SetMinMaxValues(0, 1)
-            Bar:SetValue(1)
+            Bar:SetValue(1, UI.SmoothBars)
             Bar:SetScript("OnUpdate", nil)
-
-            UI:UIFrameFadeOut(Bar, 0.25, Bar:GetAlpha(), 0.5)
         end
     end
 end

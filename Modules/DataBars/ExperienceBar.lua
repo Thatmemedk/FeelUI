@@ -23,6 +23,39 @@ local GameTooltip = _G.GameTooltip
 -- Locals
 local Mult = 2.5
 
+function ExperienceBar:CreateBar()
+	local Bar = CreateFrame("StatusBar",  nil, _G.UIParent)
+	Bar:Size(322, 12)
+	Bar:Point("TOP", _G.UIParent, 0, -12)
+	Bar:SetStatusBarTexture(Media.Global.Texture)
+	Bar:SetStatusBarColor(0.6 * Mult, 0, 0.6 * Mult, 0.7)
+	Bar:CreateBackdrop()
+	Bar:CreateShadow()
+	Bar:SetScript("OnEnter", self.OnEnter)
+	Bar:SetScript("OnLeave", self.OnLeave)
+	Bar:SetAlpha(0.25)
+	
+	local BarRested = CreateFrame("StatusBar", nil, Bar)
+	BarRested:Size(171, 8)
+	BarRested:SetInside()
+	BarRested:SetStatusBarTexture(Media.Global.Texture) 
+	BarRested:SetStatusBarColor(0, 200/255 * Mult, 1 * Mult, 0.7)
+	BarRested:SetFrameLevel(Bar:GetFrameLevel() - 1)
+	BarRested:Hide()
+
+	local InvisFrame = CreateFrame("Frame", nil, Bar)
+	InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
+	InvisFrame:SetInside()
+
+	local Text = InvisFrame:CreateFontString(nil, "OVERLAY")
+	Text:Point("CENTER", Bar, 0, 6)
+	Text:SetFontTemplate("Default", 16)
+
+	self.Bar = Bar
+	self.BarRested = BarRested
+	self.Text = Text
+end
+
 function ExperienceBar:GetXP(Unit)
 	if (Unit == "pet") then
 		return GetPetExperience()
@@ -57,50 +90,17 @@ function ExperienceBar:OnLeave()
 	UI:UIFrameFadeOut(self, 1, self:GetAlpha(), 0.25)
 end
 
-function ExperienceBar:CreateBar()
-	local Bar = CreateFrame("StatusBar",  nil, _G.UIParent)
-	Bar:Size(322, 12)
-	Bar:Point("TOP", _G.UIParent, 0, -12)
-	Bar:SetStatusBarTexture(Media.Global.Texture)
-	Bar:SetStatusBarColor(0.6 * Mult, 0, 0.6 * Mult, 0.7)
-	Bar:CreateBackdrop()
-	Bar:CreateShadow()
-	Bar:SetScript("OnEnter", self.OnEnter)
-	Bar:SetScript("OnLeave", self.OnLeave)
-	Bar:SetAlpha(0.25)
-	
-	local BarRested = CreateFrame("StatusBar", nil, Bar)
-	BarRested:Size(171, 8)
-	BarRested:SetInside()
-	BarRested:SetStatusBarTexture(Media.Global.Texture) 
-	BarRested:SetStatusBarColor(0, 200/255 * Mult, 1 * Mult, 0.7)
-	BarRested:SetFrameLevel(Bar:GetFrameLevel() - 1)
-	BarRested:Hide()
-
-	local InvisFrame = CreateFrame("Frame", nil, Bar)
-	InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
-	InvisFrame:SetInside()
-
-	local Text = InvisFrame:CreateFontString(nil, "OVERLAY")
-	Text:Point("CENTER", Bar, 0, 6)
-	Text:SetFontTemplate("Default", 16)
-
-	self.Bar = Bar
-	self.BarRested = BarRested
-	self.Text = Text
-end
-
 function ExperienceBar:OnEvent(event)
 	local Min, Max = ExperienceBar:GetXP("player")
 	local Rested = GetXPExhaustion()
 	local IsRested = GetRestState()
 
 	self.Bar:SetMinMaxValues(0, Max)
-	self.Bar:SetValue(Min)
+	self.Bar:SetValue(Min, UI.SmoothBars)
 
 	if (IsRested == 1 and Rested) then
 		self.BarRested:SetMinMaxValues(0, Max)
-		self.BarRested:SetValue(Rested + Min)
+		self.BarRested:SetValue(Rested + Min, UI.SmoothBars)
 		self.BarRested:Show()
 	else
 		self.BarRested:Hide()

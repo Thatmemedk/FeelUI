@@ -48,68 +48,6 @@ UF.SecureFrame:SetAllPoints()
 UF.SecureFrame:SetFrameStrata("LOW")
 RegisterStateDriver(UF.SecureFrame, "visibility", "[petbattle] hide; show")
 
---- HIDE BLIZZARD UF
-
-function UF:SafeHide(Frame, SkipParent)
-    if not Frame or UF.HiddenFrames[Frame] then 
-        return 
-    end
-
-    Frame:UnregisterAllEvents()
-    Frame:Hide()
-
-    if not SkipParent and UI.HiddenParent and not InCombatLockdown() then
-        Frame:SetParent(UI.HiddenParent)
-    end
-
-    UF.HiddenFrames[Frame] = true
-end
-
-function UF:HideBlizzardFrames()
-    UF:SafeHide(_G.PlayerFrame)
-    UF:SafeHide(_G.TargetFrame)
-    UF:SafeHide(_G.FocusFrame)
-    UF:SafeHide(_G.TargetFrameToT)
-    UF:SafeHide(_G.PetFrame)
-
-    if (_G.PlayerCastingBarFrame) then
-        UF:SafeHide(_G.PlayerCastingBarFrame)
-    end
-
-    if (_G.PetCastingBarFrame) then
-        UF:SafeHide(_G.PetCastingBarFrame)
-    end
-
-    if (_G.TargetFrameSpellBar) then
-        UF:SafeHide(_G.TargetFrameSpellBar)
-    end
-
-    if (_G.FocusFrameSpellBar) then
-        UF:SafeHide(_G.FocusFrameSpellBar)
-    end
-
-    for i = 1, 5 do
-        UF:SafeHide(_G["Boss" .. i .. "TargetFrameSpellBar"])
-        UF:SafeHide(_G["Boss"..i.."TargetFrame"])
-    end
-end
-
-function UF:NPHideBlizzardFrames(Frame)
-    local Border = Frame.UnitFrame.border
-    local Highlight = Frame.UnitFrame.selectionHighlight
-    local Health = Frame.UnitFrame.healthBar
-    local Name = Frame.UnitFrame.name
-    local Level = Frame.UnitFrame.levelText
-    local Classif = Frame.UnitFrame.ClassificationFrame
-
-    if Border then Border:Hide() end
-    if Highlight then Highlight:Hide()  end
-    if Health then Health:Hide()  end
-    if Name then Name:SetAlpha(0)  end
-    if Level then Level:Hide() end
-    if Classif then Classif:Hide()  end
-end
-
 --- UTF8 & NAME ABBREV
 
 local function UTF8Sub(self, i, dots)
@@ -200,12 +138,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
         local Button = Auras.Buttons[ActiveButtons + 1]
 
         if not (Button) then
-            if InCombatLockdown() then
-                break
-            end
-
-            Button = UF:CreateAuraButton(Auras)
-            Auras.Buttons[ActiveButtons + 1] = Button
+            break
         end
 
         if (Button.Icon) then
@@ -252,8 +185,11 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
         end
         --]]
 
+        local Direction = Auras.Direction or "RIGHT"
+        local OffsetMultiplier = (Direction == "RIGHT") and 1 or -1
+
         Button:ClearAllPoints()
-        Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, (ActiveButtons) * (Size + Spacing) * (IsDebuff and -1 or 1), 0)
+        Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, ActiveButtons * (Size + Spacing) * OffsetMultiplier, 0)
         Button:Show()
 
         -- CACHE For Tooltip
@@ -301,13 +237,13 @@ function UF:UpdateCastBars(Frame)
     Castbar.Delay = Castbar.Delay or 0
 
     if not (Castbar.Channeling) then
-        Castbar:SetValue(Elapsed, Enum.StatusBarInterpolation.ExponentialEaseOut)
+        Castbar:SetValue(Elapsed)
 
         if (Castbar.CustomTimeText) then
             Castbar:CustomTimeText(Elapsed)
         end
     else
-        Castbar:SetValue(Remaining, Enum.StatusBarInterpolation.ExponentialEaseOut)
+        Castbar:SetValue(Remaining)
 
         if (Castbar.CustomTimeText) then
             Castbar:CustomTimeText(Remaining)
@@ -424,94 +360,6 @@ function UF:PostCastFailed()
     UI:UIFrameFadeOut(self, UF.FadeInTime, self:GetAlpha(), 0)
 end
 
---- CREATE UNITFRAMES
-
-function UF:Spawn(Unit, Width, Height, Orientation)
-    if (not Unit) then 
-        return 
-    end
-
-    local Frame = CreateFrame("Button", "UF_FeelUI_" .. Unit, UF.SecureFrame, "SecureUnitButtonTemplate, PingableUnitFrameTemplate")
-    Frame.unit = Unit
-
-    Frame:Size(Width or 228, Height or 36)
-    Frame:SetAttribute("unit", Unit)
-    Frame:RegisterForClicks("AnyUp")
-    Frame:SetAttribute("type1", "target")
-    Frame:SetAttribute("type2", "togglemenu")
-
-    -- STORE IN CACHE
-    self.Frames[Unit] = Frame
-
-    -- CREATE ELEMENTS
-    --self:CreateOnEnterLeave(Frame)
-    self:CreatePanels(Frame)
-    self:CreateHightlight(Frame)
-    self:CreateFadeInOut(Frame)
-    self:CreateHealth(Frame, Height, Orientation)
-    self:CreateRaidIcon(Frame)
-
-    if (Unit == "player") then
-        self:CreateCombatIcon(Frame)
-        self:CreateRestingIcon(Frame)
-        self:CreatePlayerTexts(Frame)
-        self:CreatePlayerCastbar(Frame)
-        self:CreatePortrait(Frame)
-        --self:CreateHealthPrediction(Frame)
-        --self:CreateBuffs(Frame)
-    elseif (Unit == "target") then
-        self:CreateTargetTexts(Frame)
-        self:CreatePortrait(Frame)
-        --self:CreateHealthPrediction(Frame)
-        --self:CreateTargetCastbar(Frame)
-        self:CreateBuffs(Frame)
-        self:CreateDebuffs(Frame)
-        self:CreateThreatHighlight(Frame)
-    elseif (Unit == "targettarget") then
-        self:CreateNameTextCenter(Frame)
-        self:CreateThreatHighlight(Frame)
-        --self:CreatePortrait(Frame)
-    elseif (Unit == "pet") then
-        self:CreateNameTextCenter(Frame)
-        self:CreateThreatHighlight(Frame)
-        --self:CreatePortrait(Frame)
-        --self:CreatePetCastbar(Frame)
-    elseif (Unit == "focus") then
-        self:CreateNameTextCenter(Frame)
-        self:CreateThreatHighlight(Frame)
-        --self:CreateFocusCastbar(Frame)
-    elseif (Unit:match("^boss%d$")) then
-        self:CreateTargetTexts(Frame)
-        self:CreateThreatHighlight(Frame)
-        --self:CreatePortrait(Frame)
-        --self:CreateBossCastbar(Frame)
-    end
-
-    return Frame
-end
-
-function UF:CreateNameplate(Plate, Unit)
-    if (not Plate or not Unit) then
-        return
-    end
-
-    if (Plate.FeelUIPlate) then
-        return
-    end
-
-    local Frame = CreateFrame("Frame", "FeelUI_Nameplates", Plate)
-    Frame:SetAllPoints()
-    Plate.FeelUIPlate = Frame
-
-    self:NPCreatePanels(Frame)
-    --self:NPCreateTargetIndicator(Frame, Unit)
-    self:NPCreateHealth(Frame)
-    self:NPCreateHealthText(Frame)
-    --self:CreateName(Frame, Unit)
-
-    Frame.IsCreated = true
-end
-
 --- UPDATE HEALTH
 
 function UF:UpdateHealth(Frame)
@@ -523,7 +371,7 @@ function UF:UpdateHealth(Frame)
     end
 
     Frame.Health:SetMinMaxValues(0, Max)
-    Frame.Health:SetValue(Min, Enum.StatusBarInterpolation.ExponentialEaseOut)
+    Frame.Health:SetValue(Min, UI.SmoothBars)
 
     if not (UnitIsConnected(Unit)) then
         Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
@@ -536,37 +384,6 @@ function UF:UpdateHealth(Frame)
         Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
     else
         Frame.Health:SetStatusBarColor(0.1, 0.1, 0.1, 0.7)
-        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
-    end
-end
-
-function UF:NPUpdateHealth(Frame, Unit)
-    if (not Frame or not Unit) then
-        return
-    end
-
-    if (not Frame.Health) then
-        return
-    end
-
-    local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
-    Frame.Health:SetMinMaxValues(0, Max)
-    Frame.Health:SetValue(Min, Enum.StatusBarInterpolation.ExponentialEaseOut)
-
-    local Reaction = UnitReaction and UnitReaction(Unit, "player") or 5
-    local Color = UI.Colors and UI.Colors.Reaction and UI.Colors.Reaction[Reaction]
-
-    if not (UnitIsConnected(Unit)) then
-        Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
-        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
-    elseif (UnitIsTapDenied(Unit) or UnitIsGhost(Unit)) then
-        Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
-        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
-    elseif (UnitIsDead(Unit)) then
-        Frame.Health:SetStatusBarColor(0.25, 0, 0)
-        Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
-    else
-        Frame.Health:SetStatusBarColor(Color[1], Color[2], Color[3], 0.7)
         Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
     end
 end
@@ -591,19 +408,6 @@ function UF:UpdateHealthTextPer(Frame)
     end
 
     Frame.HealthTextPer:SetFormattedText("%d%%", Percent or 0)
-end
-
-function UF:NPUpdateHealthText(Frame, Unit)
-    if (not Frame or not Unit) then
-        return
-    end
-
-    if (not Frame.HealthText) then
-        return
-    end
-
-    local Percent = UnitHealthPercent(Unit, false, true)
-    Frame.HealthText:SetFormattedText("%d%%", Percent or 0)
 end
 
 -- HEAL PRED
@@ -688,22 +492,18 @@ function UF:UpdateName(Frame)
     end
 end
 
-function UF:NPUpdateName(Frame, Unit)
-    if (not Frame or not Unit) then
-        return
-    end
+function UF:UpdateNameRaid(Frame)
+    local Unit = Frame.unit
 
-    if (not Frame.Name) then
+    if not (Frame.Name) then
         return
     end
 
     local Name = UnitName(Unit) or ""
-    local Level = UnitLevel(Unit) or -1
-    local NameColor, LevelColor, LevelText
 
     if (Name) then
-        --Frame.Name:SetText(UTF8Sub(Name, 12))
-        Frame.Name:SetText(Name)
+        Frame.Name:SetText(UTF8Sub(Name, 8))
+        --Frame.Name:SetText(Name)
     end
 
     if UnitIsPlayer(Unit) then
@@ -721,45 +521,37 @@ function UF:NPUpdateName(Frame, Unit)
             Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
         end
     end
+end
 
-    --[[
+function UF:UpdateNameParty(Frame)
+    local Unit = Frame.unit
+
+    if not (Frame.Name) then
+        return
+    end
+
+    local Name = UnitName(Unit) or ""
+
+    if (Name) then
+        Frame.Name:SetText(UTF8Sub(Name, 12))
+        --Frame.Name:SetText(Name)
+    end
+
     if UnitIsPlayer(Unit) then
         local _, Class = UnitClass(Unit)
         local Color = RAID_CLASS_COLORS[Class]
 
         if (Color) then
-            NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
+            Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
         end
     else
         local Reaction = UnitReaction and UnitReaction(Unit, "player") or 5
         local Color = UI.Colors and UI.Colors.Reaction and UI.Colors.Reaction[Reaction]
 
         if (Color) then
-            NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
+            Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
         end
     end
-
-    if (Level < 0) then
-        LevelColor = "|cffff0000"
-    elseif (Level == 0) then
-        LevelColor = "|cffcccccc"
-    else
-        local DiffColor = GetQuestDifficultyColor(Level)
-        LevelColor = format("|cff%02x%02x%02x", DiffColor.r*255, DiffColor.g*255, DiffColor.b*255)
-    end
-
-    if (Level < 0) then
-        LevelText = "??"
-    elseif (Level == 0) then
-        LevelText = "?"
-    else
-        LevelText = tostring(Level)
-    end
-
-    if (Name and Level) then
-        Frame.Name:SetText(format("%s%s|r %s%s|r", NameColor or "", Name, LevelColor or "", LevelText))
-    end
-    --]]
 end
 
 --- UPDATE NAME & LEVEL
@@ -931,7 +723,7 @@ function UF:UpdateThreatHighlightRaid(Frame)
         return
     end
 
-    if (not Frame.Threat) then
+    if (not Frame.ThreatRaid) then
         return
     end
 
@@ -943,54 +735,6 @@ function UF:UpdateThreatHighlightRaid(Frame)
     else
         Frame.ThreatRaid.Glow:SetBackdropBorderColor(0, 0, 0, 0)
     end
-end
-
--- SPAWN THE UNITFRAMES
-
-function UF:CreateUF()
-    -- PLAYER
-    local Player = UF:Spawn("player", 228, 36)
-    Player:Point(unpack(DB.Global.UnitFrames.PlayerPoint))
-
-    -- TARGET
-    local Target = UF:Spawn("target", 228, 36)
-    Target:Point(unpack(DB.Global.UnitFrames.TargetPoint))
-    RegisterUnitWatch(Target)
-
-    -- TARGET OF TARGET
-    local TargetTarget = UF:Spawn("targettarget", 114, 28)
-    TargetTarget:Point("BOTTOMRIGHT", Target, 0, -58)
-    RegisterUnitWatch(TargetTarget)
-
-    -- FOCUS
-    local Focus = UF:Spawn("focus", 114, 28)
-    Focus:Point("BOTTOMRIGHT", TargetTarget, 0, -42)
-    RegisterUnitWatch(Focus)
-
-    -- PET
-    local Pet = UF:Spawn("pet", 114, 28)
-    Pet:Point("BOTTOMLEFT", Player, 0, -58)
-    RegisterUnitWatch(Pet)
-
-    -- BOSS FRAMES
-    for i = 1, 5 do
-        local Boss = UF:Spawn("boss"..i, 204, 36)
-
-        if (i == 1) then
-            Boss:Point(unpack(DB.Global.UnitFrames.BossPoint))
-        else
-            Boss:Point("BOTTOM", self.Frames["boss"..(i-1)], "TOP", 0, 28)
-        end
-
-        RegisterUnitWatch(Boss)
-    end
-
-    -- CACHE REFERENCES
-    self.Frames.Player = Player
-    self.Frames.Target = Target
-    self.Frames.TargetTarget = TargetTarget
-    self.Frames.Focus = Focus
-    self.Frames.Pet = Pet
 end
 
 --- UPDATE FRAMES
@@ -1027,22 +771,6 @@ function UF:UpdateFrame(Unit)
     if (Frame.ThreatRaid) then self:UpdateThreatHighlightRaid(Frame) end
 end
 
-function UF:UpdateNameplate(Frame, Unit)
-    if (not Frame or not UnitExists(Unit)) then
-        return 
-    end
-
-    -- HEALTH
-    if (Frame.Health) then self:NPUpdateHealth(Frame, Unit) end
-    if (Frame.HealthText) then self:NPUpdateHealthText(Frame, Unit) end
-    -- NAME
-    if (Frame.Name) then self:NPUpdateName(Frame, Unit) end
-    -- TARGET INDICATORS
-    if (Frame.TargetIndicatorLeft and Frame.TargetIndicatorRight) then self:NPHighlightOnNameplateTarget(Frame, Unit) end
-    -- THREAT
-    if (Frame.Threat) then self:UpdateThreatHighlight(Frame) end
-end
-
 -- SECURE UPDATES
 
 function UF:SecureUpdate()
@@ -1075,7 +803,7 @@ end
 
 function UF:OnEvent(event, arg1)
     local FramesUF = UF.Frames[arg1]
-    --local FramesNP
+    local FramesNP
 
     --if (type(arg1) == "string") then
     --    FramesNP = C_NamePlate.GetNamePlateForUnit(arg1)
@@ -1094,7 +822,7 @@ function UF:OnEvent(event, arg1)
         end)
 
         -- UNITFRAMES UPDATE    
-    elseif (event == "PLAYER_TARGET_CHANGED") then
+    elseif (event == "PLAYER_TARGET_CHANGED" or event == "UNIT_TARGETABLE_CHANGED") then
         for Unit, Frame in pairs(UF.Frames) do
             UF:UpdateFrame(Unit)
         end
@@ -1233,18 +961,6 @@ function UF:OnEvent(event, arg1)
     --]]
 end
 
--- SET CVAR
-
-function UF:SetCVarOnLogin()
-    SetCVar("nameplateShowSelf", 0)
-    SetCVar("nameplateMotion", 1)
-    SetCVar("nameplateShowAll", 1)
-    SetCVar("nameplateShowFriends", 0)
-    SetCVar("nameplateShowEnemies", 1)
-    SetCVar("nameplateShowEnemyMinion", 1)
-    SetCVar("nameplateShowEnemyMinus", 1)
-end
-
 -- INITIALIZE & REGISTER EVENTS
 
 function UF:CallEvents()
@@ -1272,6 +988,7 @@ function UF:CallEvents()
     -- UNITS
     SecureEventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
     SecureEventFrame:RegisterEvent("PLAYER_FOCUS_CHANGED")
+    SecureEventFrame:RegisterEvent("UNIT_TARGETABLE_CHANGED")
     SecureEventFrame:RegisterEvent("UNIT_TARGET")
     SecureEventFrame:RegisterEvent("UNIT_PET")
     -- CASTBAR
@@ -1303,6 +1020,10 @@ function UF:CallEvents()
 end
 
 function UF:Initialize()
+    if (not DB.Global.UnitFrames.Enable) then
+        return
+    end
+
     -- HIDE
     self:HideBlizzardFrames()
     -- SPAWN UNITFRAMES

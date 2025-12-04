@@ -1,0 +1,200 @@
+local UI, DB, Media, Language = select(2, ...):Call() 
+
+-- Call Modules
+local UF = UI:CallModule("UnitFrames")
+
+--- HIDE BLIZZARD UF
+
+function UF:SafeHide(Frame, SkipParent)
+    if not Frame or UF.HiddenFrames[Frame] then 
+        return 
+    end
+
+    Frame:UnregisterAllEvents()
+    Frame:Hide()
+
+    if not SkipParent and UI.HiddenParent and not InCombatLockdown() then
+        Frame:SetParent(UI.HiddenParent)
+    end
+
+    UF.HiddenFrames[Frame] = true
+end
+
+function UF:HideBlizzardFrames()
+    UF:SafeHide(_G.PlayerFrame)
+    UF:SafeHide(_G.TargetFrame)
+    UF:SafeHide(_G.FocusFrame)
+    UF:SafeHide(_G.TargetFrameToT)
+    UF:SafeHide(_G.PetFrame)
+
+    if (_G.PlayerCastingBarFrame) then
+        UF:SafeHide(_G.PlayerCastingBarFrame)
+    end
+
+    if (_G.PetCastingBarFrame) then
+        UF:SafeHide(_G.PetCastingBarFrame)
+    end
+
+    if (_G.TargetFrameSpellBar) then
+        UF:SafeHide(_G.TargetFrameSpellBar)
+    end
+
+    if (_G.FocusFrameSpellBar) then
+        UF:SafeHide(_G.FocusFrameSpellBar)
+    end
+
+    for i = 1, 5 do
+        UF:SafeHide(_G["Boss" .. i .. "TargetFrameSpellBar"])
+        UF:SafeHide(_G["Boss"..i.."TargetFrame"])
+    end
+
+    UF:SafeHide(_G.PartyFrame)
+
+    for Frames in PartyFrame.PartyMemberFramePool:EnumerateActive() do
+        UF:SafeHide(Frames)
+    end
+
+    for i = 1, _G.MEMBERS_PER_RAID_GROUP do
+        UF:SafeHide(_G["CompactPartyFrameMember"..i])
+    end
+
+    if (_G.CompactRaidFrameManager) then
+        UF:SafeHide(_G.CompactRaidFrameManager)
+    end
+
+    if (CompactRaidFrameManager_SetSetting) then
+        CompactRaidFrameManager_SetSetting("IsShown", "0")
+    end
+end
+
+-- SPAWN THE UNITFRAMES
+
+function UF:Spawn(Unit, Width, Height, Orientation)
+    if (not Unit) then 
+        return 
+    end
+
+    local Frame = CreateFrame("Button", "UF_FeelUI_" .. Unit, UF.SecureFrame, "SecureUnitButtonTemplate, PingableUnitFrameTemplate")
+    Frame.unit = Unit
+
+    Frame:Size(Width or 228, Height or 36)
+    Frame:SetAttribute("unit", Unit)
+    Frame:RegisterForClicks("AnyUp")
+    Frame:SetAttribute("type1", "target")
+    Frame:SetAttribute("type2", "togglemenu")
+
+    -- STORE IN CACHE
+    self.Frames[Unit] = Frame
+
+    -- CREATE ELEMENTS
+    --self:CreateOnEnterLeave(Frame)
+    self:CreatePanels(Frame)
+    self:CreateHightlight(Frame)
+    self:CreateFadeInOut(Frame)
+    self:CreateHealth(Frame, Height, Orientation)
+    self:CreateRaidIcon(Frame)
+
+    if (Unit == "player") then
+        self:CreateCombatIcon(Frame)
+        self:CreateRestingIcon(Frame)
+        self:CreatePlayerTexts(Frame)
+        self:CreatePlayerCastbar(Frame)
+        self:CreatePortrait(Frame)
+        --self:CreateHealthPrediction(Frame)
+        --self:CreateBuffs(Frame)
+    elseif (Unit == "target") then
+        self:CreateTargetTexts(Frame)
+        self:CreatePortrait(Frame)
+        --self:CreateHealthPrediction(Frame)
+        --self:CreateTargetCastbar(Frame)
+        self:CreateBuffs(Frame)
+        self:CreateDebuffs(Frame)
+        self:CreateThreatHighlight(Frame)
+    elseif (Unit == "targettarget") then
+        self:CreateNameTextCenter(Frame)
+        self:CreateThreatHighlight(Frame)
+        --self:CreatePortrait(Frame)
+    elseif (Unit == "pet") then
+        self:CreateNameTextCenter(Frame)
+        self:CreateThreatHighlight(Frame)
+        --self:CreatePortrait(Frame)
+        --self:CreatePetCastbar(Frame)
+    elseif (Unit == "focus") then
+        self:CreateNameTextCenter(Frame)
+        self:CreateThreatHighlight(Frame)
+        --self:CreateFocusCastbar(Frame)
+    elseif (Unit:match("^boss%d$")) then
+        self:CreateTargetTexts(Frame)
+        self:CreateThreatHighlight(Frame)
+        --self:CreatePortrait(Frame)
+        --self:CreateBossCastbar(Frame)
+    end
+
+    return Frame
+end
+
+--- CREATE UNITFRAMES
+
+function UF:CreateUF()
+    -- PLAYER
+    local Player = UF:Spawn("player", 228, 36)
+    Player:Point(unpack(DB.Global.UnitFrames.PlayerPoint))
+
+    -- TARGET
+    local Target = UF:Spawn("target", 228, 36)
+    Target:Point(unpack(DB.Global.UnitFrames.TargetPoint))
+    RegisterUnitWatch(Target)
+
+    -- TARGET OF TARGET
+    local TargetTarget = UF:Spawn("targettarget", 114, 28)
+    TargetTarget:Point("BOTTOMRIGHT", Target, 0, -58)
+    RegisterUnitWatch(TargetTarget)
+
+    -- FOCUS
+    local Focus = UF:Spawn("focus", 114, 28)
+    Focus:Point("BOTTOMRIGHT", TargetTarget, 0, -42)
+    RegisterUnitWatch(Focus)
+
+    -- PET
+    local Pet = UF:Spawn("pet", 114, 28)
+    Pet:Point("BOTTOMLEFT", Player, 0, -58)
+    RegisterUnitWatch(Pet)
+
+    -- BOSS FRAMES
+    for i = 1, 5 do
+        local Boss = UF:Spawn("boss"..i, 204, 36)
+
+        if (i == 1) then
+            Boss:Point(unpack(DB.Global.UnitFrames.BossPoint))
+        else
+            Boss:Point("BOTTOM", self.Frames["boss"..(i-1)], "TOP", 0, 28)
+        end
+
+        RegisterUnitWatch(Boss)
+    end
+
+    -- PARTY FRAMES
+    if (DB.Global.UnitFrames.PartyFrames) then
+        local Party = UF:SpawnPartyHeader()
+        Party:Point(unpack(DB.Global.UnitFrames.PartyPoint))
+
+        self.Party = Party
+    end
+
+    -- RAID FRAMES
+    if (DB.Global.UnitFrames.RaidFrames) then
+        local Raid = UF:SpawnRaidHeader()
+        Raid:Point(unpack(DB.Global.UnitFrames.RaidPoint))
+
+        self.Raid = Raid
+    end
+
+    -- CACHE REFERENCES
+    self.Frames.Player = Player
+    self.Frames.Target = Target
+    self.Frames.TargetTarget = TargetTarget
+    self.Frames.Focus = Focus
+    self.Frames.Pet = Pet
+    self.Party = Party
+    self.Raid = Raid
+end
