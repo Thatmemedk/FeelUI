@@ -9,7 +9,7 @@ local unpack = unpack
 
 function UF:OnHide()
     if not self:IsShown() then
-        self:SetAlpha(0)
+        UI:UIFrameFadeOut(self, UF.FadeInTime, self:GetAlpha(), 0)
     end
 
     UI:UIFrameFadeOut(self, UF.FadeInTime, self:GetAlpha(), 0)
@@ -17,7 +17,7 @@ end
 
 function UF:OnShow()
     if not self:IsShown() then
-        self:SetAlpha(0)
+        UI:UIFrameFadeOut(self, UF.FadeInTime, self:GetAlpha(), 0)
     end
 
     UI:UIFrameFadeIn(self, UF.FadeInTime, self:GetAlpha(), 1)
@@ -37,26 +37,6 @@ function UF:CreatePanels(Frame, EnableGlow, GlowScale, GlowSize)
     local Panel = CreateFrame("Frame", nil, Frame)
     Panel:SetFrameLevel(Frame:GetFrameLevel() - 1)
     Panel:SetInside()
-    Panel:CreateShadow()
-    
-    local InvisFrame = CreateFrame("Frame", nil, Frame)
-    InvisFrame:SetFrameLevel(Frame:GetFrameLevel() + 8)
-    InvisFrame:SetInside()
-    
-    local InvisFrameHigher = CreateFrame("Frame", nil, Frame)
-    InvisFrameHigher:SetFrameLevel(Frame:GetFrameLevel() + 10)
-    InvisFrameHigher:SetInside()
-    
-    Frame.Panel = Panel
-    Frame.InvisFrame = InvisFrame
-    Frame.InvisFrameHigher = InvisFrameHigher
-end
-
-function UF:NPCreatePanels(Frame)
-    local Panel = CreateFrame("Frame", nil, Frame)
-    Panel:SetFrameLevel(Frame:GetFrameLevel() + 2)
-    Panel:Size(Frame:GetWidth(), 14)
-    Panel:Point("CENTER", Frame, 0, -12)
     Panel:CreateShadow()
     
     local InvisFrame = CreateFrame("Frame", nil, Frame)
@@ -95,33 +75,4 @@ function UF:CreateHightlight(Frame)
     Frame:HookScript("OnLeave", self.HighlightOnMouse)
     
     Frame.Highlight = Highlight
-end
-
-function UF:NPCreateTargetIndicator(Frame, Unit)
-    local TargetIndicatorLeft = Frame.InvisFrame:CreateTexture(nil, "OVERLAY")
-    TargetIndicatorLeft:Size(14, 14)
-    TargetIndicatorLeft:Point("LEFT", Frame.Health, -18, -12)
-    TargetIndicatorLeft:SetTexture(Media.Global.PowerArrowRight)
-    TargetIndicatorLeft:SetVertexColor(77/255, 179/255, 255/255)
-    TargetIndicatorLeft:Hide()
-
-    local TargetIndicatorRight = Frame.InvisFrame:CreateTexture(nil, "OVERLAY")
-    TargetIndicatorRight:Size(14, 14)
-    TargetIndicatorRight:Point("RIGHT", Frame.Health, 18, -12)
-    TargetIndicatorRight:SetTexture(Media.Global.PowerArrowLeft)
-    TargetIndicatorRight:SetVertexColor(77/255, 179/255, 255/255)
-    TargetIndicatorRight:Hide()
-
-    Frame.TargetIndicatorLeft = TargetIndicatorLeft
-    Frame.TargetIndicatorRight = TargetIndicatorRight
-end
-
-function UF:NPHighlightOnNameplateTarget(Frame, Unit)
-    if UnitIsUnit("target", Unit) then
-        Frame.TargetIndicatorLeft:Show()
-        Frame.TargetIndicatorRight:Show()
-    else
-        Frame.TargetIndicatorLeft:Hide()
-        Frame.TargetIndicatorRight:Hide()
-    end
 end

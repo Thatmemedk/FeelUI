@@ -68,10 +68,15 @@
 	<Script file="Skins\Blizzard\DamageMeter.lua"/>
 	<!-- Tooltip -->
 	<Script file="Tooltip\Core.lua"/>
+
+	<Script file="Nameplates\Core.lua"/>
+	<Script file="Nameplates\Elements\Health.lua"/>
+	<Script file="Nameplates\Elements\Texts.lua"/>
+	<Script file="Nameplates\Elements\Highlight.lua"/>
+	<Script file="Nameplates\Elements\Threat.lua"/>
 	<!-- UnitFrames -->
 	<Script file="UnitFrames\Core.lua"/>
 	<Script file="UnitFrames\Groups.lua"/>
-	<Script file="UnitFrames\Nameplates.lua"/>
 	<Script file="UnitFrames\Spawn.lua"/>
 	<Script file="UnitFrames\Elements\Auras.lua"/>
 	<Script file="UnitFrames\Elements\Castbar.lua"/>

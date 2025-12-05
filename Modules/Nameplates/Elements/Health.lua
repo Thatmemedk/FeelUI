@@ -1,18 +1,16 @@
 local UI, DB, Media, Language = select(2, ...):Call()
 
 -- Call Modules
-local UF = UI:CallModule("UnitFrames")
+local NP = UI:CallModule("NamePlates")
 
 -- Lib Globals
 local select = select
 local unpack = unpack
 
-function UF:CreateHealth(Frame, Size, Orientation)
+function NP:CreateHealth(Frame)
     local Health = CreateFrame("StatusBar", nil, Frame)
-    Health:Height(Size or 36)
-    Health:Point("TOPRIGHT", Frame, 0, 0)
-    Health:Point("TOPLEFT", Frame, 0, 0)
-    Health:SetOrientation(Orientation or "HORIZONTAL")
+    Health:Size(Frame:GetWidth(), 14)
+    Health:Point("CENTER", Frame, 0, -12)
     Health:SetStatusBarTexture(Media.Global.Texture)
     Health:CreateBackdrop()
 

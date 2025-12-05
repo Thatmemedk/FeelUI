@@ -84,7 +84,14 @@ UI.Colors = {
 	    DEATHKNIGHT = UI:CreateColor(0.77, 0.12, 0.23),
 	    DEMONHUNTER = UI:CreateColor(0.64, 0.19, 0.79),
 	    EVOKER = UI:CreateColor(0.20, 0.58, 0.50),
-	}
+	},
+
+	Classification = {
+	    BOSS = UI:CreateColor(1, 0, 0),
+	    RARE_ELITE = UI:CreateColor(0.89, 0.2, 0.89),
+	    CASTER = UI:CreateColor(0, 0.7, 1),
+	    ELITE = UI:CreateColor(217/255, 13/255, 215/255),
+    },
 }
 
 UI.GetClassColors = UI.Colors.Class[ClassID]

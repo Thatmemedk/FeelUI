@@ -36,7 +36,6 @@ local INTERRUPTED = _G.INTERRUPTED or "Interrupted"
 
 -- Locals
 UF.HiddenFrames = {}
-UF.PlateByGUID = {}
 UF.Frames = {}
 
 -- Locals
@@ -546,7 +545,7 @@ function UF:UpdateNameParty(Frame)
         end
     else
         local Reaction = UnitReaction and UnitReaction(Unit, "player") or 5
-        local Color = UI.Colors and UI.Colors.Reaction and UI.Colors.Reaction[Reaction]
+        local Color = UI.Colors.Reaction[Reaction]
 
         if (Color) then
             Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
@@ -803,11 +802,6 @@ end
 
 function UF:OnEvent(event, arg1)
     local FramesUF = UF.Frames[arg1]
-    local FramesNP
-
-    --if (type(arg1) == "string") then
-    --    FramesNP = C_NamePlate.GetNamePlateForUnit(arg1)
-    --end
 
     -- UNITFRAMES LOG IN UPDATE
     if (event == "PLAYER_ENTERING_WORLD") then
@@ -828,13 +822,6 @@ function UF:OnEvent(event, arg1)
         end
 
         UF:ForceToTUpdate()
-
-        --for _, Plate in ipairs(C_NamePlate.GetNamePlates()) do
-        --    local Frame = Plate.FeelUIPlate
-        --    if Frame and Frame.unit then
-        --        self:UpdateNameplate(Frame, Frame.unit)
-        --    end
-        --end
     elseif (event == "UNIT_TARGET" and arg1 == "target") then
         UF:ForceToTUpdate()
 
@@ -857,10 +844,6 @@ function UF:OnEvent(event, arg1)
             UF:UpdateHealthTextCur(FramesUF)
             UF:UpdateHealthTextPer(FramesUF)
         end
-
-        --if (FramesNP and FramesNP.IsCreated) then
-        --    self:UpdateNameplate(FramesNP, arg1)
-        --end
         
         -- HEAL PRED
     elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
@@ -929,36 +912,6 @@ function UF:OnEvent(event, arg1)
             UF:UpdatePortrait(FramesUF)
         end
     end
-
-    --[[
-        -- NAMEPLATES
-    elseif (event == "NAME_PLATE_UNIT_ADDED") then
-        if not FramesNP then return end
-
-        local unit = arg1
-        local guid = UnitGUID(unit)
-        if type(guid) ~= "string" then return end
-
-        self:CreateNameplate(FramesNP, unit)
-
-        local Frame = FramesNP.FeelUIPlate
-        if not Frame then return end
-
-        self.PlateByGUID[guid] = Frame
-        self:NPHideBlizzardFrames(FramesNP)
-
-        Frame.unit = unit
-        self:UpdateNameplate(Frame, unit)
-
-        return
-    elseif (event == "NAME_PLATE_UNIT_REMOVED") then
-        local guid = UnitGUID(arg1)
-        if type(guid) == "string" then
-            self.PlateByGUID[guid] = nil
-        end
-        return
-    end
-    --]]
 end
 
 -- INITIALIZE & REGISTER EVENTS
@@ -1009,10 +962,6 @@ function UF:CallEvents()
     -- PORTRAITS
     SecureEventFrame:RegisterEvent("UNIT_MODEL_CHANGED")
     SecureEventFrame:RegisterEvent("UNIT_PORTRAIT_UPDATE")
-    -- NAMEPLATES
-    SecureEventFrame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
-    SecureEventFrame:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
-    SecureEventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
     -- ON EVENT
     SecureEventFrame:SetScript("OnEvent", function(_, event, ...)
         UF:OnEvent(event, ...)
