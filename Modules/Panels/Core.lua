@@ -42,11 +42,6 @@ function Panels:Initialize()
 	DataTextHolder:Size(392, 22)
 	DataTextHolder:Point("BOTTOM", _G.UIParent, 0, 6)
 
-	-- DataBarHolder
-	local DataBarHolder = CreateFrame("Frame", nil, _G.UIParent)
-	DataBarHolder:Size(222, 78)
-	DataBarHolder:Point("BOTTOM", _G.UIParent, 0, 166)
-	
 	-- Bottom Panel
 	local BottomPanel = CreateFrame("Frame", nil, _G.UIParent)
 	BottomPanel:SetFrameStrata("BACKGROUND")

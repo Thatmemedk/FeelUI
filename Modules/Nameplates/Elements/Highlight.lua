@@ -11,9 +11,28 @@ function NP:CreatePanels(Frame)
     local Panel = CreateFrame("Frame", nil, Frame)
     Panel:SetFrameLevel(Frame:GetFrameLevel() + 2)
     Panel:Size(Frame:GetWidth(), 14)
-    Panel:Point("CENTER", Frame, 0, -12)
+    Panel:Point("CENTER", Frame, 0, -4)
     Panel:CreateShadow()
     
+    local InvisFrame = CreateFrame("Frame", nil, Frame)
+    InvisFrame:SetFrameLevel(Frame:GetFrameLevel() + 8)
+    InvisFrame:SetInside()
+    
+    local InvisFrameHigher = CreateFrame("Frame", nil, Frame)
+    InvisFrameHigher:SetFrameLevel(Frame:GetFrameLevel() + 10)
+    InvisFrameHigher:SetInside()
+    
+    Frame.Panel = Panel
+    Frame.InvisFrame = InvisFrame
+    Frame.InvisFrameHigher = InvisFrameHigher
+end
+
+function NP:CreatePanelsFriendly(Frame)
+    local Panel = CreateFrame("Frame", nil, Frame)
+    Panel:SetFrameLevel(Frame:GetFrameLevel() + 2)
+    Panel:Size(Frame:GetWidth(), 14)
+    Panel:Point("CENTER", Frame, 0, -4)
+        
     local InvisFrame = CreateFrame("Frame", nil, Frame)
     InvisFrame:SetFrameLevel(Frame:GetFrameLevel() + 8)
     InvisFrame:SetInside()

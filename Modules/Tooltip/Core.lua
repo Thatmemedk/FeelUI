@@ -71,10 +71,10 @@ function TT:GetColor(Unit)
 
     if UnitIsPlayer(Unit) and not UnitHasVehicleUI(Unit) then
         local Class = select(2, UnitClass(Unit))
-        Color = Class and UI.Colors.Class[Class]
+        Color = UI.Colors.Class[Class]
     else
         local Reaction = UnitReaction(Unit, "player")
-        Color = Reaction and UI.Colors.Reaction[Reaction]
+        Color = UI.Colors.Reaction[Reaction]
     end
 
     if not (Color) then
@@ -100,10 +100,10 @@ function TT:ApplyStatusBarColor(Tooltip, Unit, ClassFile, Reaction)
     elseif UnitIsDead(Unit) then
         R, G, B = 0.5, 0, 0
     elseif UnitIsPlayer(Unit) then
-        local Color = UI.Colors.Class[ClassFile or select(2, UnitClass(Unit))]
+        local Color = UI.Colors.Class[ClassFile]
         R, G, B = Color and Color[1] or 1, Color and Color[2] or 1, Color and Color[3] or 1
     else
-        local Color = UI.Colors.Reaction[Reaction or UnitReaction(Unit, "player")]
+        local Color = UI.Colors.Reaction[Reaction]
         R, G, B = Color and Color[1] or 1, Color and Color[2] or 1, Color and Color[3] or 1
     end
 

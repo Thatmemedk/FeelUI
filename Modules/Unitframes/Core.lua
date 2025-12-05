@@ -445,7 +445,7 @@ function UF:UpdatePower(Frame)
     local Unit = Frame.unit
     local PowerType, PowerToken = UnitPowerType(Unit)
     local Min, Max = UnitPower(Unit, PowerType), UnitPowerMax(Unit, PowerType)
-    local PowerColor = UI.Colors and UI.Colors.Power and UI.Colors.Power[PowerToken]
+    local PowerColor = UI.Colors.Power[PowerToken]
 
     if not (Frame.PowerText) then
         return
@@ -482,8 +482,8 @@ function UF:UpdateName(Frame)
             Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
         end
     else
-        local Reaction = UnitReaction and UnitReaction(Unit, "player") or 5
-        local Color = UI.Colors and UI.Colors.Reaction and UI.Colors.Reaction[Reaction]
+        local Reaction = UnitReaction(Unit, "player") or 5
+        local Color = UI.Colors.Reaction[Reaction]
 
         if (Color) then
             Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
@@ -513,8 +513,8 @@ function UF:UpdateNameRaid(Frame)
             Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
         end
     else
-        local Reaction = UnitReaction and UnitReaction(Unit, "player") or 5
-        local Color = UI.Colors and UI.Colors.Reaction and UI.Colors.Reaction[Reaction]
+        local Reaction = UnitReaction(Unit, "player") or 5
+        local Color = UI.Colors.Reaction[Reaction]
 
         if (Color) then
             Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
@@ -544,7 +544,7 @@ function UF:UpdateNameParty(Frame)
             Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
         end
     else
-        local Reaction = UnitReaction and UnitReaction(Unit, "player") or 5
+        local Reaction = UnitReaction(Unit, "player") or 5
         local Color = UI.Colors.Reaction[Reaction]
 
         if (Color) then
@@ -573,8 +573,8 @@ function UF:UpdateTargetNameLevel(Frame)
             NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
         end
     else
-        local Reaction = UnitReaction and UnitReaction(Unit, "player") or 5
-        local Color = UI.Colors and UI.Colors.Reaction and UI.Colors.Reaction[Reaction]
+        local Reaction = UnitReaction(Unit, "player") or 5
+        local Color = UI.Colors.Reaction[Reaction]
 
         if (Color) then
             NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
@@ -916,7 +916,7 @@ end
 
 -- INITIALIZE & REGISTER EVENTS
 
-function UF:CallEvents()
+function UF:RegisterEvents()
     local SecureEventFrame = UF.SecureFrame
 
     SecureEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -980,7 +980,5 @@ function UF:Initialize()
     -- SECURE UPDATE
     self:SecureUpdate()
     -- EVENTS
-    self:CallEvents()
-    -- CVAR
-    --self:SetCVarOnLogin()
+    self:RegisterEvents()
 end

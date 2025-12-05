@@ -3,93 +3,123 @@ local UI, DB, Media, Language = select(2, ...):Call()
 -- Call Modules
 local NP = UI:RegisterModule("NamePlates")
 
+-- WoW Globals
+local UnitExists = UnitExists
+local UnitReaction = UnitReaction
+local UnitLevel = UnitLevel
+local UnitClassification = UnitClassification
+local UnitIsBossMob = UnitIsBossMob
+local UnitPowerType = UnitPowerType
+local UnitIsEnemy = UnitIsEnemy
+local UnitHealth = UnitHealth
+local UnitHealthMax = UnitHealthMax
+local UnitHealthPercent = UnitHealthPercent
+local UnitIsTapDenied = UnitIsTapDenied
+local UnitIsConnected = UnitIsConnected
+local UnitIsGhost = UnitIsGhost
+local UnitIsDead = UnitIsDead
+local UnitName = UnitName
+local UnitIsPlayer = UnitIsPlayer
+local UnitClass = UnitClass
+local UnitThreatSituation = UnitThreatSituation
+
+-- Locals
+NP.HiddenFrames = {}
+
 -- HIDE BLIZZARD FRAMES
 
 function NP:HideBlizzardFrames(Plate)
-    local UF = Plate.UnitFrame
-
-    if InCombatLockdown() then 
+    if (not Plate or NP.HiddenFrames[Plate]) then 
         return 
     end
 
-    if UF.border then UF.border:Hide() end
-    if UF.name then UF.name:SetAlpha(0) end
-    if UF.healthBar then UF.healthBar:Hide() end
-    if UF.levelText then UF.levelText:Hide() end
-    if UF.selectionHighlight then UF.selectionHighlight:Hide() end
-    if UF.ClassificationFrame then UF.ClassificationFrame:Hide() end
+    local UF = Plate.UnitFrame
+
+    if (UF) then
+        UF:UnregisterAllEvents()
+        UF:SetParent(UI.HiddenParent)
+    end
+
+    NP.HiddenFrames[Plate] = true
 end
 
--- SET CVARS
+function NP:ShowBlizzardFrames(Plate)
+    if (not Plate or not NP.HiddenFrames[Plate]) then 
+        return 
+    end
 
-function NP:SetCVarOnLogin()
-    SetCVar("nameplateShowSelf", 0)
-    SetCVar("nameplateMotion", 1)
-    SetCVar("nameplateShowAll", 1)
-    SetCVar("nameplateShowFriends", 0)
-    SetCVar("nameplateShowEnemies", 1)
-    SetCVar("nameplateShowEnemyMinion", 1)
-    SetCVar("nameplateShowEnemyMinus", 1)
+    local UF = Plate.UnitFrame
+
+    if (UF) then
+        UF:SetParent(Plate)
+        UF:Show()
+
+        NP.HiddenFrames[Plate] = nil
+    end
 end
 
 -- CREATE NAMEPLATES
 
-function NP:Create(Plate, Unit)
-    if (not Plate or not Unit) then 
-        return 
-    end
-
-    local Frame = Plate.FeelUINameplates
-
-    if (Frame) then
-        Frame.Unit = Unit
-    else
-        Frame = CreateFrame("Frame", nil, Plate)
-        Frame:SetAllPoints()
-
-        Plate.FeelUINameplates = Frame
-        Frame.Unit = Unit
-
-        self:CreatePanels(Frame)
-        self:CreateTargetIndicator(Frame)
-        self:CreateThreatHighlight(Frame)
-        self:CreateHealth(Frame)
-        self:CreateHealthText(Frame)
-        self:CreateName(Frame)
-    end
-
-    self:HideBlizzardFrames(Plate)
-    self:Update(Frame, Unit)
-end
-
--- HEALTH UPDATE
-
-function NP:UpdateHealth(Frame, Unit)
-    if (not Frame or not Unit) then 
-        return 
-    end
-
-    if (not Frame.Health) then
+function NP:CreateFriendly(Plate, Unit)
+    if (Plate.FriendlyIsCreated) then
         return
     end
 
-    local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
-    Frame.Health:SetMinMaxValues(0, Max)
-    Frame.Health:SetValue(Min, UI.SmoothBars)
+    local Frame = Plate.FeelUINameplatesFriendly
 
-    local Reaction = UnitReaction and UnitReaction(Unit, "player") or 5
-    local Color = UI.Colors.Reaction[Reaction]
+    if (not Frame) then
+        Frame = CreateFrame("Frame", nil, Plate)
+        Frame:SetAllPoints()
 
-    if not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit) then
-        Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
-        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
-    elseif UnitIsDead(Unit) then
-        Frame.Health:SetStatusBarColor(0.25, 0, 0)
-        Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
-    else
-        Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
-        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
+        Plate.FeelUINameplatesFriendly = Frame
     end
+
+    Frame.Unit = Unit
+
+    -- Hide Elements
+    --self:HideBlizzardFrames(Plate)
+
+    -- Elements
+    self:CreatePanelsFriendly(Frame)
+    self:CreateNameMiddle(Frame)
+
+    -- Update Elements
+    self:UpdateFriendly(Frame)
+
+    Plate.FriendlyIsCreated = true
+end
+
+function NP:CreateEnemy(Plate, Unit)
+    if (Plate.EnemyIsCreated) then
+        return
+    end
+
+    local Frame = Plate.FeelUINameplatesEnemy
+
+    if (not Frame) then
+        Frame = CreateFrame("Frame", nil, Plate)
+        Frame:SetAllPoints()
+
+        Plate.FeelUINameplatesEnemy = Frame
+    end
+
+    Frame.Unit = Unit
+
+    -- Hide Elements
+    --self:HideBlizzardFrames(Plate)
+
+    -- Elements
+    self:CreatePanels(Frame)
+    self:CreateTargetIndicator(Frame)
+    self:CreateThreatHighlight(Frame)
+    self:CreateHealth(Frame)
+    self:CreateHealthText(Frame)
+    self:CreateName(Frame)
+
+    -- Update Elements
+    self:UpdateEnemy(Frame)
+
+    Plate.EnemyIsCreated = true
 end
 
 -- COLORING
@@ -100,7 +130,7 @@ function NP:GetUnitColor(Unit, IsCaster)
     end
 
     local InInstance, InstanceType = IsInInstance()
-    local Reaction = UnitReaction and UnitReaction(Unit, "player") or 5
+    local Reaction = UnitReaction(Unit, "player") or 5
     local Color = UI.Colors.Reaction[Reaction]
 
     if not (InInstance and InstanceType == "party") then
@@ -138,18 +168,53 @@ function NP:SetNameplateColor(Unit, IsCaster)
 
     local NamePlates = C_NamePlate.GetNamePlateForUnit(Unit)
 
-    if (not NamePlates or not NamePlates.FeelUINameplates) then
+    if (not NamePlates) then 
+        return 
+    end
+
+    local Frame = NamePlates.FeelUINameplatesEnemy
+
+    if (not Frame or not Frame.Health) then 
+        return 
+    end
+
+    local Color = self:GetUnitColor(Unit, IsCaster)
+
+    if (not Color) then
         return
     end
 
-    local Frame = NamePlates.FeelUINameplates
+    Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b)
+end
+
+-- HEALTH UPDATE
+
+function NP:UpdateHealth(Frame, Unit)
+    if (not Frame or not Unit) then 
+        return 
+    end
 
     if (not Frame.Health) then
         return
     end
 
-    local Color = self:GetUnitColor(Unit, IsCaster)
-    Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b)
+    local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
+    Frame.Health:SetMinMaxValues(0, Max)
+    Frame.Health:SetValue(Min, UI.SmoothBars)
+
+    local Reaction = UnitReaction(Unit, "player") or 5
+    local Color = UI.Colors.Reaction[Reaction]
+
+    if not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit) then
+        Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
+        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
+    elseif UnitIsDead(Unit) then
+        Frame.Health:SetStatusBarColor(0.25, 0, 0)
+        Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
+    else
+        Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
+        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
+    end
 end
 
 function NP:UpdateHealthText(Frame, Unit)
@@ -185,7 +250,7 @@ function NP:UpdateName(Frame, Unit)
 
         Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
     else
-        local Reaction = UnitReaction and UnitReaction(Unit, "player") or 5
+        local Reaction = UnitReaction(Unit, "player") or 5
         local Color = UI.Colors.Reaction[Reaction]
 
         Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
@@ -215,71 +280,131 @@ end
 
 -- FULL UPDATE
 
-function NP:Update(Frame, Unit)
-    if (not Frame or not UnitExists(Unit)) then 
+function NP:UpdateFriendly(Frame)
+    if (not Frame or not Frame.Unit) then 
         return 
     end
 
-    if (Frame.Health) then self:UpdateHealth(Frame, Unit) end
-    if (Frame.HealthText) then self:UpdateHealthText(Frame, Unit) end
-    if (Frame.Name) then self:UpdateName(Frame, Unit) end
-    if (Frame.TargetIndicatorLeft and Frame.TargetIndicatorRight) then self:HighlightOnNameplateTarget(Frame, Unit) end
-    if (Frame.Threat) then self:UpdateThreatHighlight(Frame, Unit) end
+    if (Frame.Name) then self:UpdateName(Frame, Frame.Unit) end
+end
+
+function NP:UpdateEnemy(Frame)
+    if (not Frame or not Frame.Unit) then 
+        return 
+    end
+
+    if (Frame.Health) then self:UpdateHealth(Frame, Frame.Unit) end
+    if (Frame.HealthText) then self:UpdateHealthText(Frame, Frame.Unit) end
+    if (Frame.Name) then self:UpdateName(Frame, Frame.Unit) end
+    if (Frame.TargetIndicatorLeft and Frame.TargetIndicatorRight) then self:HighlightOnNameplateTarget(Frame, Frame.Unit) end
+    if (Frame.Threat) then self:UpdateThreatHighlight(Frame, Frame.Unit) end
 end
 
 -- EVENT HANDLER
 
 function NP:OnEvent(event, unit, ...)
     if (event == "NAME_PLATE_UNIT_ADDED") then
-        local NamePlates = C_NamePlate.GetNamePlateForUnit(unit, issecure())
+        local Plate = C_NamePlate.GetNamePlateForUnit(unit, issecure())
 
-        if (NamePlates) then
-            self:Create(NamePlates, unit)
-            self:SetNameplateColor(unit, false)
+        if (not Plate) then 
+            return 
         end
 
+        self:HideBlizzardFrames(Plate)
+
+        if UnitIsFriend("player", unit) then
+            if (not Plate.FeelUINameplatesFriendly) then
+                self:CreateFriendly(Plate, unit)
+            else
+                Plate.FeelUINameplatesFriendly.Unit = unit
+                self:UpdateFriendly(Plate.FeelUINameplatesFriendly)
+            end
+        else
+            if (not Plate.FeelUINameplatesEnemy) then
+                self:CreateEnemy(Plate, unit)
+            else
+                Plate.FeelUINameplatesEnemy.Unit = unit
+                self:UpdateEnemy(Plate.FeelUINameplatesEnemy)
+                self:SetNameplateColor(unit, false)
+            end
+        end
     elseif (event == "NAME_PLATE_UNIT_REMOVED") then
-        local NamePlates = C_NamePlate.GetNamePlateForUnit(unit)
+        local Plate = C_NamePlate.GetNamePlateForUnit(unit)
 
-        if (NamePlates and NamePlates.FeelUINameplates) then
-            NamePlates.FeelUINameplates.Unit = nil
+        if (not Plate) then 
+            return 
         end
 
+        if (Plate.FeelUINameplatesFriendly) then
+            Plate.FeelUINameplatesFriendly.Unit = nil
+        end
+
+        if (Plate.FeelUINameplatesEnemy) then
+            Plate.FeelUINameplatesEnemy.Unit = nil
+        end
+
+        self:ShowBlizzardFrames(Plate)
     elseif (event == "UNIT_SPELLCAST_START") then
-        self:SetNameplateColor(unit, true)
+        if not UnitIsFriend("player", unit) then
+            self:SetNameplateColor(unit, true)
+        end
 
     elseif (event == "PLAYER_TARGET_CHANGED" or event == "UNIT_TARGETABLE_CHANGED") then
         for _, Plate in ipairs(C_NamePlate.GetNamePlates()) do
-            local Frame = Plate.FeelUINameplates
+            local FriendlyFrame = Plate.FeelUINameplatesFriendly
+            local EnemyFrame = Plate.FeelUINameplatesEnemy
 
-            if (Frame and Frame.Unit) then
-                self:Update(Frame, Frame.Unit)
-                self:SetNameplateColor(Frame.Unit, false)
+            if (FriendlyFrame and FriendlyFrame.Unit) then
+                self:UpdateFriendly(FriendlyFrame)
+            end
+
+            if (EnemyFrame and EnemyFrame.Unit) then
+                self:UpdateEnemy(EnemyFrame)
+                self:SetNameplateColor(EnemyFrame.Unit, false)
             end
         end
+    elseif (unit and event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
+        local Plate = C_NamePlate.GetNamePlateForUnit(unit)
 
-    elseif ((unit and event == "UNIT_HEALTH") or event == "UNIT_MAXHEALTH") then
-        local NamePlates = C_NamePlate.GetNamePlateForUnit(unit)
+        if (not Plate) then 
+            return 
+        end
 
-        if (NamePlates and NamePlates.FeelUINameplates) then
-            self:Update(NamePlates.FeelUINameplates, unit)
+        if UnitIsFriend("player", unit) and Plate.FeelUINameplatesFriendly then
+            self:UpdateFriendly(Plate.FeelUINameplatesFriendly)
+        elseif (Plate.FeelUINameplatesEnemy) then
+            self:UpdateEnemy(Plate.FeelUINameplatesEnemy)
             self:SetNameplateColor(unit, false)
         end
     end
 end
 
+-- SET CVARS
+
+function NP:SetCVarOnLogin()
+    SetCVar("nameplateSelectedScaleEnabled", 1)
+    SetCVar("nameplateSelectedScale", 1)
+    SetCVar("nameplateSelectedScaleFactor", 1)
+    SetCVar("nameplateGlobalScale", 1)
+    SetCVar("nameplateMinScale", 1)
+    SetCVar("nameplateShowSelf", 0)
+    SetCVar("nameplateMotion", 0)
+    SetCVar("nameplateShowAll", 1)
+    SetCVar("nameplateShowFriends", 0)
+    SetCVar("nameplateShowEnemies", 1)
+    SetCVar("nameplateShowEnemyMinion", 1)
+    SetCVar("nameplateShowEnemyMinus", 1)
+end
+
 -- REGISTER EVENTS
 
-function NP:CallEvents()
+function NP:RegisterEvents()
     self:RegisterEvent("NAME_PLATE_UNIT_ADDED")
     self:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
     self:RegisterEvent("PLAYER_TARGET_CHANGED")
     self:RegisterEvent("UNIT_TARGETABLE_CHANGED")
     self:RegisterEvent("UNIT_HEALTH")
     self:RegisterEvent("UNIT_MAXHEALTH")
-    self:RegisterEvent("UNIT_AURA")
-    self:RegisterEvent("UNIT_CONNECTION")
-    self:RegisterEvent("UNIT_FACTION")
     self:RegisterEvent("UNIT_SPELLCAST_START")
     self:SetScript("OnEvent", function(_, event, ...) 
         NP:OnEvent(event, ...) 
@@ -293,5 +418,6 @@ function NP:Initialize()
         return 
     end
 
-    self:CallEvents()
+    self:RegisterEvents()
+    self:SetCVarOnLogin()
 end

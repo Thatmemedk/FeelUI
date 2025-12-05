@@ -147,4 +147,5 @@ function UI:UpdateBlizzardFonts()
 	--SetFont(_G.ObjectiveFont,                  12, "THINOUTLINE", 1, 1)
 	SetFont(_G.ObjectiveTrackerLineFont,       12, "THINOUTLINE", 1, 1)
 	SetFont(_G.ObjectiveTrackerHeaderFont,     16, "THINOUTLINE", 1, 1)
+	--]]
 end

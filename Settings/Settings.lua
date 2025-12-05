@@ -4,10 +4,6 @@ local UI, DB, Media, Language = select(2, ...):Call()
 -- Default Settings of FeelUI --
 --------------------------------
 
--- Lib Globals
-local select = select
-local unpack = unpack
-
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
 
@@ -169,7 +165,7 @@ DB.Global = {
 		BossPoint = { "RIGHT", _G.UIParent, -252, -122 },
 		PartyPoint = { "LEFT", _G.UIParent, 219, 1 },
 		RaidPoint = { "LEFT", _G.UIParent, 78, -1 },
-		-- CastBars
+		-- Points Settings
 		CastBarPlayerPoint = { "CENTER", _G.UIParent, 0, -282 },
 	},
 }

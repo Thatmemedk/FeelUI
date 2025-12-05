@@ -746,6 +746,7 @@ local Object = CreateFrame("Frame")
 AddAPI(Object)
 AddAPI(Object:CreateTexture())
 AddAPI(Object:CreateFontString())
+AddAPI(Object:CreateMaskTexture())
 
 Object = EnumerateFrames()
 

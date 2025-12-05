@@ -29,8 +29,8 @@ local GetMouseFocus = GetMouseFocus
 local GetMouseFoci = GetMouseFoci
 
 -- HiddenParent
-UI.HiddenParent = CreateFrame("Frame")
-UI.HiddenParent:SetAllPoints(_G.UIParent)
+UI.HiddenParent = CreateFrame("Frame", nil, _G.UIParent)
+UI.HiddenParent:SetAllPoints()
 UI.HiddenParent:Hide()
 
 -- Functions
@@ -222,18 +222,9 @@ do
 	LSM.RegisterCallback(UI, "LibSharedMedia_Registered", LSMCallback)
 end
 
--- Update Class Colors
-function FeelUI:UpdateClassColors()
-	_G.RAID_CLASS_COLORS["PRIEST"].colorStr = "ff99ccff"
-	_G.RAID_CLASS_COLORS["PRIEST"].r = 0.65
-	_G.RAID_CLASS_COLORS["PRIEST"].g = 0.84
-	_G.RAID_CLASS_COLORS["PRIEST"].b = 1.00
-end
-
 -- Initialize The Core
 function FeelUI:Initialize()
 	self:SetUIScale()
 	self:UpdateMedia()
-	self:UpdateClassColors()
 	self:LoadCommands()
 end

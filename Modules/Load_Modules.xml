@@ -68,7 +68,7 @@
 	<Script file="Skins\Blizzard\DamageMeter.lua"/>
 	<!-- Tooltip -->
 	<Script file="Tooltip\Core.lua"/>
-
+	<!-- NamePlates -->
 	<Script file="Nameplates\Core.lua"/>
 	<Script file="Nameplates\Elements\Health.lua"/>
 	<Script file="Nameplates\Elements\Texts.lua"/>

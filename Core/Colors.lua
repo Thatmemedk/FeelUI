@@ -49,6 +49,13 @@ UI.Colors = {
         [8] = UI:CreateColor(0.00, 0.60, 0.10),
     },
 
+    Classification = {
+	    BOSS = UI:CreateColor(1, 0, 0),
+	    RARE = UI:CreateColor(0.89, 0.2, 0.89),
+	    CASTER = UI:CreateColor(0, 0.7, 1),
+	    ELITE = UI:CreateColor(217/255, 13/255, 215/255),
+    },
+
     Power = {
 	    MANA = UI:CreateColor(0.31, 0.45, 0.63),
 	    RAGE = UI:CreateColor(0.69, 0.31, 0.31),
@@ -85,13 +92,6 @@ UI.Colors = {
 	    DEMONHUNTER = UI:CreateColor(0.64, 0.19, 0.79),
 	    EVOKER = UI:CreateColor(0.20, 0.58, 0.50),
 	},
-
-	Classification = {
-	    BOSS = UI:CreateColor(1, 0, 0),
-	    RARE_ELITE = UI:CreateColor(0.89, 0.2, 0.89),
-	    CASTER = UI:CreateColor(0, 0.7, 1),
-	    ELITE = UI:CreateColor(217/255, 13/255, 215/255),
-    },
 }
 
 UI.GetClassColors = UI.Colors.Class[ClassID]

@@ -22,3 +22,11 @@ function NP:CreateName(Frame)
 
     Frame.Name = Name
 end
+
+function NP:CreateNameMiddle(Frame)
+    local Name = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
+    Name:Point("CENTER", Frame.Panel, 0, 0)
+    Name:SetFontTemplate("Default", 14)
+
+    Frame.Name = Name
+end
