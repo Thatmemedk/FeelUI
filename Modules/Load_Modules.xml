@@ -71,8 +71,9 @@
 	<!-- NamePlates -->
 	<Script file="Nameplates\Core.lua"/>
 	<Script file="Nameplates\Elements\Health.lua"/>
-	<Script file="Nameplates\Elements\Texts.lua"/>
 	<Script file="Nameplates\Elements\Highlight.lua"/>
+	<Script file="Nameplates\Elements\Texts.lua"/>
+	<Script file="Nameplates\Elements\Icons.lua"/>
 	<Script file="Nameplates\Elements\Threat.lua"/>
 	<!-- UnitFrames -->
 	<Script file="UnitFrames\Core.lua"/>

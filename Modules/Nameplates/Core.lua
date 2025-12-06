@@ -23,13 +23,10 @@ local UnitIsPlayer = UnitIsPlayer
 local UnitClass = UnitClass
 local UnitThreatSituation = UnitThreatSituation
 
--- Locals
-NP.HiddenFrames = {}
-
 -- HIDE BLIZZARD FRAMES
 
 function NP:HideBlizzardFrames(Plate)
-    if (not Plate or NP.HiddenFrames[Plate]) then 
+    if (not Plate) then 
         return 
     end
 
@@ -37,14 +34,12 @@ function NP:HideBlizzardFrames(Plate)
 
     if (UF) then
         UF:UnregisterAllEvents()
-        UF:SetParent(UI.HiddenParent)
+        UF:Hide()
     end
-
-    NP.HiddenFrames[Plate] = true
 end
 
 function NP:ShowBlizzardFrames(Plate)
-    if (not Plate or not NP.HiddenFrames[Plate]) then 
+    if (not Plate) then 
         return 
     end
 
@@ -53,8 +48,6 @@ function NP:ShowBlizzardFrames(Plate)
     if (UF) then
         UF:SetParent(Plate)
         UF:Show()
-
-        NP.HiddenFrames[Plate] = nil
     end
 end
 
@@ -68,7 +61,7 @@ function NP:CreateFriendly(Plate, Unit)
     local Frame = Plate.FeelUINameplatesFriendly
 
     if (not Frame) then
-        Frame = CreateFrame("Frame", nil, Plate)
+        Frame = CreateFrame("Frame", "FeelUI_NameplatesFriendly", Plate)
         Frame:SetAllPoints()
 
         Plate.FeelUINameplatesFriendly = Frame
@@ -76,12 +69,10 @@ function NP:CreateFriendly(Plate, Unit)
 
     Frame.Unit = Unit
 
-    -- Hide Elements
-    --self:HideBlizzardFrames(Plate)
-
     -- Elements
     self:CreatePanelsFriendly(Frame)
     self:CreateNameMiddle(Frame)
+    self:CreateRaidIcon(Frame)
 
     -- Update Elements
     self:UpdateFriendly(Frame)
@@ -97,7 +88,7 @@ function NP:CreateEnemy(Plate, Unit)
     local Frame = Plate.FeelUINameplatesEnemy
 
     if (not Frame) then
-        Frame = CreateFrame("Frame", nil, Plate)
+        Frame = CreateFrame("Frame", "FeelUI_NameplatesEnemy", Plate)
         Frame:SetAllPoints()
 
         Plate.FeelUINameplatesEnemy = Frame
@@ -105,13 +96,11 @@ function NP:CreateEnemy(Plate, Unit)
 
     Frame.Unit = Unit
 
-    -- Hide Elements
-    --self:HideBlizzardFrames(Plate)
-
     -- Elements
     self:CreatePanels(Frame)
     self:CreateTargetIndicator(Frame)
     self:CreateThreatHighlight(Frame)
+    self:CreateRaidIcon(Frame)
     self:CreateHealth(Frame)
     self:CreateHealthText(Frame)
     self:CreateName(Frame)
@@ -246,7 +235,7 @@ function NP:UpdateName(Frame, Unit)
 
     if UnitIsPlayer(Unit) then
         local _, Class = UnitClass(Unit)
-        local Color = RAID_CLASS_COLORS[Class]
+        local Color = UI.Colors.Class[Class]
 
         Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
     else
@@ -254,6 +243,27 @@ function NP:UpdateName(Frame, Unit)
         local Color = UI.Colors.Reaction[Reaction]
 
         Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+    end
+end
+
+-- ICONS
+
+function NP:UpdateRaidIcon(Frame, Unit)
+    local Index = GetRaidTargetIndex(Unit)
+
+    if (not Frame or not Unit) then 
+        return 
+    end
+
+    if (not Frame.RaidIcon) then
+        return
+    end
+
+    if (Index) then
+        Frame.RaidIcon:Show()
+        SetRaidTargetIconTexture(Frame.RaidIcon, Index)
+    else
+        Frame.RaidIcon:Hide()
     end
 end
 
@@ -286,6 +296,7 @@ function NP:UpdateFriendly(Frame)
     end
 
     if (Frame.Name) then self:UpdateName(Frame, Frame.Unit) end
+    if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame, Frame.Unit) end
 end
 
 function NP:UpdateEnemy(Frame)
@@ -296,6 +307,7 @@ function NP:UpdateEnemy(Frame)
     if (Frame.Health) then self:UpdateHealth(Frame, Frame.Unit) end
     if (Frame.HealthText) then self:UpdateHealthText(Frame, Frame.Unit) end
     if (Frame.Name) then self:UpdateName(Frame, Frame.Unit) end
+    if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame, Frame.Unit) end
     if (Frame.TargetIndicatorLeft and Frame.TargetIndicatorRight) then self:HighlightOnNameplateTarget(Frame, Frame.Unit) end
     if (Frame.Threat) then self:UpdateThreatHighlight(Frame, Frame.Unit) end
 end
@@ -304,20 +316,31 @@ end
 
 function NP:OnEvent(event, unit, ...)
     if (event == "NAME_PLATE_UNIT_ADDED") then
-        local Plate = C_NamePlate.GetNamePlateForUnit(unit, issecure())
+        local Plate = C_NamePlate.GetNamePlateForUnit(unit)
 
         if (not Plate) then 
             return 
         end
 
-        self:HideBlizzardFrames(Plate)
+        local IsFriend = UnitIsFriend("player", unit)
 
-        if UnitIsFriend("player", unit) then
+        if (IsFriend and Plate.FeelUINameplatesEnemy) then
+            Plate.FeelUINameplatesEnemy:Hide()
+            Plate.FeelUINameplatesEnemy.Unit = nil
+        end
+
+        if (not IsFriend and Plate.FeelUINameplatesFriendly) then
+            Plate.FeelUINameplatesFriendly:Hide()
+            Plate.FeelUINameplatesFriendly.Unit = nil
+        end
+
+        if (IsFriend) then
             if (not Plate.FeelUINameplatesFriendly) then
                 self:CreateFriendly(Plate, unit)
             else
                 Plate.FeelUINameplatesFriendly.Unit = unit
                 self:UpdateFriendly(Plate.FeelUINameplatesFriendly)
+                Plate.FeelUINameplatesFriendly:Show()
             end
         else
             if (not Plate.FeelUINameplatesEnemy) then
@@ -326,8 +349,11 @@ function NP:OnEvent(event, unit, ...)
                 Plate.FeelUINameplatesEnemy.Unit = unit
                 self:UpdateEnemy(Plate.FeelUINameplatesEnemy)
                 self:SetNameplateColor(unit, false)
+                Plate.FeelUINameplatesEnemy:Show()
             end
         end
+
+        self:HideBlizzardFrames(Plate)
     elseif (event == "NAME_PLATE_UNIT_REMOVED") then
         local Plate = C_NamePlate.GetNamePlateForUnit(unit)
 
@@ -348,7 +374,19 @@ function NP:OnEvent(event, unit, ...)
         if not UnitIsFriend("player", unit) then
             self:SetNameplateColor(unit, true)
         end
+    elseif (event == "RAID_TARGET_UPDATE") then
+        for _, Plate in ipairs(C_NamePlate.GetNamePlates()) do
+            local FriendlyFrame = Plate.FeelUINameplatesFriendly
+            local EnemyFrame = Plate.FeelUINameplatesEnemy
 
+            if (FriendlyFrame and FriendlyFrame.Unit) then
+                self:UpdateRaidIcon(FriendlyFrame, FriendlyFrame.Unit)
+            end
+
+            if (EnemyFrame and EnemyFrame.Unit) then
+                self:UpdateRaidIcon(EnemyFrame, EnemyFrame.Unit)
+            end
+        end
     elseif (event == "PLAYER_TARGET_CHANGED" or event == "UNIT_TARGETABLE_CHANGED") then
         for _, Plate in ipairs(C_NamePlate.GetNamePlates()) do
             local FriendlyFrame = Plate.FeelUINameplatesFriendly
@@ -406,6 +444,7 @@ function NP:RegisterEvents()
     self:RegisterEvent("UNIT_HEALTH")
     self:RegisterEvent("UNIT_MAXHEALTH")
     self:RegisterEvent("UNIT_SPELLCAST_START")
+    self:RegisterEvent("RAID_TARGET_UPDATE")
     self:SetScript("OnEvent", function(_, event, ...) 
         NP:OnEvent(event, ...) 
     end)

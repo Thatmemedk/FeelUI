@@ -146,16 +146,13 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
             end
         end
 
-        --[[
         if (Button.Count) then
-            --if (Count and Count > 0) then
             if (Count) then
-                Button.Count:SetText(Count)
+                Button.Count:SetText(C_StringUtil.TruncateWhenZero(Count))
             else
                 Button.Count:SetText("")
             end
         end
-        --]]
 
         if (IsDebuff) then
             -- Getting debuff color is SECRET.
@@ -166,23 +163,12 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
             Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
         end
 
-        --[[
         if (Button.Cooldown) then
-            Button.Cooldown:Hide()
-
-            if (Duration) then 
-                local SecretOK = pcall(function()
-                    if (Duration > 0) then
-                        Button.Cooldown:SetCooldown(ExpirationTime - Duration, Duration)
-                    end
-                end)
-
-                if (SecretOK and Duration and Duration > 0) then 
-                    Button.Cooldown:Show() 
-                end
+            if C_StringUtil.TruncateWhenZero(Duration) then
+                Button.Cooldown:SetCooldown(Duration, ExpirationTime)
+                Button.Cooldown:SetCooldownFromExpirationTime(ExpirationTime, Duration)
             end
         end
-        --]]
 
         local Direction = Auras.Direction or "RIGHT"
         local OffsetMultiplier = (Direction == "RIGHT") and 1 or -1
@@ -476,18 +462,14 @@ function UF:UpdateName(Frame)
 
     if UnitIsPlayer(Unit) then
         local _, Class = UnitClass(Unit)
-        local Color = RAID_CLASS_COLORS[Class]
+        local Color = UI.Colors.Class[Class]
 
-        if (Color) then
-            Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
-        end
+        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
     else
         local Reaction = UnitReaction(Unit, "player") or 5
         local Color = UI.Colors.Reaction[Reaction]
 
-        if (Color) then
-            Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
-        end
+        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
     end
 end
 
@@ -507,18 +489,14 @@ function UF:UpdateNameRaid(Frame)
 
     if UnitIsPlayer(Unit) then
         local _, Class = UnitClass(Unit)
-        local Color = RAID_CLASS_COLORS[Class]
+        local Color = UI.Colors.Class[Class]
 
-        if (Color) then
-            Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
-        end
+        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
     else
         local Reaction = UnitReaction(Unit, "player") or 5
         local Color = UI.Colors.Reaction[Reaction]
 
-        if (Color) then
-            Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
-        end
+        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
     end
 end
 
@@ -538,18 +516,14 @@ function UF:UpdateNameParty(Frame)
 
     if UnitIsPlayer(Unit) then
         local _, Class = UnitClass(Unit)
-        local Color = RAID_CLASS_COLORS[Class]
+        local Color = UI.Colors.Class[Class]
 
-        if (Color) then
-            Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
-        end
+        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
     else
         local Reaction = UnitReaction(Unit, "player") or 5
         local Color = UI.Colors.Reaction[Reaction]
 
-        if (Color) then
-            Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
-        end
+        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
     end
 end
 
@@ -567,18 +541,14 @@ function UF:UpdateTargetNameLevel(Frame)
 
     if UnitIsPlayer(Unit) then
         local _, Class = UnitClass(Unit)
-        local Color = RAID_CLASS_COLORS[Class]
+        local Color = UI.Colors.Class[Class]
 
-        if (Color) then
-            NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
-        end
+        NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
     else
         local Reaction = UnitReaction(Unit, "player") or 5
         local Color = UI.Colors.Reaction[Reaction]
 
-        if (Color) then
-            NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
-        end
+        NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
     end
 
     if (Level < 0) then
