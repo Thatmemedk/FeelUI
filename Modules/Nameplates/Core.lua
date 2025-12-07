@@ -23,6 +23,9 @@ local UnitIsPlayer = UnitIsPlayer
 local UnitClass = UnitClass
 local UnitThreatSituation = UnitThreatSituation
 
+-- WoW Globals
+local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
+
 -- HIDE BLIZZARD FRAMES
 
 function NP:HideBlizzardFrames(Plate)
@@ -104,11 +107,106 @@ function NP:CreateEnemy(Plate, Unit)
     self:CreateHealth(Frame)
     self:CreateHealthText(Frame)
     self:CreateName(Frame)
+    self:CreateDebuffs(Frame)
 
     -- Update Elements
     self:UpdateEnemy(Frame)
 
     Plate.EnemyIsCreated = true
+end
+
+-- AURAS
+
+function NP:UpdateAuras(Frame, Unit, IsDebuff)
+    local Auras = IsDebuff and Frame.Debuffs or Frame.Buffs
+
+    if not (Auras) then 
+        return 
+    end
+
+    local AurasToShow = Auras.NumAuras or 6
+    local Spacing = Auras.Spacing or 4
+    local ButtonSize = 24
+    local ActiveButtons = 0
+    local Index = 1
+
+    for _, Buttons in ipairs(Auras.Buttons) do
+        Buttons:Hide()
+    end
+
+    while ActiveButtons < AurasToShow do
+        local AuraData = GetAuraDataByIndex(Unit, Index, IsDebuff and "HARMFUL" or "HELPFUL")
+
+        if (not AuraData or not AuraData.name) then
+            break
+        end
+
+        local Name = AuraData.name
+        local Icon = AuraData.icon
+        local Count = AuraData.applications
+        local Duration = AuraData.duration
+        local ExpirationTime = AuraData.expirationTime
+        local OnlyPlayerDebuffs = AuraData.isFromPlayerOrPlayerPet
+        local Button = Auras.Buttons[ActiveButtons + 1]
+
+        if not (Button) then
+            break
+        end
+
+        if (Button.Icon) then
+            Button.Icon:SetTexture(Icon)
+        end
+
+        if (Button.Count) then
+            if (Count) then
+                Button.Count:SetText(C_StringUtil.TruncateWhenZero(Count))
+            else
+                Button.Count:SetText("")
+            end
+        end
+
+        if (Button.Cooldown) then
+            if C_StringUtil.TruncateWhenZero(Duration) then
+                Button.Cooldown:SetCooldown(Duration, ExpirationTime)
+                Button.Cooldown:SetCooldownFromExpirationTime(ExpirationTime, Duration)
+            end
+
+            local NumRegions = Button.Cooldown:GetNumRegions()
+
+            for i = 1, NumRegions do
+                local Region = select(i, Button.Cooldown:GetRegions())
+
+                if (Region.GetText) then
+                    Region:ClearAllPoints()
+                    Region:Point("CENTER", Button.Overlay, 0, -7)
+                    Region:SetFontTemplate("Default", 13)
+                    Region:SetTextColor(1, 0.82, 0)
+                end
+            end
+        end
+
+        if (IsDebuff) then
+            Button:SetColorTemplate(1, 0, 0)
+        else
+            Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
+        end
+
+        local Direction = Auras.Direction or "RIGHT"
+        local OffsetMultiplier = (Direction == "RIGHT") and 1 or -1
+
+        Button:ClearAllPoints()
+        Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, ActiveButtons * (ButtonSize + Spacing) * OffsetMultiplier, 0)
+        Button:Show()
+
+        ActiveButtons = ActiveButtons + 1
+        Index = Index + 1
+    end
+
+    for i = ActiveButtons + 1, #Auras.Buttons do
+        if Auras.Buttons[i] then
+            Auras.Buttons[i]:Hide()
+        end
+    end
 end
 
 -- COLORING
@@ -310,6 +408,7 @@ function NP:UpdateEnemy(Frame)
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame, Frame.Unit) end
     if (Frame.TargetIndicatorLeft and Frame.TargetIndicatorRight) then self:HighlightOnNameplateTarget(Frame, Frame.Unit) end
     if (Frame.Threat) then self:UpdateThreatHighlight(Frame, Frame.Unit) end
+    if (Frame.Debuffs) then self:UpdateAuras(Frame, Frame.Unit, true) end
 end
 
 -- EVENT HANDLER
@@ -414,6 +513,18 @@ function NP:OnEvent(event, unit, ...)
             self:UpdateEnemy(Plate.FeelUINameplatesEnemy)
             self:SetNameplateColor(unit, false)
         end
+    elseif (event == "UNIT_AURA") then
+        local Plate = C_NamePlate.GetNamePlateForUnit(unit)
+
+        if (not Plate) then 
+            return 
+        end
+
+        local EnemyFrame = Plate.FeelUINameplatesEnemy
+
+        if (EnemyFrame and EnemyFrame.Unit) then
+            self:UpdateAuras(EnemyFrame, EnemyFrame.Unit, true)
+        end
     end
 end
 
@@ -445,6 +556,7 @@ function NP:RegisterEvents()
     self:RegisterEvent("UNIT_MAXHEALTH")
     self:RegisterEvent("UNIT_SPELLCAST_START")
     self:RegisterEvent("RAID_TARGET_UPDATE")
+    self:RegisterEvent("UNIT_AURA")
     self:SetScript("OnEvent", function(_, event, ...) 
         NP:OnEvent(event, ...) 
     end)

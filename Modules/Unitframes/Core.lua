@@ -128,7 +128,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
 
     local AurasToShow = Auras.NumAuras or 7
     local Spacing = Auras.Spacing or 4
-    local Size = 24
+    local ButtonSize = 24
     local ActiveButtons = 0
     local Index = 1
 
@@ -202,14 +202,8 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
         local OffsetMultiplier = (Direction == "RIGHT") and 1 or -1
 
         Button:ClearAllPoints()
-        Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, ActiveButtons * (Size + Spacing) * OffsetMultiplier, 0)
+        Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, ActiveButtons * (ButtonSize + Spacing) * OffsetMultiplier, 0)
         Button:Show()
-
-        -- CACHE For Tooltip
-        Button.Unit = Unit
-        Button.AuraInstanceID = AuraInstanceID
-        Button.AuraFilter = IsDebuff and "HARMFUL" or "HELPFUL"
-        Button.AuraIndex = Index
 
         ActiveButtons = ActiveButtons + 1
         Index = Index + 1

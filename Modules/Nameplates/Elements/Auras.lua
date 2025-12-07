@@ -1,13 +1,13 @@
 local UI, DB, Media, Language = select(2, ...):Call()
 
 -- Call Modules
-local UF = UI:CallModule("UnitFrames")
+local NP = UI:CallModule("NamePlates")
 
 -- Lib Globals
 local select = select
 local unpack = unpack
 
-function UF:CreateAuraButton(Frame)
+function NP:CreateAuraButton(Frame)
     local Button = CreateFrame("Button", nil, Frame)
     Button:Size(30, 18)
     Button:SetTemplate()
@@ -44,58 +44,18 @@ function UF:CreateAuraButton(Frame)
     return Button
 end
 
-function UF:CreateBuffs(Frame)
-    local Buffs = CreateFrame("Frame", nil, Frame)
-    Buffs:Size(30, 18)  
-    Buffs:Point("TOPLEFT", Frame, 0, 32)
-    Buffs.NumAuras = 7
-    Buffs.Spacing = 9
-    Buffs.InitialAnchor = "TOPLEFT"
-    Buffs.Direction = "RIGHT"
-    Buffs.Buttons = {}
-
-    for i = 1, Buffs.NumAuras do
-        local Button = UF:CreateAuraButton(Buffs)
-        Button:Hide()
-
-        Buffs.Buttons[i] = Button
-    end
-
-    Frame.Buffs = Buffs
-end
-
-function UF:CreateDebuffs(Frame)
+function NP:CreateDebuffs(Frame)
     local Debuffs = CreateFrame("Frame", nil, Frame)
     Debuffs:Size(30, 18)
-    Debuffs:Point("TOPRIGHT", Frame, 0, 28*2)
-    Debuffs.NumAuras = 7
+    Debuffs:Point("TOPLEFT", Frame, -8, 12)
+    Debuffs.NumAuras = 6
     Debuffs.Spacing = 9
     Debuffs.InitialAnchor = "TOPRIGHT"
-    Debuffs.Direction = "LEFT"
-    Debuffs.Buttons = {}
-
-    for i = 1, Debuffs.NumAuras do
-        local Button = UF:CreateAuraButton(Debuffs)
-        Button:Hide()
-
-        Debuffs.Buttons[i] = Button
-    end
-
-    Frame.Debuffs = Debuffs
-end
-
-function UF:CreatePartyDebuffs(Frame)
-    local Debuffs = CreateFrame("Frame", nil, Frame)
-    Debuffs:Size(32, 18)
-    Debuffs:Point("RIGHT", Frame, 40, 0)
-    Debuffs.NumAuras = 7
-    Debuffs.Spacing = 9
-    Debuffs.InitialAnchor = "TOPLEFT"
     Debuffs.Direction = "RIGHT"
     Debuffs.Buttons = {}
 
     for i = 1, Debuffs.NumAuras do
-        local Button = UF:CreateAuraButton(Debuffs)
+        local Button = NP:CreateAuraButton(Debuffs)
         Button:Hide()
 
         Debuffs.Buttons[i] = Button

@@ -70,6 +70,7 @@
 	<Script file="Tooltip\Core.lua"/>
 	<!-- NamePlates -->
 	<Script file="Nameplates\Core.lua"/>
+	<Script file="Nameplates\Elements\Auras.lua"/>
 	<Script file="Nameplates\Elements\Health.lua"/>
 	<Script file="Nameplates\Elements\Highlight.lua"/>
 	<Script file="Nameplates\Elements\Texts.lua"/>
