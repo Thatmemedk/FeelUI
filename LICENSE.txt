@@ -1,0 +1,21 @@
+All Rights Reserved (ARR) Copyright ©2021-2025 FeelUI
+
+Permission to use, copy, modify, or distribute this software is NOT granted
+without explicit written permission from the copyright holder.
+
+Acknowledgements:
+This project is primarily original code, but some parts were inspired by ElvUI
+for World of Warcraft. Proper credit is given to the ElvUI.
+
+Usage and Restrictions:
+1. You may modify this addon for private use only.
+2. Publicizing or redistributing any portion of this addon outside of GitHub, Curseforge, Wago.io
+   requires prior written permission from the copyright holder.
+3. The name of this addon and its folder structure may not be modified.
+4. The copyright notice and this license must be included in all copies or
+   substantial portions of this software.
+5. ElvUI authors reserve the right to request removal of any code that is
+   originally from ElvUI, especially if hosted elsewhere without consent.
+6. Any other rights not explicitly addressed are reserved by the copyright holders.
+
+By using this software, you agree to these terms.

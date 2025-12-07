@@ -155,7 +155,7 @@ DB.Global = {
 		PartyFrames = false,
 		RaidFrames = true,
 		-- Health / Power
-		HealthBarColor = { 0.1, 0.1, 0.1 },
+		HealthBarColor = { 0.1, 0.1, 0.1, 0.7 },
 		-- Castbar
 		CastBarColor = { 0.45, 0.45, 0.45, 0.7 },
 		InterruptColor = { 170/255, 10/255, 10/255, 0.70 },

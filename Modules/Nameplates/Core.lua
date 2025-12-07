@@ -21,6 +21,7 @@ local UnitIsDead = UnitIsDead
 local UnitName = UnitName
 local UnitIsPlayer = UnitIsPlayer
 local UnitClass = UnitClass
+local GetRaidTargetIndex = GetRaidTargetIndex
 local UnitThreatSituation = UnitThreatSituation
 
 -- WoW Globals
@@ -124,9 +125,9 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
         return 
     end
 
+    local AuraWidth, AuraHeight = Auras:GetWidth(), Auras:GetHeight()
     local AurasToShow = Auras.NumAuras or 6
     local Spacing = Auras.Spacing or 4
-    local ButtonSize = 24
     local ActiveButtons = 0
     local Index = 1
 
@@ -135,7 +136,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
     end
 
     while ActiveButtons < AurasToShow do
-        local AuraData = GetAuraDataByIndex(Unit, Index, IsDebuff and "HARMFUL" or "HELPFUL")
+        local AuraData = GetAuraDataByIndex(Unit, Index, IsDebuff and "HARMFUL|PLAYER" or "HELPFUL")
 
         if (not AuraData or not AuraData.name) then
             break
@@ -146,7 +147,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
         local Count = AuraData.applications
         local Duration = AuraData.duration
         local ExpirationTime = AuraData.expirationTime
-        local OnlyPlayerDebuffs = AuraData.isFromPlayerOrPlayerPet
+        local PlayerDebuffsOnly = AuraData.sourceUnit == "player"
         local Button = Auras.Buttons[ActiveButtons + 1]
 
         if not (Button) then
@@ -155,6 +156,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
 
         if (Button.Icon) then
             Button.Icon:SetTexture(Icon)
+            UI:KeepAspectRatio(Auras, Button.Icon)
         end
 
         if (Button.Count) then
@@ -194,8 +196,9 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
         local Direction = Auras.Direction or "RIGHT"
         local OffsetMultiplier = (Direction == "RIGHT") and 1 or -1
 
+        Button:Size(AuraWidth, AuraHeight)
         Button:ClearAllPoints()
-        Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, ActiveButtons * (ButtonSize + Spacing) * OffsetMultiplier, 0)
+        Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, ActiveButtons * (AuraWidth + Spacing) * OffsetMultiplier, 0)
         Button:Show()
 
         ActiveButtons = ActiveButtons + 1
@@ -271,7 +274,7 @@ function NP:SetNameplateColor(Unit, IsCaster)
         return
     end
 
-    Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b)
+    Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.70)
 end
 
 -- HEALTH UPDATE
@@ -453,6 +456,7 @@ function NP:OnEvent(event, unit, ...)
         end
 
         self:HideBlizzardFrames(Plate)
+
     elseif (event == "NAME_PLATE_UNIT_REMOVED") then
         local Plate = C_NamePlate.GetNamePlateForUnit(unit)
 
@@ -469,10 +473,12 @@ function NP:OnEvent(event, unit, ...)
         end
 
         self:ShowBlizzardFrames(Plate)
+
     elseif (event == "UNIT_SPELLCAST_START") then
         if not UnitIsFriend("player", unit) then
             self:SetNameplateColor(unit, true)
         end
+
     elseif (event == "RAID_TARGET_UPDATE") then
         for _, Plate in ipairs(C_NamePlate.GetNamePlates()) do
             local FriendlyFrame = Plate.FeelUINameplatesFriendly
@@ -486,6 +492,7 @@ function NP:OnEvent(event, unit, ...)
                 self:UpdateRaidIcon(EnemyFrame, EnemyFrame.Unit)
             end
         end
+
     elseif (event == "PLAYER_TARGET_CHANGED" or event == "UNIT_TARGETABLE_CHANGED") then
         for _, Plate in ipairs(C_NamePlate.GetNamePlates()) do
             local FriendlyFrame = Plate.FeelUINameplatesFriendly
@@ -500,6 +507,7 @@ function NP:OnEvent(event, unit, ...)
                 self:SetNameplateColor(EnemyFrame.Unit, false)
             end
         end
+
     elseif (unit and event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
         local Plate = C_NamePlate.GetNamePlateForUnit(unit)
 
@@ -513,6 +521,7 @@ function NP:OnEvent(event, unit, ...)
             self:UpdateEnemy(Plate.FeelUINameplatesEnemy)
             self:SetNameplateColor(unit, false)
         end
+        
     elseif (event == "UNIT_AURA") then
         local Plate = C_NamePlate.GetNamePlateForUnit(unit)
 

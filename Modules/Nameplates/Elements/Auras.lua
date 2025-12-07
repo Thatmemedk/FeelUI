@@ -9,7 +9,6 @@ local unpack = unpack
 
 function NP:CreateAuraButton(Frame)
     local Button = CreateFrame("Button", nil, Frame)
-    Button:Size(30, 18)
     Button:SetTemplate()
     Button:CreateShadow()
     Button:StyleButton()
@@ -23,7 +22,6 @@ function NP:CreateAuraButton(Frame)
     -- ICON
     local Icon = Button:CreateTexture(nil, "ARTWORK")
     Icon:SetInside()
-    UI:KeepAspectRatio(Button, Icon)
     
     -- COOLDOWNS
     local Cooldown = CreateFrame("Cooldown", nil, Button, "CooldownFrameTemplate")
@@ -46,10 +44,10 @@ end
 
 function NP:CreateDebuffs(Frame)
     local Debuffs = CreateFrame("Frame", nil, Frame)
-    Debuffs:Size(30, 18)
+    Debuffs:Size(28, 16)
     Debuffs:Point("TOPLEFT", Frame, -8, 12)
     Debuffs.NumAuras = 6
-    Debuffs.Spacing = 9
+    Debuffs.Spacing = 3
     Debuffs.InitialAnchor = "TOPRIGHT"
     Debuffs.Direction = "RIGHT"
     Debuffs.Buttons = {}

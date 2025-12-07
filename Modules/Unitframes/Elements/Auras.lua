@@ -9,7 +9,6 @@ local unpack = unpack
 
 function UF:CreateAuraButton(Frame)
     local Button = CreateFrame("Button", nil, Frame)
-    Button:Size(30, 18)
     Button:SetTemplate()
     Button:CreateShadow()
     Button:StyleButton()
@@ -23,7 +22,6 @@ function UF:CreateAuraButton(Frame)
     -- ICON
     local Icon = Button:CreateTexture(nil, "ARTWORK")
     Icon:SetInside()
-    UI:KeepAspectRatio(Button, Icon)
     
     -- COOLDOWNS
     local Cooldown = CreateFrame("Cooldown", nil, Button, "CooldownFrameTemplate")
@@ -49,7 +47,7 @@ function UF:CreateBuffs(Frame)
     Buffs:Size(30, 18)  
     Buffs:Point("TOPLEFT", Frame, 0, 32)
     Buffs.NumAuras = 7
-    Buffs.Spacing = 9
+    Buffs.Spacing = 3
     Buffs.InitialAnchor = "TOPLEFT"
     Buffs.Direction = "RIGHT"
     Buffs.Buttons = {}
@@ -69,7 +67,7 @@ function UF:CreateDebuffs(Frame)
     Debuffs:Size(30, 18)
     Debuffs:Point("TOPRIGHT", Frame, 0, 28*2)
     Debuffs.NumAuras = 7
-    Debuffs.Spacing = 9
+    Debuffs.Spacing = 3
     Debuffs.InitialAnchor = "TOPRIGHT"
     Debuffs.Direction = "LEFT"
     Debuffs.Buttons = {}
@@ -89,7 +87,7 @@ function UF:CreatePartyDebuffs(Frame)
     Debuffs:Size(32, 18)
     Debuffs:Point("RIGHT", Frame, 40, 0)
     Debuffs.NumAuras = 7
-    Debuffs.Spacing = 9
+    Debuffs.Spacing = 3
     Debuffs.InitialAnchor = "TOPLEFT"
     Debuffs.Direction = "RIGHT"
     Debuffs.Buttons = {}

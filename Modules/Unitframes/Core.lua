@@ -126,9 +126,9 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
         return 
     end
 
-    local AurasToShow = Auras.NumAuras or 7
+    local AuraWidth, AuraHeight = Auras:GetWidth(), Auras:GetHeight()
+    local AurasToShow = Auras.NumAuras or 6
     local Spacing = Auras.Spacing or 4
-    local ButtonSize = 24
     local ActiveButtons = 0
     local Index = 1
 
@@ -148,7 +148,6 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
         local Count = AuraData.applications
         local Duration = AuraData.duration
         local ExpirationTime = AuraData.expirationTime
-        local AuraInstanceID = AuraData.auraInstanceID
         local Button = Auras.Buttons[ActiveButtons + 1]
 
         if not (Button) then
@@ -156,9 +155,8 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
         end
 
         if (Button.Icon) then
-            if (Icon) then
-                Button.Icon:SetTexture(Icon)
-            end
+            Button.Icon:SetTexture(Icon)
+            UI:KeepAspectRatio(Auras, Button.Icon)
         end
 
         if (Button.Count) then
@@ -190,9 +188,6 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
         end
 
         if (IsDebuff) then
-            -- Getting debuff color is SECRET.
-            --local Color = DebuffTypeColor[AuraData.dispelName] or DebuffTypeColor.none
-
             Button:SetColorTemplate(1, 0, 0)
         else
             Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
@@ -201,8 +196,9 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
         local Direction = Auras.Direction or "RIGHT"
         local OffsetMultiplier = (Direction == "RIGHT") and 1 or -1
 
+        Button:Size(AuraWidth, AuraHeight)
         Button:ClearAllPoints()
-        Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, ActiveButtons * (ButtonSize + Spacing) * OffsetMultiplier, 0)
+        Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, ActiveButtons * (AuraWidth + Spacing) * OffsetMultiplier, 0)
         Button:Show()
 
         ActiveButtons = ActiveButtons + 1
@@ -925,7 +921,7 @@ function UF:OnEvent(event, arg1)
         end)
 
         -- UNITFRAMES UPDATE    
-    elseif (event == "PLAYER_TARGET_CHANGED" or event == "UNIT_TARGETABLE_CHANGED") then
+    elseif (event == "PLAYER_TARGET_CHANGED") then
         for Unit, Frame in pairs(UF.Frames) do
             UF:UpdateFrame(Unit)
         end
@@ -938,6 +934,16 @@ function UF:OnEvent(event, arg1)
         UF:UpdateFrame("pet")
     elseif (event == "PLAYER_FOCUS_CHANGED") then
         UF:UpdateFrame("focus")
+
+    elseif (event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" or event == "UNIT_TARGETABLE_CHANGED") then
+       for i = 1, 5 do
+           local Unit = "boss"..i
+           local Frames = UF.Frames["boss"..i]
+
+           if (Frames and UnitExists(Unit)) then
+               UF:UpdateFrame(Unit)
+           end
+       end
 
         -- BUFFS / DEBUFFS
     elseif (event == "UNIT_AURA") then
@@ -961,7 +967,7 @@ function UF:OnEvent(event, arg1)
         end
 
         -- POWER UPDATE    
-    elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_MAXPOWER") then
+    elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_MAXPOWER" or event == "UNIT_POWER_UPDATE") then
         if (FramesUF) then
             UF:UpdatePower(FramesUF)
         end
@@ -1069,12 +1075,14 @@ function UF:RegisterEvents()
     SecureEventFrame:RegisterEvent("UNIT_POWER_FREQUENT")
     SecureEventFrame:RegisterEvent("UNIT_MAXPOWER")
     SecureEventFrame:RegisterEvent("UNIT_DISPLAYPOWER")
+    SecureEventFrame:RegisterEvent("UNIT_POWER_UPDATE")
     -- UNITS
     SecureEventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
     SecureEventFrame:RegisterEvent("PLAYER_FOCUS_CHANGED")
     SecureEventFrame:RegisterEvent("UNIT_TARGETABLE_CHANGED")
     SecureEventFrame:RegisterEvent("UNIT_TARGET")
     SecureEventFrame:RegisterEvent("UNIT_PET")
+    SecureEventFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
     -- CASTBAR
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_START")
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_STOP")
