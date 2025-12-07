@@ -81,7 +81,7 @@ function TT:GetColor(Unit)
         return
     end
 
-    return UI:RGBToHex(Color[1], Color[2], Color[3]), Color[1], Color[2], Color[3]
+    return UI:RGBToHex(Color.r, Color.g, Color.b), Color.r, Color.g, Color.b
 end
 
 function TT:ApplyStatusBarColor(Tooltip, Unit, ClassFile, Reaction)
@@ -101,10 +101,10 @@ function TT:ApplyStatusBarColor(Tooltip, Unit, ClassFile, Reaction)
         R, G, B = 0.5, 0, 0
     elseif UnitIsPlayer(Unit) then
         local Color = UI.Colors.Class[ClassFile]
-        R, G, B = Color and Color[1] or 1, Color and Color[2] or 1, Color and Color[3] or 1
+        R, G, B = Color.r, Color.g, Color.b
     else
         local Color = UI.Colors.Reaction[Reaction]
-        R, G, B = Color and Color[1] or 1, Color and Color[2] or 1, Color and Color[3] or 1
+        R, G, B = Color.r, Color.g, Color.b
     end
 
     GameTooltipStatusBar:SetStatusBarColor(R, G, B)

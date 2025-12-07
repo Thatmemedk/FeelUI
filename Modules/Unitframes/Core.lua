@@ -26,6 +26,21 @@ local UnitLevel = UnitLevel
 local RAID_CLASS_COLORS = _G.RAID_CLASS_COLORS
 local GetRaidTargetIndex = GetRaidTargetIndex
 local SetRaidTargetIconTexture = SetRaidTargetIconTexture
+local UnitHasIncomingResurrection = UnitHasIncomingResurrection
+local UnitInRaid = UnitInRaid
+local UnitIsGroupAssistant = UnitIsGroupAssistant
+local UnitIsGroupLeader = UnitIsGroupLeader
+local UnitIsConnected = UnitIsConnected
+local UnitIsTapDenied = UnitIsTapDenied
+local UnitIsGhost = UnitIsGhost
+local UnitIsDead = UnitIsDead
+local UnitPhaseReason = UnitPhaseReason
+
+-- WoW Globals
+local SUMMON_STATUS_NONE = Enum.SummonStatus.None or 0
+local SUMMON_STATUS_PENDING = Enum.SummonStatus.Pending or 1
+local SUMMON_STATUS_ACCEPTED = Enum.SummonStatus.Accepted or 2
+local SUMMON_STATUS_DECLINED = Enum.SummonStatus.Declined or 3
 
 -- WoW Globals
 local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
@@ -154,6 +169,26 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
             end
         end
 
+        if (Button.Cooldown) then
+            if C_StringUtil.TruncateWhenZero(Duration) then
+                Button.Cooldown:SetCooldown(Duration, ExpirationTime)
+                Button.Cooldown:SetCooldownFromExpirationTime(ExpirationTime, Duration)
+            end
+
+            local NumRegions = Button.Cooldown:GetNumRegions()
+
+            for i = 1, NumRegions do
+                local Region = select(i, Button.Cooldown:GetRegions())
+
+                if (Region.GetText) then
+                    Region:ClearAllPoints()
+                    Region:Point("CENTER", Button.Overlay, 0, -7)
+                    Region:SetFontTemplate("Default", 13)
+                    Region:SetTextColor(1, 0.82, 0)
+                end
+            end
+        end
+
         if (IsDebuff) then
             -- Getting debuff color is SECRET.
             --local Color = DebuffTypeColor[AuraData.dispelName] or DebuffTypeColor.none
@@ -161,13 +196,6 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
             Button:SetColorTemplate(1, 0, 0)
         else
             Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
-        end
-
-        if (Button.Cooldown) then
-            if C_StringUtil.TruncateWhenZero(Duration) then
-                Button.Cooldown:SetCooldown(Duration, ExpirationTime)
-                Button.Cooldown:SetCooldownFromExpirationTime(ExpirationTime, Duration)
-            end
         end
 
         local Direction = Auras.Direction or "RIGHT"
@@ -221,7 +249,7 @@ function UF:UpdateCastBars(Frame)
     Castbar.Max = Duration
     Castbar.Delay = Castbar.Delay or 0
 
-    if not (Castbar.Channeling) then
+    if (not Castbar.Channeling) then
         Castbar:SetValue(Elapsed)
 
         if (Castbar.CustomTimeText) then
@@ -239,8 +267,8 @@ end
 function UF:CastStart(Unit)
     local Frame = self.Frames[Unit]
 
-    if (not Frame or not Frame.Castbar) then 
-        return 
+    if (not Frame or not Frame.Castbar) then
+        return
     end
 
     local Name, _, Icon, StartTime, EndTime, NotInterruptible = UnitCastingInfo(Unit)
@@ -256,27 +284,27 @@ function UF:CastStart(Unit)
         return
     end
 
-    if (type(StartTime) == "number") then 
-        StartTime = StartTime / 1000 
+    if (type(StartTime) == "number") then
+        StartTime = StartTime / 1000
     end
 
-    if (type(EndTime) == "number") then 
-        EndTime = EndTime / 1000 
+    if (type(EndTime) == "number") then
+        EndTime = EndTime / 1000
     end
 
     Frame.Castbar.StartTime = StartTime or GetTime()
     Frame.Castbar.EndTime = EndTime or (GetTime() + 1.5)
     Frame.Castbar.Channeling = Channeling
-    Frame.Castbar.NotInterruptible = NotInterruptible
+    --Frame.Castbar.NotInterruptible = NotInterruptible
     Frame.Castbar.Max = Frame.Castbar.EndTime - Frame.Castbar.StartTime
     Frame.Castbar.Delay = 0
 
-    if (Frame.Castbar.Icon) then 
-        Frame.Castbar.Icon:SetTexture(Icon) 
+    if (Frame.Castbar.Icon) then
+        Frame.Castbar.Icon:SetTexture(Icon)
     end
 
-    if (Frame.Castbar.Text) then 
-        Frame.Castbar.Text:SetText(Name) 
+    if (Frame.Castbar.Text) then
+        Frame.Castbar.Text:SetText(Name)
     end
 
     if (Frame.Castbar.PostCastStart) then
@@ -290,7 +318,7 @@ function UF:CastStop(Unit)
     local Frame = self.Frames[Unit]
 
     if (not Frame or not Frame.Castbar) then
-        return 
+        return
     end
 
     if (Frame.Castbar.PostCastStop) then
@@ -308,34 +336,38 @@ function UF:CastStop(Unit)
 end
 
 function UF:PostCastStart()
+    --[[
     if (self.NotInterruptible) then
         self:SetStatusBarColor(unpack(DB.Global.UnitFrames.InterruptColor))
 
-        if (self.Icon) then 
-            self.Icon:SetDesaturated(1) 
+        if (self.Icon) then
+            self.Icon:SetDesaturated(1)
         end
     else
         self:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
 
-        if (self.Icon) then 
-            self.Icon:SetDesaturated(false) 
+        if (self.Icon) then
+            self.Icon:SetDesaturated(false)
         end
     end
+    --]]
 
     UI:UIFrameFadeIn(self, UF.FadeInTime, self:GetAlpha(), 1)
 end
 
 function UF:PostCastStop()
-    if (self.Name) then 
-        self.Name:SetText(FAILED or INTERRUPTED) 
+    self:SetStatusBarColor(unpack(DB.Global.UnitFrames.InterruptColor))
+
+    if (self.Text) then
+        self.Text:SetText(FAILED or INTERRUPTED)
     end
 
     UI:UIFrameFadeOut(self, UF.FadeInTime, self:GetAlpha(), 0)
 end
 
 function UF:PostCastFailed()
-    if (self.Name) then 
-        self.Name:SetText(FAILED or INTERRUPTED) 
+    if (self.Text) then 
+        self.Text:SetText(FAILED or INTERRUPTED) 
     end
     
     self:SetStatusBarColor(unpack(DB.Global.UnitFrames.InterruptColor))
@@ -662,6 +694,114 @@ function UF:UpdateRaidIcon(Frame)
     end
 end
 
+function UF:UpdateResurrectionIcon(Frame)
+    local Unit = Frame.unit
+
+    if (not Frame or not Unit) then
+        return
+    end
+
+    if (not Frame.ResurrectIcon) then
+        return
+    end
+
+    local UnitHasIncomingResurrection = UnitHasIncomingResurrection(Unit)
+
+    if (UnitHasIncomingResurrection) then
+        Frame.ResurrectIcon:Show()
+    else
+        Frame.ResurrectIcon:Hide()
+    end
+end
+
+function UF:UpdateAssistantIcon(Frame)
+    local Unit = Frame.unit
+
+    if (not Frame or not Unit) then
+        return
+    end
+
+    if (not Frame.AssistantIcon) then
+        return
+    end
+
+    local IsAssistant = UnitInRaid(Unit) and UnitIsGroupAssistant(Unit) and not UnitIsGroupLeader(Unit)
+
+    if (IsAssistant) then
+        Frame.AssistantIcon:Show()
+    else
+        Frame.AssistantIcon:Hide()
+    end
+end
+
+function UF:UpdateLeaderIcon(Frame)
+    local Unit = Frame.unit
+
+    if (not Frame or not Unit) then
+        return
+    end
+
+    if (not Frame.LeaderIcon) then
+        return
+    end
+
+    local UnitIsGroupLeader = UnitIsGroupLeader(Unit)
+
+    if (UnitIsGroupLeader) then
+        Frame.LeaderIcon:Show()
+    else
+        Frame.LeaderIcon:Hide()
+    end
+end
+
+function UF:UpdateSummonIcon(Frame)
+    local Unit = Frame.unit
+
+    if (not Frame or not Unit) then
+        return
+    end
+
+    if (not Frame.SummonIcon) then
+        return
+    end
+
+    local IncomingSummon = C_IncomingSummon.IncomingSummonStatus(Unit)
+
+    if (IncomingSummon ~= SUMMON_STATUS_NONE) then
+        if (IncomingSummon == SUMMON_STATUS_PENDING) then
+            Frame.SummonIcon:SetAtlas("Raid-Icon-SummonPending")
+        elseif (IncomingSummon == SUMMON_STATUS_ACCEPTED) then
+            Frame.SummonIcon:SetAtlas("Raid-Icon-SummonAccepted")
+        elseif (IncomingSummon == SUMMON_STATUS_DECLINED) then
+            Frame.SummonIcon:SetAtlas("Raid-Icon-SummonDeclined")
+        end
+
+        Frame.SummonIcon:Show()
+    else
+        Frame.SummonIcon:Hide()
+    end
+end
+
+function UF:UpdatePhaseIcon(Frame)
+    local Unit = Frame.unit
+
+    if (not Frame or not Unit) then
+        return
+    end
+
+    if (not Frame.PhaseIcon) then
+        return
+    end
+
+    local IsPhased = UnitIsPlayer(Unit) and UnitIsConnected(Unit) and UnitPhaseReason(Unit) or nil
+
+    if (IsPhased) then
+        Frame.PhaseIcon:Show()
+    else
+        Frame.PhaseIcon:Hide()
+    end
+end
+
 -- THREAT
 
 function UF:UpdateThreatHighlight(Frame)
@@ -733,6 +873,11 @@ function UF:UpdateFrame(Unit)
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame) end
     if (Frame.CombatIcon) then self:UpdateCombatIcon(Frame) end
     if (Frame.RestingIcon) then self:UpdateRestingIcon(Frame) end
+    if (Frame.ResurrectionIcon) then self:UpdateResurrectionIcon(Frame) end
+    if (Frame.LeaderIcon) then self:UpdateLeaderIcon(Frame) end
+    if (Frame.AssistantIcon) then self:UpdateAssistantIcon(Frame) end
+    if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame) end
+    if (Frame.PhaseIcon) then self:UpdatePhaseIcon(Frame) end
     -- HEALTH PRED
     if (Frame.UpdateHealthPred)then self:UpdateHealthPred(Frame) end
     -- THREAT
@@ -852,14 +997,31 @@ function UF:OnEvent(event, arg1)
             UF:UpdateRestingIcon(FramesUF)
         end
 
-    elseif (event == "UNIT_FLAGS") then
+    elseif (event == "RAID_TARGET_UPDATE") then
         if (FramesUF) then
-            UF:UpdateCombatIcon(FramesUF)
+            UF:UpdateRaidIcon(FramesUF)
         end
 
-    elseif (event == "RAID_TARGET_UPDATE") then
-        for _, Frames in pairs(UF.Frames) do
-            UF:UpdateRaidIcon(Frames)
+    elseif (event == "INCOMING_RESURRECT_CHANGED") then
+        if (FramesUF) then
+            UF:UpdateResurrectionIcon(FramesUF)
+        end
+
+    elseif (event == "UNIT_FLAGS" or event == "PARTY_LEADER_CHANGED" or event == "GROUP_ROSTER_UPDATE") then
+        if (FramesUF) then
+            UF:UpdateCombatIcon(FramesUF)
+            UF:UpdateLeaderIcon(FramesUF)
+            UF:UpdateAssistantIcon(FramesUF)
+        end
+
+    elseif (event == "INCOMING_SUMMON_CHANGED") then
+        if (FramesUF) then
+            UF:UpdateSummonIcon(FramesUF)
+        end
+
+    elseif (event == "UNIT_PHASE") then
+        if (FramesUF) then
+            UF:UpdatePhaseIcon(FramesUF)
         end
 
         -- CASTBAR UPDATE
@@ -904,6 +1066,11 @@ function UF:RegisterEvents()
     SecureEventFrame:RegisterEvent("UNIT_FLAGS")
     SecureEventFrame:RegisterEvent("PLAYER_UPDATE_RESTING")
     SecureEventFrame:RegisterEvent("RAID_TARGET_UPDATE")
+    SecureEventFrame:RegisterEvent("INCOMING_RESURRECT_CHANGED")
+    SecureEventFrame:RegisterEvent("PARTY_LEADER_CHANGED")
+    SecureEventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+    SecureEventFrame:RegisterEvent("INCOMING_SUMMON_CHANGED")
+    SecureEventFrame:RegisterEvent("UNIT_PHASE")
     -- POWER
     SecureEventFrame:RegisterEvent("UNIT_POWER_FREQUENT")
     SecureEventFrame:RegisterEvent("UNIT_MAXPOWER")

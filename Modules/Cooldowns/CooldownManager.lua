@@ -24,8 +24,8 @@ function CooldownManager:SkinIcons(Button)
 
 	local Icon = Button.Icon or Button.icon or Button.Texture or Button.texture
 	local Count = Button.Applications and Button.Applications.Applications
-	local Cooldown = Button.Cooldown
 	local Charges = Button.ChargeCount and Button.ChargeCount.Current
+	local Cooldown = Button.Cooldown
 
 	if not (Icon) then
 		return

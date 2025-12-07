@@ -9,14 +9,16 @@ local unpack = unpack
 local select = select
 
 -- WoW Globals
-local C_Container = _G.C_Container
 local C_Item = _G.C_Item
-local SetItemSearch = C_Container.SetItemSearch
+local C_Container = _G.C_Container
 local GetContainerNumSlots = GetContainerNumSlots or (C_Container and C_Container.GetContainerNumSlots)
 local GetContainerItemInfo = GetContainerItemInfo or (C_Container and C_Container.GetContainerItemInfo)
 local GetContainerItemQuestInfo = GetContainerItemQuestInfo or (C_Container and C_Container.GetContainerItemQuestInfo)
 local SetSortBagsRightToLeft = C_Container and C_Container.SetSortBagsRightToLeft or SetSortBagsRightToLeft
 local SetInsertItemsLeftToRight = C_Container and C_Container.SetInsertItemsLeftToRight or SetSortBagsRightToLeft
+local PickupContainerItem = C_Container.PickupContainerItem
+local UseContainerItem = C_Container.UseContainerItem
+local SetItemSearch = C_Container.SetItemSearch
 
 -- Locals
 B.ButtonWidth = 32
@@ -42,6 +44,7 @@ function B:DisableBlizzard()
         if (Frame) then
             Frame:UnregisterAllEvents()
             Frame:Hide()
+            Frame:HookScript("OnShow", Frame.Hide)
         end
     end
 
@@ -57,7 +60,7 @@ function B:DisableBlizzard()
 end
 
 function B:GetCachedItemName(ItemID)
-    if not ItemID then 
+    if (not ItemID) then 
         return "" 
     end
 
@@ -69,7 +72,7 @@ function B:GetCachedItemName(ItemID)
 end
 
 function B:GetContainerItemInfo(bag, slot)
-    if _G.GetContainerItemInfo then
+    if (_G.GetContainerItemInfo) then
         local info = {}
         info.iconFileID, info.stackCount, info.isLocked, info.quality, info.isReadable, info.hasLoot, info.hyperlink, info.isFiltered, info.hasNoValue, info.itemID, info.isBound = GetContainerItemInfo(bag, slot)
         return info
@@ -79,7 +82,7 @@ function B:GetContainerItemInfo(bag, slot)
 end
 
 function B:GetContainerItemQuestInfo(bag, slot)
-    if _G.GetContainerItemQuestInfo then
+    if (_G.GetContainerItemQuestInfo) then
         local info = {}
         info.isQuestItem, info.questID, info.isActive = GetContainerItemQuestInfo(bag, slot)
         return info
@@ -118,7 +121,7 @@ function B:CreateContainer()
     CloseButton:Point("TOPRIGHT", Container)
     CloseButton:HandleCloseButton(-6, -8, 16)
     CloseButton:SetScript("OnMouseUp", function()
-        CloseAllBags()
+        B:CloseAllBags()
         PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
     end)
 
@@ -209,28 +212,18 @@ function B:CreateReagentContainer()
     InvisFrame:SetFrameLevel(ReagentContainer:GetFrameLevel() + 10)
     InvisFrame:SetInside()
 
-    --ReagentContainer.Title = InvisFrame:CreateFontString(nil, "OVERLAY")
-    --ReagentContainer.Title:Point("TOP", ReagentContainer, 0, 8)
-    --ReagentContainer.Title:SetFontTemplate("Default", 16)
-    --ReagentContainer.Title:SetText("Reagent")
-    --ReagentContainer.Title:SetTextColor(1, 0.82, 0)
-
     self.ReagentContainer = ReagentContainer
 end
 
-function B:CreateItemSlot(ID)
-    local Button = CreateFrame("Button", nil, ID, "SecureActionButtonTemplate")
-    Button:SetFrameLevel(ID:GetFrameLevel() + 10)
+function B:CreateItemSlot(Frame)
+    local Button = CreateFrame("Button", nil, Frame, "SecureActionButtonTemplate")
+    Button:SetFrameLevel(Frame:GetFrameLevel() + 10)
     Button:Size(B.ButtonWidth, B.ButtonHeight)
     Button:CreateButtonPanel()
     Button:CreateButtonBackdrop()
     Button:CreateShadow()
     Button:StyleButton()
     Button:SetShadowOverlay()
-    -- Add Clicks
-    Button:EnableMouse(true)
-    Button:RegisterForClicks("AnyUp")
-    Button:SetAttribute("type", "item")
 
     Button.Icon = Button:CreateTexture(nil, "ARTWORK")
     Button.Icon:SetInside(Button, 1, 1)
@@ -254,43 +247,34 @@ function B:CreateItemSlot(ID)
 
     Button.NewItemAnimation = Button.NewItemTexture:CreateAnimationGroup()
     Button.NewItemAnimation:SetLooping("BOUNCE")
-
     Button.NewItemAnimation.FadeOut = Button.NewItemAnimation:CreateAnimation("Alpha")
     Button.NewItemAnimation.FadeOut:SetFromAlpha(1)
     Button.NewItemAnimation.FadeOut:SetToAlpha(0.5)
     Button.NewItemAnimation.FadeOut:SetDuration(0.5)
     Button.NewItemAnimation.FadeOut:SetSmoothing("IN_OUT")
 
-    -- Tooltips
-    Button:HookScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetBagItem(self.bag, self.slot)
-        GameTooltip:Show()
-
-        if C_NewItems and C_NewItems.IsNewItem(self.bag, self.slot) then
-            C_NewItems.RemoveNewItem(self.bag, self.slot)
-            if self.NewItemTexture then self.NewItemTexture:Hide() end
-            if self.NewItemAnimation and self.NewItemAnimation:IsPlaying() then
-                self.NewItemAnimation:Stop()
-            end
-        end
-    end)
-
-    Button:HookScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
+    -- Register Buttons
+    Button:EnableMouse(true)
+    Button:RegisterForClicks("AnyUp") -- required for secure template
+    Button:RegisterForDrag("LeftButton") -- allows picking up items
 
     -- Shift-click to chat link
-    Button:SetScript("OnMouseDown", function(self)
-        if IsShiftKeyDown() then
-            local ItemID = GetContainerItemID(self.bag, self.slot)
-            if ItemID then
-                local ItemLink = GetItemLink(ItemID)
-                if ItemLink then
-                    ChatEdit_InsertLink(ItemLink)
-                end
-            end
+    Button:HookScript("PreClick", function(self, mouseButton)
+        if IsShiftKeyDown() and mouseButton == "LeftButton" and self.ItemLink then
+            ChatEdit_InsertLink(self.ItemLink)
         end
+    end)
+
+    Button:HookScript("OnEnter", function(self)
+        if self.ItemLink then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetBagItem(self.bag, self.slot)
+            GameTooltip:Show()
+        end
+    end)
+
+    Button:HookScript("OnLeave", function() 
+        GameTooltip:Hide() 
     end)
 
     return Button
@@ -310,6 +294,11 @@ function B:UpdateItemSlots(BagID, StartIndex, SlotTable, ParentFrame, isReagent)
 
         -- Assign bag and slot
         Button.bag, Button.slot = BagID, Slot
+
+        -- set attributes for the secure template
+        Button:SetAttribute("type", "item")
+        Button:SetAttribute("bag", BagID)
+        Button:SetAttribute("slot", Slot)
 
         -- Set secure item location for proper click handling
         local il = ItemLocation:CreateFromBagAndSlot(BagID, Slot)
@@ -438,22 +427,16 @@ function B:UpdateMoneyText()
 end
 
 function B:OnEvent(event, ...)
-    if event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_MONEY" or event == "PLAYER_TRADE_MONEY" or event == "TRADE_MONEY_CHANGED" then
+    if (event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_MONEY" or event == "PLAYER_TRADE_MONEY" or event == "TRADE_MONEY_CHANGED") then
         self:UpdateMoneyText()
     end
 
-    if event == "BAG_UPDATE" or event == "BAG_UPDATE_DELAYED" or event == "PLAYERBANKSLOTS_CHANGED" or event == "BANKFRAME_OPENED" or event == "BANKFRAME_CLOSED" then
+    if (event == "BAG_UPDATE" or event == "BAG_UPDATE_DELAYED" or event == "PLAYERBANKSLOTS_CHANGED" or event == "BANKFRAME_OPENED" or event == "BANKFRAME_CLOSED") then
         self:UpdateBags()
     end
 end
 
 function B:OpenBags()
-    OpenAllBags = function() end
-    OpenBackpack = function() end
-    ToggleBag = function() end
-    ToggleBackpack = function() end
-    ToggleAllBags = function() end
-
     hooksecurefunc("OpenBackpack", function() B:ToggleStandaloneBag() end)
     hooksecurefunc("CloseBackpack", function() B:CloseAllBags() end)
     hooksecurefunc("ToggleBackpack", function() B:ToggleStandaloneBag() end)
@@ -462,7 +445,7 @@ function B:OpenBags()
     hooksecurefunc("ToggleAllBags", function() B:ToggleStandaloneBag() end)
 end
 
-function B:Update()
+function B:RegisterEvents()
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("BAG_UPDATE")
     self:RegisterEvent("BAG_UPDATE_DELAYED")
@@ -476,9 +459,6 @@ function B:Update()
     self:RegisterEvent("PLAYER_TRADE_MONEY")
     self:RegisterEvent("TRADE_MONEY_CHANGED")
     self:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
-    self:RegisterEvent("SOULBIND_FORGE_INTERACTION_STARTED")
-    self:RegisterEvent("SOULBIND_FORGE_INTERACTION_ENDED")
-
     self:SetScript("OnEvent", function(_, event, ...) 
         self:OnEvent(event, ...) 
     end)
@@ -498,7 +478,7 @@ function B:Initialize()
     self:DisableBlizzard()
     self:CreateContainer()
     self:CreateReagentContainer()
-    self:Update()
+    self:RegisterEvents()
     self:OpenBags()
     self:SortBags()
     --]]

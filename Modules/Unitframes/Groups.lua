@@ -12,28 +12,49 @@ function UF:SetupPartyFrames(Frame)
     Frame:SetAttribute("*type2", "togglemenu")
     Frame:RegisterForClicks("AnyUp")
 
+    -- Panels
     self:CreatePanels(Frame)
     self:CreateHightlight(Frame)
     self:CreateFadeInOut(Frame)
+    -- Health
     self:CreateHealth(Frame)
     self:CreatePartyTexts(Frame)
+    -- Icons
     self:CreateRaidIcon(Frame)
+    self:CreateResurrectIcon(Frame)
+    self:CreateLeaderIcon(Frame)
+    self:CreateAssistantIcon(Frame)
+    self:CreateSummonIcon(Frame)
+    self:CreatePhaseIcon(Frame)
+    -- Aura
     self:CreatePartyDebuffs(Frame)
+    -- Threat
     self:CreateThreatHighlightRaid(Frame)
 
     Frame:HookScript("OnAttributeChanged", function(self, name, value)
         if (name == "unit" and value) then
             self.unit = value
 
+            -- Health
             UF:UpdateHealth(self)
-            UF:UpdateRaidIcon(self)
             UF:UpdateHealthTextCur(self)
             UF:UpdateHealthTextPer(self)
+            -- Power
             UF:UpdatePower(self)
+            -- Name
             UF:UpdateNameParty(self)
-            UF:UpdateThreatHighlightRaid(self)
+            -- Icons
+            UF:UpdateRaidIcon(self)
+            UF:UpdateResurrectionIcon(self)
+            UF:UpdateLeaderIcon(self)
+            UF:UpdateAssistantIcon(self)
+            UF:UpdateSummonIcon(self)
+            UF:UpdatePhaseIcon(self)
+            -- Aura
             --UF:UpdateAuras(self, value, false)
             UF:UpdateAuras(self, value, true)
+            -- Threat
+            UF:UpdateThreatHighlightRaid(self)
         end
     end)
 
@@ -49,25 +70,44 @@ function UF:SetupRaidFrames(Frame)
     Frame:SetAttribute("*type2", "togglemenu")
     Frame:RegisterForClicks("AnyUp")
 
+    -- Panels
     self:CreatePanels(Frame)
     self:CreateHightlight(Frame)
     self:CreateFadeInOut(Frame)
+    -- Health
     self:CreateHealth(Frame, 42, "VERTICAL")
+    -- Texts
     self:CreateRaidTexts(Frame)
+    -- Icons
     self:CreateRaidIcon(Frame)
+    self:CreateResurrectIcon(Frame)
+    self:CreateLeaderIcon(Frame)
+    self:CreateAssistantIcon(Frame)
+    self:CreateSummonIcon(Frame)
+    self:CreatePhaseIcon(Frame)
+    -- Threat
     self:CreateThreatHighlightRaid(Frame)
 
     Frame:HookScript("OnAttributeChanged", function(self, name, value)
         if (name == "unit" and value) then
             self.unit = value
 
+            -- Health
             UF:UpdateHealth(self)
-            UF:UpdateRaidIcon(self)
             UF:UpdateHealthTextCur(self)
             UF:UpdateHealthTextPer(self)
-            UF:UpdatePower(self)
+            -- Name
             UF:UpdateNameRaid(self)
+            -- Icons
+            UF:UpdateRaidIcon(self)
+            UF:UpdateResurrectionIcon(self)
+            UF:UpdateLeaderIcon(self)
+            UF:UpdateAssistantIcon(self)
+            UF:UpdateSummonIcon(self)
+            UF:UpdatePhaseIcon(self)
+            -- Threat
             UF:UpdateThreatHighlightRaid(self)
+            -- Aura
             --UF:UpdateAuras(self, value, true)
         end
     end)

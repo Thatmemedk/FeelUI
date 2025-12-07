@@ -108,7 +108,7 @@ function ExperienceBar:OnEvent(event)
 	
 	self.Text:SetText(floor(Min/Max*100).."%")
 
-	if (UI.MyLevel == MAX_PLAYER_LEVEL or IsXPUserDisabled()) then
+	if (UI.MyLevel == 90 or IsXPUserDisabled()) then
 		self.Bar:Hide()
 	end
 end

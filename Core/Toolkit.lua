@@ -699,8 +699,8 @@ local function AddAPI(object)
 		if mt.SetColorTexture then hooksecurefunc(mt, "SetColorTexture", DisablePixelSnap) end
 		if mt.SetVertexColor then hooksecurefunc(mt, "SetVertexColor", DisablePixelSnap) end
 		if mt.CreateTexture then hooksecurefunc(mt, "CreateTexture", DisablePixelSnap) end
-		if mt.SetTexCoord then hooksecurefunc(mt, "SetTexCoord", DisablePixelSnap) end
 		if mt.SetTexture then hooksecurefunc(mt, "SetTexture", DisablePixelSnap) end
+		if mt.SetTexCoord then hooksecurefunc(mt, "SetTexCoord", DisablePixelSnap) end
 
 		mt.DisabledPixelSnap = true
 	end
