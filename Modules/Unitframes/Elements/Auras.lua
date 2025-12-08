@@ -101,3 +101,23 @@ function UF:CreatePartyDebuffs(Frame)
 
     Frame.Debuffs = Debuffs
 end
+
+function UF:CreateRaidDebuffs(Frame)
+    local Debuffs = CreateFrame("Frame", nil, Frame.InvisFrameHigher)
+    Debuffs:Size(26, 16)
+    Debuffs:Point("LEFT", Frame, 10, 0)
+    Debuffs.NumAuras = 2
+    Debuffs.Spacing = 4
+    Debuffs.InitialAnchor = "TOPLEFT"
+    Debuffs.Direction = "RIGHT"
+    Debuffs.Buttons = {}
+
+    for i = 1, Debuffs.NumAuras do
+        local Button = UF:CreateAuraButton(Debuffs)
+        Button:Hide()
+
+        Debuffs.Buttons[i] = Button
+    end
+
+    Frame.Debuffs = Debuffs
+end

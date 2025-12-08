@@ -74,7 +74,7 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         return 
     end
 
-    local Frame = CreateFrame("Button", "UF_FeelUI_" .. Unit, UF.SecureFrame, "SecureUnitButtonTemplate, PingableUnitFrameTemplate")
+    local Frame = CreateFrame("Button", "FeelUI_" .. Unit, UF.SecureFrame, "SecureUnitButtonTemplate, PingableUnitFrameTemplate")
     Frame.unit = Unit
 
     Frame:Size(Width or 228, Height or 36)
@@ -104,14 +104,14 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         self:CreatePlayerTexts(Frame)
         self:CreatePlayerCastbar(Frame)
         self:CreatePortrait(Frame)
-        --self:CreateHealthPrediction(Frame)
+        self:CreateHealthPrediction(Frame)
         --self:CreateBuffs(Frame)
     elseif (Unit == "target") then
         self:CreateTargetTexts(Frame)
         self:CreatePortrait(Frame)
         self:CreateSummonIcon(Frame)
         self:CreatePhaseIcon(Frame)
-        --self:CreateHealthPrediction(Frame)
+        self:CreateHealthPrediction(Frame)
         --self:CreateTargetCastbar(Frame)
         self:CreateBuffs(Frame)
         self:CreateDebuffs(Frame)
@@ -181,18 +181,18 @@ function UF:CreateUF()
 
     -- PARTY FRAMES
     if (DB.Global.UnitFrames.PartyFrames) then
-        local Party = UF:SpawnPartyHeader()
+        local Party = UF:SpawnGroupHeader("party")
         Party:Point(unpack(DB.Global.UnitFrames.PartyPoint))
 
-        self.Party = Party
+        self.Frames.Party = Party
     end
 
     -- RAID FRAMES
     if (DB.Global.UnitFrames.RaidFrames) then
-        local Raid = UF:SpawnRaidHeader()
+        local Raid = UF:SpawnGroupHeader("raid")
         Raid:Point(unpack(DB.Global.UnitFrames.RaidPoint))
 
-        self.Raid = Raid
+        self.Frames.Raid = Raid
     end
 
     -- CACHE REFERENCES
@@ -201,6 +201,4 @@ function UF:CreateUF()
     self.Frames.TargetTarget = TargetTarget
     self.Frames.Focus = Focus
     self.Frames.Pet = Pet
-    self.Party = Party
-    self.Raid = Raid
 end

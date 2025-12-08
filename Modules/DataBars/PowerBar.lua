@@ -25,6 +25,7 @@ function PowerBar:CreateBar()
 	Bar:SetStatusBarTexture(Media.Global.Texture)
 	Bar:CreateBackdrop()
 	Bar:CreateShadow()
+	Bar:CreateSpark()
 	
 	local InvisFrame = CreateFrame("Frame", nil, Bar)
 	InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
@@ -46,6 +47,12 @@ function PowerBar:Update()
 	self.Bar:SetMinMaxValues(0, Max)
 	self.Bar:SetValue(Min, UI.SmoothBars)
 	self.Text:SetText(AbbreviateNumbers(Min))
+
+	if (Min) then
+		self.Bar.Spark:Show()
+	else
+		self.Bar.Spark:Hide()
+	end
 
 	if (PowerColor) then
 		self.Bar:SetStatusBarColor(unpack(PowerColor))

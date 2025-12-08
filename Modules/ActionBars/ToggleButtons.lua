@@ -56,6 +56,7 @@ function AB:ToggleButtonOnEvent(event)
 	end
 
 	if (event == "PLAYER_REGEN_DISABLED") then
+		self:Hide()
 		self:Point("LEFT", _G.UIParent, 6, 0)
 
 		if (DB.Global.UnitFrames.RaidFrames) then
@@ -63,8 +64,17 @@ function AB:ToggleButtonOnEvent(event)
 				FeelUI_Raid:Point("LEFT", _G.UIParent, 6, 1)
 			end
 		end
+
+		local Bar = AB.ActionBar4
+	
+		if (Bar:IsVisible()) then
+			UnregisterStateDriver(Bar, "visibility")
+			Bar:Hide()
+		end
 	elseif (event == "PLAYER_REGEN_ENABLED") then
-		self:Point("LEFT", _G.UIParent, 54, 0)
+		self:Show()
+	else
+		self:Hide()
 	end
 end
 

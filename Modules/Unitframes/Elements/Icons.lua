@@ -74,16 +74,22 @@ function UF:CreateReadyCheckIcon(Frame)
     local ReadyCheckIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
     ReadyCheckIcon:Size(24, 24)
     ReadyCheckIcon:Point("CENTER", Frame.Health, 0, 0)
-    
-    Frame.ReadyCheckIcon = ReadyCheckIcon
-end
+    ReadyCheckIcon:Hide()
 
-function UF:CreateRoleIcon(Frame)
-    local RoleIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
-    RoleIcon:Size(11, 11)
-    RoleIcon:Point("TOP", Frame.Health, 0, 0)
-    
-    Frame.RoleIcon = RoleIcon
+    local Animation = ReadyCheckIcon:CreateAnimationGroup()
+
+    local Fade = Animation:CreateAnimation("Alpha")
+    Fade:SetFromAlpha(1)
+    Fade:SetToAlpha(0)
+    Fade:SetDuration(1.5)
+    Fade:SetStartDelay(10)
+
+    Animation:SetScript("OnFinished", function()
+        ReadyCheckIcon:Hide()
+    end)
+
+    Frame.Animation = Animation
+    Frame.ReadyCheckIcon = ReadyCheckIcon
 end
 
 function UF:CreateSummonIcon(Frame)

@@ -147,7 +147,6 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
         local Count = AuraData.applications
         local Duration = AuraData.duration
         local ExpirationTime = AuraData.expirationTime
-        local PlayerDebuffsOnly = AuraData.sourceUnit == "player"
         local Button = Auras.Buttons[ActiveButtons + 1]
 
         if not (Button) then

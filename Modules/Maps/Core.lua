@@ -127,6 +127,7 @@ function Maps:Disable()
 		"MinimapNorthTag",
 		"MiniMapWorldMapButton",
 		"MinimapBackdrop",
+		"TimeManagerClockTicker",
 	}
 
 	local DisableFrames = {

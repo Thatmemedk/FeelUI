@@ -12,7 +12,6 @@ local format = string.format
 -- WoW Globals
 local C_Timer = _G.C_Timer
 local CreateFrame = CreateFrame
-local InCombatLockdown = InCombatLockdown
 local UnitHealth = UnitHealth
 local UnitHealthMax = UnitHealthMax
 local UnitPower = UnitPower
@@ -23,7 +22,6 @@ local UnitExists = UnitExists
 local UnitClass = UnitClass
 local UnitName = UnitName
 local UnitLevel = UnitLevel
-local RAID_CLASS_COLORS = _G.RAID_CLASS_COLORS
 local GetRaidTargetIndex = GetRaidTargetIndex
 local SetRaidTargetIconTexture = SetRaidTargetIconTexture
 local UnitHasIncomingResurrection = UnitHasIncomingResurrection
@@ -35,12 +33,22 @@ local UnitIsTapDenied = UnitIsTapDenied
 local UnitIsGhost = UnitIsGhost
 local UnitIsDead = UnitIsDead
 local UnitPhaseReason = UnitPhaseReason
+local GetReadyCheckStatus = GetReadyCheckStatus
+local UnitGetTotalHealAbsorbs = UnitGetTotalHealAbsorbs
+local UnitGetIncomingHeals = UnitGetIncomingHeals
+local UnitGetIncomingHeals = UnitGetIncomingHeals
+local UnitGetTotalAbsorbs = UnitGetTotalAbsorbs
 
 -- WoW Globals
 local SUMMON_STATUS_NONE = Enum.SummonStatus.None or 0
 local SUMMON_STATUS_PENDING = Enum.SummonStatus.Pending or 1
 local SUMMON_STATUS_ACCEPTED = Enum.SummonStatus.Accepted or 2
 local SUMMON_STATUS_DECLINED = Enum.SummonStatus.Declined or 3
+
+-- WoW Globals
+local READY_CHECK_READY_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Ready"
+local READY_CHECK_NOT_READY_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-NotReady"
+local READY_CHECK_WAITING_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Waiting"
 
 -- WoW Globals
 local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
@@ -52,6 +60,8 @@ local INTERRUPTED = _G.INTERRUPTED or "Interrupted"
 -- Locals
 UF.HiddenFrames = {}
 UF.Frames = {}
+UF.Frames.Party = {}
+UF.Frames.Raid = {}
 
 -- Locals
 UF.FadeInTime = 0.5
@@ -326,7 +336,6 @@ function UF:CastStop(Unit)
 end
 
 function UF:PostCastStart()
-    --[[
     if (self.NotInterruptible) then
         self:SetStatusBarColor(unpack(DB.Global.UnitFrames.InterruptColor))
 
@@ -340,7 +349,6 @@ function UF:PostCastStart()
             self.Icon:SetDesaturated(false)
         end
     end
-    --]]
 
     UI:UIFrameFadeIn(self, UF.FadeInTime, self:GetAlpha(), 1)
 end
@@ -421,29 +429,65 @@ end
 
 function UF:UpdateHealthPred(Frame)
     local Unit = Frame.unit
-    local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
-    local AbsorbAmount = UnitGetTotalAbsorbs(Unit) or 0
 
-    if (not Frame.AbsorbBar) then
-        return
+    if (not Frame.Health or not Frame.MyHeals or not Frame.OtherHeals or not Frame.Absorbs or not Frame.HealAbsorbs) then 
+        return 
     end
 
-    if (AbsorbAmount) then
-        local HealthOrientation = Frame.Health:GetOrientation()
-        local PreviousTexture = Frame.Health:GetStatusBarTexture()
-        local TotalWidth = Frame.Health:GetWidth()
-        local TotalHeight = Frame.Health:GetHeight()
+    local Max = UnitHealthMax(Unit)
+    local Current = UnitHealth(Unit)
+    local MyIncomingHeal = UnitGetIncomingHeals(Unit, "player") or 0
+    local AllIncomingHeal = UnitGetIncomingHeals(Unit) or 0
+    local Absorb = UnitGetTotalAbsorbs(Unit) or 0
+    local HealAbsorb = UnitGetTotalHealAbsorbs(Unit) or 0
+    local HealthOrientation = Frame.Health:GetOrientation()
+    local PreviousTexture = Frame.Health:GetStatusBarTexture()
+    local Width = Frame.Health:GetWidth()
+    local Height = Frame.Health:GetHeight()
 
-        Frame.AbsorbBar:SetMinMaxValues(0, Max)
-        Frame.AbsorbBar:SetValue(AbsorbAmount, Enum.StatusBarInterpolation.ExponentialEaseOut)
+    Frame.MyHeals:SetOrientation(HealthOrientation)
+    Frame.MyHeals:Size(Width, Height)
+    Frame.MyHeals:SetMinMaxValues(0, Max)
+    Frame.MyHeals:SetValue(MyIncomingHeal, UI.SmoothBars)
+    Frame.MyHeals:Show()
 
-        Frame.AbsorbBar:SetOrientation(HealthOrientation)
-        Frame.AbsorbBar:SetParent(Frame.Health)
-        Frame.AbsorbBar:Size(TotalWidth, TotalHeight)
-        Frame.AbsorbBar:Point("LEFT", PreviousTexture, "RIGHT", 0, 0)
-        Frame.AbsorbBar:Show()
+    Frame.OtherHeals:SetOrientation(HealthOrientation)
+    Frame.OtherHeals:Size(Width, Height)
+    Frame.OtherHeals:SetMinMaxValues(0, Max)
+    Frame.OtherHeals:SetValue(AllIncomingHeal, UI.SmoothBars)
+    Frame.OtherHeals:Show()
+
+    Frame.Absorbs:SetOrientation(HealthOrientation)
+    Frame.Absorbs:SetReverseFill(true)
+    Frame.Absorbs:Size(Width, Height)
+    Frame.Absorbs:SetMinMaxValues(0, Max)
+    Frame.Absorbs:SetValue(Absorb, UI.SmoothBars)
+    Frame.Absorbs:Show()
+
+    Frame.HealAbsorbs:SetOrientation(HealthOrientation)
+    Frame.HealAbsorbs:Size(Width, Height)
+    Frame.HealAbsorbs:SetMinMaxValues(0, Max)
+    Frame.HealAbsorbs:SetValue(HealAbsorb, UI.SmoothBars)
+    Frame.HealAbsorbs:Show()
+
+    if (HealthOrientation == "HORIZONTAL") then
+        Frame.MyHeals:Point("TOPLEFT", PreviousTexture, "TOPRIGHT", 0, 0)
+        Frame.MyHeals:Point("BOTTOMLEFT", PreviousTexture, "BOTTOMRIGHT", 0, 0)
+        Frame.OtherHeals:Point("TOPLEFT", Frame.MyHeals:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+        Frame.OtherHeals:Point("BOTTOMLEFT", Frame.MyHeals:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
+        Frame.Absorbs:Point("TOPRIGHT", PreviousTexture, "TOPRIGHT", 0, 0)
+        Frame.Absorbs:Point("BOTTOMRIGHT", PreviousTexture, "BOTTOMRIGHT", 0, 0)
+        Frame.HealAbsorbs:Point("TOPRIGHT", PreviousTexture, "TOPRIGHT", 0, 0)
+        Frame.HealAbsorbs:Point("BOTTOMRIGHT", PreviousTexture, "BOTTOMRIGHT", 0, 0)
     else
-        Frame.AbsorbBar:Hide()
+        Frame.MyHeals:Point("BOTTOMLEFT", PreviousTexture, "TOPLEFT", 0, 0)
+        Frame.MyHeals:Point("BOTTOMRIGHT", PreviousTexture, "TOPRIGHT", 0, 0)
+        Frame.OtherHeals:Point("BOTTOMLEFT", Frame.MyHeals:GetStatusBarTexture(), "TOPLEFT", 0, 0)
+        Frame.OtherHeals:Point("BOTTOMRIGHT", Frame.MyHeals:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+        Frame.Absorbs:Point("TOPLEFT", PreviousTexture, "TOPLEFT", 0, 0)
+        Frame.Absorbs:Point("TOPRIGHT", PreviousTexture, "TOPRIGHT", 0, 0)
+        Frame.HealAbsorbs:Point("TOPLEFT", PreviousTexture, "TOPLEFT", 0, 0)
+        Frame.HealAbsorbs:Point("TOPRIGHT", PreviousTexture, "TOPRIGHT", 0, 0)
     end
 end
 
@@ -792,6 +836,45 @@ function UF:UpdatePhaseIcon(Frame)
     end
 end
 
+function UF:UpdateReadyCheckIcon(Frame, event)
+    local Unit = Frame.unit
+
+    if (not Frame or not Unit) then
+        return
+    end
+
+    if (not Frame.ReadyCheckIcon) then 
+        return 
+    end
+
+    if (Frame.Animation.FadeOut and Frame.Animation.FadeOut:IsPlaying()) then
+        Frame.Animation.FadeOut:Stop()
+    end
+
+    local GetReadyCheckStatus = GetReadyCheckStatus(Unit)
+
+    if (GetReadyCheckStatus == "ready") then
+        Frame.ReadyCheckIcon:SetTexture(READY_CHECK_READY_TEXTURE)
+        Frame.ReadyCheckIcon:Show()
+    elseif (GetReadyCheckStatus == "notready") then
+        Frame.ReadyCheckIcon:SetTexture(READY_CHECK_NOT_READY_TEXTURE)
+        Frame.ReadyCheckIcon:Show()
+    elseif (GetReadyCheckStatus == "waiting") then
+        Frame.ReadyCheckIcon:SetTexture(READY_CHECK_WAITING_TEXTURE)
+        Frame.ReadyCheckIcon:Show()
+    else
+        if (event == "READY_CHECK_FINISHED") then
+            C_Timer.After(5, function()
+                if (Frame.ReadyCheckIcon:IsShown() and Frame.Animation.FadeOut) then
+                    Frame.Animation.FadeOut:Play()
+                end
+            end)
+        else
+            Frame.ReadyCheckIcon:Hide()
+        end
+    end
+end
+
 -- THREAT
 
 function UF:UpdateThreatHighlight(Frame)
@@ -868,8 +951,9 @@ function UF:UpdateFrame(Unit)
     if (Frame.AssistantIcon) then self:UpdateAssistantIcon(Frame) end
     if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame) end
     if (Frame.PhaseIcon) then self:UpdatePhaseIcon(Frame) end
+    if (Frame.ReadyCheckIcon) then self:UpdateReadyCheckIcon(Frame) end
     -- HEALTH PRED
-    if (Frame.UpdateHealthPred)then self:UpdateHealthPred(Frame) end
+    if (Frame.Health)then self:UpdateHealthPred(Frame) end
     -- THREAT
     if (Frame.Threat) then self:UpdateThreatHighlight(Frame) end
     if (Frame.ThreatRaid) then self:UpdateThreatHighlightRaid(Frame) end
@@ -944,6 +1028,11 @@ function UF:OnEvent(event, arg1)
                UF:UpdateFrame(Unit)
            end
        end
+    elseif (event == "GROUP_ROSTER_UPDATE") then
+        for _, Frames in pairs(UF.Frames) do
+            UF:UpdateFrame(Frames, "party")
+            UF:UpdateFrame(Frames, "raid")
+        end
 
         -- BUFFS / DEBUFFS
     elseif (event == "UNIT_AURA") then
@@ -961,7 +1050,7 @@ function UF:OnEvent(event, arg1)
         end
         
         -- HEAL PRED
-    elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
+    elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
         if (FramesUF) then
             UF:UpdateHealthPred(FramesUF)
         end
@@ -976,7 +1065,6 @@ function UF:OnEvent(event, arg1)
     elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
         if (FramesUF) then
             UF:UpdateThreatHighlight(FramesUF)
-            UF:UpdateThreatHighlightRaid(FramesUF)
         end
 
         -- NAME UPDATE
@@ -1023,25 +1111,31 @@ function UF:OnEvent(event, arg1)
         if (FramesUF) then
             UF:UpdatePhaseIcon(FramesUF)
         end
-
-        -- CASTBAR UPDATE
-    elseif (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START") then
-        if (FramesUF and FramesUF.Castbar) then
-            UF:CastStart(arg1)
-        end
-    elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP") then
-        if (FramesUF and FramesUF.Castbar) then
-            UF:CastStop(arg1)
-        end
-    elseif (event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_FAILED") then
-        if (FramesUF and FramesUF.Castbar and FramesUF.Castbar.PostCastFailed) then
-            FramesUF.Castbar:PostCastFailed()
+    elseif (event == "READY_CHECK" or event == "READY_CHECK_CONFIRM" or event == "READY_CHECK_FINISHED") then
+        if (FramesUF) then
+            UF:UpdateReadyCheckIcon(FramesUF, event)
         end
 
         -- PORTRAIT UPDATE
     elseif (event == "UNIT_MODEL_CHANGED" or event == "UNIT_PORTRAIT_UPDATE") then
         if (FramesUF and FramesUF.Portrait) then
             UF:UpdatePortrait(FramesUF)
+        end
+
+        -- CASTBAR UPDATE
+    elseif (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START") then
+        if (FramesUF and FramesUF.Castbar) then
+            UF:CastStart(arg1)
+        end
+
+    elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP") then
+        if (FramesUF and FramesUF.Castbar) then
+            UF:CastStop(arg1)
+        end
+
+    elseif (event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_FAILED") then
+        if (FramesUF and FramesUF.Castbar and FramesUF.Castbar.PostCastFailed) then
+            FramesUF.Castbar:PostCastFailed()
         end
     end
 end
@@ -1071,6 +1165,9 @@ function UF:RegisterEvents()
     SecureEventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
     SecureEventFrame:RegisterEvent("INCOMING_SUMMON_CHANGED")
     SecureEventFrame:RegisterEvent("UNIT_PHASE")
+    SecureEventFrame:RegisterEvent("READY_CHECK")
+    SecureEventFrame:RegisterEvent("READY_CHECK_CONFIRM")
+    SecureEventFrame:RegisterEvent("READY_CHECK_FINISHED")
     -- POWER
     SecureEventFrame:RegisterEvent("UNIT_POWER_FREQUENT")
     SecureEventFrame:RegisterEvent("UNIT_MAXPOWER")
@@ -1083,6 +1180,7 @@ function UF:RegisterEvents()
     SecureEventFrame:RegisterEvent("UNIT_TARGET")
     SecureEventFrame:RegisterEvent("UNIT_PET")
     SecureEventFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+    SecureEventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
     -- CASTBAR
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_START")
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_STOP")
