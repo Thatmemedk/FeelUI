@@ -150,11 +150,6 @@ function UI:KeepAspectRatio(Button, Icon)
 
 	local BaseLeft, BaseRight, BaseTop, BaseBottom = unpack(UI.TexCoords)
 	local Width, Height = Button:GetWidth(), Button:GetHeight()
-
-	if (not Width or not Height or Height == 0) then
-		return
-	end
-
 	local Aspect = Width / Height
 	local Trim = 0
 

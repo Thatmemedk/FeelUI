@@ -10,15 +10,22 @@ local _G = _G
 local select = select
 local unpack = unpack
 
+-- WoW Globals
+local EssentialCooldownViewer = _G.EssentialCooldownViewer
+local UtilityCooldownViewer = _G.UtilityCooldownViewer
+local CooldownViewerSettings = _G.CooldownViewerSettings
+local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
+local LoadAddOn = C_AddOns.LoadAddOn
+
 -- Locals
 local CooldownManagerFrames = { 
-	_G.EssentialCooldownViewer, 
-	_G.UtilityCooldownViewer, 
-	_G.BuffIconCooldownViewer,
+	EssentialCooldownViewer, 
+	UtilityCooldownViewer, 
+	BuffIconCooldownViewer,
 }
 
 function CooldownManager:SkinIcons(Button)
-	if not (Button or Button.CDMIsSkinned) then
+	if (Button:IsForbidden() or Button.CDMIsSkinned) then
 		return
 	end
 
@@ -26,30 +33,43 @@ function CooldownManager:SkinIcons(Button)
 	local Count = Button.Applications and Button.Applications.Applications
 	local Charges = Button.ChargeCount and Button.ChargeCount.Current
 	local Cooldown = Button.Cooldown
+	local CooldownFlash = Button.CooldownFlash
+	local Border = select(3, Button:GetRegions())
+	local PandemIcon = Button.PandemicIcon or Button.pandemicIcon or Button.Pandemic or Button.pandemic
 
-	if not (Icon) then
+	if (not Button and not Icon) then
 		return
 	end
 
-	select(3, Button:GetRegions()):Hide()
-
+	-- Button Size
 	Button:Size(unpack(DB.Global.CooldownManager.ButtonSize))
-	Button:CreateButtonPanel()
-	Button:CreateButtonBackdrop()
-	Button:CreateShadow()
-	Button:SetShadowOverlay()
+
+	-- Keep Aspect Ratio
+	UI:KeepAspectRatio(Button, Icon)
+
+	local OverlayFrame = CreateFrame("Frame", nil, Button)
+	OverlayFrame:SetInside(Button, 1, 1)
+	OverlayFrame:SetTemplate()
+	OverlayFrame:CreateShadow()
+	OverlayFrame:SetShadowOverlay()
 
 	local InvisFrame = CreateFrame("Frame", nil, Button)
 	InvisFrame:SetFrameLevel(Button:GetFrameLevel() + 10)
 	InvisFrame:SetInside()
 
 	if (Icon) then
-		Icon:SetInside()
-		UI:KeepAspectRatio(Button, Icon)
+		Icon:ClearAllPoints()
+		Icon:SetInside(Button, 1, 1)
 	end
 
 	if (Cooldown) then
-		Cooldown:SetInside()
+		Cooldown:ClearAllPoints()
+		Cooldown:SetInside(Button, 1, 1)
+	end
+
+	if (CooldownFlash) then
+		CooldownFlash:ClearAllPoints()
+		CooldownFlash:SetInside(Button, 1, 1)
 	end
 
 	if (Charges) then
@@ -65,17 +85,41 @@ function CooldownManager:SkinIcons(Button)
     	Count:SetFontTemplate("Default", 14)
     end
 
+    if (not PandemIcon) then
+        for _, Frames in ipairs({ Button:GetChildren() }) do
+            if (Frames:GetName() and Frames:GetName():find("Pandemic")) then
+                PandemIcon = Frames
+                break
+            end
+        end
+    end
+
+    if (PandemIcon and PandemIcon.ClearAllPoints) then
+        PandemIcon:ClearAllPoints()
+        PandemIcon:SetInside(Button, 1, 1)
+        print("PandemIcon Found")
+    end
+
+    if (Border) then
+    	Border:Hide()
+    end
+
 	Button.CDMIsSkinned = true
 end
 
-function CooldownManager:RegisterEvents()
-	EventUtil.RegisterOnceFrameEventAndCallback("PLAYER_ENTERING_WORLD", function()
-		for _, Frames in ipairs(CooldownManagerFrames) do
-			for _, Button in pairs({ Frames:GetChildren() }) do
-				self:SkinIcons(Button)
-			end
+function CooldownManager:Update()
+	for _, Frames in ipairs(CooldownManagerFrames) do
+		for _, Button in pairs({ Frames:GetChildren() }) do
+			self:SkinIcons(Button)
 		end
-	end)
+	end
+end
+
+function CooldownManager:Refresh()
+	if (CooldownViewerSettings) then
+		self:Update()
+		hooksecurefunc(CooldownViewerSettings, "RefreshLayout", self.Update)
+	end
 end
 
 function CooldownManager:Initialize()
@@ -83,5 +127,9 @@ function CooldownManager:Initialize()
 		return
 	end
 
-	self:RegisterEvents()
+	if not IsAddOnLoaded("Blizzard_CooldownViewer") then
+		LoadAddOn("Blizzard_CooldownViewer")
+	end
+
+	self:Refresh()
 end

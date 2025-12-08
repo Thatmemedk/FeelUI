@@ -31,6 +31,7 @@ function Auras:Skin(Frame)
 	Frame:CreateShadow()
 	Frame:StyleButton()
 	Frame:SetShadowOverlay()
+	Frame:CreateGlow(4, 3, 0, 0, 0, 0)
 	
 	Frame.InvisFrame = CreateFrame("Frame", nil, Frame)
 	Frame.InvisFrame:SetFrameLevel(Frame:GetFrameLevel() + 10)
@@ -152,11 +153,16 @@ function Auras:AnchorDebuffs(Frame, Index)
 		UI:KeepAspectRatio(Frame, Frame.Icon)
 	end
 
+	-- Update Debuff Border
 	if (Frame.DebuffBorder) then
 		Frame.DebuffBorder:SetAlpha(0)
 
 		local R, G, B = Frame.DebuffBorder:GetVertexColor()
 		Frame:SetColorTemplate(R, G, B)
+		Frame.Glow:SetBackdropBorderColor(R, G, B, 0.8)
+	else
+		Frame:SetColorTemplate(unpack(DB.Global.General.BorderColor))
+		Frame.Glow:SetBackdropBorderColor(0, 0, 0, 0)
 	end
 
 	Previous = Frame

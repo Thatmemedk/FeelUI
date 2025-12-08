@@ -479,7 +479,7 @@ local function SetShadowOverlay(self, ShadowOverlayAlpha)
 	local ShadowOverlay = self:CreateTexture(nil, "OVERLAY", nil, 7)
 	ShadowOverlay:SetInside()
 	ShadowOverlay:SetTexture(Media.Global.Overlay)
-	ShadowOverlay:SetVertexColor(1, 1, 1, ShadowOverlayAlpha or 0.5)
+	ShadowOverlay:SetVertexColor(1, 1, 1, ShadowOverlayAlpha or 0.7)
 
 	self.ShadowOverlay = ShadowOverlay
 end
@@ -497,7 +497,7 @@ local function CreateSpark(self, R, G, B, A)
 	Spark:Size(3, self:GetHeight())
 	Spark:Point("CENTER", self:GetStatusBarTexture(), "RIGHT")
 	Spark:SetTexture(Media.Global.Highlight)
-	Spark:SetVertexColor(R or 0, G or 0.66, B or 1, A or 0.80)
+	Spark:SetVertexColor(R or 0, G or 0.66, B or 1, A or 0.8)
 	Spark:SetBlendMode("DISABLE")
 	
 	self.Spark = Spark
