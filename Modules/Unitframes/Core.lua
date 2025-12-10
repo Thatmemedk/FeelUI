@@ -38,6 +38,11 @@ local UnitGetTotalHealAbsorbs = UnitGetTotalHealAbsorbs
 local UnitGetIncomingHeals = UnitGetIncomingHeals
 local UnitGetIncomingHeals = UnitGetIncomingHeals
 local UnitGetTotalAbsorbs = UnitGetTotalAbsorbs
+local UnitIsUnit = UnitIsUnit
+
+-- WoW Globals
+local ADDITIONAL_POWER_BAR_NAME = "MANA"
+local ADDITIONAL_POWER_BAR_INDEX = 0
 
 -- WoW Globals
 local SUMMON_STATUS_NONE = Enum.SummonStatus.None or 0
@@ -224,155 +229,259 @@ end
 
 -- CASTBARS
 
-function UF:UpdateCastBars(Frame)
-    local Castbar = Frame.Castbar
-
-    if (not Castbar or not Castbar:IsShown()) then
-        return
-    end
-
-    local StartTime = Castbar.StartTime
-    local EndTime = Castbar.EndTime
-
-    if (not StartTime or not EndTime) then
-        return
-    end
-
-    local GetTime = GetTime()
-    local Duration = EndTime - StartTime
-    local Elapsed = GetTime - StartTime
-    local Remaining = EndTime - GetTime
-    Elapsed = math.max(0, math.min(Elapsed, Duration))
-    Remaining = math.max(0, math.min(Remaining, Duration))
-
-    Castbar:SetMinMaxValues(0, Duration)
-    Castbar.Max = Duration
-    Castbar.Delay = Castbar.Delay or 0
-
-    if (not Castbar.Channeling) then
-        Castbar:SetValue(Elapsed)
-
-        if (Castbar.CustomTimeText) then
-            Castbar:CustomTimeText(Elapsed)
-        end
-    else
-        Castbar:SetValue(Remaining)
-
-        if (Castbar.CustomTimeText) then
-            Castbar:CustomTimeText(Remaining)
-        end
-    end
-end
-
 function UF:CastStart(Unit)
     local Frame = self.Frames[Unit]
 
-    if (not Frame or not Frame.Castbar) then
-        return
+    if (not Frame or not Frame.Castbar) then 
+        return 
     end
 
-    local Name, _, Icon, StartTime, EndTime, NotInterruptible = UnitCastingInfo(Unit)
+    local Name, Text, Icon, StartTime, EndTime, IsTradeSkill, CastID, Interrupt, SpellID = UnitCastingInfo(Unit)
     local Channeling = false
 
     if (not Name) then
-        Name, _, Icon, StartTime, EndTime = UnitChannelInfo(Unit)
+        Name, Text, Icon, StartTime, EndTime, IsTradeSkill, CastID, Interrupt, SpellID = UnitChannelInfo(Unit)
         Channeling = Name ~= nil
     end
 
-    if (not Name) then
-        self:CastStop(Unit)
-        return
+    if (not Name) then return end
+
+    if (type(StartTime) == "number") then 
+        StartTime = StartTime / 1000 
     end
 
-    if (type(StartTime) == "number") then
-        StartTime = StartTime / 1000
+    if (type(EndTime) == "number") then 
+        EndTime = EndTime / 1000 
     end
 
-    if (type(EndTime) == "number") then
-        EndTime = EndTime / 1000
-    end
-
+    -- Cache
     Frame.Castbar.StartTime = StartTime or GetTime()
     Frame.Castbar.EndTime = EndTime or (GetTime() + 1.5)
-    Frame.Castbar.Channeling = Channeling
-    --Frame.Castbar.NotInterruptible = NotInterruptible
     Frame.Castbar.Max = Frame.Castbar.EndTime - Frame.Castbar.StartTime
+    Frame.Castbar.Channeling = Channeling
+    Frame.Castbar.Casting = not Channeling
+    Frame.Castbar.Interrupt = Interrupt
     Frame.Castbar.Delay = 0
+    Frame.Castbar.SpellID = SpellID
+    Frame.Castbar.CastID = CastID
 
-    if (Frame.Castbar.Icon) then
-        Frame.Castbar.Icon:SetTexture(Icon)
+    if (Frame.Castbar.Icon) then 
+        Frame.Castbar.Icon:SetTexture(Icon) 
     end
 
-    if (Frame.Castbar.Text) then
+    if (Frame.Castbar.Text) then 
         Frame.Castbar.Text:SetText(Name)
     end
 
-    if (Frame.Castbar.PostCastStart) then
-        Frame.Castbar:PostCastStart(Frame.Castbar)
+    if (Frame.Castbar) then
+        Frame.Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
     end
 
-    UI:UIFrameFadeOut(Frame.Castbar, UF.FadeInTime, Frame.Castbar:GetAlpha(), 1)
+    UI:UIFrameFadeIn(Frame.Castbar, UF.FadeInTime, Frame.Castbar:GetAlpha(), 1)
 end
 
 function UF:CastStop(Unit)
     local Frame = self.Frames[Unit]
 
-    if (not Frame or not Frame.Castbar) then
-        return
+    if (not Frame or not Frame.Castbar) then 
+        return 
     end
 
-    if (Frame.Castbar.PostCastStop) then
-        Frame.Castbar:PostCastStop(Frame.Castbar)
+    if (CastID and Castbar.CastID ~= CastID) then 
+        return 
     end
 
-    Frame.Castbar.StartTime = nil
-    Frame.Castbar.EndTime = nil
+    if (SpellID and Castbar.SpellID ~= SpellID) then 
+        return 
+    end
+
+    -- Reset Cache
+    Frame.Castbar.Casting = nil
     Frame.Castbar.Channeling = nil
-    Frame.Castbar.NotInterruptible = nil
-    Frame.Castbar.Max = nil
-    Frame.Castbar.Delay = nil
+    Frame.Castbar.Interrupt = nil
+    Frame.Castbar.CastID = nil
+    Frame.Castbar.SpellID = nil
 
     UI:UIFrameFadeOut(Frame.Castbar, UF.FadeInTime, Frame.Castbar:GetAlpha(), 0)
 end
 
-function UF:PostCastStart()
-    if (self.NotInterruptible) then
-        self:SetStatusBarColor(unpack(DB.Global.UnitFrames.InterruptColor))
+function UF:CastFailed(Unit, Event)
+    local Frame = self.Frames[Unit]
 
-        if (self.Icon) then
-            self.Icon:SetDesaturated(1)
-        end
-    else
-        self:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
-
-        if (self.Icon) then
-            self.Icon:SetDesaturated(false)
-        end
+    if (not Frame or not Frame.Castbar) then 
+        return 
     end
 
-    UI:UIFrameFadeIn(self, UF.FadeInTime, self:GetAlpha(), 1)
-end
-
-function UF:PostCastStop()
-    self:SetStatusBarColor(unpack(DB.Global.UnitFrames.InterruptColor))
-
-    if (self.Text) then
-        self.Text:SetText(FAILED or INTERRUPTED)
+    if (CastID and Castbar.CastID ~= CastID) then 
+        return 
     end
 
-    UI:UIFrameFadeOut(self, UF.FadeInTime, self:GetAlpha(), 0)
-end
-
-function UF:PostCastFailed()
-    if (self.Text) then 
-        self.Text:SetText(FAILED or INTERRUPTED) 
+    if (SpellID and Castbar.SpellID ~= SpellID) then 
+        return 
     end
+
+    if (Frame.Castbar.Text) then 
+        Frame.Castbar.Text:SetText(Event == "UNIT_SPELLCAST_FAILED" and FAILED or INTERRUPTED)
+    end
+
+    -- Reset Cache
+    Frame.Castbar.Casting = nil
+    Frame.Castbar.Channeling = nil
+    Frame.Castbar.Interrupt = nil
+    Frame.Castbar.CastID = nil
+    Frame.Castbar.SpellID = nil
+
+    Frame.Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.InterruptColor))
+    Frame.Castbar:SetValue(Frame.Castbar.Max)
     
-    self:SetStatusBarColor(unpack(DB.Global.UnitFrames.InterruptColor))
-    self:SetMinMaxValues(0, 1)
-    self:SetValue(1)
+    UI:UIFrameFadeOut(Frame.Castbar, UF.FadeInTime, Frame.Castbar:GetAlpha(), 0)
+end
 
-    UI:UIFrameFadeOut(self, UF.FadeInTime, self:GetAlpha(), 0)
+function UF:CastInterruptible(Unit, Event)
+    local Frame = self.Frames[Unit]
+
+    if (not Frame or not Frame.Castbar) then 
+        return 
+    end
+
+    if (Event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
+        Frame.Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.InterruptColor))
+
+        if (Frame.Castbar.Icon) then 
+            Frame.Castbar.Icon:SetDesaturated(true) 
+        end
+
+        Frame.Castbar.Interrupt = true
+    else
+        Frame.Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
+
+        if (Frame.Castbar.Icon) then 
+            Frame.Castbar.Icon:SetDesaturated(false) 
+        end
+
+        Frame.Castbar.Interrupt = nil
+    end
+end
+
+function UF:CastUpdate(Frame)
+    if (not Frame or not Frame.Castbar or not Frame.Castbar.StartTime or not Frame.Castbar.EndTime) then 
+        return 
+    end
+
+    local Now = GetTime()
+    local Duration = Frame.Castbar.EndTime - Frame.Castbar.StartTime
+    local Elapsed = Now - Frame.Castbar.StartTime
+    local Remaining = Frame.Castbar.EndTime - Now
+    local DisplayValue
+
+    if (Duration <= 0) then 
+        Duration = 0.1 
+    end
+
+    Frame.Castbar:SetMinMaxValues(0, Duration)
+    Frame.Castbar.Max = Duration
+
+    if (Frame.Castbar.Channeling) then
+        Remaining = math.max(0, math.min(Remaining, Duration))
+        Frame.Castbar:SetValue(Remaining, UI.SmoothBars)
+        DisplayValue = Remaining
+    else
+        Elapsed = math.max(0, math.min(Elapsed, Duration))
+        Frame.Castbar:SetValue(Elapsed, UI.SmoothBars)
+        DisplayValue = Elapsed
+    end
+
+    if (Frame.Castbar.Time) then
+        local Delay = Frame.Castbar.Delay or 0
+        local Max = Frame.Castbar.Max or Duration
+
+        if (Frame.Castbar.Channeling) then
+            if (Delay ~= 0) then
+                Frame.Castbar.Time:SetFormattedText("%.1f / %.1f |cffff0000(%.1f)|r", DisplayValue, Max, Delay)
+            else
+                Frame.Castbar.Time:SetFormattedText("%.1f / %.1f", DisplayValue, Max)
+            end
+        else
+            if (Delay ~= 0) then
+                Frame.Castbar.Time:SetFormattedText("%.1f / %.1f |cffff0000(+%.1f)|r", DisplayValue, Max, Delay)
+            else
+                Frame.Castbar.Time:SetFormattedText("%.1f / %.1f", DisplayValue, Max)
+            end
+        end
+    end
+
+    if (Frame.Castbar.SafeZone) then
+        local Latency = select(4, GetNetStats()) / 1000
+        local Ratio = math.min(Latency / Duration, 1)
+        local Width = Frame.Castbar:GetWidth() * Ratio
+
+        Frame.Castbar.SafeZone:ClearAllPoints()
+        Frame.Castbar.SafeZone:Show()
+
+        if (Frame.Castbar.Channeling) then
+            Frame.Castbar.SafeZone:Width(Width)
+            Frame.Castbar.SafeZone:Point("TOPLEFT", Frame.Castbar, "TOPLEFT")
+            Frame.Castbar.SafeZone:Point("BOTTOMLEFT", Frame.Castbar, "BOTTOMLEFT")
+        else
+            Frame.Castbar.SafeZone:Width(Width)
+            Frame.Castbar.SafeZone:Point("TOPRIGHT", Frame.Castbar, "TOPRIGHT")
+            Frame.Castbar.SafeZone:Point("BOTTOMRIGHT", Frame.Castbar, "BOTTOMRIGHT")
+        end
+    end
+end
+
+function UF:CastDelayed(Unit)
+    local Frame = self.Frames[Unit]
+
+    if (not Frame or not Frame.Castbar) then 
+        return 
+    end
+
+    local Name, Text, Icon, StartTime, EndTime, _, CastID, Interrupt, SpellID
+
+    if (Frame.Castbar.Channeling) then
+        Name, Text, Icon, StartTime, EndTime, _, CastID, Interrupt, SpellID = UnitChannelInfo(Unit)
+    else
+        Name, Text, Icon, StartTime, EndTime, _, CastID, Interrupt, SpellID = UnitCastingInfo(Unit)
+    end
+
+    if not StartTime or not EndTime then 
+        return 
+    end
+
+    StartTime = StartTime / 1000
+    EndTime = EndTime / 1000
+
+    local PreviousEnd = Castbar.EndTime or EndTime
+    Frame.Castbar.Delay = (Frame.Castbar.Delay or 0) + abs(EndTime - PreviousEnd)
+
+    Frame.Castbar.StartTime = StartTime
+    Frame.Castbar.EndTime = EndTime
+    Frame.Castbar.Max = EndTime - StartTime
+end
+
+function UF:CastChannelUpdate(Unit)
+    local Frame = self.Frames[Unit]
+
+    if (not Frame or not Frame.Castbar) then 
+        return 
+    end
+
+    local _, _, _, StartTime, EndTime = UnitChannelInfo(Unit)
+
+    if (StartTime and EndTime) then
+        StartTime = StartTime / 1000
+        EndTime   = EndTime / 1000
+
+        local OldEnd = Frame.Castbar.EndTime or EndTime
+
+        Frame.Castbar.StartTime = StartTime
+        Frame.Castbar.EndTime = EndTime
+        Frame.Castbar.Duration = EndTime - StartTime
+        Frame.Castbar.Max = Frame.Castbar.Duration
+
+        Frame.Castbar.Delay = (Frame.Castbar.Delay or 0) + abs(EndTime - OldEnd)
+    end
 end
 
 --- UPDATE HEALTH
@@ -507,6 +616,32 @@ function UF:UpdatePower(Frame)
 
     if (PowerColor) then
         Frame.PowerText:SetTextColor(unpack(PowerColor))
+    end
+end
+
+function UF:UpdateAdditionalPower(Frame)
+    local Unit = Frame.unit
+    local Min, Max = UnitPower("player", ADDITIONAL_POWER_BAR_INDEX), UnitPowerMax("player", ADDITIONAL_POWER_BAR_INDEX)
+    local PowerType = UnitPowerType("player")
+
+    if (not Unit and UnitIsUnit(Unit, "player")) then
+        return
+    end
+
+    if (not Frame.AdditionalPower) then
+        return
+    end
+
+    if (PowerType == Enum.PowerType.Mana) then
+        UI:UIFrameFadeOut(Frame.AdditionalPower, UF.FadeInTime, Frame.AdditionalPower:GetAlpha(), 0)
+        UI:UIFrameFadeOut(Frame.AdditionalPowerText, UF.FadeInTime, Frame.AdditionalPowerText:GetAlpha(), 0)
+    else
+        Frame.AdditionalPower:SetMinMaxValues(0, Max)
+        Frame.AdditionalPower:SetValue(Min, UI.SmoothBars)
+        Frame.AdditionalPowerText:SetText(AbbreviateNumbers(Min))
+
+        UI:UIFrameFadeIn(Frame.AdditionalPower, UF.FadeInTime, Frame.AdditionalPower:GetAlpha(), 1)
+        UI:UIFrameFadeIn(Frame.AdditionalPowerText, UF.FadeInTime, Frame.AdditionalPowerText:GetAlpha(), 1)
     end
 end
 
@@ -934,6 +1069,7 @@ function UF:UpdateFrame(Unit)
     if (Frame.HealthTextPer) then self:UpdateHealthTextPer(Frame) end
     -- POWER
     if (Frame.PowerText) then self:UpdatePower(Frame) end
+    if (Frame.AdditionalPower) then self:UpdateAdditionalPower(Frame) end
     -- AURAS
     if (Frame.Buffs) then self:UpdateAuras(Frame, Unit, false) end
     if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
@@ -961,17 +1097,17 @@ end
 
 -- SECURE UPDATES
 
-function UF:SecureUpdate()
-    if (not UF._onupdate_set) then
+function UF:CastBarUpdate()
+    if (not UF.CastBarOnUpdate) then
         UF.SecureFrame:SetScript("OnUpdate", function(_, elapsed)
             for _, Frame in pairs(UF.Frames) do
                 if (Frame.Castbar and Frame.Castbar:IsShown()) then
-                    UF:UpdateCastBars(Frame)
+                    UF:CastUpdate(Frame)
                 end
             end
         end)
 
-        UF._onupdate_set = true
+        UF.CastBarOnUpdate = true
     end
 end
 
@@ -992,10 +1128,10 @@ end
 function UF:OnEvent(event, arg1)
     local FramesUF = UF.Frames[arg1]
 
-    -- UNITFRAMES LOG IN UPDATE
+    -- LOGIN UPDATE
     if (event == "PLAYER_ENTERING_WORLD") then
         C_Timer.After(0.1, function()
-            for Unit, Frame in pairs(UF.Frames) do
+            for Unit in pairs(UF.Frames) do
                 UF:UpdateFrame(Unit)
             end
         end)
@@ -1004,82 +1140,86 @@ function UF:OnEvent(event, arg1)
             UF:ForceToTUpdate()
         end)
 
-        -- UNITFRAMES UPDATE    
+    -- TARGET
     elseif (event == "PLAYER_TARGET_CHANGED") then
-        for Unit, Frame in pairs(UF.Frames) do
+        for Unit in pairs(UF.Frames) do
             UF:UpdateFrame(Unit)
         end
-
         UF:ForceToTUpdate()
+
     elseif (event == "UNIT_TARGET" and arg1 == "target") then
         UF:ForceToTUpdate()
 
+    -- PET & FOCUS
     elseif (event == "UNIT_PET") then
         UF:UpdateFrame("pet")
+
     elseif (event == "PLAYER_FOCUS_CHANGED") then
         UF:UpdateFrame("focus")
 
+    -- BOSS FRAMES
     elseif (event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" or event == "UNIT_TARGETABLE_CHANGED") then
        for i = 1, 5 do
            local Unit = "boss"..i
-           local Frames = UF.Frames["boss"..i]
-
-           if (Frames and UnitExists(Unit)) then
+           if (UF.Frames[Unit] and UnitExists(Unit)) then
                UF:UpdateFrame(Unit)
            end
        end
+
+    -- GROUP UPDATE
     elseif (event == "GROUP_ROSTER_UPDATE") then
-        for _, Frames in pairs(UF.Frames) do
-            UF:UpdateFrame(Frames, "party")
-            UF:UpdateFrame(Frames, "raid")
+        for Unit in pairs(UF.Frames) do
+            UF:UpdateFrame(Unit)
         end
 
-        -- BUFFS / DEBUFFS
+    -- AURAS
     elseif (event == "UNIT_AURA") then
         if (FramesUF) then
             UF:UpdateAuras(FramesUF, arg1, true)
             UF:UpdateAuras(FramesUF, arg1, false)
         end
 
-        -- HEALTH UPDATE
+    -- HEALTH
     elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
         if (FramesUF) then
             UF:UpdateHealth(FramesUF)
             UF:UpdateHealthTextCur(FramesUF)
             UF:UpdateHealthTextPer(FramesUF)
+            UF:UpdateHealthPred(FramesUF)
         end
-        
-        -- HEAL PRED
-    elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
+
+    -- HEAL PRED ONLY EVENTS
+    elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
         if (FramesUF) then
             UF:UpdateHealthPred(FramesUF)
         end
 
-        -- POWER UPDATE    
+    -- POWER
     elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_MAXPOWER" or event == "UNIT_POWER_UPDATE") then
         if (FramesUF) then
             UF:UpdatePower(FramesUF)
+            UF:UpdateAdditionalPower(FramesUF)
         end
 
-        -- THREAT
+    -- THREAT
     elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
         if (FramesUF) then
             UF:UpdateThreatHighlight(FramesUF)
         end
 
-        -- NAME UPDATE
+    -- NAME
     elseif (event == "UNIT_NAME_UPDATE") then
         if (FramesUF) then
             UF:UpdateName(FramesUF)
         end
 
-        -- LEVEL UPDATE    
+    -- LEVEL
     elseif (event == "UNIT_LEVEL" or event == "PLAYER_LEVEL_UP") then
         if (FramesUF) then
             UF:UpdateTargetNameLevel(FramesUF)
         end
 
-        -- ICONS
+    -- ICONS
     elseif (event == "PLAYER_UPDATE_RESTING") then
         if (FramesUF) then
             UF:UpdateRestingIcon(FramesUF)
@@ -1095,7 +1235,7 @@ function UF:OnEvent(event, arg1)
             UF:UpdateResurrectionIcon(FramesUF)
         end
 
-    elseif (event == "UNIT_FLAGS" or event == "PARTY_LEADER_CHANGED" or event == "GROUP_ROSTER_UPDATE") then
+    elseif (event == "UNIT_FLAGS" or event == "PARTY_LEADER_CHANGED") then
         if (FramesUF) then
             UF:UpdateCombatIcon(FramesUF)
             UF:UpdateLeaderIcon(FramesUF)
@@ -1111,32 +1251,36 @@ function UF:OnEvent(event, arg1)
         if (FramesUF) then
             UF:UpdatePhaseIcon(FramesUF)
         end
+
     elseif (event == "READY_CHECK" or event == "READY_CHECK_CONFIRM" or event == "READY_CHECK_FINISHED") then
         if (FramesUF) then
             UF:UpdateReadyCheckIcon(FramesUF, event)
         end
 
-        -- PORTRAIT UPDATE
+    -- PORTRAIT
     elseif (event == "UNIT_MODEL_CHANGED" or event == "UNIT_PORTRAIT_UPDATE") then
         if (FramesUF and FramesUF.Portrait) then
             UF:UpdatePortrait(FramesUF)
         end
 
-        -- CASTBAR UPDATE
+    -- CASTBAR EVENTS (FULLY FIXED)
     elseif (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START") then
-        if (FramesUF and FramesUF.Castbar) then
-            UF:CastStart(arg1)
-        end
+        UF:CastStart(arg1)
 
     elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP") then
-        if (FramesUF and FramesUF.Castbar) then
-            UF:CastStop(arg1)
-        end
+        UF:CastStop(arg1)
 
-    elseif (event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_FAILED") then
-        if (FramesUF and FramesUF.Castbar and FramesUF.Castbar.PostCastFailed) then
-            FramesUF.Castbar:PostCastFailed()
-        end
+    elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
+        UF:CastFailed(arg1, event)
+
+    elseif (event == "UNIT_SPELLCAST_DELAYED") then
+        UF:CastDelayed(arg1)
+
+    elseif (event == "UNIT_SPELLCAST_CHANNEL_UPDATE") then
+        UF:CastChannelUpdate(arg1)
+
+    elseif (event == "UNIT_SPELLCAST_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
+        UF:CastInterruptible(arg1, event)
     end
 end
 
@@ -1183,11 +1327,18 @@ function UF:RegisterEvents()
     SecureEventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
     -- CASTBAR
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_START")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_STOP")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_FAILED")
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_STOP")
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_DELAYED")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_FAILED")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
     -- THREAT
     SecureEventFrame:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE")
     SecureEventFrame:RegisterEvent("UNIT_THREAT_LIST_UPDATE")
@@ -1214,8 +1365,8 @@ function UF:Initialize()
     self:HideBlizzardFrames()
     -- SPAWN UNITFRAMES
     self:CreateUF()
-    -- SECURE UPDATE
-    self:SecureUpdate()
+    -- UPDATE CASTBARS
+    self:CastBarUpdate()
     -- EVENTS
     self:RegisterEvents()
 end

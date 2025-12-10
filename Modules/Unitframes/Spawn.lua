@@ -6,14 +6,14 @@ local UF = UI:CallModule("UnitFrames")
 --- HIDE BLIZZARD UF
 
 function UF:SafeHide(Frame, SkipParent)
-    if not Frame or UF.HiddenFrames[Frame] then 
+    if (not Frame or UF.HiddenFrames[Frame]) then 
         return 
     end
 
     Frame:UnregisterAllEvents()
     Frame:Hide()
 
-    if not SkipParent and UI.HiddenParent and not InCombatLockdown() then
+    if (not SkipParent and UI.HiddenParent and not InCombatLockdown()) then
         Frame:SetParent(UI.HiddenParent)
     end
 
@@ -105,6 +105,7 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         self:CreatePlayerCastbar(Frame)
         self:CreatePortrait(Frame)
         self:CreateHealthPrediction(Frame)
+        self:CreateAdditionalPower(Frame)
         --self:CreateBuffs(Frame)
     elseif (Unit == "target") then
         self:CreateTargetTexts(Frame)

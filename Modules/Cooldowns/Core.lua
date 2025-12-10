@@ -59,13 +59,9 @@ function Cooldown:UpdateCooldown(start, duration, enable, charges, maxcharges, f
 			return
 		end
 
-		if (not self.InvisFrame) then
-        	local InvisFrame = CreateFrame("Frame", nil, self)
-        	InvisFrame:SetFrameLevel(self:GetFrameLevel() + 10)
-        	InvisFrame:SetInside()
-
-        	self.InvisFrame = InvisFrame
-    	end
+        local InvisFrame = CreateFrame("Frame", nil, self)
+        InvisFrame:SetFrameLevel(self:GetFrameLevel() + 10)
+        InvisFrame:SetInside()
 
 		local NumRegions = self:GetNumRegions()
 
@@ -74,7 +70,7 @@ function Cooldown:UpdateCooldown(start, duration, enable, charges, maxcharges, f
 
 			if (Region.GetText) then
                 local FontSize = Cooldown:GetFontScale(self)
-                Region:SetParent(self.InvisFrame)
+                Region:SetParent(InvisFrame)
                 Region:ClearAllPoints()
                 Region:SetFontTemplate("Default", FontSize)
                 Region:SetTextColor(1, 0.82, 0)

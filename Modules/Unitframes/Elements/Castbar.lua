@@ -7,27 +7,6 @@ local UF = UI:CallModule("UnitFrames")
 local select = select
 local unpack = unpack
 
-function UF:UpdateCustomDelayText(Duration)
-    local Delay = self.Delay or 0
-    local Max = self.Max or 0
-
-    if (self.Channeling) then
-        self.Time:SetFormattedText("%.1f / %.1f |cffff0000(%.1f)|r", Duration, Max, Delay)
-    else
-        self.Time:SetFormattedText("%.1f / %.1f |cffff0000(+%.1f)|r", Duration, Max, Delay)
-    end
-end
-
-function UF:UpdateCustomTimeText(Duration)
-    local Max = self.Max or 0
-
-    if (self.Channeling) then
-        self.Time:SetFormattedText("%.1f / %.1f", abs(Duration - Max), Max)
-    else
-        self.Time:SetFormattedText("%.1f / %.1f", Duration, Max)
-    end
-end
-
 function UF:CreatePlayerCastbar(Frame)
     local Castbar = CreateFrame("StatusBar", nil, _G.UIParent)
     Castbar:Size(222, 26)
@@ -57,16 +36,17 @@ function UF:CreatePlayerCastbar(Frame)
     local CastbarText = Castbar:CreateFontString(nil, "OVERLAY", nil, 7)
     CastbarText:Point("LEFT", Castbar, 4, 0)
     CastbarText:SetFontTemplate("Default")
+
+    local CastbarSafeZone = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
+    CastbarSafeZone:SetTexture(Media.Global.Texture)
+    CastbarSafeZone:SetVertexColor(0.69, 0.31, 0.31, 0.7)
+    CastbarSafeZone:Hide()
         
     Frame.Castbar = Castbar
     Frame.Castbar.Icon = CastbarIcon
     Frame.Castbar.Time = CastbarTime
     Frame.Castbar.Text = CastbarText
-    Frame.Castbar.CustomTimeText = UF.UpdateCustomTimeText
-    Frame.Castbar.CustomDelayText = UF.UpdateCustomDelayText
-    Frame.Castbar.PostCastStart = UF.PostCastStart
-    Frame.Castbar.PostCastStop = UF.PostCastStop
-    Frame.Castbar.PostCastFailed = UF.PostCastFailed
+    Frame.Castbar.SafeZone = CastbarSafeZone
 end
 
 function UF:CreateTargetCastbar(Frame)
@@ -102,11 +82,6 @@ function UF:CreateTargetCastbar(Frame)
     Frame.Castbar.Icon = CastbarIcon
     Frame.Castbar.Time = CastbarTime
     Frame.Castbar.Text = CastbarText
-    Frame.Castbar.CustomTimeText = UF.UpdateCustomTimeText
-    Frame.Castbar.CustomDelayText = UF.UpdateCustomDelayText
-    Frame.Castbar.PostCastStart = UF.PostCastStart
-    Frame.Castbar.PostCastStop = UF.PostCastStop
-    Frame.Castbar.PostCastFailed = UF.PostCastFailed
 end
 
 function UF:CreatePetCastbar(Frame)
@@ -142,11 +117,6 @@ function UF:CreatePetCastbar(Frame)
     Frame.Castbar.Icon = CastbarIcon
     Frame.Castbar.Time = CastbarTime
     Frame.Castbar.Text = CastbarText
-    Frame.Castbar.CustomTimeText = UF.UpdateCustomTimeText
-    Frame.Castbar.CustomDelayText = UF.UpdateCustomDelayText
-    Frame.Castbar.PostCastStart = UF.PostCastStart
-    Frame.Castbar.PostCastStop = UF.PostCastStop
-    Frame.Castbar.PostCastFailed = UF.PostCastFailed
 end
 
 function UF:CreateFocusCastbar(Frame)
@@ -182,11 +152,6 @@ function UF:CreateFocusCastbar(Frame)
     Frame.Castbar.Icon = CastbarIcon
     Frame.Castbar.Time = CastbarTime
     Frame.Castbar.Text = CastbarText
-    Frame.Castbar.CustomTimeText = UF.UpdateCustomTimeText
-    Frame.Castbar.CustomDelayText = UF.UpdateCustomDelayText
-    Frame.Castbar.PostCastStart = UF.PostCastStart
-    Frame.Castbar.PostCastStop = UF.PostCastStop
-    Frame.Castbar.PostCastFailed = UF.PostCastFailed
 end
 
 function UF:CreateBossCastbar(Frame)
@@ -221,9 +186,4 @@ function UF:CreateBossCastbar(Frame)
     Frame.Castbar.Icon = CastbarIcon
     Frame.Castbar.Time = CastbarTime
     Frame.Castbar.Text = CastbarText
-    Frame.Castbar.CustomTimeText = UF.UpdateCustomTimeText
-    Frame.Castbar.CustomDelayText = UF.UpdateCustomDelayText
-    Frame.Castbar.PostCastStart = UF.PostCastStart
-    Frame.Castbar.PostCastStop = UF.PostCastStop
-    Frame.Castbar.PostCastFailed = UF.PostCastFailed
 end

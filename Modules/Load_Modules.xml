@@ -89,4 +89,5 @@
 	<Script file="UnitFrames\Elements\HealthPred.lua"/>
 	<Script file="UnitFrames\Elements\Icons.lua"/>
 	<Script file="UnitFrames\Elements\Threat.lua"/>
+	<Script file="UnitFrames\Elements\AdditionalPower.lua"/>
 </Ui>

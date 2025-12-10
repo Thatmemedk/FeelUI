@@ -57,6 +57,10 @@ function CooldownManager:SkinIcons(Button)
 	InvisFrame:SetFrameLevel(Button:GetFrameLevel() + 10)
 	InvisFrame:SetInside()
 
+    if (Border) then
+    	Border:Hide()
+    end
+
 	if (Icon) then
 		Icon:ClearAllPoints()
 		Icon:SetInside(Button, 1, 1)
@@ -65,6 +69,7 @@ function CooldownManager:SkinIcons(Button)
 	if (Cooldown) then
 		Cooldown:ClearAllPoints()
 		Cooldown:SetInside(Button, 1, 1)
+		Cooldown:SetReverse(true)
 	end
 
 	if (CooldownFlash) then
@@ -97,29 +102,48 @@ function CooldownManager:SkinIcons(Button)
     if (PandemIcon and PandemIcon.ClearAllPoints) then
         PandemIcon:ClearAllPoints()
         PandemIcon:SetInside(Button, 1, 1)
-        print("PandemIcon Found")
-    end
-
-    if (Border) then
-    	Border:Hide()
     end
 
 	Button.CDMIsSkinned = true
 end
 
 function CooldownManager:Update()
+    if (self.Queued) then 
+    	return
+   	end
+
+    self.Queued = true
+
 	for _, Frames in ipairs(CooldownManagerFrames) do
 		for _, Button in pairs({ Frames:GetChildren() }) do
 			self:SkinIcons(Button)
-		end
+
+	        if (Frames.GetNumChildren) then
+	            local NumChild = Frames:GetNumChildren()
+
+	            for i = 1, NumChild do
+	                local Frame = select(i, Frames:GetChildren())
+
+	                if (Frame and not Frame.IsHooked) then
+	                    if (Frame.SetPoint) then hooksecurefunc(Frame, "SetPoint", function() CooldownManager:Update() end) end
+	                    if (Frame.SetAllPoints) then hooksecurefunc(Frame, "SetAllPoints", function() CooldownManager:Update() end) end
+	                    if (Frame.ClearAllPoints) then hooksecurefunc(Frame, "ClearAllPoints", function() CooldownManager:Update() end) end
+	                    if (Frame.SetSize) then hooksecurefunc(Frame, "SetSize", function() CooldownManager:Update() end) end
+
+	                   	Frame.IsHooked = true
+	                end
+	            end
+	        end
+	    end
 	end
+
+	self.Queued = false
 end
 
-function CooldownManager:Refresh()
-	if (CooldownViewerSettings) then
-		self:Update()
-		hooksecurefunc(CooldownViewerSettings, "RefreshLayout", self.Update)
-	end
+function CooldownManager:UpdateSafe()
+    if (not self.Queued) then
+        self:Update()
+    end
 end
 
 function CooldownManager:Initialize()
@@ -131,5 +155,6 @@ function CooldownManager:Initialize()
 		LoadAddOn("Blizzard_CooldownViewer")
 	end
 
-	self:Refresh()
+	self:UpdateSafe()
+	--self:AddHooks()
 end
