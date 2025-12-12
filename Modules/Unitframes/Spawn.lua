@@ -87,7 +87,7 @@ function UF:Spawn(Unit, Width, Height, Orientation)
     self.Frames[Unit] = Frame
 
     -- CREATE ELEMENTS
-    --self:CreateOnEnterLeave(Frame)
+    self:CreateOnEnterLeave(Frame)
     self:CreatePanels(Frame)
     self:CreateHightlight(Frame)
     self:CreateFadeInOut(Frame)

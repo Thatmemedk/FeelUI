@@ -1,7 +1,8 @@
 ## Title: F|CFF00AAFFeelUI|r
 ## Notes: Lightweight User Interface.
 ## Author: Thatmemedk
-## Version: 1.07
+## Version: 1.09
+
 ## SavedVariables: FeelDB
 ## SavedVariablesPerCharacter: FeelCharacterDB
 ## Interface: 120000

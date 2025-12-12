@@ -8,6 +8,8 @@ local format = string.format
 -- Locals
 local ClassID = select(2, UnitClass("player"))
 
+-- CREATE COLORS
+
 function UI:CreateColor(R, G, B, A)
     R = R or 1
     G = G or 1
@@ -36,6 +38,27 @@ function UI:CreateColor(R, G, B, A)
 
     return color
 end
+
+-- COLOR CURVES
+
+local DEBUFF_DISPLAY_COLOR_INFO = {
+    [0] = DEBUFF_TYPE_NONE_COLOR,
+    [1] = DEBUFF_TYPE_MAGIC_COLOR,
+    [2] = DEBUFF_TYPE_CURSE_COLOR,
+    [3] = DEBUFF_TYPE_DISEASE_COLOR,
+    [4] = DEBUFF_TYPE_POISON_COLOR,
+    [9] = DEBUFF_TYPE_BLEED_COLOR, -- Enrage
+    [11] = DEBUFF_TYPE_BLEED_COLOR,
+}
+
+UI.DispelColorCurve = C_CurveUtil.CreateColorCurve()
+UI.DispelColorCurve:SetType(Enum.LuaCurveType.Step)
+
+for i, c in pairs(DEBUFF_DISPLAY_COLOR_INFO) do
+    UI.DispelColorCurve:AddPoint(i, c)
+end
+
+-- COLOR TABLES
 
 UI.Colors = {
     Reaction = {

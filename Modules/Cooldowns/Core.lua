@@ -44,13 +44,6 @@ function Cooldown:GetFontScale(CD)
     return FontSize
 end
 
-function Cooldown:IsActionBarParent(CD)
-    local Parent = CD:GetParent()
-    local Name = Parent and Parent:GetName() or ""
-
-    return Name:match("ActionButton") or Name:match("MultiBar")
-end
-
 function Cooldown:UpdateCooldown(start, duration, enable, charges, maxcharges, forceShowdrawedge)
 	local Enabled = GetCVar("countdownForCooldowns")
 
@@ -70,16 +63,12 @@ function Cooldown:UpdateCooldown(start, duration, enable, charges, maxcharges, f
 
 			if (Region.GetText) then
                 local FontSize = Cooldown:GetFontScale(self)
+                
                 Region:SetParent(InvisFrame)
                 Region:ClearAllPoints()
+                Region:Point("CENTER", InvisFrame, 0, -7)
                 Region:SetFontTemplate("Default", FontSize)
                 Region:SetTextColor(1, 0.82, 0)
-
-                if (Cooldown:IsActionBarParent(self)) then
-                    Region:Point("CENTER", InvisFrame, 0, 0)
-                else
-                	Region:Point("CENTER", InvisFrame, 0, -7)
-                end
 			end
 		end
 

@@ -123,16 +123,20 @@ function UF:SpawnGroupHeader(type)
         Header:SetAttribute("columnSpacing", 4)
     end
 
+    -- GENERAL SETTINGS
     Header:SetAttribute("groupFilter", "1,2,3,4,5,6,7,8")
     Header:SetAttribute("groupingOrder", "1,2,3,4,5,6,7,8")
     Header:SetAttribute("groupBy", "GROUP")
     Header:SetAttribute("sortMethod", "INDEX")
 
+    -- REGISTER DRIVER
     RegisterAttributeDriver(Header, "state-visibility", "show")
 
     -- EVENTS
     Header:RegisterEvent("PLAYER_ENTERING_WORLD")
     Header:RegisterEvent("GROUP_ROSTER_UPDATE")
+    Header:RegisterEvent("UPDATE_INSTANCE_INFO")
+    Header:RegisterEvent("ZONE_CHANGED_NEW_AREA")
     Header:SetScript("OnEvent", function(self)
         local Index = 1
         while true do

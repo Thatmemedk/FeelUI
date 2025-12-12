@@ -22,10 +22,10 @@ local ChatConfigFrameDefaultButton = _G.ChatConfigFrameDefaultButton
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
 
-function CH:HideButtons()
-	ChatFrameMenuButton:Kill()
-	ChatConfigFrameDefaultButton:Kill()
-	QuickJoinToastButton:Kill()
+function CH:AddMessage(msg, ...)
+	msg = format("%s %s", date"|CFF909090[%H:%M:%S]|r", msg) -- Time Stamps
+	
+	self.OldAddMessage(self, msg, ...)
 end
 
 function CH:StyleFrames(Frame)
@@ -46,7 +46,6 @@ function CH:StyleFrames(Frame)
 
 	Chat:SetClampRectInsets(0, 0, 0, 0)
 	Chat:SetClampedToScreen(false)
-	--Chat:SetFading(false)
 	
 	EditBox:Size(Panels.ChatPanelLeft:GetWidth(), 22)
 	EditBox:ClearAllPoints()
@@ -54,12 +53,7 @@ function CH:StyleFrames(Frame)
 	EditBox:CreateBackdrop()
 	EditBox:SetBackdropColorTemplate(0.1, 0.1, 0.1, 0.90)
 	EditBox:CreateShadow()
-	EditBox:SetAltArrowKeyMode(false)
-	EditBox:Hide()
-	EditBox:HookScript("OnEditFocusLost", function(Frame)
-		Frame:Hide()
-	end)
-	
+
 	Chat:SetFontTemplate("Default")
 	EditBox:SetFontTemplate("Default")
 	EditBoxHeader:SetFontTemplate("Default")
@@ -83,6 +77,11 @@ function CH:StyleFrames(Frame)
 	if (Scroll) then Scroll:Kill() end
 	if (ScrollBottom) then ScrollBottom:Kill() end
 	if (MinimizeButton) then MinimizeButton:Kill() end
+
+	if (i ~= 2) then
+		Frame.OldAddMessage = Frame.AddMessage
+		Frame.AddMessage = CH.AddMessage
+	end
 
 	Frame.ChatIsSkinned = true
 end
@@ -145,9 +144,15 @@ function CH:SetupChat()
 		if not (Frame.isLocked) then
 			FCF_SetLocked(Frame, 1)
 		end
-		
+
 		self.SetChatFramePosition(Frame)
 	end
+end
+
+function CH:HideButtons()
+	ChatFrameMenuButton:Kill()
+	ChatConfigFrameDefaultButton:Kill()
+	QuickJoinToastButton:Kill()
 end
 
 function CH:Initialize()

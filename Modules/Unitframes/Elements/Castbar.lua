@@ -39,14 +39,19 @@ function UF:CreatePlayerCastbar(Frame)
 
     local CastbarSafeZone = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
     CastbarSafeZone:SetTexture(Media.Global.Texture)
-    CastbarSafeZone:SetVertexColor(0.69, 0.31, 0.31, 0.7)
+    CastbarSafeZone:SetVertexColor(1, 0.55, 0.15, 0.7)
     CastbarSafeZone:Hide()
+
+    local CastbarSafeZoneText = Castbar.Backdrop.FrameRaised:CreateFontString(nil, "OVERLAY", nil, 7)
+    CastbarSafeZoneText:SetFontTemplate("Default", 10)
+    CastbarSafeZoneText:SetVertexColor(0.6, 0.6, 0.6)
         
     Frame.Castbar = Castbar
     Frame.Castbar.Icon = CastbarIcon
     Frame.Castbar.Time = CastbarTime
     Frame.Castbar.Text = CastbarText
     Frame.Castbar.SafeZone = CastbarSafeZone
+    Frame.Castbar.SafeZoneText = CastbarSafeZoneText
 end
 
 function UF:CreateTargetCastbar(Frame)

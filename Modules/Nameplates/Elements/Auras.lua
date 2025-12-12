@@ -50,6 +50,7 @@ function NP:CreateDebuffs(Frame)
     Debuffs.Spacing = 3
     Debuffs.InitialAnchor = "TOPRIGHT"
     Debuffs.Direction = "RIGHT"
+    Debuffs.ShowOnlyPlayer = true
     Debuffs.Buttons = {}
 
     for i = 1, Debuffs.NumAuras do

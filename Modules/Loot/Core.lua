@@ -86,11 +86,11 @@ function Loot:OnEnter()
 
 	local SlotID = self:GetID()
 
-	--if LootSlotHasItem(SlotID) then
-	--	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-	--	GameTooltip:SetLootItem(SlotID)
-	--	CursorUpdate(self)
-	--end
+	if LootSlotHasItem(SlotID) then
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetLootItem(SlotID)
+		CursorUpdate(self)
+	end
 end
 
 function Loot:OnLeave()
@@ -99,8 +99,8 @@ function Loot:OnLeave()
 		self.Highlight:Hide()
 	end
 
-	--GameTooltip:Hide()
-	--ResetCursor()
+	GameTooltip:Hide()
+	ResetCursor()
 end
 
 function Loot:OnClick()

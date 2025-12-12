@@ -7,12 +7,48 @@ local UF = UI:CallModule("UnitFrames")
 local select = select
 local unpack = unpack
 
+function AuraTooltipOnEnter(self)
+    if _G.GameTooltip:IsForbidden() or not self:IsVisible() then 
+        return 
+    end
+
+    _G.GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+
+    if (self.AuraInstanceID and type(self.AuraInstanceID) == "number") then
+        if (self.AuraFilter == "HARMFUL") then
+            _G.GameTooltip:SetUnitDebuffByAuraInstanceID(self.Unit, self.AuraInstanceID)
+        else
+            _G.GameTooltip:SetUnitBuffByAuraInstanceID(self.Unit, self.AuraInstanceID)
+        end
+    elseif (self.AuraIndex and type(self.AuraIndex) == "number") then
+        if (self.AuraFilter == "HARMFUL") then
+            _G.GameTooltip:SetUnitDebuff(self.Unit, self.AuraIndex)
+        else
+            _G.GameTooltip:SetUnitBuff(self.Unit, self.AuraIndex)
+        end
+    end
+
+    _G.GameTooltip:Show()
+end
+
+function AuraTooltipOnLeave(self)
+    if _G.GameTooltip:IsForbidden() then 
+        return 
+    end
+
+    _G.GameTooltip:Hide()
+end
+
 function UF:CreateAuraButton(Frame)
     local Button = CreateFrame("Button", nil, Frame)
     Button:SetTemplate()
     Button:CreateShadow()
     Button:StyleButton()
     Button:SetShadowOverlay()
+
+    -- TOOLTIP
+    Button:SetScript("OnEnter", AuraTooltipOnEnter)
+    Button:SetScript("OnLeave", AuraTooltipOnLeave)
 
     -- OVERLAY
     local Overlay = CreateFrame("Frame", nil, Button)
@@ -105,7 +141,7 @@ end
 function UF:CreateRaidDebuffs(Frame)
     local Debuffs = CreateFrame("Frame", nil, Frame.InvisFrameHigher)
     Debuffs:Size(26, 16)
-    Debuffs:Point("LEFT", Frame, 10, 0)
+    Debuffs:Point("LEFT", Frame, 12, 0)
     Debuffs.NumAuras = 2
     Debuffs.Spacing = 4
     Debuffs.InitialAnchor = "TOPLEFT"

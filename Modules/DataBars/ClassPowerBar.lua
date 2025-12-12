@@ -105,7 +105,7 @@ function ClassPowerBar:Update()
 
     local BarWidth = 222
     local SegmentSpacing = 2
-    local SegmentWidth = math.floor((BarWidth - ((BarCount - 1) * SegmentSpacing)) / BarCount + 0.5)
+    local SegmentWidth = math.floor((BarWidth - ((BarCount - 1) * SegmentSpacing)) / BarCount + 1)
 
     for i = 1, BarCount do
         local Segment = self.Segment[i]

@@ -56,6 +56,5 @@ function Panels:Initialize()
 	self.ChatPanelRight = ChatPanelRight
 	self.CopyHighlight = CopyHighlight
 	self.DataTextHolder = DataTextHolder
-	self.DataBarHolder = DataBarHolder
 	self.BottomPanel = BottomPanel
 end

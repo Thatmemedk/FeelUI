@@ -17,7 +17,6 @@ function UF:CreateAdditionalPower(Frame)
     AdditionalPower:SetStatusBarColor(0.31, 0.45, 0.63)
     AdditionalPower:CreateBackdrop()
     AdditionalPower:CreateShadow()
-    AdditionalPower:CreateSpark()
     AdditionalPower:SetAlpha(0)
 
     local AdditionalPowerText = Frame.InvisFrameHigher:CreateFontString(nil, "OVERLAY")

@@ -25,7 +25,7 @@ function GameMenu:Skin()
 		GameMenuFrame.NewOptionsFrame.Glow:Hide()
 
 		local GameMenuFrameNew = CreateFrame("Frame", nil, GameMenuFrame)
-		GameMenuFrameNew:Size(162, 282)
+		GameMenuFrameNew:Size(162, 294)
 		GameMenuFrameNew:Point("CENTER", GameMenuFrame, 0, -6)
 		GameMenuFrameNew:CreateBackdrop()
 		GameMenuFrameNew:CreateShadow()
@@ -55,12 +55,8 @@ function GameMenu:Skin()
 			Button.Backdrop:SetInside(Button, 1, 1)
 			Button.BorderBackdrop:SetInside(Button, 1, 1)
 
-			local Font = Button.GetFontString and Button:GetFontString()
-
-			if (Font) then
-				Font:SetFontTemplate("Default", 12)
-				Font:SetTextColor(0.85, 0.85, 0.85)
-			end
+			Button:GetFontString():SetFontTemplate("Default")
+			Button:GetFontString():SetTextColor(0.8, 0.8, 0.8)
 		end
 	end)
 end

@@ -121,22 +121,30 @@ end
 function NP:UpdateAuras(Frame, Unit, IsDebuff)
     local Auras = IsDebuff and Frame.Debuffs or Frame.Buffs
 
-    if not (Auras) then 
+    if (not Auras) then 
         return 
     end
 
     local AuraWidth, AuraHeight = Auras:GetWidth(), Auras:GetHeight()
     local AurasToShow = Auras.NumAuras or 6
     local Spacing = Auras.Spacing or 4
+    local OnlyPlayerDebuffs = Auras.ShowOnlyPlayer
     local ActiveButtons = 0
     local Index = 1
+    local HarmState
 
     for _, Buttons in ipairs(Auras.Buttons) do
         Buttons:Hide()
     end
 
+    if (OnlyPlayerDebuffs) then
+        HarmState = "HARMFUL|PLAYER"
+    else
+        HarmState = "HARMFUl"
+    end
+
     while ActiveButtons < AurasToShow do
-        local AuraData = GetAuraDataByIndex(Unit, Index, IsDebuff and "HARMFUL|PLAYER" or "HELPFUL")
+        local AuraData = GetAuraDataByIndex(Unit, Index, IsDebuff and HarmState or "HELPFUL")
 
         if (not AuraData or not AuraData.name) then
             break
@@ -147,11 +155,20 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
         local Count = AuraData.applications
         local Duration = AuraData.duration
         local ExpirationTime = AuraData.expirationTime
+        local AuraInstanceID = AuraData.auraInstanceID
         local Button = Auras.Buttons[ActiveButtons + 1]
 
-        if not (Button) then
+        if (not Button) then
             break
         end
+
+        local Direction = Auras.Direction or "RIGHT"
+        local OffsetMultiplier = (Direction == "RIGHT") and 1 or -1
+
+        Button:Size(AuraWidth, AuraHeight)
+        Button:ClearAllPoints()
+        Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, ActiveButtons * (AuraWidth + Spacing) * OffsetMultiplier, 0)
+        Button:Show()
 
         if (Button.Icon) then
             Button.Icon:SetTexture(Icon)
@@ -180,25 +197,21 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
                 if (Region.GetText) then
                     Region:ClearAllPoints()
                     Region:Point("CENTER", Button.Overlay, 0, -7)
-                    Region:SetFontTemplate("Default", 13)
+                    Region:SetFontTemplate("Default")
                     Region:SetTextColor(1, 0.82, 0)
                 end
             end
         end
 
         if (IsDebuff) then
-            Button:SetColorTemplate(1, 0, 0)
+            local Color = C_UnitAuras.GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
+
+            if (Color) then
+                Button:SetColorTemplate(Color.r, Color.g, Color.b)
+            end
         else
             Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
         end
-
-        local Direction = Auras.Direction or "RIGHT"
-        local OffsetMultiplier = (Direction == "RIGHT") and 1 or -1
-
-        Button:Size(AuraWidth, AuraHeight)
-        Button:ClearAllPoints()
-        Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, ActiveButtons * (AuraWidth + Spacing) * OffsetMultiplier, 0)
-        Button:Show()
 
         ActiveButtons = ActiveButtons + 1
         Index = Index + 1
@@ -315,7 +328,7 @@ function NP:UpdateHealthText(Frame, Unit)
         return
     end
 
-    local Percent = UnitHealthPercent(Unit, false, true)
+    local Percent = UnitHealthPercent(Unit, false, CurveConstants.ScaleTo100)
     Frame.HealthText:SetFormattedText("%d%%", Percent or 0)
 end
 
@@ -395,7 +408,9 @@ function NP:UpdateFriendly(Frame)
         return 
     end
 
+    -- NAME
     if (Frame.Name) then self:UpdateName(Frame, Frame.Unit) end
+    -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame, Frame.Unit) end
 end
 
@@ -404,96 +419,94 @@ function NP:UpdateEnemy(Frame)
         return 
     end
 
+    -- HEALTH
     if (Frame.Health) then self:UpdateHealth(Frame, Frame.Unit) end
     if (Frame.HealthText) then self:UpdateHealthText(Frame, Frame.Unit) end
+    -- NAME
     if (Frame.Name) then self:UpdateName(Frame, Frame.Unit) end
+    -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame, Frame.Unit) end
+    -- HIGHLIGHT
     if (Frame.TargetIndicatorLeft and Frame.TargetIndicatorRight) then self:HighlightOnNameplateTarget(Frame, Frame.Unit) end
+    -- THREAT
     if (Frame.Threat) then self:UpdateThreatHighlight(Frame, Frame.Unit) end
+    -- AURAS
     if (Frame.Debuffs) then self:UpdateAuras(Frame, Frame.Unit, true) end
 end
 
 -- EVENT HANDLER
 
 function NP:OnEvent(event, unit, ...)
-    if (event == "NAME_PLATE_UNIT_ADDED") then
-        local Plate = C_NamePlate.GetNamePlateForUnit(unit)
+    local GNP = C_NamePlate.GetNamePlates()
+    local GNPFU = unit and C_NamePlate.GetNamePlateForUnit(unit) or nil
 
-        if (not Plate) then 
-            return 
+    -- UPDATE ADDED NAMEPLATES
+    if (event == "NAME_PLATE_UNIT_ADDED") then
+        if (not unit or not GNPFU) then
+            return
         end
 
+        local FriendlyFrame = GNPFU.FeelUINameplatesFriendly
+        local EnemyFrame = GNPFU.FeelUINameplatesEnemy
         local IsFriend = UnitIsFriend("player", unit)
 
-        if (IsFriend and Plate.FeelUINameplatesEnemy) then
-            Plate.FeelUINameplatesEnemy:Hide()
-            Plate.FeelUINameplatesEnemy.Unit = nil
-        end
-
-        if (not IsFriend and Plate.FeelUINameplatesFriendly) then
-            Plate.FeelUINameplatesFriendly:Hide()
-            Plate.FeelUINameplatesFriendly.Unit = nil
+        if (IsFriend and EnemyFrame) then
+            EnemyFrame:Hide()
+            EnemyFrame.Unit = nil
+        elseif (not IsFriend and FriendlyFrame) then
+            FriendlyFrame:Hide()
+            FriendlyFrame.Unit = nil
         end
 
         if (IsFriend) then
-            if (not Plate.FeelUINameplatesFriendly) then
-                self:CreateFriendly(Plate, unit)
+            if (not FriendlyFrame) then
+                self:CreateFriendly(GNPFU, unit)
             else
-                Plate.FeelUINameplatesFriendly.Unit = unit
-                self:UpdateFriendly(Plate.FeelUINameplatesFriendly)
-                Plate.FeelUINameplatesFriendly:Show()
+                FriendlyFrame.Unit = unit
+                FriendlyFrame:Show()
+
+                self:UpdateFriendly(FriendlyFrame)
             end
         else
-            if (not Plate.FeelUINameplatesEnemy) then
-                self:CreateEnemy(Plate, unit)
+            if (not EnemyFrame) then
+                self:CreateEnemy(GNPFU, unit)
             else
-                Plate.FeelUINameplatesEnemy.Unit = unit
-                self:UpdateEnemy(Plate.FeelUINameplatesEnemy)
+                EnemyFrame.Unit = unit
+                EnemyFrame:Show()
+
+                self:UpdateEnemy(EnemyFrame)
                 self:SetNameplateColor(unit, false)
-                Plate.FeelUINameplatesEnemy:Show()
             end
         end
 
-        self:HideBlizzardFrames(Plate)
+        self:HideBlizzardFrames(GNPFU)
 
+        return
+
+        -- UPDATE REMOVED NAMEPLATES
     elseif (event == "NAME_PLATE_UNIT_REMOVED") then
-        local Plate = C_NamePlate.GetNamePlateForUnit(unit)
-
-        if (not Plate) then 
-            return 
+        if (not unit or not GNPFU) then
+            return
         end
 
-        if (Plate.FeelUINameplatesFriendly) then
-            Plate.FeelUINameplatesFriendly.Unit = nil
+        local FriendlyFrame = GNPFU.FeelUINameplatesFriendly
+        local EnemyFrame = GNPFU.FeelUINameplatesEnemy
+
+        if (FriendlyFrame) then
+            FriendlyFrame.Unit = nil
         end
 
-        if (Plate.FeelUINameplatesEnemy) then
-            Plate.FeelUINameplatesEnemy.Unit = nil
+        if (EnemyFrame) then
+            EnemyFrame.Unit = nil
         end
 
-        self:ShowBlizzardFrames(Plate)
+        self:ShowBlizzardFrames(GNPFU)
 
-    elseif (event == "UNIT_SPELLCAST_START") then
-        if not UnitIsFriend("player", unit) then
-            self:SetNameplateColor(unit, true)
-        end
+        return
 
-    elseif (event == "RAID_TARGET_UPDATE") then
-        for _, Plate in ipairs(C_NamePlate.GetNamePlates()) do
-            local FriendlyFrame = Plate.FeelUINameplatesFriendly
-            local EnemyFrame = Plate.FeelUINameplatesEnemy
-
-            if (FriendlyFrame and FriendlyFrame.Unit) then
-                self:UpdateRaidIcon(FriendlyFrame, FriendlyFrame.Unit)
-            end
-
-            if (EnemyFrame and EnemyFrame.Unit) then
-                self:UpdateRaidIcon(EnemyFrame, EnemyFrame.Unit)
-            end
-        end
-
+        -- UPDATE TARGET NAMEPLATES
     elseif (event == "PLAYER_TARGET_CHANGED" or event == "UNIT_TARGETABLE_CHANGED") then
-        for _, Plate in ipairs(C_NamePlate.GetNamePlates()) do
+        for _, Plate in ipairs(GNP) do
             local FriendlyFrame = Plate.FeelUINameplatesFriendly
             local EnemyFrame = Plate.FeelUINameplatesEnemy
 
@@ -507,32 +520,72 @@ function NP:OnEvent(event, unit, ...)
             end
         end
 
-    elseif (unit and event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
-        local Plate = C_NamePlate.GetNamePlateForUnit(unit)
+        return
 
-        if (not Plate) then 
-            return 
+        -- UPDATE COLORS
+    elseif (event == "UNIT_SPELLCAST_START") then
+        if (not unit) then
+            return
         end
 
-        if UnitIsFriend("player", unit) and Plate.FeelUINameplatesFriendly then
-            self:UpdateFriendly(Plate.FeelUINameplatesFriendly)
-        elseif (Plate.FeelUINameplatesEnemy) then
-            self:UpdateEnemy(Plate.FeelUINameplatesEnemy)
-            self:SetNameplateColor(unit, false)
+        if not UnitIsFriend("player", unit) then
+            self:SetNameplateColor(unit, true)
         end
-        
+
+        return
+
+        -- HEALTH
+    elseif ((event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") and unit) then
+        if (not GNPFU) then
+            return
+        end
+
+        local FriendlyFrame = GNPFU.FeelUINameplatesFriendly
+        local EnemyFrame = GNPFU.FeelUINameplatesEnemy
+
+        if UnitIsFriend("player", unit) then
+            if (FriendlyFrame) then
+                self:UpdateFriendly(FriendlyFrame)
+            end
+        else
+            if (EnemyFrame) then
+                self:UpdateEnemy(EnemyFrame)
+                self:SetNameplateColor(unit, false)
+            end
+        end
+
+        return
+
+        -- UPDATE ICONS
+    elseif (event == "RAID_TARGET_UPDATE") then
+        for _, Plate in ipairs(GNP) do
+            local FriendlyFrame = Plate.FeelUINameplatesFriendly
+            local EnemyFrame = Plate.FeelUINameplatesEnemy
+
+            if (FriendlyFrame and FriendlyFrame.Unit) then
+                self:UpdateRaidIcon(FriendlyFrame, FriendlyFrame.Unit)
+            end
+
+            if (EnemyFrame and EnemyFrame.Unit) then
+                self:UpdateRaidIcon(EnemyFrame, EnemyFrame.Unit)
+            end
+        end
+
+        return
+
+        -- UPDATE AURAS
     elseif (event == "UNIT_AURA") then
-        local Plate = C_NamePlate.GetNamePlateForUnit(unit)
-
-        if (not Plate) then 
-            return 
+        if (not unit or not GNPFU) then
+            return
         end
 
-        local EnemyFrame = Plate.FeelUINameplatesEnemy
+        local EnemyFrame = GNPFU.FeelUINameplatesEnemy
 
         if (EnemyFrame and EnemyFrame.Unit) then
             self:UpdateAuras(EnemyFrame, EnemyFrame.Unit, true)
         end
+
+        return
     end
 end
 
