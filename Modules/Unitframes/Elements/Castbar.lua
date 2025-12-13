@@ -52,6 +52,7 @@ function UF:CreatePlayerCastbar(Frame)
     Frame.Castbar.Text = CastbarText
     Frame.Castbar.SafeZone = CastbarSafeZone
     Frame.Castbar.SafeZoneText = CastbarSafeZoneText
+    Frame.Castbar.CastHold = 0
 end
 
 function UF:CreateTargetCastbar(Frame)
@@ -87,6 +88,7 @@ function UF:CreateTargetCastbar(Frame)
     Frame.Castbar.Icon = CastbarIcon
     Frame.Castbar.Time = CastbarTime
     Frame.Castbar.Text = CastbarText
+    Frame.Castbar.CastHold = 0
 end
 
 function UF:CreatePetCastbar(Frame)
@@ -122,6 +124,7 @@ function UF:CreatePetCastbar(Frame)
     Frame.Castbar.Icon = CastbarIcon
     Frame.Castbar.Time = CastbarTime
     Frame.Castbar.Text = CastbarText
+    Frame.Castbar.CastHold = 0
 end
 
 function UF:CreateFocusCastbar(Frame)
@@ -157,6 +160,7 @@ function UF:CreateFocusCastbar(Frame)
     Frame.Castbar.Icon = CastbarIcon
     Frame.Castbar.Time = CastbarTime
     Frame.Castbar.Text = CastbarText
+    Frame.Castbar.CastHold = 0
 end
 
 function UF:CreateBossCastbar(Frame)
@@ -191,4 +195,5 @@ function UF:CreateBossCastbar(Frame)
     Frame.Castbar.Icon = CastbarIcon
     Frame.Castbar.Time = CastbarTime
     Frame.Castbar.Text = CastbarText
+    Frame.Castbar.CastHold = 0
 end

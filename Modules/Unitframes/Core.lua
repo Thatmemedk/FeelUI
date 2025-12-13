@@ -255,22 +255,26 @@ function UF:CastStarted(Unit, Event)
         return
     end
 
-    local Name, Icon, StartTime, EndTime, TradeSkill, Interrupt, EmpowerStages
+    local Name, Icon, StartTime, EndTime, Interrupt, EmpowerStages
 
-    -- Normal Casts
+    -- Try normal cast first
     if (Event == "UNIT_SPELLCAST_START") then
-        Name, _, Icon, StartTime, EndTime, TradeSkill, _, Interrupt = UnitCastingInfo(Unit)
-
-        -- Channel Casts
-    elseif (Event == "UNIT_SPELLCAST_CHANNEL_START") then
-        Name, _, Icon, StartTime, EndTime, TradeSkill, Interrupt = UnitChannelInfo(Unit)
-
-        -- Empower Casts
-    elseif (Event == "UNIT_SPELLCAST_EMPOWER_START") then
-        Name, _, Icon, StartTime, EndTime, TradeSkill, Interrupt, _, _, EmpowerStages = UnitChannelInfo(Unit)
+        Name, _, Icon, StartTime, EndTime, _, _, Interrupt = UnitCastingInfo(Unit)
     end
 
-    if (not Name or TradeSkill) then
+    -- Fallback to channel / empower if normal cast is nil
+    if (not Name) then
+        Name, _, Icon, StartTime, EndTime, _, Interrupt, _, _, EmpowerStages = UnitChannelInfo(Unit)
+        
+        -- Dynamically set the event
+        if (Unit == "player" and EmpowerStages and EmpowerStages > 0) then
+            Event = "UNIT_SPELLCAST_EMPOWER_START"
+        else
+            Event = "UNIT_SPELLCAST_CHANNEL_START"
+        end
+    end
+
+    if (not Name) then
         return
     end
 
@@ -278,34 +282,6 @@ function UF:CastStarted(Unit, Event)
     Castbar.Casting = (Event == "UNIT_SPELLCAST_START")
     Castbar.Channel = (Event == "UNIT_SPELLCAST_CHANNEL_START")
     Castbar.Empower = (Event == "UNIT_SPELLCAST_EMPOWER_START")
-
-    -- Empower
-    if (Castbar.Empower) then
-        EndTime = EndTime + GetUnitEmpowerHoldAtMaxTime(Unit)
-    end
-
-    -- Convert milliseconds to seconds
-    EndTime = EndTime / 1000
-    StartTime = StartTime / 1000
-
-    -- Cache
-    Castbar.Max = EndTime - StartTime
-    Castbar.StartTime = StartTime
-    Castbar.EndTime = EndTime
-    Castbar.Interrupt = Interrupt
-    Castbar.CastDelayed = 0
-    Castbar.CastHold = 0
-
-    if (Castbar.Channel) then
-        Castbar.Duration = EndTime - GetTime()
-    else
-        Castbar.Duration = GetTime() - StartTime
-    end
-
-    -- Set Values
-    Castbar:SetMinMaxValues(0, Castbar.Max)
-    Castbar:SetValue(Castbar.Duration)
-    Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
 
     -- Icon
     if (Castbar.Icon) then
@@ -317,36 +293,86 @@ function UF:CastStarted(Unit, Event)
         Castbar.Text:SetText(Name)
     end
 
-    -- Safe Zone
-    if (Castbar.SafeZone) then
-        local _, _, MSHome, MSWorld = GetNetStats()
-        local MS = (MSHome + MSWorld) / 2
-        local Latency = MS / 1000
-        local Ratio = math.min(Latency / Castbar.Max, 1)
-        local Width = Castbar:GetWidth() * Ratio
+    if (Unit == "player") then
+        -- Empower
+        if (Castbar.Empower) then
+            EndTime = EndTime + GetUnitEmpowerHoldAtMaxTime(Unit)
+        end
 
-        Castbar.SafeZone:ClearAllPoints()
-        Castbar.SafeZone:Width(Width)
-        Castbar.SafeZone:Show()
+        -- Convert milliseconds to seconds
+        EndTime = EndTime / 1000
+        StartTime = StartTime / 1000
 
-        Castbar.SafeZoneText:ClearAllPoints()
-        Castbar.SafeZoneText:SetText(string.format("%.0f", MS).."ms")
+        -- Cache
+        Castbar.Max = EndTime - StartTime
+        Castbar.StartTime = StartTime
+        Castbar.EndTime = EndTime
+        Castbar.Interrupt = Interrupt
+        Castbar.CastDelayed = 0
+        Castbar.CastHold = 0
 
         if (Castbar.Channel) then
-            Castbar.SafeZoneText:Point("LEFT", Castbar, "BOTTOMLEFT", 0, 0)
-
-            Castbar.SafeZone:Point("TOPLEFT", Castbar, "TOPLEFT")
-            Castbar.SafeZone:Point("BOTTOMLEFT", Castbar, "BOTTOMLEFT")
+            Castbar.Duration = EndTime - GetTime()
         else
-            Castbar.SafeZoneText:Point("RIGHT", Castbar, "BOTTOMRIGHT", 0, 0)
-
-            Castbar.SafeZone:Point("TOPRIGHT", Castbar, "TOPRIGHT")
-            Castbar.SafeZone:Point("BOTTOMRIGHT", Castbar, "BOTTOMRIGHT")
+            Castbar.Duration = GetTime() - StartTime
         end
-    end
 
-    -- Call On Update
-    Castbar:SetScript("OnUpdate", self.CastBarOnUpdate)
+        -- Set Values
+        Castbar:SetMinMaxValues(0, Castbar.Max)
+        Castbar:SetValue(Castbar.Duration)
+        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
+
+        -- Safe Zone
+        if (Castbar.SafeZone) then
+            local _, _, MSHome, MSWorld = GetNetStats()
+            local MS = (MSHome + MSWorld) / 2
+            local Latency = MS / 1000
+            local Ratio = math.min(Latency / Castbar.Max, 1)
+            local Width = Castbar:GetWidth() * Ratio
+
+            Castbar.SafeZone:ClearAllPoints()
+            Castbar.SafeZone:Width(Width)
+            Castbar.SafeZone:Show()
+
+            Castbar.SafeZoneText:ClearAllPoints()
+            Castbar.SafeZoneText:SetText(string.format("%.0f", MS).."ms")
+
+            if (Castbar.Channel) then
+                Castbar.SafeZoneText:Point("LEFT", Castbar, "BOTTOMLEFT", 0, 0)
+
+                Castbar.SafeZone:Point("TOPLEFT", Castbar, "TOPLEFT")
+                Castbar.SafeZone:Point("BOTTOMLEFT", Castbar, "BOTTOMLEFT")
+            else
+                Castbar.SafeZoneText:Point("RIGHT", Castbar, "BOTTOMRIGHT", 0, 0)
+
+                Castbar.SafeZone:Point("TOPRIGHT", Castbar, "TOPRIGHT")
+                Castbar.SafeZone:Point("BOTTOMRIGHT", Castbar, "BOTTOMRIGHT")
+            end
+        end
+
+        -- Call On Update
+        Castbar:SetScript("OnUpdate", UF.CastBarOnUpdate)
+    else
+        if (Castbar.Channel) then
+            Castbar.Duration = UnitChannelDuration(Unit)
+
+            Castbar:SetReverseFill(true)
+            Castbar:SetStatusBarColor(unpack(DB.Global.General.BackdropColor))
+            Castbar:SetBackdropColorTemplate(unpack(DB.Global.UnitFrames.CastBarColor))
+        else
+            Castbar.Duration = UnitCastingDuration(Unit)
+
+            Castbar:SetReverseFill(false)
+            Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
+            Castbar:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
+        end
+
+        -- Set Values
+        Castbar:SetTimerDuration(Castbar.Duration)
+
+        -- Call On Update
+        Castbar:SetScript("OnUpdate", UF.OnUpdate)
+    end
 
     -- Call Fade
     UI:UIFrameFadeIn(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 1)
@@ -366,9 +392,11 @@ function UF:CastStopped(Unit, Event)
     Castbar.Empower = nil
     Castbar.Interrupt = nil
 
-    -- Set Value
-    Castbar:SetMinMaxValues(0, Castbar.Max or 1)
-    Castbar:SetValue(Castbar.Duration or 1)
+    if (Unit == "player") then
+        -- Set Value
+        Castbar:SetMinMaxValues(0, 1)
+        Castbar:SetValue(1)
+    end
 
     -- Call Fade
     UI:UIFrameFadeOut(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 0)
@@ -383,16 +411,17 @@ function UF:CastFailed(Unit, Event)
     end
 
     -- Update Events
-    if (Castbar.Text) then
-        if (Event == "UNIT_SPELLCAST_FAILED") then
-            Castbar.Text:SetText(FAILED)
-        elseif (Event == "UNIT_SPELLCAST_INTERRUPTED") then
-            Castbar.Text:SetText(INTERRUPTED)
-        end
+    if (Event == "UNIT_SPELLCAST_FAILED") then
+        Castbar.Text:SetText(FAILED)
+        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.InterruptColor))
+    elseif (Event == "UNIT_SPELLCAST_INTERRUPTED") then
+        Castbar.Text:SetText(INTERRUPTED)
+        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.InterruptColor))
+    else
+        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
     end
 
-    -- Hold
-    Frame.Castbar.CastHold = Frame.Castbar.CastHold or 0
+    Castbar.CastHold = Castbar.CastHold or 0
 
     -- Clear Cache
     Castbar.Casting = nil
@@ -400,8 +429,10 @@ function UF:CastFailed(Unit, Event)
     Castbar.Empower = nil
     Castbar.Interrupt = nil
 
-    Castbar:SetValue(Castbar.Max or 1)
-    Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.InterruptColor))
+    if (Unit == "player") then
+        -- Set Value
+        Castbar:SetValue(1)
+    end
 
     -- Call Fade
     UI:UIFrameFadeOut(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 0)
@@ -417,18 +448,12 @@ function UF:CastInterrupted(Unit, Event)
 
     if (Event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
         Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.InterruptColor))
-
-        if (Castbar.Icon) then 
-            Castbar.Icon:SetDesaturated(true) 
-        end
+        Castbar.Icon:SetDesaturated(true)
 
         Castbar.Interrupt = true
     else
         Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
-
-        if (Castbar.Icon) then 
-            Castbar.Icon:SetDesaturated(false) 
-        end
+        Castbar.Icon:SetDesaturated(false)
 
         Castbar.Interrupt = nil
     end
@@ -458,36 +483,55 @@ function UF:CastUpdated(Unit, Event)
         return 
     end
 
-    -- Empower
-    if (Castbar.Empower) then
-        EndTime = EndTime + GetUnitEmpowerHoldAtMaxTime(Unit)
-    end
+    if (Unit == "player") then
+        -- Empower
+        if (Castbar.Empower) then
+            EndTime = EndTime + GetUnitEmpowerHoldAtMaxTime(Unit)
+        end
 
-    -- Convert milliseconds to seconds
-    StartTime = StartTime / 1000 
-    EndTime = EndTime / 1000 
+        -- Convert milliseconds to seconds
+        StartTime = StartTime / 1000 
+        EndTime = EndTime / 1000 
 
-    if (Castbar.Channel) then
-        Value = Castbar.StartTime - StartTime
-        Castbar.Duration = EndTime - GetTime()
+        if (Castbar.Channel) then
+            Value = Castbar.StartTime - StartTime
+            Castbar.Duration = EndTime - GetTime()
+        else
+            Value = StartTime - Castbar.StartTime
+            Castbar.Duration = GetTime() - StartTime
+        end
+
+        if (Value < 0) then 
+            Value = 0 
+        end
+
+        -- Cache
+        Castbar.Max = EndTime - StartTime
+        Castbar.StartTime = StartTime
+        Castbar.EndTime = EndTime
+        Castbar.CastDelayed = Castbar.CastDelayed + Value
+
+        -- Set Values
+        Castbar:SetMinMaxValues(0, Castbar.Max or 1)
+        Castbar:SetValue(Castbar.Duration or 1)
     else
-        Value = StartTime - Castbar.StartTime
-        Castbar.Duration = GetTime() - StartTime
+        if (Castbar.Channel) then
+            Castbar.Duration = UnitChannelDuration(Unit)
+
+            Castbar:SetReverseFill(true)
+            Castbar:SetStatusBarColor(unpack(DB.Global.General.BackdropColor))
+            Castbar:SetBackdropColorTemplate(unpack(DB.Global.UnitFrames.CastBarColor))
+        else
+            Castbar.Duration = UnitCastingDuration(Unit)
+
+            Castbar:SetReverseFill(false)
+            Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
+            Castbar:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
+        end
+
+        -- Set Values
+        Castbar:SetTimerDuration(Castbar.Duration)
     end
-
-    if (Value < 0) then 
-        Value = 0 
-    end
-
-    -- Cache
-    Castbar.Max = EndTime - StartTime
-    Castbar.StartTime = StartTime
-    Castbar.EndTime = EndTime
-    Castbar.CastDelayed = Castbar.CastDelayed + Value
-
-    -- Set Values
-    Castbar:SetMinMaxValues(0, Castbar.Max)
-    Castbar:SetValue(Castbar.Duration)
 end
 
 function UF:CastBarOnUpdate(Elapsed)
@@ -558,6 +602,33 @@ function UF:CastBarOnUpdate(Elapsed)
         -- Call Fade
         UI:UIFrameFadeOut(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 0)
     end
+end
+
+function UF.OnUpdate(Castbar)
+    Castbar.Time:SetFormattedText("%.1fs", Castbar:GetTimerDuration():GetRemainingDuration())
+end
+
+function UF:ClearCastbar(Unit)
+    local Frame = self.Frames[Unit]
+    local Castbar = Frame.Castbar
+
+    if (not Frame or not Castbar) then 
+        return 
+    end
+
+    -- Clear Cache
+    Castbar.Casting = nil
+    Castbar.Channel = nil
+    Castbar.Empower = nil
+    Castbar.Interrupt = nil
+    Castbar.CastDelayed = 0
+    Castbar.CastHold = 0
+
+    -- Call On Update
+    Castbar:SetScript("OnUpdate", nil)
+
+    -- Call Fade
+    UI:UIFrameFadeOut(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 0)
 end
 
 --- UPDATE HEALTH
@@ -1197,6 +1268,8 @@ function UF:OnEvent(event, arg1)
     elseif (event == "PLAYER_TARGET_CHANGED") then
         if UF.Frames["target"] then UF:UpdateFrame("target") end
         if UF.Frames["targettarget"] then UF:UpdateFrame("targettarget") end
+        
+        UF:ClearCastbar("target")
 
     -- TARGET OF TARGET
     elseif (event == "UNIT_TARGET" and arg1 == "target") then

@@ -91,50 +91,74 @@ function UF:Spawn(Unit, Width, Height, Orientation)
     self:CreatePanels(Frame)
     self:CreateHightlight(Frame)
     self:CreateFadeInOut(Frame)
+
+    -- HEALTH
     self:CreateHealth(Frame, Height, Orientation)
+
+    -- ICONS
     self:CreateRaidIcon(Frame)
 
     if (Unit == "player") then
+        -- TEXTS
+        self:CreatePlayerTexts(Frame)
+        -- HEALTH PRED
+        self:CreateHealthPrediction(Frame)
+        -- ICONS
         self:CreateCombatIcon(Frame)
         self:CreateRestingIcon(Frame)
         self:CreateResurrectIcon(Frame)
         self:CreateLeaderIcon(Frame)
         self:CreateAssistantIcon(Frame)
         self:CreateSummonIcon(Frame)
-        self:CreatePlayerTexts(Frame)
+        -- CASTBAR
         self:CreatePlayerCastbar(Frame)
+        -- PORTRAITS
         self:CreatePortrait(Frame)
-        self:CreateHealthPrediction(Frame)
+        -- ADDITIONAL POWER
         self:CreateAdditionalPower(Frame)
-        --self:CreateBuffs(Frame)
     elseif (Unit == "target") then
+        -- TEXTS
         self:CreateTargetTexts(Frame)
-        self:CreatePortrait(Frame)
+        -- ICONS
         self:CreateSummonIcon(Frame)
         self:CreatePhaseIcon(Frame)
+        -- CASTBARS
+        self:CreateTargetCastbar(Frame)
+        -- PORTRAITS
+        self:CreatePortrait(Frame)
+        -- HEALTH PRED
         self:CreateHealthPrediction(Frame)
-        --self:CreateTargetCastbar(Frame)
+        -- AURAS
         self:CreateBuffs(Frame)
         self:CreateDebuffs(Frame)
+        -- THREAT
         self:CreateThreatHighlight(Frame)
     elseif (Unit == "targettarget") then
+        -- TEXT
         self:CreateNameTextCenter(Frame)
+        -- THREAT
         self:CreateThreatHighlight(Frame)
-        --self:CreatePortrait(Frame)
     elseif (Unit == "pet") then
+        -- TEXT
         self:CreateNameTextCenter(Frame)
+        -- THREAT
         self:CreateThreatHighlight(Frame)
-        --self:CreatePortrait(Frame)
-        --self:CreatePetCastbar(Frame)
+        -- CASTBAR
+        self:CreatePetCastbar(Frame)
     elseif (Unit == "focus") then
+        -- TEXT
         self:CreateNameTextCenter(Frame)
+        -- THREAT
         self:CreateThreatHighlight(Frame)
-        --self:CreateFocusCastbar(Frame)
+        -- CASTBAR
+        self:CreateFocusCastbar(Frame)
     elseif (Unit:match("^boss%d$")) then
+        -- TEXT
         self:CreateTargetTexts(Frame)
+        -- THREAT
         self:CreateThreatHighlight(Frame)
-        --self:CreatePortrait(Frame)
-        --self:CreateBossCastbar(Frame)
+        -- CASTBAR
+        self:CreateBossCastbar(Frame)
     end
 
     return Frame
