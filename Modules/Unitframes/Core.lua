@@ -255,13 +255,19 @@ function UF:CastStarted(Unit, Event)
         return
     end
 
-    local Name, _, Icon, StartTime, EndTime, TradeSkill, _, Interrupt = UnitCastingInfo(Unit)
-    local EmpowerStage = 0
-    Event = "UNIT_SPELLCAST_START"
+    local Name, Icon, StartTime, EndTime, TradeSkill, Interrupt, EmpowerStages
 
-    if (not Name) then
+    -- Normal Casts
+    if (Event == "UNIT_SPELLCAST_START") then
+        Name, _, Icon, StartTime, EndTime, TradeSkill, _, Interrupt = UnitCastingInfo(Unit)
+
+        -- Channel Casts
+    elseif (Event == "UNIT_SPELLCAST_CHANNEL_START") then
+        Name, _, Icon, StartTime, EndTime, TradeSkill, Interrupt = UnitChannelInfo(Unit)
+
+        -- Empower Casts
+    elseif (Event == "UNIT_SPELLCAST_EMPOWER_START") then
         Name, _, Icon, StartTime, EndTime, TradeSkill, Interrupt, _, _, EmpowerStages = UnitChannelInfo(Unit)
-        Event = (EmpowerStages and EmpowerStages > 0) and "UNIT_SPELLCAST_EMPOWER_START" or "UNIT_SPELLCAST_CHANNEL_START"
     end
 
     if (not Name or TradeSkill) then
@@ -273,8 +279,9 @@ function UF:CastStarted(Unit, Event)
     Castbar.Channel = (Event == "UNIT_SPELLCAST_CHANNEL_START")
     Castbar.Empower = (Event == "UNIT_SPELLCAST_EMPOWER_START")
 
+    -- Empower
     if (Castbar.Empower) then
-        EndTime = EndTime + GetUnitEmpowerHoldAtMaxTime(unit)
+        EndTime = EndTime + GetUnitEmpowerHoldAtMaxTime(Unit)
     end
 
     -- Convert milliseconds to seconds
@@ -286,7 +293,7 @@ function UF:CastStarted(Unit, Event)
     Castbar.StartTime = StartTime
     Castbar.EndTime = EndTime
     Castbar.Interrupt = Interrupt
-    Castbar.CastDelay = 0
+    Castbar.CastDelayed = 0
     Castbar.CastHold = 0
 
     if (Castbar.Channel) then
@@ -360,64 +367,11 @@ function UF:CastStopped(Unit, Event)
     Castbar.Interrupt = nil
 
     -- Set Value
-    Castbar:SetMinMaxValues(0, Castbar.Max)
-    Castbar:SetValue(Castbar.Duration)
+    Castbar:SetMinMaxValues(0, Castbar.Max or 1)
+    Castbar:SetValue(Castbar.Duration or 1)
 
     -- Call Fade
     UI:UIFrameFadeOut(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 0)
-end
-
-function UF:CastUpdated(Unit, Event)
-    local Frame = self.Frames[Unit]
-    local Castbar = Frame.Castbar
-    local Value
-
-    if (not Frame or not Castbar) then
-        return
-    end
-
-    local Name, StartTime, EndTime
-
-    if (Event == "UNIT_SPELLCAST_DELAYED") then
-        Name, _, _, StartTime, EndTime = UnitCastingInfo(Unit)
-
-    elseif (Event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or Event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
-        Name, _, _, StartTime, EndTime = UnitChannelInfo(Unit)
-    end
-
-    if (not Name) then 
-        return 
-    end
-
-    if (Castbar.Empower) then
-        EndTime = EndTime + GetUnitEmpowerHoldAtMaxTime(Unit)
-    end
-
-    -- Convert milliseconds to seconds
-    StartTime = StartTime / 1000 
-    EndTime = EndTime / 1000 
-
-    if (Castbar.Channel) then
-        Value = Castbar.StartTime - StartTime
-        Castbar.Duration = EndTime - GetTime()
-    else
-        Value = StartTime - Castbar.StartTime
-        Castbar.Duration = GetTime() - StartTime
-    end
-
-    if (Value < 0) then 
-        Value = 0 
-    end
-
-    -- Cache
-    Castbar.Max = EndTime - StartTime
-    Castbar.StartTime = StartTime
-    Castbar.EndTime = EndTime
-    Castbar.CastDelay = Castbar.CastDelay + Value
-
-    -- Set Values
-    Castbar:SetMinMaxValues(0, Castbar.Max)
-    Castbar:SetValue(Castbar.Duration)
 end
 
 function UF:CastFailed(Unit, Event)
@@ -428,6 +382,7 @@ function UF:CastFailed(Unit, Event)
         return 
     end
 
+    -- Update Events
     if (Castbar.Text) then
         if (Event == "UNIT_SPELLCAST_FAILED") then
             Castbar.Text:SetText(FAILED)
@@ -436,6 +391,7 @@ function UF:CastFailed(Unit, Event)
         end
     end
 
+    -- Hold
     Frame.Castbar.CastHold = Frame.Castbar.CastHold or 0
 
     -- Clear Cache
@@ -476,6 +432,62 @@ function UF:CastInterrupted(Unit, Event)
 
         Castbar.Interrupt = nil
     end
+end
+
+function UF:CastUpdated(Unit, Event)
+    local Frame = self.Frames[Unit]
+    local Castbar = Frame.Castbar
+    local Value
+
+    if (not Frame or not Castbar) then
+        return
+    end
+
+    local Name, StartTime, EndTime
+
+    -- Normal Casts
+    if (Event == "UNIT_SPELLCAST_DELAYED") then
+        Name, _, _, StartTime, EndTime = UnitCastingInfo(Unit)
+
+        -- Channel Casts
+    elseif (Event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or Event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
+        Name, _, _, StartTime, EndTime = UnitChannelInfo(Unit)
+    end
+
+    if (not Name) then 
+        return 
+    end
+
+    -- Empower
+    if (Castbar.Empower) then
+        EndTime = EndTime + GetUnitEmpowerHoldAtMaxTime(Unit)
+    end
+
+    -- Convert milliseconds to seconds
+    StartTime = StartTime / 1000 
+    EndTime = EndTime / 1000 
+
+    if (Castbar.Channel) then
+        Value = Castbar.StartTime - StartTime
+        Castbar.Duration = EndTime - GetTime()
+    else
+        Value = StartTime - Castbar.StartTime
+        Castbar.Duration = GetTime() - StartTime
+    end
+
+    if (Value < 0) then 
+        Value = 0 
+    end
+
+    -- Cache
+    Castbar.Max = EndTime - StartTime
+    Castbar.StartTime = StartTime
+    Castbar.EndTime = EndTime
+    Castbar.CastDelayed = Castbar.CastDelayed + Value
+
+    -- Set Values
+    Castbar:SetMinMaxValues(0, Castbar.Max)
+    Castbar:SetValue(Castbar.Duration)
 end
 
 function UF:CastBarOnUpdate(Elapsed)
@@ -521,7 +533,7 @@ function UF:CastBarOnUpdate(Elapsed)
         end
 
         if (Castbar.Time) then
-            if (Castbar.CastDelay ~= 0) then
+            if (Castbar.CastDelayed ~= 0) then
                 Castbar.Time:SetFormattedText("%.1f|cffff0000%s%.2f|r", Castbar.Duration, Castbar.Casting and "+" or "-", Castbar.CastDelay)
             else
                 Castbar.Time:SetFormattedText("%.1f / %.1f", Castbar.Duration, Castbar.Max)
