@@ -24,270 +24,8 @@ local UnitClass = UnitClass
 local GetRaidTargetIndex = GetRaidTargetIndex
 local UnitThreatSituation = UnitThreatSituation
 
--- WoW Globals
-local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
-
--- HIDE BLIZZARD FRAMES
-
-function NP:HideBlizzardFrames(Plate)
-    if (not Plate) then 
-        return 
-    end
-
-    local UF = Plate.UnitFrame
-
-    if (UF) then
-        UF:UnregisterAllEvents()
-        UF:Hide()
-    end
-end
-
-function NP:ShowBlizzardFrames(Plate)
-    if (not Plate) then 
-        return 
-    end
-
-    local UF = Plate.UnitFrame
-
-    if (UF) then
-        UF:SetParent(Plate)
-        UF:Show()
-    end
-end
-
--- CREATE NAMEPLATES
-
-function NP:CreateFriendly(Plate, Unit)
-    if (Plate.FriendlyIsCreated) then
-        return
-    end
-
-    local Frame = Plate.FeelUINameplatesFriendly
-
-    if (not Frame) then
-        Frame = CreateFrame("Frame", "FeelUI_NameplatesFriendly", Plate)
-        Frame:SetAllPoints()
-
-        Plate.FeelUINameplatesFriendly = Frame
-    end
-
-    Frame.Unit = Unit
-
-    -- Elements
-    self:CreatePanelsFriendly(Frame)
-    self:CreateNameMiddle(Frame)
-    self:CreateRaidIcon(Frame)
-
-    -- Update Elements
-    self:UpdateFriendly(Frame)
-
-    Plate.FriendlyIsCreated = true
-end
-
-function NP:CreateEnemy(Plate, Unit)
-    if (Plate.EnemyIsCreated) then
-        return
-    end
-
-    local Frame = Plate.FeelUINameplatesEnemy
-
-    if (not Frame) then
-        Frame = CreateFrame("Frame", "FeelUI_NameplatesEnemy", Plate)
-        Frame:SetAllPoints()
-
-        Plate.FeelUINameplatesEnemy = Frame
-    end
-
-    Frame.Unit = Unit
-
-    -- Elements
-    self:CreatePanels(Frame)
-    self:CreateTargetIndicator(Frame)
-    self:CreateThreatHighlight(Frame)
-    self:CreateRaidIcon(Frame)
-    self:CreateHealth(Frame)
-    self:CreateHealthText(Frame)
-    self:CreateName(Frame)
-    self:CreateDebuffs(Frame)
-
-    -- Update Elements
-    self:UpdateEnemy(Frame)
-
-    Plate.EnemyIsCreated = true
-end
-
--- AURAS
-
-function NP:UpdateAuras(Frame, Unit, IsDebuff)
-    local Auras = IsDebuff and Frame.Debuffs or Frame.Buffs
-
-    if (not Auras) then 
-        return 
-    end
-
-    local AuraWidth, AuraHeight = Auras:GetWidth(), Auras:GetHeight()
-    local AurasToShow = Auras.NumAuras or 6
-    local Spacing = Auras.Spacing or 4
-    local OnlyPlayerDebuffs = Auras.ShowOnlyPlayer
-    local ActiveButtons = 0
-    local Index = 1
-    local HarmState
-
-    for _, Buttons in ipairs(Auras.Buttons) do
-        Buttons:Hide()
-    end
-
-    if (OnlyPlayerDebuffs) then
-        HarmState = "HARMFUL|PLAYER"
-    else
-        HarmState = "HARMFUl"
-    end
-
-    while ActiveButtons < AurasToShow do
-        local AuraData = GetAuraDataByIndex(Unit, Index, IsDebuff and HarmState or "HELPFUL")
-
-        if (not AuraData or not AuraData.name) then
-            break
-        end
-
-        local Name = AuraData.name
-        local Icon = AuraData.icon
-        local Count = AuraData.applications
-        local Duration = AuraData.duration
-        local ExpirationTime = AuraData.expirationTime
-        local AuraInstanceID = AuraData.auraInstanceID
-        local Button = Auras.Buttons[ActiveButtons + 1]
-
-        if (not Button) then
-            break
-        end
-
-        local Direction = Auras.Direction or "RIGHT"
-        local OffsetMultiplier = (Direction == "RIGHT") and 1 or -1
-
-        Button:Size(AuraWidth, AuraHeight)
-        Button:ClearAllPoints()
-        Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, ActiveButtons * (AuraWidth + Spacing) * OffsetMultiplier, 0)
-        Button:Show()
-
-        if (Button.Icon) then
-            Button.Icon:SetTexture(Icon)
-            UI:KeepAspectRatio(Auras, Button.Icon)
-        end
-
-        if (Button.Count) then
-            if (Count) then
-                Button.Count:SetText(C_StringUtil.TruncateWhenZero(Count))
-            else
-                Button.Count:SetText("")
-            end
-        end
-
-        if (Button.Cooldown) then
-            if C_StringUtil.TruncateWhenZero(Duration) then
-                Button.Cooldown:SetCooldown(Duration, ExpirationTime)
-                Button.Cooldown:SetCooldownFromExpirationTime(ExpirationTime, Duration)
-            end
-
-            local NumRegions = Button.Cooldown:GetNumRegions()
-
-            for i = 1, NumRegions do
-                local Region = select(i, Button.Cooldown:GetRegions())
-
-                if (Region.GetText) then
-                    Region:ClearAllPoints()
-                    Region:Point("CENTER", Button.Overlay, 0, -7)
-                    Region:SetFontTemplate("Default")
-                    Region:SetTextColor(1, 0.82, 0)
-                end
-            end
-        end
-
-        if (IsDebuff) then
-            local Color = C_UnitAuras.GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
-
-            if (Color) then
-                Button:SetColorTemplate(Color.r, Color.g, Color.b)
-            end
-        else
-            Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
-        end
-
-        ActiveButtons = ActiveButtons + 1
-        Index = Index + 1
-    end
-
-    for i = ActiveButtons + 1, #Auras.Buttons do
-        if Auras.Buttons[i] then
-            Auras.Buttons[i]:Hide()
-        end
-    end
-end
-
--- COLORING
-
-function NP:GetUnitColor(Unit, IsCaster)
-    if (not UnitExists(Unit)) then
-        return
-    end
-
-    local InInstance, InstanceType = IsInInstance()
-    local Reaction = UnitReaction(Unit, "player") or 5
-    local Color = UI.Colors.Reaction[Reaction]
-
-    if not (InInstance and InstanceType == "party") then
-        return Color
-    end
-
-    local Level = UnitLevel(Unit)
-    local Classific = UnitClassification(Unit)
-    local IsBoss = UnitIsBossMob(Unit)
-    local _, PowerType = UnitPowerType(Unit)
-
-    if (IsBoss) then
-        return UI.Colors.Classification.BOSS
-    end
-
-    if (Level == 91 and Classific == "elite") then
-        return UI.Colors.Classification.RARE
-    end
-
-    if (Level == 90 and Classific == "elite") then
-        if (PowerType == "MANA" or IsCaster) then
-            return UI.Colors.Classification.CASTER
-        else
-            return UI.Colors.Classification.ELITE
-        end
-    end
-
-    return Color
-end
-
-function NP:SetNameplateColor(Unit, IsCaster)
-    if (not Unit or not UnitIsEnemy("player", Unit)) then
-        return
-    end
-
-    local NamePlates = C_NamePlate.GetNamePlateForUnit(Unit)
-
-    if (not NamePlates) then 
-        return 
-    end
-
-    local Frame = NamePlates.FeelUINameplatesEnemy
-
-    if (not Frame or not Frame.Health) then 
-        return 
-    end
-
-    local Color = self:GetUnitColor(Unit, IsCaster)
-
-    if (not Color) then
-        return
-    end
-
-    Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.70)
-end
+-- Locals
+NP.FadeInTime = 0.5
 
 -- HEALTH UPDATE
 
@@ -481,8 +219,6 @@ function NP:OnEvent(event, unit, ...)
 
         self:HideBlizzardFrames(GNPFU)
 
-        return
-
         -- UPDATE REMOVED NAMEPLATES
     elseif (event == "NAME_PLATE_UNIT_REMOVED") then
         if (not unit or not GNPFU) then
@@ -502,8 +238,6 @@ function NP:OnEvent(event, unit, ...)
 
         self:ShowBlizzardFrames(GNPFU)
 
-        return
-
         -- UPDATE TARGET NAMEPLATES
     elseif (event == "PLAYER_TARGET_CHANGED" or event == "UNIT_TARGETABLE_CHANGED") then
         for _, Plate in ipairs(GNP) do
@@ -519,20 +253,6 @@ function NP:OnEvent(event, unit, ...)
                 self:SetNameplateColor(EnemyFrame.Unit, false)
             end
         end
-
-        return
-
-        -- UPDATE COLORS
-    elseif (event == "UNIT_SPELLCAST_START") then
-        if (not unit) then
-            return
-        end
-
-        if not UnitIsFriend("player", unit) then
-            self:SetNameplateColor(unit, true)
-        end
-
-        return
 
         -- HEALTH
     elseif ((event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") and unit) then
@@ -554,7 +274,17 @@ function NP:OnEvent(event, unit, ...)
             end
         end
 
-        return
+        -- UPDATE AURAS
+    elseif (event == "UNIT_AURA") then
+        if (not unit or not GNPFU) then
+            return
+        end
+
+        local EnemyFrame = GNPFU.FeelUINameplatesEnemy
+
+        if (EnemyFrame and EnemyFrame.Unit) then
+            self:UpdateAuras(EnemyFrame, EnemyFrame.Unit, true)
+        end
 
         -- UPDATE ICONS
     elseif (event == "RAID_TARGET_UPDATE") then
@@ -571,21 +301,41 @@ function NP:OnEvent(event, unit, ...)
             end
         end
 
-        return
-
-        -- UPDATE AURAS
-    elseif (event == "UNIT_AURA") then
-        if (not unit or not GNPFU) then
+        -- CASTBAR / CHANGE UNIT COLORS
+    elseif (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START") then
+        if (not unit or UnitIsFriend("player", unit)) then
             return
         end
 
-        local EnemyFrame = GNPFU.FeelUINameplatesEnemy
+        self:SetNameplateColor(unit, true)
+        self:CastStarted(unit, event)
 
-        if (EnemyFrame and EnemyFrame.Unit) then
-            self:UpdateAuras(EnemyFrame, EnemyFrame.Unit, true)
+    elseif (event == "UNIT_SPELLCAST_STOP") then
+        if (not unit or UnitIsFriend("player", unit)) then
+            return
         end
 
-        return
+        self:CastStopped(unit)
+
+    elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
+        if (not unit or UnitIsFriend("player", unit)) then
+            return
+        end
+
+        self:CastFailed(unit, event)
+
+    elseif (event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_INTERRUPTIBLE") then
+        if (not unit or UnitIsFriend("player", unit)) then
+            return
+        end
+
+        self:CastInterrupted(unit, event)
+    elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE") then
+        if (not unit or UnitIsFriend("player", unit)) then
+            return
+        end
+        
+        self:CastUpdated(unit, event)
     end
 end
 
@@ -609,15 +359,31 @@ end
 -- REGISTER EVENTS
 
 function NP:RegisterEvents()
+    -- NAMEPLATE
     self:RegisterEvent("NAME_PLATE_UNIT_ADDED")
     self:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
     self:RegisterEvent("PLAYER_TARGET_CHANGED")
     self:RegisterEvent("UNIT_TARGETABLE_CHANGED")
+    -- HEALTH
     self:RegisterEvent("UNIT_HEALTH")
     self:RegisterEvent("UNIT_MAXHEALTH")
-    self:RegisterEvent("UNIT_SPELLCAST_START")
-    self:RegisterEvent("RAID_TARGET_UPDATE")
+    -- AURA
     self:RegisterEvent("UNIT_AURA")
+    -- CASTBAR
+    self:RegisterEvent("UNIT_SPELLCAST_START")
+    self:RegisterEvent("UNIT_SPELLCAST_STOP")
+    self:RegisterEvent("UNIT_SPELLCAST_FAILED")
+    self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+    self:RegisterEvent("UNIT_SPELLCAST_DELAYED")
+    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
+    self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
+    self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE")
+    self:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
+    self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE")
+    -- ICONS
+    self:RegisterEvent("RAID_TARGET_UPDATE")
+    -- ON EVENT
     self:SetScript("OnEvent", function(_, event, ...) 
         NP:OnEvent(event, ...) 
     end)

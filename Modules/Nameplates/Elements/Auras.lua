@@ -7,6 +7,115 @@ local NP = UI:CallModule("NamePlates")
 local select = select
 local unpack = unpack
 
+-- WoW Globals
+local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
+
+function NP:UpdateAuras(Frame, Unit, IsDebuff)
+    local Auras = IsDebuff and Frame.Debuffs or Frame.Buffs
+
+    if (not Auras) then 
+        return 
+    end
+
+    local AuraWidth, AuraHeight = Auras:GetWidth(), Auras:GetHeight()
+    local AurasToShow = Auras.NumAuras or 6
+    local Spacing = Auras.Spacing or 4
+    local OnlyPlayerDebuffs = Auras.ShowOnlyPlayer
+    local ActiveButtons = 0
+    local Index = 1
+    local HarmState
+
+    for _, Buttons in ipairs(Auras.Buttons) do
+        Buttons:Hide()
+    end
+
+    if (OnlyPlayerDebuffs) then
+        HarmState = "HARMFUL|PLAYER"
+    else
+        HarmState = "HARMFUl"
+    end
+
+    while ActiveButtons < AurasToShow do
+        local AuraData = GetAuraDataByIndex(Unit, Index, IsDebuff and HarmState or "HELPFUL")
+
+        if (not AuraData or not AuraData.name) then
+            break
+        end
+
+        local Name = AuraData.name
+        local Icon = AuraData.icon
+        local Count = AuraData.applications
+        local Duration = AuraData.duration
+        local ExpirationTime = AuraData.expirationTime
+        local AuraInstanceID = AuraData.auraInstanceID
+        local Button = Auras.Buttons[ActiveButtons + 1]
+
+        if (not Button) then
+            break
+        end
+
+        local Direction = Auras.Direction or "RIGHT"
+        local OffsetMultiplier = (Direction == "RIGHT") and 1 or -1
+
+        Button:Size(AuraWidth, AuraHeight)
+        Button:ClearAllPoints()
+        Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, ActiveButtons * (AuraWidth + Spacing) * OffsetMultiplier, 0)
+        Button:Show()
+
+        if (Button.Icon) then
+            Button.Icon:SetTexture(Icon)
+            UI:KeepAspectRatio(Auras, Button.Icon)
+        end
+
+        if (Button.Count) then
+            if (Count) then
+                Button.Count:SetText(C_StringUtil.TruncateWhenZero(Count))
+            else
+                Button.Count:SetText("")
+            end
+        end
+
+        if (Button.Cooldown) then
+            if C_StringUtil.TruncateWhenZero(Duration) then
+                Button.Cooldown:SetCooldown(Duration, ExpirationTime)
+                Button.Cooldown:SetCooldownFromExpirationTime(ExpirationTime, Duration)
+            end
+
+            local NumRegions = Button.Cooldown:GetNumRegions()
+
+            for i = 1, NumRegions do
+                local Region = select(i, Button.Cooldown:GetRegions())
+
+                if (Region.GetText) then
+                    Region:ClearAllPoints()
+                    Region:Point("CENTER", Button.Overlay, 0, -7)
+                    Region:SetFontTemplate("Default")
+                    Region:SetTextColor(1, 0.82, 0)
+                end
+            end
+        end
+
+        if (IsDebuff) then
+            local Color = C_UnitAuras.GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
+
+            if (Color) then
+                Button:SetColorTemplate(Color.r, Color.g, Color.b)
+            end
+        else
+            Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
+        end
+
+        ActiveButtons = ActiveButtons + 1
+        Index = Index + 1
+    end
+
+    for i = ActiveButtons + 1, #Auras.Buttons do
+        if Auras.Buttons[i] then
+            Auras.Buttons[i]:Hide()
+        end
+    end
+end
+
 function NP:CreateAuraButton(Frame)
     local Button = CreateFrame("Button", nil, Frame)
     Button:SetTemplate()

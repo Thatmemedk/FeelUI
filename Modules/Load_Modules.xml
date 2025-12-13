@@ -70,6 +70,7 @@
 	<Script file="Tooltip\Core.lua"/>
 	<!-- NamePlates -->
 	<Script file="Nameplates\Core.lua"/>
+	<Script file="Nameplates\Spawn.lua"/>
 	<Script file="Nameplates\Elements\Auras.lua"/>
 	<Script file="Nameplates\Elements\Castbar.lua"/>
 	<Script file="Nameplates\Elements\Health.lua"/>
@@ -77,6 +78,7 @@
 	<Script file="Nameplates\Elements\Icons.lua"/>
 	<Script file="Nameplates\Elements\Texts.lua"/>
 	<Script file="Nameplates\Elements\Threat.lua"/>
+	<Script file="Nameplates\Elements\UnitColors.lua"/>
 	<!-- UnitFrames -->
 	<Script file="UnitFrames\Core.lua"/>
 	<Script file="UnitFrames\Groups.lua"/>

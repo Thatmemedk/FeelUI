@@ -277,7 +277,7 @@ function TT:StyleTooltips()
         end
     end
 
-    hooksecurefunc("SharedTooltip_SetBackdropStyle", self.SetBackdropStyle) 
+    --hooksecurefunc("SharedTooltip_SetBackdropStyle", self.SetBackdropStyle) 
 end
 
 function TT:StyleCloseButton()

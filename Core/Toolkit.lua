@@ -507,15 +507,15 @@ end
 -- Skinning --
 --------------
 
-local function ClearFrameRegions(Frame, Remove)
-    if not (Frame) then 
-    	return 
-    end
+local function ClearFrameRegions(self, Remove)
+	if not self or self:IsForbidden() then 
+		return
+	end
 
-    local Prefix = Frame.GetName and Frame:GetName() or nil
+    local Prefix = self.GetName and self:GetName() or nil
 
     for _, RegionSuffix in ipairs(UI.BlizzardRegions) do
-        local Region = Frame[RegionSuffix] or (Prefix and _G[Prefix .. RegionSuffix])
+        local Region = self[RegionSuffix] or (Prefix and _G[Prefix .. RegionSuffix])
 
         if (Region) then
             if (Remove) then
@@ -528,6 +528,10 @@ local function ClearFrameRegions(Frame, Remove)
 end
 
 local function DisableBackdrops(self)
+	if not self or self:IsForbidden() then 
+		return
+	end
+
     for _, RegionKey in ipairs(UI.BlizzardRegions) do
         local Frame = self[RegionKey]
 

@@ -91,10 +91,8 @@ function UF:Spawn(Unit, Width, Height, Orientation)
     self:CreatePanels(Frame)
     self:CreateHightlight(Frame)
     self:CreateFadeInOut(Frame)
-
     -- HEALTH
     self:CreateHealth(Frame, Height, Orientation)
-
     -- ICONS
     self:CreateRaidIcon(Frame)
 
