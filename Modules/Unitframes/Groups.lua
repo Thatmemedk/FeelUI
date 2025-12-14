@@ -8,11 +8,10 @@ function UF:SetupGroupFrame(Frame, type)
         return 
     end
 
-    Frame:SetAttribute("*type1", "target")
-    Frame:SetAttribute("*type2", "togglemenu")
-
-    -- REGISTER
-    RegisterUnitWatch(Frame)
+    Frame:RegisterForClicks("AnyUp")
+    Frame:SetAttribute("type1", "target")
+    Frame:SetAttribute("type2", "togglemenu")
+    Frame:SetAttribute("toggleForVehicle", true)
 
     -- PANELS
     self:CreatePanels(Frame)
@@ -80,6 +79,12 @@ function UF:SetupGroupFrame(Frame, type)
             else
                 UF.Frames.Raid[value] = self
             end
+
+            if (not self.UnitWatchRegistered) then
+                RegisterUnitWatch(self)
+
+                self.UnitWatchRegistered = true
+            end
         end
     end)
 
@@ -138,7 +143,7 @@ function UF:SpawnGroupHeader(type)
     Header:RegisterEvent("ZONE_CHANGED_NEW_AREA")
     Header:SetScript("OnEvent", function(self)
         local Index = 1
-        
+
         while true do
             local Frame = self:GetAttribute("child"..Index)
 

@@ -155,9 +155,10 @@ function Auras:AnchorDebuffs(Frame, Index)
 
 	-- Update Debuff Border
 	if (Frame.DebuffBorder) then
-		Frame.DebuffBorder:SetAlpha(0)
+		--Frame.DebuffBorder:SetAlpha(0)
 	end
 
+	--[[
 	if (Frame.AuraInstanceID) then
 	    local Color = C_UnitAuras.GetAuraDispelTypeColor(Frame.unit, Frame.auraInstanceID, UI.DispelColorCurve)
 	    
@@ -169,6 +170,7 @@ function Auras:AnchorDebuffs(Frame, Index)
 	    Frame:SetColorTemplate(unpack(DB.Global.General.BorderColor))
 	    Frame.Glow:SetBackdropBorderColor(0, 0, 0, 0)
 	end
+	--]]
 
 	Previous = Frame
 end

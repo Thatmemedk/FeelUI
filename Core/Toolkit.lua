@@ -166,7 +166,7 @@ end
 --------------------
 
 local function SetFontTemplate(self, FontTemplate, FontSize, ShadowOffsetX, ShadowOffsetY)
-	if not (self) then
+	if not (self and not self:IsForbidden()) then
 		return
 	end
 

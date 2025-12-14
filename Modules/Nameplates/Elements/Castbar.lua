@@ -26,7 +26,7 @@ function NP:CastStarted(Unit, Event)
         return
     end
 
-    local Name, Icon, StartTime, EndTime, Interrupt, EmpowerStages
+    local Name, Icon, StartTime, EndTime, Interrupt
 
     -- Try normal cast first
     if (Event == "UNIT_SPELLCAST_START") then
@@ -92,7 +92,6 @@ function NP:CastStopped(Unit, Event)
     -- Clear Cache
     Frame.Castbar.Casting = nil
     Frame.Castbar.Channel = nil
-    Frame.Castbar.Empower = nil
     Frame.Castbar.Interrupt = nil
 
     -- Call Fade
@@ -120,7 +119,6 @@ function NP:CastFailed(Unit, Event)
     -- Clear Cache
     Frame.Castbar.Casting = nil
     Frame.Castbar.Channel = nil
-    Frame.Castbar.Empower = nil
     Frame.Castbar.Interrupt = nil
 
     -- Call Fade
@@ -188,7 +186,8 @@ function NP:CastUpdated(Unit, Event)
 end
 
 function NP.OnUpdate(Castbar)
-    Castbar.Time:SetFormattedText("%.1fs", Castbar:GetTimerDuration():GetRemainingDuration())
+    local Duration = Castbar:GetTimerDuration():GetRemainingDuration()
+    Castbar.Time:SetFormattedText("%.1fs", Duration)
 end
 
 -- CREATE CASTBAR

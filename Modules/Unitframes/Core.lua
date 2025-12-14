@@ -55,13 +55,6 @@ local READY_CHECK_READY_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Ready"
 local READY_CHECK_NOT_READY_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-NotReady"
 local READY_CHECK_WAITING_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Waiting"
 
--- WoW Globals
-local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
-
--- WoW Globals
-local FAILED = _G.FAILED or "Failed"
-local INTERRUPTED = _G.INTERRUPTED or "Interrupted"
-
 -- Locals
 UF.HiddenFrames = {}
 UF.Frames = {}

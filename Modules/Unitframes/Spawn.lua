@@ -79,8 +79,14 @@ function UF:Spawn(Unit, Width, Height, Orientation)
 
     Frame:Size(Width or 228, Height or 36)
     Frame:SetAttribute("unit", Unit)
-    RegisterUnitWatch(Frame)
 
+    if (not Frame.UnitWatchRegistered) then
+        RegisterUnitWatch(Frame)
+        
+        Frame.UnitWatchRegistered = true
+    end
+
+    Frame:RegisterForClicks("AnyUp")
     Frame:SetAttribute("type1", "target")
     Frame:SetAttribute("type2", "togglemenu")
     Frame:SetAttribute("toggleForVehicle", true)
