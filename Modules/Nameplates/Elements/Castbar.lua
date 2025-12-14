@@ -7,41 +7,6 @@ local NP = UI:CallModule("NamePlates")
 local select = select
 local unpack = unpack
 
-function NP:CreateNamePlateCastBar(Frame)
-    local Castbar = CreateFrame("StatusBar", nil, Frame)
-    Castbar:Size(Frame:GetWidth() + 18, 20) 
-    Castbar:Point("BOTTOM", Frame, 0, -6)
-    Castbar:SetStatusBarTexture(Media.Global.Texture)
-    Castbar:CreateBackdrop()
-    Castbar:CreateShadow()
-    Castbar:CreateSpark()
-    Castbar:SetAlpha(0)
-
-    local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
-    CastbarIcon:Size(42, 32)
-    CastbarIcon:Point("LEFT", Castbar, "RIGHT", 4, 5)
-    UI:KeepAspectRatio(CastbarIcon, CastbarIcon)
-    
-    local IconOverlay = CreateFrame("Frame", nil, Castbar)
-    IconOverlay:SetInside(CastbarIcon)
-    IconOverlay:SetTemplate()
-    IconOverlay:CreateShadow()
-    IconOverlay:SetShadowOverlay()
-    
-    local CastbarTime = Castbar:CreateFontString(nil, "OVERLAY", nil, 7)    
-    CastbarTime:Point("RIGHT", Castbar, -4, 0)
-    CastbarTime:SetFontTemplate("Default")
-
-    local CastbarText = Castbar:CreateFontString(nil, "OVERLAY", nil, 7)
-    CastbarText:Point("LEFT", Castbar, 4, 0)
-    CastbarText:SetFontTemplate("Default")
-    
-    Frame.Castbar = Castbar
-    Frame.Castbar.Icon = CastbarIcon
-    Frame.Castbar.Time = CastbarTime
-    Frame.Castbar.Text = CastbarText
-end
-
 function NP:GetFrameForUnit(Unit)
     for _, Plate in ipairs(C_NamePlate.GetNamePlates()) do
         local Frame = Plate.FeelUINameplatesEnemy
@@ -70,14 +35,8 @@ function NP:CastStarted(Unit, Event)
 
     -- Fallback to channel / empower if normal cast is nil
     if (not Name) then
-        Name, _, Icon, StartTime, EndTime, _, Interrupt, _, _, EmpowerStages = UnitChannelInfo(Unit)
-        
-        -- Dynamically set the event
-        if (Unit == "player" and EmpowerStages and EmpowerStages > 0) then
-            Event = "UNIT_SPELLCAST_EMPOWER_START"
-        else
-            Event = "UNIT_SPELLCAST_CHANNEL_START"
-        end
+        Name, _, Icon, StartTime, EndTime, _, Interrupt = UnitChannelInfo(Unit)
+        Event = "UNIT_SPELLCAST_CHANNEL_START"
     end
 
     if (not Name) then
@@ -87,7 +46,7 @@ function NP:CastStarted(Unit, Event)
     -- Update Events
     Frame.Castbar.Casting = (Event == "UNIT_SPELLCAST_START")
     Frame.Castbar.Channel = (Event == "UNIT_SPELLCAST_CHANNEL_START")
-    Frame.Castbar.Empower = (Event == "UNIT_SPELLCAST_EMPOWER_START")
+    Frame.Castbar.Interrupt = Interrupt
 
     -- Icon
     if (Frame.Castbar.Icon) then
@@ -180,7 +139,7 @@ function NP:CastInterrupted(Unit, Event)
         Frame.Castbar.Icon:SetDesaturated(true)
 
         Frame.Castbar.Interrupt = true
-    else
+    elseif (Event == "UNIT_SPELLCAST_INTERRUPTIBLE") then
         Frame.Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
         Frame.Castbar.Icon:SetDesaturated(false)
 
@@ -202,7 +161,7 @@ function NP:CastUpdated(Unit, Event)
         Name, _, _, StartTime, EndTime = UnitCastingInfo(Unit)
 
         -- Channel Casts
-    elseif (Event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or Event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
+    elseif (Event == "UNIT_SPELLCAST_CHANNEL_UPDATE") then
         Name, _, _, StartTime, EndTime = UnitChannelInfo(Unit)
     end
 
@@ -230,4 +189,41 @@ end
 
 function NP.OnUpdate(Castbar)
     Castbar.Time:SetFormattedText("%.1fs", Castbar:GetTimerDuration():GetRemainingDuration())
+end
+
+-- CREATE CASTBAR
+
+function NP:CreateNamePlateCastBar(Frame)
+    local Castbar = CreateFrame("StatusBar", nil, Frame)
+    Castbar:Size(Frame:GetWidth() + 18, 20) 
+    Castbar:Point("BOTTOM", Frame, 0, -6)
+    Castbar:SetStatusBarTexture(Media.Global.Texture)
+    Castbar:CreateBackdrop()
+    Castbar:CreateShadow()
+    Castbar:CreateSpark()
+    Castbar:SetAlpha(0)
+
+    local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
+    CastbarIcon:Size(36, 26)
+    CastbarIcon:Point("LEFT", Castbar, "RIGHT", 4, 3)
+    UI:KeepAspectRatio(CastbarIcon, CastbarIcon)
+    
+    local IconOverlay = CreateFrame("Frame", nil, Castbar)
+    IconOverlay:SetInside(CastbarIcon)
+    IconOverlay:SetTemplate()
+    IconOverlay:CreateShadow()
+    IconOverlay:SetShadowOverlay()
+    
+    local CastbarTime = Castbar:CreateFontString(nil, "OVERLAY", nil, 7)    
+    CastbarTime:Point("RIGHT", Castbar, -4, 0)
+    CastbarTime:SetFontTemplate("Default")
+
+    local CastbarText = Castbar:CreateFontString(nil, "OVERLAY", nil, 7)
+    CastbarText:Point("LEFT", Castbar, 4, 0)
+    CastbarText:SetFontTemplate("Default")
+    
+    Frame.Castbar = Castbar
+    Frame.Castbar.Icon = CastbarIcon
+    Frame.Castbar.Time = CastbarTime
+    Frame.Castbar.Text = CastbarText
 end

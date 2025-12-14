@@ -79,9 +79,11 @@ function UF:Spawn(Unit, Width, Height, Orientation)
 
     Frame:Size(Width or 228, Height or 36)
     Frame:SetAttribute("unit", Unit)
-    Frame:RegisterForClicks("AnyUp")
+    RegisterUnitWatch(Frame)
+
     Frame:SetAttribute("type1", "target")
     Frame:SetAttribute("type2", "togglemenu")
+    Frame:SetAttribute("toggleForVehicle", true)
 
     -- STORE IN CACHE
     self.Frames[Unit] = Frame
@@ -172,22 +174,18 @@ function UF:CreateUF()
     -- TARGET
     local Target = UF:Spawn("target", 228, 36)
     Target:Point(unpack(DB.Global.UnitFrames.TargetPoint))
-    RegisterUnitWatch(Target)
 
     -- TARGET OF TARGET
     local TargetTarget = UF:Spawn("targettarget", 114, 28)
     TargetTarget:Point("BOTTOMRIGHT", Target, 0, -58)
-    RegisterUnitWatch(TargetTarget)
 
     -- FOCUS
     local Focus = UF:Spawn("focus", 114, 28)
     Focus:Point("BOTTOMRIGHT", TargetTarget, 0, -42)
-    RegisterUnitWatch(Focus)
 
     -- PET
     local Pet = UF:Spawn("pet", 114, 28)
     Pet:Point("BOTTOMLEFT", Player, 0, -58)
-    RegisterUnitWatch(Pet)
 
     -- BOSS FRAMES
     for i = 1, 5 do
@@ -198,8 +196,6 @@ function UF:CreateUF()
         else
             Boss:Point("BOTTOM", self.Frames["boss"..(i-1)], "TOP", 0, 28)
         end
-
-        RegisterUnitWatch(Boss)
     end
 
     -- PARTY FRAMES

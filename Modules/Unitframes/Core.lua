@@ -787,10 +787,7 @@ function UF:OnEvent(event, arg1)
     -- BOSS FRAMES
     elseif (event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" or event == "UNIT_TARGETABLE_CHANGED") then
         for i = 1, 5 do
-            local Unit = "boss"..i
-            if UF.Frames[Unit] and UnitExists(Unit) then
-                UF:UpdateFrame(Unit)
-            end
+            if UF.Frames["boss"..i] then UF:UpdateFrame("boss"..i) end
         end
     end
 

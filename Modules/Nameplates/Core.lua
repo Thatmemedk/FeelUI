@@ -309,27 +309,24 @@ function NP:OnEvent(event, unit, ...)
 
         self:SetNameplateColor(unit, true)
         self:CastStarted(unit, event)
-
-    elseif (event == "UNIT_SPELLCAST_STOP") then
+    elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP") then
         if (not unit or UnitIsFriend("player", unit)) then
             return
         end
 
         self:CastStopped(unit)
-
     elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
         if (not unit or UnitIsFriend("player", unit)) then
             return
         end
 
         self:CastFailed(unit, event)
-
     elseif (event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_INTERRUPTIBLE") then
         if (not unit or UnitIsFriend("player", unit)) then
             return
         end
 
-        self:CastInterrupted(unit, event)
+        self:CastNonInterruptable(unit, event)
     elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE") then
         if (not unit or UnitIsFriend("player", unit)) then
             return
@@ -376,9 +373,8 @@ function NP:RegisterEvents()
     self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
     self:RegisterEvent("UNIT_SPELLCAST_DELAYED")
     self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
     self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
-    self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
-    self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE")
     self:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
     self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE")
     -- ICONS

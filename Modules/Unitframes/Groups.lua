@@ -10,14 +10,16 @@ function UF:SetupGroupFrame(Frame, type)
 
     Frame:SetAttribute("*type1", "target")
     Frame:SetAttribute("*type2", "togglemenu")
-    Frame:RegisterForClicks("AnyUp")
 
-    -- Panels
+    -- REGISTER
+    RegisterUnitWatch(Frame)
+
+    -- PANELS
     self:CreatePanels(Frame)
     self:CreateHightlight(Frame)
     self:CreateFadeInOut(Frame)
 
-    -- Health
+    -- HEALTH
     if (type == "party") then
         self:CreateHealth(Frame)
         self:CreatePartyTexts(Frame)
@@ -28,10 +30,9 @@ function UF:SetupGroupFrame(Frame, type)
         self:CreateRaidDebuffs(Frame)
     end
 
-    -- Health Pred
+    -- HEALTH PRED
     self:CreateHealthPrediction(Frame)
-
-    -- Icons
+    -- ICONS
     self:CreateRaidIcon(Frame)
     self:CreateResurrectIcon(Frame)
     self:CreateLeaderIcon(Frame)
@@ -39,32 +40,30 @@ function UF:SetupGroupFrame(Frame, type)
     self:CreateSummonIcon(Frame)
     self:CreatePhaseIcon(Frame)
     self:CreateReadyCheckIcon(Frame)
-
-    -- Threat
+    -- THREAT
     self:CreateThreatHighlightRaid(Frame)
 
     Frame:HookScript("OnAttributeChanged", function(self, name, value)
         if (name == "unit" and value) then
             self.unit = value
 
-            -- Health
+            -- HEALTH
             UF:UpdateHealth(self)
-            UF:UpdateHealthTextCur(self)
-            UF:UpdateHealthTextPer(self)
-            UF:UpdatePower(self)
-
-            -- Health Pre
+            -- HEALTH PRED
             UF:UpdateHealthPred(self)
 
             if (type == "party") then
                 UF:UpdateNameParty(self)
+                UF:UpdateHealthTextCur(self)
+                UF:UpdateHealthTextPer(self)
+                UF:UpdatePower(self)
             else
                 UF:UpdateNameRaid(self)
             end
 
-            -- Auras
+            -- AURAS
             UF:UpdateAuras(self, value, true)
-            -- Icons
+            -- ICONS
             UF:UpdateRaidIcon(self)
             UF:UpdateResurrectionIcon(self)
             UF:UpdateLeaderIcon(self)
@@ -72,10 +71,10 @@ function UF:SetupGroupFrame(Frame, type)
             UF:UpdateSummonIcon(self)
             UF:UpdatePhaseIcon(self)
             UF:UpdateReadyCheckIcon(self)
-            -- Threat
+            -- THREAT
             UF:UpdateThreatHighlightRaid(self)
 
-            -- Store frame
+            -- CACHE
             if (type == "party") then
                 UF.Frames.Party[value] = self
             else
@@ -139,6 +138,7 @@ function UF:SpawnGroupHeader(type)
     Header:RegisterEvent("ZONE_CHANGED_NEW_AREA")
     Header:SetScript("OnEvent", function(self)
         local Index = 1
+        
         while true do
             local Frame = self:GetAttribute("child"..Index)
 
