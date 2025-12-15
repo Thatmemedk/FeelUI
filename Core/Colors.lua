@@ -73,10 +73,10 @@ UI.Colors = {
     },
 
     Classification = {
-	    BOSS = UI:CreateColor(1, 0, 0),
-	    RARE = UI:CreateColor(0.89, 0.2, 0.89),
+	    BOSS = UI:CreateColor(1, 0.2, 0),
+	    RARE = UI:CreateColor(0.9, 0.2, 0.9),
+	   	ELITE = UI:CreateColor(0.8, 0, 0.8),
 	    CASTER = UI:CreateColor(0, 0.7, 1),
-	    ELITE = UI:CreateColor(217/255, 13/255, 215/255),
     },
 
     Power = {

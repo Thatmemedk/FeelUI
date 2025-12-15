@@ -149,6 +149,17 @@ DB.Global = {
 		Enable = true,
 	},
 
+	Nameplates = {
+		Enable = true,
+		-- Colors
+		BossColor = { 1, 0, 0 },
+		RareColor = { 0.89, 0.2, 0.89 },
+		CasterColor = { 0, 0.7, 1 },
+		EliteColor = { 0.8, 0, 0.8 },
+		-- Target Indicator Color
+		TargetIndicatorColor = { 0.30, 0.70, 1 },
+	},
+
 	UnitFrames = {
 		Enable = true,
 		BossFrames = true,
@@ -158,7 +169,7 @@ DB.Global = {
 		HealthBarColor = { 0.1, 0.1, 0.1, 0.7 },
 		-- Castbar
 		CastBarColor = { 0.45, 0.45, 0.45, 0.7 },
-		InterruptColor = { 170/255, 10/255, 10/255, 0.70 },
+		CastBarInterruptColor = { 0.67, 0, 0, 0.70 },
 		-- Points Settings
 		PlayerPoint = { "BOTTOMLEFT", _G.UIParent, 482, 244 },
 		TargetPoint = { "BOTTOMRIGHT", _G.UIParent, -482, 244 },

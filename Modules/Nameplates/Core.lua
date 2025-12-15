@@ -4,13 +4,7 @@ local UI, DB, Media, Language = select(2, ...):Call()
 local NP = UI:RegisterModule("NamePlates")
 
 -- WoW Globals
-local UnitExists = UnitExists
 local UnitReaction = UnitReaction
-local UnitLevel = UnitLevel
-local UnitClassification = UnitClassification
-local UnitIsBossMob = UnitIsBossMob
-local UnitPowerType = UnitPowerType
-local UnitIsEnemy = UnitIsEnemy
 local UnitHealth = UnitHealth
 local UnitHealthMax = UnitHealthMax
 local UnitHealthPercent = UnitHealthPercent
@@ -25,6 +19,7 @@ local GetRaidTargetIndex = GetRaidTargetIndex
 local UnitThreatSituation = UnitThreatSituation
 
 -- Locals
+NP.ForcedCasters = {}
 NP.FadeInTime = 0.5
 
 -- HEALTH UPDATE
@@ -39,11 +34,11 @@ function NP:UpdateHealth(Frame, Unit)
     end
 
     local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
-    Frame.Health:SetMinMaxValues(0, Max)
-    Frame.Health:SetValue(Min, UI.SmoothBars)
-
     local Reaction = UnitReaction(Unit, "player") or 5
     local Color = UI.Colors.Reaction[Reaction]
+
+    Frame.Health:SetMinMaxValues(0, Max)
+    Frame.Health:SetValue(Min, UI.SmoothBars)
 
     if not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit) then
         Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
@@ -82,19 +77,11 @@ function NP:UpdateName(Frame, Unit)
     end
 
     local Name = UnitName(Unit) or ""
+    local _, Class = UnitClass(Unit)
+    local Color = UI.Colors.Class[Class]
+
     Frame.Name:SetText(Name)
-
-    if UnitIsPlayer(Unit) then
-        local _, Class = UnitClass(Unit)
-        local Color = UI.Colors.Class[Class]
-
-        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
-    else
-        local Reaction = UnitReaction(Unit, "player") or 5
-        local Color = UI.Colors.Reaction[Reaction]
-
-        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
-    end
+    Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
 end
 
 -- ICONS
@@ -165,7 +152,7 @@ function NP:UpdateEnemy(Frame)
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame, Frame.Unit) end
     -- HIGHLIGHT
-    if (Frame.TargetIndicatorLeft and Frame.TargetIndicatorRight) then self:HighlightOnNameplateTarget(Frame, Frame.Unit) end
+    if (Frame.TargetIndicator) then self:HighlightOnNameplateTarget(Frame, Frame.Unit) end
     -- THREAT
     if (Frame.Threat) then self:UpdateThreatHighlight(Frame, Frame.Unit) end
     -- AURAS
@@ -200,8 +187,8 @@ function NP:OnEvent(event, unit, ...)
             if (not FriendlyFrame) then
                 self:CreateFriendly(GNPFU, unit)
             else
-                FriendlyFrame.Unit = unit
                 FriendlyFrame:Show()
+                FriendlyFrame.Unit = unit
 
                 self:UpdateFriendly(FriendlyFrame)
             end
@@ -209,11 +196,11 @@ function NP:OnEvent(event, unit, ...)
             if (not EnemyFrame) then
                 self:CreateEnemy(GNPFU, unit)
             else
-                EnemyFrame.Unit = unit
                 EnemyFrame:Show()
+                EnemyFrame.Unit = unit
 
                 self:UpdateEnemy(EnemyFrame)
-                self:SetNameplateColor(unit, false)
+                self:SetNameplateColor(EnemyFrame.Unit, false)
             end
         end
 
@@ -237,6 +224,9 @@ function NP:OnEvent(event, unit, ...)
         end
 
         self:ShowBlizzardFrames(GNPFU)
+
+        -- Clear persistent caster for this unit
+        self:ClearForcedCasters(unit)
 
         -- UPDATE TARGET NAMEPLATES
     elseif (event == "PLAYER_TARGET_CHANGED" or event == "UNIT_TARGETABLE_CHANGED") then
@@ -307,8 +297,8 @@ function NP:OnEvent(event, unit, ...)
             return
         end
 
-        self:SetNameplateColor(unit, true)
         self:CastStarted(unit, event)
+        self:SetNameplateColor(unit, true)
     elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP") then
         if (not unit or UnitIsFriend("player", unit)) then
             return
@@ -388,7 +378,7 @@ end
 -- INITIALIZE
 
 function NP:Initialize()
-    if (not DB.Global.UnitFrames.Enable) then 
+    if (not DB.Global.Nameplates.Enable) then 
         return 
     end
 

@@ -35,7 +35,7 @@ function CooldownManager:SkinIcons(Button)
 	local Cooldown = Button.Cooldown
 	local CooldownFlash = Button.CooldownFlash
 	local Border = select(3, Button:GetRegions())
-	local PandemIcon = Button.PandemicIcon or Button.pandemicIcon or Button.Pandemic or Button.pandemic
+	--local PandemIcon = Button.PandemicIcon or Button.pandemicIcon or Button.Pandemic or Button.pandemic
 
 	if (not Button and not Icon) then
 		return
@@ -90,6 +90,7 @@ function CooldownManager:SkinIcons(Button)
     	Count:SetFontTemplate("Default", 14)
     end
 
+    --[[
     if (not PandemIcon) then
         for _, Frames in ipairs({ Button:GetChildren() }) do
             if (Frames:GetName() and Frames:GetName():find("Pandemic")) then
@@ -103,47 +104,38 @@ function CooldownManager:SkinIcons(Button)
         PandemIcon:ClearAllPoints()
         PandemIcon:SetInside(Button, 1, 1)
     end
+    --]]
 
 	Button.CDMIsSkinned = true
 end
 
 function CooldownManager:Update()
-    if (self.Queued) then 
-    	return
-   	end
+	EventUtil.RegisterOnceFrameEventAndCallback("PLAYER_ENTERING_WORLD", function()
+		for _, Frames in ipairs(CooldownManagerFrames) do
+			for _, Button in pairs({ Frames:GetChildren() }) do
+				self:SkinIcons(Button)
 
-    self.Queued = true
+				--[[
+		        if (Frames.GetNumChildren) then
+		            local NumChild = Frames:GetNumChildren()
 
-	for _, Frames in ipairs(CooldownManagerFrames) do
-		for _, Button in pairs({ Frames:GetChildren() }) do
-			self:SkinIcons(Button)
+		            for i = 1, NumChild do
+		                local Frame = select(i, Frames:GetChildren())
 
-	        if (Frames.GetNumChildren) then
-	            local NumChild = Frames:GetNumChildren()
+		                if (Frame and not Frame.IsHooked) then
+		                    if (Frame.SetPoint) then hooksecurefunc(Frame, "SetPoint", function() CooldownManager:Update() end) end
+		                    if (Frame.SetAllPoints) then hooksecurefunc(Frame, "SetAllPoints", function() CooldownManager:Update() end) end
+		                    if (Frame.ClearAllPoints) then hooksecurefunc(Frame, "ClearAllPoints", function() CooldownManager:Update() end) end
+		                    if (Frame.SetSize) then hooksecurefunc(Frame, "SetSize", function() CooldownManager:Update() end) end
 
-	            for i = 1, NumChild do
-	                local Frame = select(i, Frames:GetChildren())
-
-	                if (Frame and not Frame.IsHooked) then
-	                    if (Frame.SetPoint) then hooksecurefunc(Frame, "SetPoint", function() CooldownManager:Update() end) end
-	                    if (Frame.SetAllPoints) then hooksecurefunc(Frame, "SetAllPoints", function() CooldownManager:Update() end) end
-	                    if (Frame.ClearAllPoints) then hooksecurefunc(Frame, "ClearAllPoints", function() CooldownManager:Update() end) end
-	                    if (Frame.SetSize) then hooksecurefunc(Frame, "SetSize", function() CooldownManager:Update() end) end
-
-	                   	Frame.IsHooked = true
-	                end
-	            end
-	        end
-	    end
-	end
-
-	self.Queued = false
-end
-
-function CooldownManager:UpdateSafe()
-    if (not self.Queued) then
-        self:Update()
-    end
+		                   	Frame.IsHooked = true
+		                end
+		            end
+		        end
+		        --]]
+		    end
+		end
+	end)
 end
 
 function CooldownManager:Initialize()
@@ -155,6 +147,5 @@ function CooldownManager:Initialize()
 		LoadAddOn("Blizzard_CooldownViewer")
 	end
 
-	self:UpdateSafe()
-	--self:AddHooks()
+	self:Update()
 end

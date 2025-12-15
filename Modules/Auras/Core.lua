@@ -146,6 +146,7 @@ function Auras:AnchorDebuffs(Frame, Index)
 		Frame.Count:Point("TOPRIGHT", Frame, 0, -2)
 		Frame.Count:SetFontTemplate("Default")
 	end
+	--]]
 
 	-- Update KeepAspectRatio here too.
 	if (Frame.Icon) then

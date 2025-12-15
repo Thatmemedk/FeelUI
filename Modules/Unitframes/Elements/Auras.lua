@@ -122,31 +122,16 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
 end
 
 function AuraTooltipOnEnter(self)
-    if _G.GameTooltip:IsForbidden() or not self:IsVisible() then 
+    if (_G.GameTooltip:IsForbidden() or not self:IsVisible()) then 
         return 
     end
 
     _G.GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
-
-    if (self.AuraInstanceID and type(self.AuraInstanceID) == "number") then
-        if (self.AuraFilter == "HARMFUL") then
-            _G.GameTooltip:SetUnitDebuffByAuraInstanceID(self.Unit, self.AuraInstanceID)
-        else
-            _G.GameTooltip:SetUnitBuffByAuraInstanceID(self.Unit, self.AuraInstanceID)
-        end
-    elseif (self.AuraIndex and type(self.AuraIndex) == "number") then
-        if (self.AuraFilter == "HARMFUL") then
-            _G.GameTooltip:SetUnitDebuff(self.Unit, self.AuraIndex)
-        else
-            _G.GameTooltip:SetUnitBuff(self.Unit, self.AuraIndex)
-        end
-    end
-
-    _G.GameTooltip:Show()
+    _G.GameTooltip:SetUnitAuraByAuraInstanceID(self.Unit, self.AuraInstanceID)
 end
 
 function AuraTooltipOnLeave(self)
-    if _G.GameTooltip:IsForbidden() then 
+    if _G.GameTooltip:IsForbidden(  ) then 
         return 
     end
 
@@ -193,6 +178,10 @@ function UF:CreateAuraButton(Frame)
 end
 
 function UF:CreateBuffs(Frame)
+    if (Frame.Buffs) then
+        return
+    end
+
     local Buffs = CreateFrame("Frame", nil, Frame)
     Buffs:Size(30, 18)  
     Buffs:Point("TOPLEFT", Frame, 0, 32)
@@ -213,6 +202,10 @@ function UF:CreateBuffs(Frame)
 end
 
 function UF:CreateDebuffs(Frame)
+    if (Frame.Debuffs) then
+        return
+    end
+
     local Debuffs = CreateFrame("Frame", nil, Frame)
     Debuffs:Size(30, 18)
     Debuffs:Point("TOPRIGHT", Frame, 0, 28*2)
@@ -233,6 +226,10 @@ function UF:CreateDebuffs(Frame)
 end
 
 function UF:CreatePartyDebuffs(Frame)
+    if (Frame.Debuffs) then
+        return
+    end
+
     local Debuffs = CreateFrame("Frame", nil, Frame)
     Debuffs:Size(32, 18)
     Debuffs:Point("RIGHT", Frame, 40, 0)
@@ -253,6 +250,10 @@ function UF:CreatePartyDebuffs(Frame)
 end
 
 function UF:CreateRaidDebuffs(Frame)
+    if (Frame.Debuffs) then
+        return
+    end
+    
     local Debuffs = CreateFrame("Frame", nil, Frame.InvisFrameHigher)
     Debuffs:Size(26, 16)
     Debuffs:Point("LEFT", Frame, 12, 0)

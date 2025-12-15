@@ -47,30 +47,33 @@ function NP:CreatePanelsFriendly(Frame)
 end
 
 function NP:CreateTargetIndicator(Frame)
-    local TargetIndicatorLeft = Frame:CreateTexture(nil, "OVERLAY")
-    TargetIndicatorLeft:Size(16, 16)
-    TargetIndicatorLeft:Point("LEFT", Frame, -30, -4)
-    TargetIndicatorLeft:SetTexture(Media.Global.PowerArrowRight)
-    TargetIndicatorLeft:SetVertexColor(77/255, 179/255, 255/255)
-    TargetIndicatorLeft:Hide()
+    local Indicator = CreateFrame("Frame", nil, Frame)
+    Indicator:Size(Frame:GetWidth() + 18, 16)
+    Indicator:Point("CENTER", Frame, 0, -4)
 
-    local TargetIndicatorRight = Frame:CreateTexture(nil, "OVERLAY")
-    TargetIndicatorRight:Size(16, 16)
-    TargetIndicatorRight:Point("RIGHT", Frame, 30, -4)
-    TargetIndicatorRight:SetTexture(Media.Global.PowerArrowLeft)
-    TargetIndicatorRight:SetVertexColor(77/255, 179/255, 255/255)
-    TargetIndicatorRight:Hide()
+    local Left = Indicator:CreateTexture(nil, "OVERLAY")
+    Left:Size(16, 16)
+    Left:Point("LEFT", Indicator, -16, 0)
+    Left:SetTexture(Media.Global.PowerArrowRight)
+    Left:SetVertexColor(unpack(DB.Global.Nameplates.TargetIndicatorColor))
 
-    Frame.TargetIndicatorLeft = TargetIndicatorLeft
-    Frame.TargetIndicatorRight = TargetIndicatorRight
+    local Right = Indicator:CreateTexture(nil, "OVERLAY")
+    Right:Size(16, 16)
+    Right:Point("RIGHT", Indicator, 16, 0)
+    Right:SetTexture(Media.Global.PowerArrowLeft)
+    Right:SetVertexColor(unpack(DB.Global.Nameplates.TargetIndicatorColor))
+
+    Frame.TargetIndicator = Indicator
+    Frame.TargetIndicator.Left = Left
+    Frame.TargetIndicator.Right = Right
 end
 
 function NP:HighlightOnNameplateTarget(Frame, Unit)
     if UnitIsUnit("target", Unit) then
-        Frame.TargetIndicatorLeft:Show()
-        Frame.TargetIndicatorRight:Show()
+        Frame.TargetIndicator.Left:Show()
+        Frame.TargetIndicator.Right:Show()
     else
-        Frame.TargetIndicatorLeft:Hide()
-        Frame.TargetIndicatorRight:Hide()
+        Frame.TargetIndicator.Left:Hide()
+        Frame.TargetIndicator.Right:Hide()
     end
 end
