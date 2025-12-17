@@ -190,9 +190,9 @@ end
 
 -- CREATE CASTBAR
 
-function NP:CreateNamePlateCastBar(Frame)
+function NP:CreateCastBar(Frame)
     local Castbar = CreateFrame("StatusBar", nil, Frame)
-    Castbar:Size(Frame:GetWidth() + 18, 20) 
+    Castbar:Size(192, 20) 
     Castbar:Point("BOTTOM", Frame, 0, -6)
     Castbar:SetStatusBarTexture(Media.Global.Texture)
     Castbar:CreateBackdrop()

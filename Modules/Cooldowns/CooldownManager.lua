@@ -1,5 +1,3 @@
--- CREDITS: Spyro
-
 local UI, DB, Media, Language = select(2, ...):Call()
 
 -- Call Modules
@@ -17,15 +15,11 @@ local CooldownViewerSettings = _G.CooldownViewerSettings
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local LoadAddOn = C_AddOns.LoadAddOn
 
--- Locals
-local CooldownManagerFrames = { 
-	EssentialCooldownViewer, 
-	UtilityCooldownViewer, 
-	BuffIconCooldownViewer,
-}
+-- WoW Globals
+local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
 
 function CooldownManager:SkinIcons(Button)
-	if (Button:IsForbidden() or Button.CDMIsSkinned) then
+	if (Button.CDMIsSkinned) then
 		return
 	end
 
@@ -33,8 +27,10 @@ function CooldownManager:SkinIcons(Button)
 	local Count = Button.Applications and Button.Applications.Applications
 	local Charges = Button.ChargeCount and Button.ChargeCount.Current
 	local Cooldown = Button.Cooldown
+	local OutOfRange = Button.OutOfRange
 	local CooldownFlash = Button.CooldownFlash
-	local Border = select(3, Button:GetRegions())
+	local Border = Button.DebuffBorder
+	local BorderTex = select(3, Button:GetRegions())
 	--local PandemIcon = Button.PandemicIcon or Button.pandemicIcon or Button.Pandemic or Button.pandemic
 
 	if (not Button and not Icon) then
@@ -57,26 +53,51 @@ function CooldownManager:SkinIcons(Button)
 	InvisFrame:SetFrameLevel(Button:GetFrameLevel() + 10)
 	InvisFrame:SetInside()
 
-    if (Border) then
-    	Border:Hide()
+    if (BorderTex) then
+    	BorderTex:SetAlpha(0)
     end
+
+   	if (Border) then
+		Border:SetAlpha(0)
+
+		--[[
+		local Index = 10
+		local AuraData = GetAuraDataByIndex("Target", Index, "HARMFUL")
+
+	    if (AuraData) then
+			local Color = C_UnitAuras.GetAuraDispelTypeColor("Target", AuraData.auraInstanceID, UI.DispelColorCurve)
+			    
+		    if (Color) then
+		        OverlayFrame:SetColorTemplate(Color.r, Color.g, Color.b)
+		    else
+		   	    OverlayFrame:SetColorTemplate(unpack(DB.Global.General.BorderColor))
+		    end
+		end
+		--]]
+	end
 
 	if (Icon) then
 		Icon:ClearAllPoints()
-		Icon:SetInside(Button, 1, 1)
+		Icon:SetInside(OverlayFrame, 1, 1)
 	end
 
 	if (Cooldown) then
 		Cooldown:ClearAllPoints()
-		Cooldown:SetInside(Button, 1, 1)
+		Cooldown:SetInside(OverlayFrame, 1, 1)
 		Cooldown:SetReverse(true)
+		Cooldown:SetSwipeTexture(Media.Global.Blank)
 	end
 
 	if (CooldownFlash) then
 		CooldownFlash:ClearAllPoints()
-		CooldownFlash:SetInside(Button, 1, 1)
+		CooldownFlash:SetInside(OverlayFrame, 1, 1)
 	end
 
+	if (OutOfRange) then
+		OutOfRange:ClearAllPoints()
+		OutOfRange:SetInside(OverlayFrame, 1, 1)
+	end
+ 
 	if (Charges) then
     	Charges:ClearAllPoints()
     	Charges:Point("TOPRIGHT", Button, -1, -1)
@@ -90,52 +111,25 @@ function CooldownManager:SkinIcons(Button)
     	Count:SetFontTemplate("Default", 14)
     end
 
-    --[[
-    if (not PandemIcon) then
-        for _, Frames in ipairs({ Button:GetChildren() }) do
-            if (Frames:GetName() and Frames:GetName():find("Pandemic")) then
-                PandemIcon = Frames
-                break
-            end
-        end
-    end
-
-    if (PandemIcon and PandemIcon.ClearAllPoints) then
-        PandemIcon:ClearAllPoints()
-        PandemIcon:SetInside(Button, 1, 1)
-    end
-    --]]
-
 	Button.CDMIsSkinned = true
 end
 
+function CooldownManager:UpdateAcquireItemsFrame(Frames)
+	CooldownManager:SkinIcons(Frames)
+end
+
+function CooldownManager:UpdateIcons(Elements)
+	hooksecurefunc(Elements, "OnAcquireItemFrame", CooldownManager.UpdateAcquireItemsFrame)
+
+	for Frames in Elements.itemFramePool:EnumerateActive() do
+		CooldownManager:SkinIcons(Frames)
+	end
+end
+
 function CooldownManager:Update()
-	EventUtil.RegisterOnceFrameEventAndCallback("PLAYER_ENTERING_WORLD", function()
-		for _, Frames in ipairs(CooldownManagerFrames) do
-			for _, Button in pairs({ Frames:GetChildren() }) do
-				self:SkinIcons(Button)
-
-				--[[
-		        if (Frames.GetNumChildren) then
-		            local NumChild = Frames:GetNumChildren()
-
-		            for i = 1, NumChild do
-		                local Frame = select(i, Frames:GetChildren())
-
-		                if (Frame and not Frame.IsHooked) then
-		                    if (Frame.SetPoint) then hooksecurefunc(Frame, "SetPoint", function() CooldownManager:Update() end) end
-		                    if (Frame.SetAllPoints) then hooksecurefunc(Frame, "SetAllPoints", function() CooldownManager:Update() end) end
-		                    if (Frame.ClearAllPoints) then hooksecurefunc(Frame, "ClearAllPoints", function() CooldownManager:Update() end) end
-		                    if (Frame.SetSize) then hooksecurefunc(Frame, "SetSize", function() CooldownManager:Update() end) end
-
-		                   	Frame.IsHooked = true
-		                end
-		            end
-		        end
-		        --]]
-		    end
-		end
-	end)
+	self:UpdateIcons(UtilityCooldownViewer)
+	self:UpdateIcons(BuffIconCooldownViewer)
+	self:UpdateIcons(EssentialCooldownViewer)
 end
 
 function CooldownManager:Initialize()

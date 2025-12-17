@@ -36,9 +36,8 @@ function RuneBar:CreateBar()
         Bars:Size(212/6, 8)
         Bars:SetStatusBarTexture(Media.Global.Texture)
 
-        local Backdrop = CreateFrame("StatusBar", nil, Bar)
+        local Backdrop = CreateFrame("Frame", nil, Bar)
         Backdrop:Size(212/6, 8)
-        Backdrop:SetStatusBarTexture(Media.Global.Texture)
         Backdrop:CreateBackdrop()
         Backdrop:CreateShadow()
         
@@ -76,8 +75,8 @@ function RuneBar:Update()
     for i = 1, 6 do
         local Bar = self.RunesBars[i]
 
-        if not (Bar) then 
-            return 
+        if not (Bar) then
+            return
         end
 
         local Start, Duration, RuneIsReady = GetRuneCooldown(i)
@@ -88,14 +87,14 @@ function RuneBar:Update()
             Bar.Duration = Elapsed
             Bar.Max = Duration
             Bar:SetMinMaxValues(0, Duration)
-            Bar:SetValue(Elapsed, UI.SmoothBars)
 
             if (RuneIsReady) then
-                Bar:SetScript("OnUpdate", nil)
                 Bar:SetValue(Duration, UI.SmoothBars)
+                Bar:SetScript("OnUpdate", nil)
 
                 UI:UIFrameFadeIn(Bar, 0.25, Bar:GetAlpha(), 1)
             else
+                Bar:SetValue(Elapsed, UI.SmoothBars)
                 Bar:SetScript("OnUpdate", self.OnUpdate)
 
                 UI:UIFrameFadeOut(Bar, 0.25, Bar:GetAlpha(), 0.50)
@@ -137,13 +136,6 @@ function RuneBar:UpdateSpec()
         Bar[4]:SetStatusBarColor(unpack(FrostColor))
         Bar[5]:SetStatusBarColor(unpack(UnholyColor))
         Bar[6]:SetStatusBarColor(unpack(UnholyColor))
-
-        Backdrop[1]:SetStatusBarColor(1 * Mult, 0, 0, 0.25)
-        Backdrop[2]:SetStatusBarColor(1 * Mult, 0, 0, 0.25)
-        Backdrop[3]:SetStatusBarColor(0, 0.35 * Mult, 1 * Mult, 0.25)
-        Backdrop[4]:SetStatusBarColor(0, 0.35 * Mult, 1 * Mult, 0.25)
-        Backdrop[5]:SetStatusBarColor(0.25 * Mult, 0.55 * Mult, 0.10 * Mult, 0.25)
-        Backdrop[6]:SetStatusBarColor(0.25 * Mult, 0.55 * Mult, 0.10 * Mult, 0.25)
     end
 end
 

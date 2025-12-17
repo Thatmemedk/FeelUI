@@ -36,7 +36,6 @@ local UnitPhaseReason = UnitPhaseReason
 local GetReadyCheckStatus = GetReadyCheckStatus
 local UnitGetTotalHealAbsorbs = UnitGetTotalHealAbsorbs
 local UnitGetIncomingHeals = UnitGetIncomingHeals
-local UnitGetIncomingHeals = UnitGetIncomingHeals
 local UnitGetTotalAbsorbs = UnitGetTotalAbsorbs
 local UnitIsUnit = UnitIsUnit
 
@@ -128,15 +127,16 @@ end
 --- UPDATE HEALTH
 
 function UF:UpdateHealth(Frame)
-    local Unit = Frame.unit
-    local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
-
-    if (not Frame.Health) then
+    if (not Frame or not Frame.unit or not Frame.Health) then
         return
     end
 
+    local Unit = Frame.unit
+    local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
+
     Frame.Health:SetMinMaxValues(0, Max)
     Frame.Health:SetValue(Min, UI.SmoothBars)
+    Frame.Health:Show()
 
     if not (UnitIsConnected(Unit)) then
         Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
@@ -154,23 +154,23 @@ function UF:UpdateHealth(Frame)
 end
 
 function UF:UpdateHealthTextCur(Frame)
-    local Unit = Frame.unit
-    local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
-
-    if (not Frame.HealthTextCur) then
+    if (not Frame or not Frame.unit or not Frame.HealthTextCur) then
         return
     end
+
+    local Unit = Frame.unit
+    local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
 
     Frame.HealthTextCur:SetText(AbbreviateNumbers(Min))
 end
 
 function UF:UpdateHealthTextPer(Frame)
-    local Unit = Frame.unit
-    local Percent = UnitHealthPercent(Unit, false, CurveConstants.ScaleTo100)
-
-    if (not Frame.HealthTextPer) then
+    if (not Frame or not Frame.unit or not Frame.HealthTextPer) then
         return
     end
+
+    local Unit = Frame.unit
+    local Percent = UnitHealthPercent(Unit, false, CurveConstants.ScaleTo100)
 
     Frame.HealthTextPer:SetFormattedText("%d%%", Percent or 0)
 end
@@ -178,87 +178,91 @@ end
 -- HEAL PRED
 
 function UF:UpdateHealthPred(Frame)
-    local Unit = Frame.unit
-
-    if (not Frame.Health or not Frame.MyHeals or not Frame.OtherHeals or not Frame.Absorbs or not Frame.HealAbsorbs) then 
-        return 
+    if (not Frame or not Frame.unit or not Frame.HealthPrediction) then
+        return
     end
 
+    local Unit = Frame.unit
     local Max = UnitHealthMax(Unit)
     local Current = UnitHealth(Unit)
     local MyIncomingHeal = UnitGetIncomingHeals(Unit, "player") or 0
     local AllIncomingHeal = UnitGetIncomingHeals(Unit) or 0
     local Absorb = UnitGetTotalAbsorbs(Unit) or 0
     local HealAbsorb = UnitGetTotalHealAbsorbs(Unit) or 0
-    local HealthOrientation = Frame.Health:GetOrientation()
-    local PreviousTexture = Frame.Health:GetStatusBarTexture()
-    local Width = Frame.Health:GetWidth()
-    local Height = Frame.Health:GetHeight()
+    local Orientation = Frame.Health:GetOrientation()
+    local PrevTexture = Frame.Health:GetStatusBarTexture()
+    local Width, Height = Frame.Health:GetWidth(), Frame.Health:GetHeight()
     local BarWidth, BarHeight = Width, Height
 
-    if (HealthOrientation ~= "HORIZONTAL") then
+    if (Orientation ~= "HORIZONTAL") then
         BarWidth, BarHeight = Height, Width
     end
 
-    Frame.MyHeals:SetOrientation(HealthOrientation)
-    Frame.MyHeals:Size(BarWidth, BarHeight)
-    Frame.MyHeals:SetMinMaxValues(0, Max)
-    Frame.MyHeals:SetValue(MyIncomingHeal, UI.SmoothBars)
-    Frame.MyHeals:Show()
+    local FirstBar = Frame.HealthPrediction.MyHeals
+    local SecondBar = Frame.HealthPrediction.OtherHeals
+    local ThirdBar = Frame.HealthPrediction.Absorbs
+    local FourthBar = Frame.HealthPrediction.HealAbsorbs
 
-    Frame.OtherHeals:SetOrientation(HealthOrientation)
-    Frame.OtherHeals:Size(BarWidth, BarHeight)
-    Frame.OtherHeals:SetMinMaxValues(0, Max)
-    Frame.OtherHeals:SetValue(AllIncomingHeal, UI.SmoothBars)
-    Frame.OtherHeals:Show()
+    -- Update bars
+    FirstBar:SetOrientation(Orientation)
+    FirstBar:Size(BarWidth, BarHeight)
+    FirstBar:SetMinMaxValues(0, Max)
+    FirstBar:SetValue(MyIncomingHeal, UI.SmoothBars)
+    FirstBar:Show()
 
-    Frame.Absorbs:SetOrientation(HealthOrientation)
-    Frame.Absorbs:SetReverseFill(true)
-    Frame.Absorbs:Size(BarWidth, BarHeight)
-    Frame.Absorbs:SetMinMaxValues(0, Max)
-    Frame.Absorbs:SetValue(Absorb, UI.SmoothBars)
-    Frame.Absorbs:Show()
+    SecondBar:SetOrientation(Orientation)
+    SecondBar:Size(BarWidth, BarHeight)
+    SecondBar:SetMinMaxValues(0, Max)
+    SecondBar:SetValue(AllIncomingHeal, UI.SmoothBars)
+    SecondBar:Show()
 
-    Frame.HealAbsorbs:SetOrientation(HealthOrientation)
-    Frame.HealAbsorbs:SetReverseFill(true)
-    Frame.HealAbsorbs:Size(BarWidth, BarHeight)
-    Frame.HealAbsorbs:SetMinMaxValues(0, Max)
-    Frame.HealAbsorbs:SetValue(HealAbsorb, UI.SmoothBars)
-    Frame.HealAbsorbs:Show()
+    ThirdBar:SetOrientation(Orientation)
+    ThirdBar:SetReverseFill(true)
+    ThirdBar:Size(BarWidth, BarHeight)
+    ThirdBar:SetMinMaxValues(0, Max)
+    ThirdBar:SetValue(Absorb, UI.SmoothBars)
+    ThirdBar:Show()
 
-    if (HealthOrientation == "HORIZONTAL") then
-        Frame.MyHeals:Point("TOPLEFT", PreviousTexture, "TOPRIGHT", 0, 0)
-        Frame.MyHeals:Point("BOTTOMLEFT", PreviousTexture, "BOTTOMRIGHT", 0, 0)
-        Frame.OtherHeals:Point("TOPLEFT", Frame.MyHeals:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
-        Frame.OtherHeals:Point("BOTTOMLEFT", Frame.MyHeals:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
-        Frame.Absorbs:Point("TOPRIGHT", PreviousTexture, "TOPRIGHT", 0, 0)
-        Frame.Absorbs:Point("BOTTOMRIGHT", PreviousTexture, "BOTTOMRIGHT", 0, 0)
-        Frame.HealAbsorbs:Point("TOPRIGHT", PreviousTexture, "TOPRIGHT", 0, 0)
-        Frame.HealAbsorbs:Point("BOTTOMRIGHT", PreviousTexture, "BOTTOMRIGHT", 0, 0)
+    FourthBar:SetOrientation(Orientation)
+    FourthBar:SetReverseFill(true)
+    FourthBar:Size(BarWidth, BarHeight)
+    FourthBar:SetMinMaxValues(0, Max)
+    FourthBar:SetValue(HealAbsorb, UI.SmoothBars)
+    FourthBar:Show()
+
+    if (Orientation == "HORIZONTAL") then
+        FirstBar:Point("TOPLEFT", PrevTexture, "TOPRIGHT", 0, 0)
+        FirstBar:Point("BOTTOMLEFT", PrevTexture, "BOTTOMRIGHT", 0, 0)
+        SecondBar:Point("TOPLEFT", FirstBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+        SecondBar:Point("BOTTOMLEFT", FirstBar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
+        ThirdBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
+        ThirdBar:Point("BOTTOMRIGHT", PrevTexture, "BOTTOMRIGHT", 0, 0)
+        FourthBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
+        FourthBar:Point("BOTTOMRIGHT", PrevTexture, "BOTTOMRIGHT", 0, 0)
     else
-        Frame.MyHeals:Point("BOTTOMLEFT", PreviousTexture, "TOPLEFT", 0, 0)
-        Frame.MyHeals:Point("BOTTOMRIGHT", PreviousTexture, "TOPRIGHT", 0, 0)
-        Frame.OtherHeals:Point("BOTTOMLEFT", Frame.MyHeals:GetStatusBarTexture(), "TOPLEFT", 0, 0)
-        Frame.OtherHeals:Point("BOTTOMRIGHT", Frame.MyHeals:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
-        Frame.Absorbs:Point("TOPLEFT", PreviousTexture, "TOPLEFT", 0, 0)
-        Frame.Absorbs:Point("TOPRIGHT", PreviousTexture, "TOPRIGHT", 0, 0)
-        Frame.HealAbsorbs:Point("TOPLEFT", PreviousTexture, "TOPLEFT", 0, 0)
-        Frame.HealAbsorbs:Point("TOPRIGHT", PreviousTexture, "TOPRIGHT", 0, 0)
+        FirstBar:Point("BOTTOMLEFT", PrevTexture, "TOPLEFT", 0, 0)
+        FirstBar:Point("BOTTOMRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
+        SecondBar:Point("BOTTOMLEFT", FirstBar:GetStatusBarTexture(), "TOPLEFT", 0, 0)
+        SecondBar:Point("BOTTOMRIGHT", FirstBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+        ThirdBar:Point("TOPLEFT", PrevTexture, "TOPLEFT", 0, 0)
+        ThirdBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
+        FourthBar:Point("TOPLEFT", PrevTexture, "TOPLEFT", 0, 0)
+        FourthBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
     end
 end
 
 --- UPDATE POWER
 
 function UF:UpdatePower(Frame)
+    if (not Frame or not Frame.unit or not Frame.PowerText) then
+        return
+    end
+
     local Unit = Frame.unit
     local PowerType, PowerToken = UnitPowerType(Unit)
     local Min, Max = UnitPower(Unit, PowerType), UnitPowerMax(Unit, PowerType)
     local Percent = UnitPowerPercent(Unit, PowerType, false, CurveConstants.ScaleTo100)
     local PowerColor = UI.Colors.Power[PowerToken]
-
-    if not (Frame.PowerText) then
-        return
-    end
 
     if (PowerType == Enum.PowerType.Mana) then
         Frame.PowerText:SetFormattedText("%.0f%%", Percent)
@@ -272,97 +276,48 @@ function UF:UpdatePower(Frame)
 end
 
 function UF:UpdateAdditionalPower(Frame)
+    if (not Frame or not Frame.unit or not Frame.AdditionalPower) then
+        return
+    end
+
     local Unit = Frame.unit
     local PowerType = UnitPowerType("player")
     local Min, Max = UnitPower("player", ADDITIONAL_POWER_BAR_INDEX), UnitPowerMax("player", ADDITIONAL_POWER_BAR_INDEX)
     local Percent = UnitPowerPercent("player", PowerType, false, CurveConstants.ScaleTo100)
-
-    if (not Frame.AdditionalPower) then
-        return
-    end
+    local Bar = Frame.AdditionalPower
+    local Text = Frame.AdditionalPowerText
 
     if (Max == 0 or PowerType == Enum.PowerType.Mana) then
-        UI:UIFrameFadeOut(Frame.AdditionalPower, UF.FadeInTime, Frame.AdditionalPower:GetAlpha(), 0)
-        UI:UIFrameFadeOut(Frame.AdditionalPowerText, UF.FadeInTime, Frame.AdditionalPowerText:GetAlpha(), 0)
-        return
+        UI:UIFrameFadeOut(Bar, 0.25, Bar:GetAlpha(), 0)
+        UI:UIFrameFadeOut(Text, 0.25, Text:GetAlpha(), 0)
+    else
+        UI:UIFrameFadeIn(Bar, 0.25, Bar:GetAlpha(), 1)
+        UI:UIFrameFadeIn(Text, 0.25, Text:GetAlpha(), 1)
+
+        Bar:SetMinMaxValues(0, Max)
+        Bar:SetValue(Min, UI.SmoothBars)
+        Text:SetFormattedText("%.0f%%", Percent)
     end
-
-    Frame.AdditionalPower:SetMinMaxValues(0, Max)
-    Frame.AdditionalPower:SetValue(Min, UI.SmoothBars)
-    Frame.AdditionalPowerText:SetFormattedText("%.0f%%", Percent)
-
-    UI:UIFrameFadeIn(Frame.AdditionalPower, UF.FadeInTime, Frame.AdditionalPower:GetAlpha(), 1)
-    UI:UIFrameFadeIn(Frame.AdditionalPowerText, UF.FadeInTime, Frame.AdditionalPowerText:GetAlpha(), 1)
 end
 
 --- UPDATE NAME
 
-function UF:UpdateName(Frame)
-    local Unit = Frame.unit
-
-    if not (Frame.Name) then
+function UF:UpdateName(Frame, TypeFrame)
+    if (not Frame or not Frame.unit or not Frame.Name) then
         return
     end
 
-    local Name = UnitName(Unit) or ""
-
-    if (Name) then
-        --Frame.Name:SetText(UTF8Sub(Name, 12))
-        Frame.Name:SetText(Name)
-    end
-
-    if UnitIsPlayer(Unit) then
-        local _, Class = UnitClass(Unit)
-        local Color = UI.Colors.Class[Class]
-
-        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
-    else
-        local Reaction = UnitReaction(Unit, "player") or 5
-        local Color = UI.Colors.Reaction[Reaction]
-
-        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
-    end
-end
-
-function UF:UpdateNameRaid(Frame)
     local Unit = Frame.unit
-
-    if not (Frame.Name) then
-        return
-    end
-
     local Name = UnitName(Unit) or ""
 
     if (Name) then
-        Frame.Name:SetText(UTF8Sub(Name, 8))
-        --Frame.Name:SetText(Name)
-    end
-
-    if UnitIsPlayer(Unit) then
-        local _, Class = UnitClass(Unit)
-        local Color = UI.Colors.Class[Class]
-
-        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
-    else
-        local Reaction = UnitReaction(Unit, "player") or 5
-        local Color = UI.Colors.Reaction[Reaction]
-
-        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
-    end
-end
-
-function UF:UpdateNameParty(Frame)
-    local Unit = Frame.unit
-
-    if not (Frame.Name) then
-        return
-    end
-
-    local Name = UnitName(Unit) or ""
-
-    if (Name) then
-        Frame.Name:SetText(UTF8Sub(Name, 12))
-        --Frame.Name:SetText(Name)
+        if (TypeFrame == "Raid") then
+            Frame.Name:SetText(UTF8Sub(Name, 8))
+        elseif (TypeFrame == "Party") then
+            Frame.Name:SetText(UTF8Sub(Name, 12))
+        else
+            Frame.Name:SetText(Name)
+        end
     end
 
     if UnitIsPlayer(Unit) then
@@ -381,14 +336,14 @@ end
 --- UPDATE NAME & LEVEL
 
 function UF:UpdateTargetNameLevel(Frame)
+    if (not Frame or not Frame.unit or not Frame.NameLevel) then
+        return
+    end
+
     local Unit = Frame.unit
     local Name = UnitName(Unit) or ""
     local Level = UnitLevel(Unit) or -1
     local NameColor, LevelColor, LevelText
-
-    if not (Frame.NameLevel) then
-        return
-    end
 
     if UnitIsPlayer(Unit) then
         local _, Class = UnitClass(Unit)
@@ -456,16 +411,11 @@ end
 -- ICONS
 
 function UF:UpdateRestingIcon(Frame)
-    local Unit = Frame.unit
+    if (not Frame or not Frame.unit or not Frame.RestingIcon) then
+        return
+    end
+
     local IsResting = IsResting()
-
-    if (not Frame or not Unit) then
-        return
-    end
-
-    if (not Frame.RestingIcon) then
-        return
-    end
 
     if (IsResting) then
         Frame.RestingIcon:Show()
@@ -475,16 +425,11 @@ function UF:UpdateRestingIcon(Frame)
 end
 
 function UF:UpdateCombatIcon(Frame)
-    local Unit = Frame.unit
+    if (not Frame or not Frame.unit or not Frame.CombatIcon) then
+        return
+    end
+
     local UnitAffectingCombat = UnitAffectingCombat("player")
-
-    if (not Frame or not Unit) then
-        return
-    end
-
-    if (not Frame.CombatIcon) then
-        return
-    end
 
     if (UnitAffectingCombat) then
         Frame.CombatIcon:Show()
@@ -494,16 +439,12 @@ function UF:UpdateCombatIcon(Frame)
 end
 
 function UF:UpdateRaidIcon(Frame)
+    if (not Frame or not Frame.unit or not Frame.RaidIcon) then
+        return
+    end
+
     local Unit = Frame.unit
     local Index = GetRaidTargetIndex(Unit)
-
-    if (not Frame or not Unit) then
-        return
-    end
-
-    if (not Frame.RaidIcon) then
-        return
-    end
 
     if (Index) then
         Frame.RaidIcon:Show()
@@ -514,16 +455,11 @@ function UF:UpdateRaidIcon(Frame)
 end
 
 function UF:UpdateResurrectionIcon(Frame)
+    if (not Frame or not Frame.unit or not Frame.ResurrectIcon) then
+        return
+    end
+
     local Unit = Frame.unit
-
-    if (not Frame or not Unit) then
-        return
-    end
-
-    if (not Frame.ResurrectIcon) then
-        return
-    end
-
     local UnitHasIncomingResurrection = UnitHasIncomingResurrection(Unit)
 
     if (UnitHasIncomingResurrection) then
@@ -534,16 +470,11 @@ function UF:UpdateResurrectionIcon(Frame)
 end
 
 function UF:UpdateAssistantIcon(Frame)
+    if (not Frame or not Frame.unit or not Frame.UpdateAssistantIcon) then
+        return
+    end
+
     local Unit = Frame.unit
-
-    if (not Frame or not Unit) then
-        return
-    end
-
-    if (not Frame.AssistantIcon) then
-        return
-    end
-
     local IsAssistant = UnitInRaid(Unit) and UnitIsGroupAssistant(Unit) and not UnitIsGroupLeader(Unit)
 
     if (IsAssistant) then
@@ -554,16 +485,11 @@ function UF:UpdateAssistantIcon(Frame)
 end
 
 function UF:UpdateLeaderIcon(Frame)
+    if (not Frame or not Frame.unit or not Frame.LeaderIcon) then
+        return
+    end
+
     local Unit = Frame.unit
-
-    if (not Frame or not Unit) then
-        return
-    end
-
-    if (not Frame.LeaderIcon) then
-        return
-    end
-
     local UnitIsGroupLeader = UnitIsGroupLeader(Unit)
 
     if (UnitIsGroupLeader) then
@@ -574,16 +500,11 @@ function UF:UpdateLeaderIcon(Frame)
 end
 
 function UF:UpdateSummonIcon(Frame)
+    if (not Frame or not Frame.unit or not Frame.SummonIcon) then
+        return
+    end
+
     local Unit = Frame.unit
-
-    if (not Frame or not Unit) then
-        return
-    end
-
-    if (not Frame.SummonIcon) then
-        return
-    end
-
     local IncomingSummon = C_IncomingSummon.IncomingSummonStatus(Unit)
 
     if (IncomingSummon ~= SUMMON_STATUS_NONE) then
@@ -602,16 +523,11 @@ function UF:UpdateSummonIcon(Frame)
 end
 
 function UF:UpdatePhaseIcon(Frame)
+    if (not Frame or not Frame.unit or not Frame.PhaseIcon) then
+        return
+    end
+
     local Unit = Frame.unit
-
-    if (not Frame or not Unit) then
-        return
-    end
-
-    if (not Frame.PhaseIcon) then
-        return
-    end
-
     local IsPhased = UnitIsPlayer(Unit) and UnitIsConnected(Unit) and UnitPhaseReason(Unit) or nil
 
     if (IsPhased) then
@@ -622,20 +538,15 @@ function UF:UpdatePhaseIcon(Frame)
 end
 
 function UF:UpdateReadyCheckIcon(Frame, event)
-    local Unit = Frame.unit
-
-    if (not Frame or not Unit) then
+    if (not Frame or not Frame.unit or not Frame.ReadyCheckIcon) then
         return
-    end
-
-    if (not Frame.ReadyCheckIcon) then 
-        return 
     end
 
     if (Frame.Animation.FadeOut and Frame.Animation.FadeOut:IsPlaying()) then
         Frame.Animation.FadeOut:Stop()
     end
 
+    local Unit = Frame.unit
     local GetReadyCheckStatus = GetReadyCheckStatus(Unit)
 
     if (GetReadyCheckStatus == "ready") then
@@ -663,16 +574,11 @@ end
 -- THREAT
 
 function UF:UpdateThreatHighlight(Frame)
+    if (not Frame or not Frame.unit or not Frame.Threat) then
+        return
+    end
+
     local Unit = Frame.unit
-
-    if (not Unit) then
-        return
-    end
-
-    if (not Frame.Threat) then
-        return
-    end
-
     local Threat = UnitThreatSituation("player", Unit)
     
     if (Threat and Threat > 0) then
@@ -684,16 +590,11 @@ function UF:UpdateThreatHighlight(Frame)
 end
 
 function UF:UpdateThreatHighlightRaid(Frame)
+    if (not Frame or not Frame.unit or not Frame.Threat) then
+        return
+    end
+
     local Unit = Frame.unit
-
-    if (not Unit) then
-        return
-    end
-
-    if (not Frame.ThreatRaid) then
-        return
-    end
-
     local Threat = UnitThreatSituation(Unit)
 
     if (Threat and Threat > 0) then
@@ -717,6 +618,8 @@ function UF:UpdateFrame(Unit)
     if (Frame.Health) then self:UpdateHealth(Frame) end
     if (Frame.HealthTextCur) then self:UpdateHealthTextCur(Frame) end
     if (Frame.HealthTextPer) then self:UpdateHealthTextPer(Frame) end
+    -- HEALTH PRED
+    if (Frame.HealthPrediction)then self:UpdateHealthPred(Frame) end
     -- POWER
     if (Frame.PowerText) then self:UpdatePower(Frame) end
     if (Frame.AdditionalPower) then self:UpdateAdditionalPower(Frame) end
@@ -738,130 +641,156 @@ function UF:UpdateFrame(Unit)
     if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame) end
     if (Frame.PhaseIcon) then self:UpdatePhaseIcon(Frame) end
     if (Frame.ReadyCheckIcon) then self:UpdateReadyCheckIcon(Frame) end
-    -- HEALTH PRED
-    if (Frame.Health)then self:UpdateHealthPred(Frame) end
     -- THREAT
     if (Frame.Threat) then self:UpdateThreatHighlight(Frame) end
     if (Frame.ThreatRaid) then self:UpdateThreatHighlightRaid(Frame) end
 end
 
+function UF:UpdateAll()
+    for Units, Frames in pairs(self.Frames) do
+        if (Frames and UnitExists(Units)) then
+            self:UpdateFrame(Units)
+        end
+    end
+end
+
 -- ON EVENTS
 
-function UF:OnEvent(event, arg1)
-    local FramesUF = UF.Frames[arg1]
+function UF:OnEvent(event, unit)
+    local FramesUF = unit and UF.Frames[unit]
 
     -- LOGIN UPDATE
     if (event == "PLAYER_ENTERING_WORLD") then
         C_Timer.After(0.1, function()
-            for Unit in pairs(UF.Frames) do
-                UF:UpdateFrame(Unit)
-            end
+            UF:UpdateAll()
         end)
-
-    -- TARGET
-    elseif (event == "PLAYER_TARGET_CHANGED") then
-        if UF.Frames["target"] then UF:UpdateFrame("target") end
-        if UF.Frames["targettarget"] then UF:UpdateFrame("targettarget") end
-        
-        UF:ClearCastbar("target")
-
-    -- TARGET OF TARGET
-    elseif (event == "UNIT_TARGET" and arg1 == "target") then
-        if UF.Frames["targettarget"] then UF:UpdateFrame("targettarget") end
-
-    -- PET
-    elseif (event == "UNIT_PET") then
-        if UF.Frames["pet"] then UF:UpdateFrame("pet") end
-
-    -- FOCUS   
-    elseif (event == "PLAYER_FOCUS_CHANGED") then
-        if UF.Frames["focus"] then UF:UpdateFrame("focus") end
-
-    -- BOSS FRAMES
-    elseif (event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" or event == "UNIT_TARGETABLE_CHANGED") then
-        for i = 1, 5 do
-            if UF.Frames["boss"..i] then UF:UpdateFrame("boss"..i) end
-        end
+        return
     end
 
-    if (FramesUF) then
-        -- AURAS
-        if (event == "UNIT_AURA") then
-            UF:UpdateAuras(FramesUF, arg1, false)
-            UF:UpdateAuras(FramesUF, arg1, true)
+    -- TARGET
+    if (event == "PLAYER_TARGET_CHANGED") then
+        UF:UpdateAll()
+        UF:ClearCastbar("target")
+        return
+    end
 
-        -- HEALTH
-        elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
-            UF:UpdateHealth(FramesUF)
-            UF:UpdateHealthTextCur(FramesUF)
-            UF:UpdateHealthTextPer(FramesUF)
-            UF:UpdateHealthPred(FramesUF)
+    -- TARGET OF TARGET
+    if (event == "UNIT_TARGET" and unit == "target") then
+        UF:UpdateAll()
+        return
+    end
 
-        -- HEALTH PRED
-        elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
-            UF:UpdateHealthPred(FramesUF)
+    -- PET
+    if (event == "UNIT_PET") then
+        UF:UpdateAll()
+        return
+    end
 
-        -- POWER
-        elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_MAXPOWER" or event == "UNIT_POWER_UPDATE") then
-            UF:UpdatePower(FramesUF)
-            UF:UpdateAdditionalPower(FramesUF)
+    -- FOCUS
+    if (event == "PLAYER_FOCUS_CHANGED") then
+        UF:UpdateAll()
+        return
+    end
 
-        -- THREAT
-        elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
-            UF:UpdateThreatHighlight(FramesUF)
+    -- BOSS FRAMES
+    if (event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" or event == "UNIT_TARGETABLE_CHANGED") then
+        UF:UpdateAll()
+        return
+    end
 
-        -- NAME
-        elseif (event == "UNIT_NAME_UPDATE") then
-            UF:UpdateName(FramesUF)
-
-        -- LEVEL
-        elseif (event == "UNIT_LEVEL" or event == "PLAYER_LEVEL_UP") then
-            UF:UpdateTargetNameLevel(FramesUF)
-
-        -- ICONS
-        elseif (event == "PLAYER_UPDATE_RESTING") then
-            UF:UpdateRestingIcon(FramesUF)
-
-        elseif (event == "RAID_TARGET_UPDATE") then
-            UF:UpdateRaidIcon(FramesUF)
-
-        elseif (event == "INCOMING_RESURRECT_CHANGED") then
-            UF:UpdateResurrectionIcon(FramesUF)
-
-        elseif (event == "UNIT_FLAGS" or event == "PARTY_LEADER_CHANGED" or event == "GROUP_ROSTER_UPDATE") then
-            UF:UpdateCombatIcon(FramesUF)
-            UF:UpdateLeaderIcon(FramesUF)
-            UF:UpdateAssistantIcon(FramesUF)
-
-        elseif (event == "INCOMING_SUMMON_CHANGED") then
-            UF:UpdateSummonIcon(FramesUF)
-
-        elseif (event == "UNIT_PHASE") then
-            UF:UpdatePhaseIcon(FramesUF)
-
-        elseif (event == "READY_CHECK" or event == "READY_CHECK_CONFIRM" or event == "READY_CHECK_FINISHED") then
-            UF:UpdateReadyCheckIcon(FramesUF, event)
-
-        -- PORTRAITS
-        elseif (event == "UNIT_MODEL_CHANGED" or event == "UNIT_PORTRAIT_UPDATE") then
-            UF:UpdatePortrait(FramesUF)
-
-        -- CASTBARS
-        elseif (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then
-            UF:CastStarted(arg1, event)
-
-        elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") then
-            UF:CastStopped(arg1)
-
-        elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
-            UF:CastUpdated(arg1, event)
-
-        elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
-            UF:CastFailed(arg1, event)
-
-        elseif (event == "UNIT_SPELLCAST_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
-            UF:CastInterrupted(arg1, event)
+    -- GLOBAL ICON UPDATES
+    if (event == "PLAYER_UPDATE_RESTING") then
+        for _, Frame in pairs(UF.Frames) do
+            UF:UpdateRestingIcon(Frame)
         end
+        return
+    end
+
+    if (event == "RAID_TARGET_UPDATE") then
+        for _, Frame in pairs(UF.Frames) do
+            UF:UpdateRaidIcon(Frame)
+        end
+        return
+    end
+
+    if (event == "READY_CHECK" or event == "READY_CHECK_CONFIRM" or event == "READY_CHECK_FINISHED") then
+        for _, Frame in pairs(UF.Frames) do
+            UF:UpdateReadyCheckIcon(Frame, event)
+        end
+        return
+    end
+
+    if (not FramesUF) then
+        return
+    end
+
+    -- AURAS
+    if (event == "UNIT_AURA") then
+        UF:UpdateAuras(FramesUF, unit, false)
+        UF:UpdateAuras(FramesUF, unit, true)
+
+    -- HEALTH
+    elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
+        UF:UpdateHealth(FramesUF)
+        UF:UpdateHealthTextCur(FramesUF)
+        UF:UpdateHealthTextPer(FramesUF)
+        UF:UpdateHealthPred(FramesUF)
+
+    -- HEALTH PRED
+    elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
+        UF:UpdateHealthPred(FramesUF)
+
+    -- POWER
+    elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER") then
+        UF:UpdatePower(FramesUF)
+        UF:UpdateAdditionalPower(FramesUF)
+
+    -- THREAT
+    elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
+        UF:UpdateThreatHighlight(FramesUF)
+
+    -- NAME
+    elseif (event == "UNIT_NAME_UPDATE") then
+        UF:UpdateName(FramesUF)
+
+    -- LEVEL
+    elseif (event == "UNIT_LEVEL" or event == "PLAYER_LEVEL_UP") then
+        UF:UpdateTargetNameLevel(FramesUF)
+
+    -- ICONS
+    elseif (event == "UNIT_FLAGS" or event == "PARTY_LEADER_CHANGED" or event == "GROUP_ROSTER_UPDATE") then
+        UF:UpdateCombatIcon(FramesUF)
+        UF:UpdateLeaderIcon(FramesUF)
+        UF:UpdateAssistantIcon(FramesUF)
+
+    elseif (event == "INCOMING_RESURRECT_CHANGED") then
+        UF:UpdateResurrectionIcon(FramesUF)
+
+    elseif (event == "INCOMING_SUMMON_CHANGED") then
+        UF:UpdateSummonIcon(FramesUF)
+
+    elseif (event == "UNIT_PHASE") then
+        UF:UpdatePhaseIcon(FramesUF)
+
+    -- PORTRAITS
+    elseif (event == "UNIT_MODEL_CHANGED" or event == "UNIT_PORTRAIT_UPDATE") then
+        UF:UpdatePortrait(FramesUF)
+
+    -- CASTBARS
+    elseif (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then
+        UF:CastStarted(unit, event)
+
+    elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") then
+        UF:CastStopped(unit)
+
+    elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
+        UF:CastUpdated(unit, event)
+
+    elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
+        UF:CastFailed(unit, event)
+
+    elseif (event == "UNIT_SPELLCAST_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
+        UF:CastInterrupted(unit, event)
     end
 end
 

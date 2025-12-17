@@ -5,9 +5,9 @@ local MaelstromBar = UI:RegisterModule("MaelstromBar")
 
 -- WoW Globals
 local CreateFrame = CreateFrame
-local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
 local UnitClass = UnitClass
 local GetSpecialization = GetSpecialization
+local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
 
 -- Locals
 local Class = select(2, UnitClass("player"))
@@ -17,6 +17,34 @@ local R, G, B = unpack(UI.GetClassColors)
 
 -- Colors
 local Mult = 0.5
+
+function MaelstromBar:CreateBar()
+    local Bar = CreateFrame("Frame", nil, _G.UIParent)
+    Bar:SetFrameStrata("LOW")
+    Bar:Size(222, 12)
+    Bar:Point(unpack(DB.Global.DataBars.MaelstromBarPoint))
+    Bar:Hide()
+
+    local Backdrop = CreateFrame("Frame", nil, Bar)
+    Backdrop:Size(222, 12)
+    Backdrop:SetFrameLevel(Bar:GetFrameLevel() - 1)
+    Backdrop:Point("CENTER", Bar, 0, 0)
+    Backdrop:Hide()
+
+    local InvisFrame = CreateFrame("Frame", nil, Bar)
+    InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
+    InvisFrame:SetInside()
+
+    local Text = InvisFrame:CreateFontString(nil, "OVERLAY")
+    Text:Point("CENTER", Bar, 0, 8)
+    Text:SetFontTemplate("Default", 22)
+
+    self.Bar = Bar
+    self.Backdrop = Backdrop
+    self.Text = Text
+    self.Bars = {}
+    self.Backdrops = {}
+end
 
 function MaelstromBar:Update()
     if not self.Bar or not self.Bar:IsShown() then 
@@ -92,41 +120,11 @@ function MaelstromBar:OnEvent(event, unit)
         return 
     end
 
-    if (event == "PLAYER_ENTERING_WORLD" or event == "UNIT_AURA" or event == "SPELL_UPDATE_COOLDOWN") then
-        self:Update()
-    end
+    self:Update()
 
     if (event == "PLAYER_SPECIALIZATION_CHANGED" or event == "SPELLS_CHANGED" or event == "PLAYER_TALENT_UPDATE") then
         self:UpdateSpec()
     end
-end
-
-function MaelstromBar:CreateBar()
-    local Bar = CreateFrame("Frame", nil, _G.UIParent)
-    Bar:SetFrameStrata("LOW")
-    Bar:Size(222, 12)
-    Bar:Point(unpack(DB.Global.DataBars.MaelstromBarPoint))
-    Bar:Hide()
-
-    local Backdrop = CreateFrame("Frame", nil, Bar)
-    Backdrop:Size(222, 12)
-    Backdrop:SetFrameLevel(Bar:GetFrameLevel() - 1)
-    Backdrop:Point("CENTER", Bar, 0, 0)
-    Backdrop:Hide()
-
-    local InvisFrame = CreateFrame("Frame", nil, Bar)
-    InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
-    InvisFrame:SetInside()
-
-    local Text = InvisFrame:CreateFontString(nil, "OVERLAY")
-    Text:Point("CENTER", Bar, 0, 8)
-    Text:SetFontTemplate("Default", 22)
-
-    self.Bar = Bar
-    self.Backdrop = Backdrop
-    self.Text = Text
-    self.Bars = {}
-    self.Backdrops = {}
 end
 
 function MaelstromBar:RegisterEvents()

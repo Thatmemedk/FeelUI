@@ -5,30 +5,49 @@ local NP = UI:CallModule("NamePlates")
 
 -- HIDE BLIZZARD FRAMES
 
-function NP:HideBlizzardFrames(Plate)
-    if (not Plate) then 
-        return 
-    end
+function NP:AddHooks()
+    hooksecurefunc(_G.NamePlateDriverFrame, "OnNamePlateAdded", function(_, Unit)
+        local BlizzNP = C_NamePlate.GetNamePlateForUnit(Unit, issecure())
 
-    local UF = Plate.UnitFrame
+        if (not BlizzNP and Unit) then
+            return
+        end
 
-    if (UF) then
-        UF:UnregisterAllEvents()
-        UF:Hide()
-    end
-end
+        BlizzNP.UnitFrame:UnregisterAllEvents()
+        BlizzNP.UnitFrame:SetAlpha(0)
 
-function NP:ShowBlizzardFrames(Plate)
-    if (not Plate) then 
-        return 
-    end
+        if (BlizzNP.UnitFrame.castBar) then
+            BlizzNP.UnitFrame.castBar:UnregisterAllEvents()
+        end
 
-    local UF = Plate.UnitFrame
+        hooksecurefunc(BlizzNP.UnitFrame, "SetAlpha", function(Frame)
+            if Frame:IsForbidden() or Frame:GetAlpha() == 0 then
+                return
+            end
 
-    if (UF) then
-        UF:SetParent(Plate)
-        UF:Show()
-    end
+            Frame:SetAlpha(0)
+        end)
+
+        if (BlizzNP.UnitFrame.WidgetContainer) then
+            BlizzNP.UnitFrame.WidgetContainer:SetParent(BlizzNP)
+        end
+
+        NP.Hooked[Unit] = BlizzNP.UnitFrame
+    end)
+
+    hooksecurefunc(_G.NamePlateDriverFrame, "OnNamePlateRemoved", function(_, Unit)
+        local BlizzNP = NP.Hooked[Unit]
+
+        if (not BlizzNP and Unit) then
+            return
+        end
+
+        if (BlizzNP.WidgetContainer) then
+            BlizzNP.WidgetContainer:SetParent(BlizzNP)
+        end
+
+        NP.Hooked[Unit] = nil
+    end)
 end
 
 -- CREATE NAMEPLATES
@@ -50,7 +69,7 @@ function NP:CreateFriendly(Plate, Unit)
     Frame.Unit = Unit
 
     -- Elements
-    self:CreatePanelsFriendly(Frame)
+    self:CreatePanels(Frame)
     self:CreateNameMiddle(Frame)
     self:CreateRaidIcon(Frame)
 
@@ -64,7 +83,7 @@ function NP:CreateEnemy(Plate, Unit)
     if (Plate.EnemyIsCreated) then
         return
     end
-
+    
     local Frame = Plate.FeelUINameplatesEnemy
 
     if (not Frame) then
@@ -85,7 +104,7 @@ function NP:CreateEnemy(Plate, Unit)
     self:CreateHealthText(Frame)
     self:CreateName(Frame)
     self:CreateDebuffs(Frame)
-    self:CreateNamePlateCastBar(Frame)
+    self:CreateCastBar(Frame)
 
     -- Update Elements
     self:UpdateEnemy(Frame)

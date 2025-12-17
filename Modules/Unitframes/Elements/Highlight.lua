@@ -33,7 +33,7 @@ function UF:CreateOnEnterLeave(Frame)
     Frame:SetScript("OnLeave", _G.UnitFrame_OnLeave)
 end
 
-function UF:CreatePanels(Frame, EnableGlow, GlowScale, GlowSize)
+function UF:CreatePanels(Frame)
     local Panel = CreateFrame("Frame", nil, Frame)
     Panel:SetFrameLevel(Frame:GetFrameLevel() - 1)
     Panel:SetInside()

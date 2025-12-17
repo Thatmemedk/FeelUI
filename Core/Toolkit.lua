@@ -165,7 +165,7 @@ end
 -- Font Templates --
 --------------------
 
-local function SetFontTemplate(self, FontTemplate, FontSize, ShadowOffsetX, ShadowOffsetY)
+local function SetFontTemplate(self, FontTemplate, FontSize, ShadowOffsetX, ShadowOffsetY, ShadowColor)
 	if not (self and not self:IsForbidden()) then
 		return
 	end
@@ -175,7 +175,7 @@ local function SetFontTemplate(self, FontTemplate, FontSize, ShadowOffsetX, Shad
 	end
 
 	self:SetShadowOffset(UI:Scale(ShadowOffsetX or 1), -UI:Scale(ShadowOffsetY or 1))
-	self:SetShadowColor(0, 0, 0, 0.5)
+	self:SetShadowColor(0, 0, 0, 0.5 or ShadowColor)
 	
 	UI.Texts[self] = true
 end
@@ -269,10 +269,10 @@ end
 ------------------------
 
 local function SetTemplate(self)
-	if (self.BorderIsCreated) then
+	if (not self or self.BorderIsCreated) then
 		return
 	end
-	
+
 	local R, G, B, Alpha = unpack(DB.Global.General.BorderColor)
 	
 	self.FrameRaised = CreateFrame("Frame", nil, self)
@@ -304,15 +304,15 @@ local function SetTemplate(self)
 end
 
 local function SetBackdropTemplate(self, InsetLeft, InsetRight, InsetTop, InsetBottom)
-	if (self.BackdropIsCreated) then
+	if (not self or self.BackdropIsCreated) then
 		return
 	end
-	
+
 	local R, G, B, Alpha = unpack(DB.Global.General.BackdropColor)
 	
 	self.BorderBackdrop = self:CreateTexture(nil, "BACKGROUND", nil, -8)
 	self.BorderBackdrop:SetTexture(Media.Global.Texture)
-	self.BorderBackdrop:SetVertexColor(R, G, B, Alpha)
+	self.BorderBackdrop:SetColorTexture(R, G, B, Alpha)
 	
 	if (InsetLeft or InsetRight or InsetTop or InsetBottom) then
 		self.BorderBackdrop:Point("TOPLEFT", self, "TOPLEFT", -InsetLeft or 0, InsetTop or 0)
@@ -335,12 +335,12 @@ end
 
 function SetBackdropColorTemplate(self, R, G, B, Alpha)
 	if (self and self.BorderBackdrop) then
-		self.BorderBackdrop:SetVertexColor(R, G, B, Alpha)
+		self.BorderBackdrop:SetColorTexture(R, G, B, Alpha)
 	end
 end
 
 local function CreateBackdrop(self)
-	if (self.Backdrop) then
+	if (not self or self.Backdrop) then
 		return
 	end
 	
@@ -354,9 +354,12 @@ local function CreateBackdrop(self)
 end
 
 local function CreateShadow(self)
+	--[[
 	if (self.Shadow) then
 		return
 	end
+
+	local R, G, B, Alpha = unpack(DB.Global.General.ShadowColor)
 
 	local Shadow = CreateFrame("Frame", nil, self, "BackdropTemplate")
 
@@ -368,13 +371,73 @@ local function CreateShadow(self)
 	Shadow:SetOutside(self, 2, 2)
 	Shadow:SetBackdrop({edgeFile = Media.Global.Shadow, edgeSize = UI:Scale(3)})
 	Shadow:SetBackdropColor(0, 0, 0, 0)
-	Shadow:SetBackdropBorderColor(unpack(DB.Global.General.ShadowColor))
+	Shadow:SetBackdropBorderColor(R, G, B, Alpha)
 
 	self.Shadow = Shadow
+	--]]
+
+	--[[
+	if (not self or self.ShadowIsCreated) then
+		return
+	end
+
+    local Size = 2
+    local Offset = 1
+    local TextureSize = 64
+    local TexCoordSize = (Size -1) / TextureSize
+    local R, G, B, Alpha = unpack(DB.Global.General.ShadowColor)
+
+    local Shadow = CreateFrame("Frame", nil, self)
+    Shadow:SetOutside(self, 3, 3)
+
+    if (self.FrameRaised) then
+    	Shadow:SetFrameLevel(0)
+        Shadow:SetFrameStrata(self.FrameRaised:GetFrameStrata())
+    end
+
+    self.ShadowBorder = {}
+
+    for i = 1, 8 do
+        self.ShadowBorder[i] = Shadow:CreateTexture(nil, "BACKGROUND", nil, -8)
+        self.ShadowBorder[i]:Size(Size, Size)
+        self.ShadowBorder[i]:SetTexture(Media.Global.ShadowBorder)
+        self.ShadowBorder[i]:SetVertexColor(R, G, B, Alpha)
+    end
+
+    self.ShadowBorder[1]:Point("TOPLEFT", self, "TOPLEFT", -Offset, Offset)
+    self.ShadowBorder[1]:Point("TOPRIGHT", self, "TOPRIGHT", Offset, Offset)
+    self.ShadowBorder[1]:SetTexCoord(TexCoordSize, 1-TexCoordSize, 0, TexCoordSize)
+
+    self.ShadowBorder[2]:Point("BOTTOMLEFT", self, "BOTTOMLEFT", -Offset, -Offset)
+    self.ShadowBorder[2]:Point("BOTTOMRIGHT", self, "BOTTOMRIGHT", Offset, -Offset)
+    self.ShadowBorder[2]:SetTexCoord(TexCoordSize, 1-TexCoordSize, 1-TexCoordSize, 1)
+
+    self.ShadowBorder[3]:Point("TOPLEFT", self, "TOPLEFT", -Offset, Offset)
+    self.ShadowBorder[3]:Point("BOTTOMLEFT", self, "BOTTOMLEFT", -Offset, -Offset)
+    self.ShadowBorder[3]:SetTexCoord(0, TexCoordSize, TexCoordSize, 1-TexCoordSize)
+
+    self.ShadowBorder[4]:Point("TOPRIGHT", self, "TOPRIGHT", Offset, Offset)
+    self.ShadowBorder[4]:Point("BOTTOMRIGHT", self, "BOTTOMRIGHT", Offset, -Offset)
+    self.ShadowBorder[4]:SetTexCoord(1-TexCoordSize, 1, TexCoordSize, 1-TexCoordSize)
+
+    self.ShadowBorder[5]:Point("TOPLEFT", self, "TOPLEFT", -Offset, Offset)
+    self.ShadowBorder[5]:SetTexCoord(0, TexCoordSize, 0, TexCoordSize)
+
+    self.ShadowBorder[6]:Point("TOPRIGHT", self, "TOPRIGHT", Offset, Offset)
+    self.ShadowBorder[6]:SetTexCoord(1-TexCoordSize, 1, 0, TexCoordSize)
+
+    self.ShadowBorder[7]:Point("BOTTOMLEFT", self, "BOTTOMLEFT", -Offset, -Offset)
+    self.ShadowBorder[7]:SetTexCoord(0, TexCoordSize, 1-TexCoordSize, 1)
+
+    self.ShadowBorder[8]:Point("BOTTOMRIGHT", self, "BOTTOMRIGHT", Offset, -Offset)
+    self.ShadowBorder[8]:SetTexCoord(1-TexCoordSize, 1, 1-TexCoordSize, 1)
+
+    self.ShadowIsCreated = true
+    --]]
 end
 
 local function CreateGlow(self, Scale, EdgeSize, R, G, B, Alpha)
-	if (self.Glow) then
+	if (not self or self.Glow) then
 		return
 	end
 
@@ -398,7 +461,7 @@ end
 ----------------------
 
 local function CreateButtonPanel(self, ExtraShadowBorders)
-	if (self.ButtonPanel) then
+	if (not self or self.ButtonPanel) then
 		return
 	end
 
@@ -411,7 +474,7 @@ local function CreateButtonPanel(self, ExtraShadowBorders)
 end
 
 local function CreateButtonBackdrop(self)
-	if (self.ButtonBG) then
+	if (not self or self.ButtonBG) then
 		return
 	end
 
@@ -472,7 +535,7 @@ local function StyleButtonHighlight(self, X, Y)
 end
 
 local function SetShadowOverlay(self, ShadowOverlayAlpha)
-	if (self.ShadowOverlay) then
+	if (not self or self.ShadowOverlay) then
 		return
 	end
 
@@ -489,7 +552,7 @@ end
 ----------
 
 local function CreateSpark(self, R, G, B, A)
-	if (self.Spark) then
+	if (not self or self.Spark) then
 		return
 	end
 

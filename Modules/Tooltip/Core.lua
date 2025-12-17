@@ -196,24 +196,24 @@ function TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Ra
 end
 
 function TT:OnTooltipSetUnit()
-	if (self ~= GameTooltip or self:IsForbidden()) then
-		return
-	end
-	
-	local Unit = select(2, self:GetUnit())
+    if (self ~= GameTooltip or self:IsForbidden()) then
+        return
+    end
 
-	if (not Unit) then
-		local GMF = UI:GetMouseFocus()
-		local FocusUnit = GMF and GMF.GetAttribute and GMF:GetAttribute("unit")
+    local Unit = select(2, self:GetUnit())
 
-		if (FocusUnit) then 
-			Unit = FocusUnit 
-		end
+    if (not Unit) then
+        local GMF = UI:GetMouseFocus()
+        local FocusUnit = GMF and GMF.GetAttribute and GMF:GetAttribute("unit")
 
-		if not Unit or not UnitExists(Unit) then
-			return
-		end
-	end
+        if (FocusUnit) then
+            Unit = FocusUnit
+        end
+    end
+
+    if not Unit or issecretvalue(Unit) or not UnitExists(Unit) then
+        return
+    end
 
     local NumLines = self:NumLines()
     local Player = UnitIsPlayer(Unit)
@@ -232,23 +232,27 @@ end
 
 function TT:StyleHealthBar()
 	GameTooltipStatusBar:Height(6)
+    GameTooltipStatusBar:ClearAllPoints()
+    GameTooltipStatusBar:Point("TOPLEFT", GameTooltip, "BOTTOMLEFT", 2, -2)
+    GameTooltipStatusBar:Point("TOPRIGHT", GameTooltip, "BOTTOMRIGHT", -2, 2)
 	GameTooltipStatusBar:SetStatusBarTexture(Media.Global.Texture)
 	GameTooltipStatusBar:CreateBackdrop()
 	GameTooltipStatusBar:CreateShadow()
-    GameTooltipStatusBar:ClearAllPoints()
-    GameTooltipStatusBar:Point("TOPLEFT", GameTooltip, "BOTTOMLEFT", 0, -2)
-    GameTooltipStatusBar:Point("TOPRIGHT", GameTooltip, "BOTTOMRIGHT", 0, 0)
 end
 
 function TT:SetBackdropStyle(tt)
-	if not tt or (tt.IsEmbedded or not tt.NineSlice) or tt:IsForbidden() then 
+	if not tt or (tt.IsEmbedded) or tt:IsForbidden() then 
 		return 
 	end
 
     if not issecretvalue or not issecretvalue(tt:GetWidth()) then
         tt:DisableBackdrops()
-        tt:CreateBackdrop()
-        tt:CreateShadow()
+
+        local Frame = CreateFrame("Frame", nil, tt)
+        Frame:SetFrameLevel(tt:GetFrameLevel() -1)
+        Frame:SetInside(tt, 2, 2)
+        Frame:CreateBackdrop()
+        Frame:CreateShadow()
     end
 end
 
@@ -274,6 +278,10 @@ function TT:StyleTooltips()
     for _, Tooltips in pairs(TTList) do
         if (Tooltips) then
             TT:SetBackdropStyle(Tooltips)
+
+            if (Tooltips.CompareHeader) then
+                Tooltips.CompareHeader:StripTexture()
+            end
         end
     end
 
@@ -332,5 +340,5 @@ function TT:Initialize()
 	self:StyleHealthBar()
 	self:StyleTooltips()
 	self:StyleCloseButton()
-	--self:SetTooltipSetUnitUpdate()
+	self:SetTooltipSetUnitUpdate()
 end

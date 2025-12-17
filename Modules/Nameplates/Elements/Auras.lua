@@ -76,24 +76,21 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
         end
 
         if (Button.Cooldown) then
-            Button.Cooldown:Hide()
-
-            if C_StringUtil.TruncateWhenZero(Duration) then
+            if (C_StringUtil.TruncateWhenZero(Duration)) then
                 Button.Cooldown:SetCooldown(Duration, ExpirationTime)
                 Button.Cooldown:SetCooldownFromExpirationTime(ExpirationTime, Duration)
-                Button.Cooldown:Show()
-            end
 
-            local NumRegions = Button.Cooldown:GetNumRegions()
+                local NumRegions = Button.Cooldown:GetNumRegions()
 
-            for i = 1, NumRegions do
-                local Region = select(i, Button.Cooldown:GetRegions())
+                for i = 1, NumRegions do
+                    local Region = select(i, Button.Cooldown:GetRegions())
 
-                if (Region.GetText) then
-                    Region:ClearAllPoints()
-                    Region:Point("CENTER", Button.Overlay, 0, -7)
-                    Region:SetFontTemplate("Default")
-                    Region:SetTextColor(1, 0.82, 0)
+                    if (Region.GetText) then
+                        Region:ClearAllPoints()
+                        Region:Point("CENTER", Button.Overlay, 0, -7)
+                        Region:SetFontTemplate("Default")
+                        Region:SetTextColor(1, 0.82, 0)
+                    end
                 end
             end
         end
@@ -140,7 +137,6 @@ function NP:CreateAuraButton(Frame)
     Cooldown:SetInside()
     Cooldown:SetDrawEdge(false)
     Cooldown:SetReverse(true)
-    Cooldown:Hide()
 
     -- COUNT
     local Count = Overlay:CreateFontString(nil, "OVERLAY")

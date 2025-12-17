@@ -17,6 +17,9 @@ local DebuffFrameAuraFrames = _G.DebuffFrame.auraFrames
 local BuffCollapseAndExpandButton = _G.BuffFrame.CollapseAndExpandButton
 local EditModeManager = _G.EditModeManager
 
+-- WoW Globals
+local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
+
 function Auras:Skin(Frame)
 	if (Frame.isAuraAnchor or not Frame.Icon) then
 		return 
@@ -51,10 +54,10 @@ function Auras:Skin(Frame)
 		Frame.Count:SetFontTemplate("Default")
 	end
 	
-	--if (Frame.Icon) then
-		--Frame.Icon:SetInside()
-		--UI:KeepAspectRatio(Frame, Frame.Icon)
-	--end
+	if (Frame.Icon) then
+		Frame.Icon:SetInside()
+		UI:KeepAspectRatio(Frame, Frame.Icon)
+	end
 
 	if (Frame.TempEnchantBorder) then
 		Frame.TempEnchantBorder:ClearAllPoints()
@@ -77,7 +80,6 @@ function Auras:AnchorBuffs(Frame, Index)
 		return
 	end
 
-	-- Update ButtonSize here too.
 	Frame:Size(unpack(DB.Global.Auras.ButtonSize))
 	Frame:ClearAllPoints()
 
@@ -89,7 +91,6 @@ function Auras:AnchorBuffs(Frame, Index)
 		Frame:Point("RIGHT", BuffFrameAuraFrames[Index - 1], "LEFT", -DB.Global.Auras.ButtonSpacing, 0)
 	end
 
-	-- Update Duration and Count here too.
 	if (Frame.Duration) then
 		Frame.Duration:SetParent(Frame.InvisFrame)
 		Frame.Duration:ClearAllPoints()
@@ -104,7 +105,6 @@ function Auras:AnchorBuffs(Frame, Index)
 		Frame.Count:SetFontTemplate("Default")
 	end
 
-	-- Update KeepAspectRatio here too.
 	if (Frame.Icon) then
 		Frame.Icon:SetInside()
 		UI:KeepAspectRatio(Frame, Frame.Icon)
@@ -120,7 +120,6 @@ function Auras:AnchorDebuffs(Frame, Index)
 		return
 	end
 
-	-- Update ButtonSize here too.
 	Frame:Size(unpack(DB.Global.Auras.ButtonSize))
 	Frame:ClearAllPoints()
 
@@ -132,7 +131,6 @@ function Auras:AnchorDebuffs(Frame, Index)
 		Frame:Point("RIGHT", DebuffFrameAuraFrames[Index - 1], "LEFT", -DB.Global.Auras.ButtonSpacing, 0)
 	end
 
-	-- Update Duration and Count here too.
 	if (Frame.Duration) then
 		Frame.Duration:SetParent(Frame.InvisFrame)
 		Frame.Duration:ClearAllPoints()
@@ -146,32 +144,29 @@ function Auras:AnchorDebuffs(Frame, Index)
 		Frame.Count:Point("TOPRIGHT", Frame, 0, -2)
 		Frame.Count:SetFontTemplate("Default")
 	end
-	--]]
 
-	-- Update KeepAspectRatio here too.
 	if (Frame.Icon) then
 		Frame.Icon:SetInside()
 		UI:KeepAspectRatio(Frame, Frame.Icon)
 	end
 
-	-- Update Debuff Border
 	if (Frame.DebuffBorder) then
-		--Frame.DebuffBorder:SetAlpha(0)
+		Frame.DebuffBorder:SetAlpha(0)
 	end
 
-	--[[
-	if (Frame.AuraInstanceID) then
-	    local Color = C_UnitAuras.GetAuraDispelTypeColor(Frame.unit, Frame.auraInstanceID, UI.DispelColorCurve)
-	    
+	local AuraData = GetAuraDataByIndex("Player", Index, "HARMFUL")
+
+    if (AuraData) then
+		local Color = C_UnitAuras.GetAuraDispelTypeColor("Player", AuraData.auraInstanceID, UI.DispelColorCurve)
+		    
 	    if (Color) then
 	        Frame:SetColorTemplate(Color.r, Color.g, Color.b)
 	        Frame.Glow:SetBackdropBorderColor(Color.r, Color.g, Color.b, 0.8)
+	    else
+	   	    Frame:SetColorTemplate(unpack(DB.Global.General.BorderColor))
+	    	Frame.Glow:SetBackdropBorderColor(0, 0, 0, 0)
 	    end
-	else
-	    Frame:SetColorTemplate(unpack(DB.Global.General.BorderColor))
-	    Frame.Glow:SetBackdropBorderColor(0, 0, 0, 0)
 	end
-	--]]
 
 	Previous = Frame
 end

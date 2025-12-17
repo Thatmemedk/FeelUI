@@ -80,6 +80,6 @@ function SoulFragmentsBar:Initialize()
         return
     end
 
-    self:CreateBar()
-    self:RegisterEvents()
+    --self:CreateBar()
+    --self:RegisterEvents()
 end

@@ -161,6 +161,8 @@ function UF:CastStopped(Unit, Event)
         return
     end
 
+    local Castbar = Frame.Castbar
+
     -- Clear Cache
     Castbar.Casting = nil
     Castbar.Channel = nil
@@ -181,10 +183,12 @@ function UF:CastFailed(Unit, Event)
     local Frame = self.Frames[Unit]
     local Castbar = Frame.Castbar
 
-    if (not Frame or not Castbar) then 
-        return 
+    if (not Frame or not Castbar) then
+        return
     end
 
+    local Castbar = Frame.Castbar
+    
     -- Update Events
     if (Event == "UNIT_SPELLCAST_FAILED") then
         Castbar.Text:SetText(FAILED)
@@ -219,6 +223,8 @@ function UF:CastNonInterruptable(Unit, Event)
         return
     end
 
+    local Castbar = Frame.Castbar
+
     if (Event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
         Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
         Castbar.Icon:SetDesaturated(true)
@@ -235,13 +241,14 @@ end
 function UF:CastUpdated(Unit, Event)
     local Frame = self.Frames[Unit]
     local Castbar = Frame.Castbar
-    local Value
 
     if (not Frame or not Castbar) then
         return
     end
 
+    local Castbar = Frame.Castbar
     local Name, StartTime, EndTime
+    local Value
 
     -- Normal Casts
     if (Event == "UNIT_SPELLCAST_DELAYED") then
@@ -377,8 +384,8 @@ function UF:ClearCastbar(Unit)
     local Frame = self.Frames[Unit]
     local Castbar = Frame.Castbar
 
-    if (not Frame or not Castbar) then 
-        return 
+    if (not Frame or not Castbar) then
+        return
     end
 
     -- Clear Cache
@@ -555,6 +562,7 @@ function UF:CreateBossCastbar(Frame)
     Castbar:CreateBackdrop()
     Castbar:CreateShadow()
     Castbar:CreateSpark()
+    Castbar:SetAlpha(0)
     
     local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
     CastbarIcon:Size(42, 36)

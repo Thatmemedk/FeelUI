@@ -58,7 +58,7 @@ function NP:GetUnitColor(Unit, IsCaster)
             return UI.Colors.Classification.RARE
         end
 
-        if (Level <= UnitLevel("player") and powerType == Enum.PowerType.Mana or Class == "PALADIN") then
+        if (Level <= UnitLevel("player") and PowerType == Enum.PowerType.Mana or Class == "PALADIN") then
             return UI.Colors.Classification.CASTER
         end
 

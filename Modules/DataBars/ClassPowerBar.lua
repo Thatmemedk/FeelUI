@@ -104,8 +104,24 @@ function ClassPowerBar:Update()
     end
 
     local BarWidth = 222
-    local SegmentSpacing = 2
-    local SegmentWidth = math.floor((BarWidth - ((BarCount - 1) * SegmentSpacing)) / BarCount + 1)
+    local SegmentSpacing = 4
+    local TotalSpacing = (BarCount - 1) * SegmentSpacing
+    local BaseWidth = (BarWidth - TotalSpacing) / BarCount
+    local Widths = {}
+    local SumWidths = 0
+
+    for i = 1, BarCount do
+        Widths[i] = math.floor(BaseWidth)
+        SumWidths = SumWidths + Widths[i]
+    end
+
+    local Remainder = BarWidth - TotalSpacing - SumWidths
+
+    for i = 1, Remainder do
+        Widths[i] = Widths[i] + 1
+    end
+
+    local X = 0
 
     for i = 1, BarCount do
         local Segment = self.Segment[i]
@@ -115,7 +131,6 @@ function ClassPowerBar:Update()
             Segment = CreateFrame("StatusBar", nil, self.Bar)
             Segment:SetStatusBarTexture(Media.Global.Texture)
             Segment:SetAlpha(0)
-
             self.Segment[i] = Segment
         end
 
@@ -124,20 +139,18 @@ function ClassPowerBar:Update()
             Backdrop:SetStatusBarTexture(Media.Global.Texture)
             Backdrop:CreateBackdrop()
             Backdrop:CreateShadow()
-
             self.Backdrops[i] = Backdrop
         end
 
-        Segment:Size(SegmentWidth, 8)
-        Backdrop:Size(SegmentWidth, 8)
+        Segment:Size(Widths[i], 8)
+        Backdrop:Size(Widths[i], 8)
 
-        if (i == 1) then
-            Segment:Point("LEFT", self.Bar, "LEFT", 0, 0)
-            Backdrop:Point("LEFT", self.Bar, "LEFT", 0, 0)
-        else
-            Segment:Point("LEFT", self.Segment[i-1], "RIGHT", SegmentSpacing, 0)
-            Backdrop:Point("LEFT", self.Backdrops[i-1], "RIGHT", SegmentSpacing, 0)
-        end
+        Segment:ClearAllPoints()
+        Segment:Point("LEFT", self.Bar, "LEFT", X, 0)
+        Backdrop:ClearAllPoints()
+        Backdrop:Point("LEFT", self.Bar, "LEFT", X, 0)
+
+        X = X + Widths[i] + SegmentSpacing
 
         if (i == 1) then
             Segment:SetStatusBarColor(R1, G1, B1)
@@ -154,17 +167,13 @@ function ClassPowerBar:Update()
         elseif (i == 5) then
             Segment:SetStatusBarColor(R5, G5, B5)
             Backdrop:SetStatusBarColor(R5 * Mult, G5 * Mult, B5 * Mult, 0.5)
-        elseif (i == 6) then
-            Segment:SetStatusBarColor(R6, G6, B6)
-            Backdrop:SetStatusBarColor(R6 * Mult, G6 * Mult, B6 * Mult, 0.5)
-        elseif (i == 7) then
+        elseif (i == 6 or i == 7) then
             Segment:SetStatusBarColor(R6, G6, B6)
             Backdrop:SetStatusBarColor(R6 * Mult, G6 * Mult, B6 * Mult, 0.5)
         end
 
         if (Class == "MAGE" or Class == "WARLOCK" or Class == "MONK" or Class == "EVOKER") then
             local R, G, B = unpack(UI.GetClassColors)
-        
             Segment:SetStatusBarColor(R, G, B)
             Backdrop:SetStatusBarColor(R * Mult, G * Mult, B * Mult, 0.5)
         elseif (Class == "PALADIN") then
@@ -189,9 +198,6 @@ function ClassPowerBar:Update()
                 UI:UIFrameFadeIn(Segment, 0.25, Segment:GetAlpha(), 1)
             end
         else
-            --Segment:SetMinMaxValues(0, 1)
-            --Segment:SetValue(i <= Min and 1 or 0, UI.SmoothBars)
-
             if (i <= Min) then
                 UI:UIFrameFadeIn(Segment, 0.25, Segment:GetAlpha(), 1)
             else

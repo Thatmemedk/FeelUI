@@ -19,6 +19,7 @@ local GetRaidTargetIndex = GetRaidTargetIndex
 local UnitThreatSituation = UnitThreatSituation
 
 -- Locals
+NP.Hooked = {}
 NP.ForcedCasters = {}
 NP.FadeInTime = 0.5
 
@@ -77,11 +78,22 @@ function NP:UpdateName(Frame, Unit)
     end
 
     local Name = UnitName(Unit) or ""
-    local _, Class = UnitClass(Unit)
-    local Color = UI.Colors.Class[Class]
 
-    Frame.Name:SetText(Name)
-    Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+    if (Name) then
+        Frame.Name:SetText(Name)
+    end
+
+    if UnitIsPlayer(Unit) then
+        local _, Class = UnitClass(Unit)
+        local Color = UI.Colors.Class[Class]
+
+        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+    else
+        local Reaction = UnitReaction(Unit, "player") or 5
+        local Color = UI.Colors.Reaction[Reaction]
+
+        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+    end
 end
 
 -- ICONS
@@ -204,8 +216,6 @@ function NP:OnEvent(event, unit, ...)
             end
         end
 
-        self:HideBlizzardFrames(GNPFU)
-
         -- UPDATE REMOVED NAMEPLATES
     elseif (event == "NAME_PLATE_UNIT_REMOVED") then
         if (not unit or not GNPFU) then
@@ -223,9 +233,6 @@ function NP:OnEvent(event, unit, ...)
             EnemyFrame.Unit = nil
         end
 
-        self:ShowBlizzardFrames(GNPFU)
-
-        -- Clear persistent caster for this unit
         self:ClearForcedCasters(unit)
 
         -- UPDATE TARGET NAMEPLATES
@@ -291,37 +298,37 @@ function NP:OnEvent(event, unit, ...)
             end
         end
 
-        -- CASTBAR / CHANGE UNIT COLORS
+        -- CASTBARS
     elseif (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START") then
-        if (not unit or UnitIsFriend("player", unit)) then
-            return
+        if not unit or UnitIsFriend("player", unit) then 
+            return 
         end
 
         self:CastStarted(unit, event)
         self:SetNameplateColor(unit, true)
     elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP") then
-        if (not unit or UnitIsFriend("player", unit)) then
-            return
+        if not unit or UnitIsFriend("player", unit) then 
+            return 
         end
 
         self:CastStopped(unit)
     elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
-        if (not unit or UnitIsFriend("player", unit)) then
-            return
+        if not unit or UnitIsFriend("player", unit) then 
+            return 
         end
 
         self:CastFailed(unit, event)
     elseif (event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_INTERRUPTIBLE") then
-        if (not unit or UnitIsFriend("player", unit)) then
-            return
+        if not unit or UnitIsFriend("player", unit) then 
+            return 
         end
 
         self:CastNonInterruptable(unit, event)
     elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE") then
-        if (not unit or UnitIsFriend("player", unit)) then
-            return
+        if not unit or UnitIsFriend("player", unit) then 
+            return 
         end
-        
+
         self:CastUpdated(unit, event)
     end
 end
@@ -382,6 +389,7 @@ function NP:Initialize()
         return 
     end
 
+    self:AddHooks()
     self:RegisterEvents()
     self:SetCVarOnLogin()
 end

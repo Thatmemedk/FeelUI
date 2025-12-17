@@ -74,22 +74,23 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         return 
     end
 
-    local Frame = CreateFrame("Button", "FeelUI_" .. Unit, UF.SecureFrame, "SecureUnitButtonTemplate, PingableUnitFrameTemplate")
+    -- CHECK IF FRAME ALREADY EXISTS
+    if (self.Frames[Unit]) then
+        return self.Frames[Unit]
+    end
+
+    local Frame = CreateFrame("Button", "FeelUI_"..Unit, UF.SecureFrame, "SecureUnitButtonTemplate, PingableUnitFrameTemplate")
     Frame.unit = Unit
 
     Frame:Size(Width or 228, Height or 36)
     Frame:SetAttribute("unit", Unit)
 
-    if (not Frame.UnitWatchRegistered) then
-        RegisterUnitWatch(Frame)
-        
-        Frame.UnitWatchRegistered = true
-    end
-
     Frame:RegisterForClicks("AnyUp")
     Frame:SetAttribute("type1", "target")
     Frame:SetAttribute("type2", "togglemenu")
-    Frame:SetAttribute("toggleForVehicle", true)
+
+    -- REGISTER
+    RegisterUnitWatch(Frame)
 
     -- STORE IN CACHE
     self.Frames[Unit] = Frame

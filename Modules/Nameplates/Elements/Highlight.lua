@@ -10,29 +10,9 @@ local unpack = unpack
 function NP:CreatePanels(Frame)
     local Panel = CreateFrame("Frame", nil, Frame)
     Panel:SetFrameLevel(Frame:GetFrameLevel() + 2)
-    Panel:Size(Frame:GetWidth() + 18, 16)
+    Panel:Size(192, 16)
     Panel:Point("CENTER", Frame, 0, -4)
-    Panel:CreateShadow()
     
-    local InvisFrame = CreateFrame("Frame", nil, Frame)
-    InvisFrame:SetFrameLevel(Frame:GetFrameLevel() + 8)
-    InvisFrame:SetInside()
-    
-    local InvisFrameHigher = CreateFrame("Frame", nil, Frame)
-    InvisFrameHigher:SetFrameLevel(Frame:GetFrameLevel() + 10)
-    InvisFrameHigher:SetInside()
-    
-    Frame.Panel = Panel
-    Frame.InvisFrame = InvisFrame
-    Frame.InvisFrameHigher = InvisFrameHigher
-end
-
-function NP:CreatePanelsFriendly(Frame)
-    local Panel = CreateFrame("Frame", nil, Frame)
-    Panel:SetFrameLevel(Frame:GetFrameLevel() + 2)
-    Panel:Size(Frame:GetWidth() + 18, 16)
-    Panel:Point("CENTER", Frame, 0, -4)
-        
     local InvisFrame = CreateFrame("Frame", nil, Frame)
     InvisFrame:SetFrameLevel(Frame:GetFrameLevel() + 8)
     InvisFrame:SetInside()
@@ -48,20 +28,22 @@ end
 
 function NP:CreateTargetIndicator(Frame)
     local Indicator = CreateFrame("Frame", nil, Frame)
-    Indicator:Size(Frame:GetWidth() + 18, 16)
+    Indicator:Size(192, 16)
     Indicator:Point("CENTER", Frame, 0, -4)
 
     local Left = Indicator:CreateTexture(nil, "OVERLAY")
     Left:Size(16, 16)
-    Left:Point("LEFT", Indicator, -16, 0)
+    Left:Point("LEFT", Indicator, -20, 0)
     Left:SetTexture(Media.Global.PowerArrowRight)
     Left:SetVertexColor(unpack(DB.Global.Nameplates.TargetIndicatorColor))
+    Left:Hide()
 
     local Right = Indicator:CreateTexture(nil, "OVERLAY")
     Right:Size(16, 16)
-    Right:Point("RIGHT", Indicator, 16, 0)
+    Right:Point("RIGHT", Indicator, 20, 0)
     Right:SetTexture(Media.Global.PowerArrowLeft)
     Right:SetVertexColor(unpack(DB.Global.Nameplates.TargetIndicatorColor))
+    Right:Hide()
 
     Frame.TargetIndicator = Indicator
     Frame.TargetIndicator.Left = Left

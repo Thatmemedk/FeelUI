@@ -50,18 +50,20 @@ function UF:SetupGroupFrame(Frame, type)
             UF:UpdateHealth(self)
             -- HEALTH PRED
             UF:UpdateHealthPred(self)
+            -- NAME
 
             if (type == "party") then
-                UF:UpdateNameParty(self)
                 UF:UpdateHealthTextCur(self)
                 UF:UpdateHealthTextPer(self)
                 UF:UpdatePower(self)
+
+                UF:UpdateName(self, "Party")
             else
-                UF:UpdateNameRaid(self)
+                UF:UpdateName(self, "Raid")
             end
 
             -- AURAS
-            UF:UpdateAuras(self, value, true)
+            UF:UpdateAuras(self, self.unit, true)
             -- ICONS
             UF:UpdateRaidIcon(self)
             UF:UpdateResurrectionIcon(self)
@@ -80,11 +82,7 @@ function UF:SetupGroupFrame(Frame, type)
                 UF.Frames.Raid[value] = self
             end
 
-            if (not self.UnitWatchRegistered) then
-                RegisterUnitWatch(self)
-
-                self.UnitWatchRegistered = true
-            end
+            RegisterUnitWatch(self)
         end
     end)
 
