@@ -103,13 +103,13 @@ function UF:CastStarted(Unit, Event)
     end
 
     if (Castbar.Channel) then
-        Castbar.DurationNew = UnitChannelDuration(Unit)
+        Castbar.Duration = UnitChannelDuration(Unit)
     else
-        Castbar.DurationNew = UnitCastingDuration(Unit)
+        Castbar.Duration = UnitCastingDuration(Unit)
     end
 
     -- Set Values
-    Castbar:SetTimerDuration(Castbar.DurationNew, UI.SmoothBars)
+    Castbar:SetTimerDuration(Castbar.Duration)
     Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
 
     -- Call On Update
