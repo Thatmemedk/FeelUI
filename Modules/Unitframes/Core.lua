@@ -383,11 +383,11 @@ end
 -- UPDATE PORTRAITS
 
 function UF:UpdatePortrait(Frame)
-    local Unit = Frame.unit
-
-    if (not Frame.Portrait) then
+    if (not Frame or not Frame.unit or not Frame.Portrait) then
         return
     end
+
+    local Unit = Frame.unit
 
     if (not UnitExists(Unit)) then
         Frame.Portrait:ClearModel()
@@ -395,16 +395,17 @@ function UF:UpdatePortrait(Frame)
     end
 
     C_Timer.After(0, function()
-        if (not UnitExists(Unit) or not Frame.Portrait) then
-            if (Frame.Portrait) then 
-                Frame.Portrait:ClearModel() 
+        if (not Frame or not Frame.unit or not Frame.Portrait or not UnitExists(Unit)) then
+            if (Frame and Frame.Portrait) then
+                Frame.Portrait:ClearModel()
             end
-        else
-            Frame.Portrait:SetUnit(Unit)
-            Frame.Portrait:SetCamDistanceScale(2.5)
-            Frame.Portrait:SetPortraitZoom(1)
-            Frame.Portrait:SetPosition(0, 0, 0)
+            return
         end
+
+        Frame.Portrait:SetUnit(Unit)
+        Frame.Portrait:SetCamDistanceScale(2.5)
+        Frame.Portrait:SetPortraitZoom(1)
+        Frame.Portrait:SetPosition(0, 0, 0)
     end)
 end
 
@@ -418,9 +419,9 @@ function UF:UpdateRestingIcon(Frame)
     local IsResting = IsResting()
 
     if (IsResting) then
-        Frame.RestingIcon:Show()
+        UI:UIFrameFadeIn(Frame.RestingIcon, 2, Frame.RestingIcon:GetAlpha(), 1)
     else
-        Frame.RestingIcon:Hide()
+        UI:UIFrameFadeOut(Frame.RestingIcon, 2, Frame.RestingIcon:GetAlpha(), 0)
     end
 end
 
@@ -670,7 +671,7 @@ function UF:OnEvent(event, unit)
     -- TARGET
     if (event == "PLAYER_TARGET_CHANGED") then
         UF:UpdateAll()
-        UF:ClearCastbar("target")
+        UF:ClearCastBarOnUnit("target")
         return
     end
 

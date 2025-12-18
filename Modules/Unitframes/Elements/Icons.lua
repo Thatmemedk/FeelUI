@@ -24,7 +24,7 @@ function UF:CreateRestingIcon(Frame)
     RestingIcon:Point("TOP", Frame, 0, 18)
     RestingIcon:SetTexture([[Interface\CharacterFrame\UI-StateIcon]])
     RestingIcon:SetTexCoord(0, 0.5, 0, 0.421875)
-    RestingIcon:Hide()
+    RestingIcon:SetAlpha(0)
 
     Frame.RestingIcon = RestingIcon
 end

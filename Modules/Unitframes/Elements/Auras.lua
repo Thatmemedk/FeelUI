@@ -11,8 +11,12 @@ local unpack = unpack
 local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
 
 function UF:UpdateAuras(Frame, Unit, IsDebuff)
-    local Auras = IsDebuff and Frame.Debuffs or Frame.Buffs
+    if (not Frame or not Frame.unit) then
+        return
+    end
 
+    local Auras = IsDebuff and Frame.Debuffs or Frame.Buffs
+    
     if (not Auras) then 
         return 
     end

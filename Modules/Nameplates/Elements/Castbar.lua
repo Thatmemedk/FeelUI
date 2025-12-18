@@ -74,20 +74,13 @@ function NP:CastStarted(Unit, Event)
 
     if (Frame.Castbar.Channel) then
         Frame.Castbar.Duration = UnitChannelDuration(Unit)
-
-        Frame.Castbar:SetReverseFill(true)
-        Frame.Castbar:SetStatusBarColor(unpack(DB.Global.General.BackdropColor))
-        Frame.Castbar:SetBackdropColorTemplate(unpack(DB.Global.UnitFrames.CastBarColor))
     else
         Frame.Castbar.Duration = UnitCastingDuration(Unit)
-
-        Frame.Castbar:SetReverseFill(false)
-        Frame.Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
-        Frame.Castbar:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
     end
 
     -- Set Values
     Frame.Castbar:SetTimerDuration(Frame.Castbar.Duration)
+    Frame.Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
 
     -- Call On Update
     Frame.Castbar:SetScript("OnUpdate", NP.OnUpdate)
@@ -185,7 +178,14 @@ end
 
 function NP.OnUpdate(Castbar)
     local Duration = Castbar:GetTimerDuration():GetRemainingDuration()
-    Castbar.Time:SetFormattedText("%.1fs", Duration)
+    local DurationChannel = Castbar:GetTimerDuration():GetElapsedDuration()
+    local Total = Castbar:GetTimerDuration():GetTotalDuration()
+
+    if (Castbar.Channel) then
+        Castbar.Time:SetFormattedText("%.1fs/%.1fs", DurationChannel, Total)
+    else
+        Castbar.Time:SetFormattedText("%.1fs/%.1fs", Duration, Total)
+    end
 end
 
 -- CREATE CASTBAR

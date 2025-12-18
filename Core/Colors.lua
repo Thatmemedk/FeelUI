@@ -61,6 +61,14 @@ end
 -- COLOR TABLES
 
 UI.Colors = {
+	EmpowerStagesColors = {
+	    [1] = UI:CreateColor(0.3, 0.75, 1),
+	    [2] = UI:CreateColor(0.4, 1, 0.4),
+	    [3] = UI:CreateColor(1, 0.85, 0),
+	    [4] = UI:CreateColor(1, 0.5, 0),
+	    [5] = UI:CreateColor(1, 0.2, 0.2),
+	},
+
     Reaction = {
         [1] = UI:CreateColor(0.80, 0.30, 0.22),
         [2] = UI:CreateColor(0.80, 0.30, 0.22),
