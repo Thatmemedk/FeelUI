@@ -7,41 +7,6 @@ local AB = UI:CallModule("ActionBars")
 local _G = _G
 local unpack = unpack
 
-function AB:GetFontScale(CD)
-    if (not CD) then 
-        return 16 
-    end
-
-    local Width = CD:GetWidth() or 36
-    local Height = CD:GetHeight() or 36
-    local BaseSize = min(Width, Height)
-
-    -- Base scale relative to standard 36px button
-    local Scale = BaseSize / 36
-
-    -- Smooth scaling for very small buttons
-    if (Scale < 0.7) then
-        Scale = 0.7  -- prevents ridiculously tiny fonts
-    elseif (Scale > 1.6) then
-        Scale = 1.6
-    end
-
-    -- Non-linear adjustment to make medium-small buttons more readable
-    if (Scale < 1) then
-        Scale = 0.8 + (Scale * 0.2)
-    end
-
-    -- Calculate final font size
-    local FontSize = floor(Scale * 16 + 0.5)
-
-    -- Minimum readable font
-    if (FontSize < 10) then
-        FontSize = 10
-    end
-
-    return FontSize
-end
-
 function AB:SafeHide(Frame)
     if (Frame) then
         Frame:Hide()
@@ -116,10 +81,6 @@ function AB:StyleActionButton(Button, Icon, Name)
         UI:KeepAspectRatio(Button, Icon)
     end
 
-    local InvisFrame = CreateFrame("Frame", nil, Button)
-    InvisFrame:SetFrameLevel(Button:GetFrameLevel() + 10)
-    InvisFrame:SetInside()
-
     if (Cooldown) then
         Cooldown:ClearAllPoints()
         Cooldown:SetInside()
@@ -130,9 +91,8 @@ function AB:StyleActionButton(Button, Icon, Name)
             local Region = select(i, Cooldown:GetRegions())
 
             if (Region.GetText) then
-                local FontSize = self:GetFontScale(Cooldown)
+                local FontSize = UI:GetCooldownFontScale(Cooldown)
 
-                Region:SetParent(InvisFrame)
                 Region:ClearAllPoints()
                 Region:Point("CENTER", Button, 0, 0)
                 Region:SetFontTemplate("Default", FontSize)

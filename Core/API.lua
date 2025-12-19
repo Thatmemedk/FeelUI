@@ -166,6 +166,35 @@ function UI:KeepAspectRatio(Button, Icon)
 	Icon:SetTexCoord(BaseLeft, BaseRight, BaseTop, BaseBottom)
 end
 
+function UI:GetCooldownFontScale(CD)
+    if (not CD) then 
+    	return
+    end
+
+    local Width = CD:GetWidth() or 36
+    local Height = CD:GetHeight() or 36
+    local BaseSize = min(Width, Height)
+    local Scale = BaseSize / 36
+
+    if (Scale < 0.7) then
+        Scale = 0.7
+    elseif (Scale > 1.6) then
+        Scale = 1.6
+    end
+
+    if (Scale < 1) then
+        Scale = 0.8 + (Scale * 0.2)
+    end
+
+    local FontSize = floor(Scale * 16 + 0.5)
+
+    if (FontSize < 10) then
+        FontSize = 10
+    end
+
+    return FontSize
+end
+
 -- Pulse Function
 function UI:CreatePulse(Frame)
 	if not (Frame) then

@@ -325,15 +325,13 @@ function NP:OnEvent(event, unit, ...)
     end
 
         self:CastNonInterruptable(unit, event)
-    --[[
-    elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE") then
-        if not unit or UnitIsFriend("player", unit) then 
-            return 
-        end
-
-        self:CastUpdated(unit, event)
-    end
-    --]]
+    --elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE") then
+    --    if not unit or UnitIsFriend("player", unit) then 
+    --        return 
+    --    end
+    --
+    --    self:CastUpdated(unit, event)
+    --end
 end
 
 -- SET CVARS

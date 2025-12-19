@@ -657,68 +657,51 @@ end
 
 -- ON EVENTS
 
-function UF:OnEvent(event, unit)
+function UF:OnEvent(event, unit, ...)
     local FramesUF = unit and UF.Frames[unit]
 
     -- LOGIN UPDATE
     if (event == "PLAYER_ENTERING_WORLD") then
-        C_Timer.After(0.1, function()
+        C_Timer.After(0.7, function()
             UF:UpdateAll()
         end)
-        return
-    end
 
-    -- TARGET
-    if (event == "PLAYER_TARGET_CHANGED") then
+        -- TARGET
+    elseif (event == "PLAYER_TARGET_CHANGED") then
         UF:UpdateAll()
         UF:ClearCastBarOnUnit("target")
-        return
-    end
 
-    -- TARGET OF TARGET
-    if (event == "UNIT_TARGET" and unit == "target") then
+        -- TARGET OF TARGET
+    elseif (event == "UNIT_TARGET" and unit == "target") then
         UF:UpdateAll()
-        return
-    end
 
-    -- PET
-    if (event == "UNIT_PET") then
+        -- PET
+    elseif (event == "UNIT_PET") then
         UF:UpdateAll()
-        return
-    end
 
-    -- FOCUS
-    if (event == "PLAYER_FOCUS_CHANGED") then
+        -- FOCUS
+    elseif (event == "PLAYER_FOCUS_CHANGED") then
         UF:UpdateAll()
-        return
-    end
 
-    -- BOSS FRAMES
-    if (event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" or event == "UNIT_TARGETABLE_CHANGED") then
+        -- BOSS FRAMES
+    elseif (event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" or event == "UNIT_TARGETABLE_CHANGED") then
         UF:UpdateAll()
-        return
-    end
 
-    -- GLOBAL ICON UPDATES
-    if (event == "PLAYER_UPDATE_RESTING") then
+        -- ICONS
+    elseif (event == "PLAYER_UPDATE_RESTING") then
         for _, Frame in pairs(UF.Frames) do
             UF:UpdateRestingIcon(Frame)
         end
-        return
-    end
 
-    if (event == "RAID_TARGET_UPDATE") then
+    elseif (event == "RAID_TARGET_UPDATE") then
         for _, Frame in pairs(UF.Frames) do
             UF:UpdateRaidIcon(Frame)
         end
-        return
-    end
 
-    if (event == "READY_CHECK" or event == "READY_CHECK_CONFIRM" or event == "READY_CHECK_FINISHED") then
+    elseif (event == "READY_CHECK" or event == "READY_CHECK_CONFIRM" or event == "READY_CHECK_FINISHED") then
         for _, Frame in pairs(UF.Frames) do
             UF:UpdateReadyCheckIcon(Frame, event)
         end
-        return
     end
 
     if (not FramesUF) then
@@ -785,7 +768,7 @@ function UF:OnEvent(event, unit)
         UF:CastStopped(unit)
 
     --elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
-    --    UF:CastUpdated(unit, event)
+        --UF:CastUpdated(unit, event)
 
     elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
         UF:CastFailed(unit, event)

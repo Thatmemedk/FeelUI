@@ -19,26 +19,25 @@ local FAILED = _G.FAILED or "Failed"
 local INTERRUPTED = _G.INTERRUPTED or "Interrupted"
 
 function UF:CastStarted(Unit, Event)
-    local Frame = self.Frames[Unit]
-    local Castbar = Frame.Castbar
+    local Castbar = self.Frames[Unit] and self.Frames[Unit].Castbar
 
-    if (not Frame or not Castbar) then
-        return
+    if (not Castbar) then 
+        return 
     end
 
     -- Cache Names
-    local Name, Icon, StartTime, EndTime, Interrupt, EmpowerStages
+    local Name, Icon, StartTime, EndTime, Interrupt, CastID, SpellID, EmpowerStages
 
     -- Normal Casts
     if (Event == "UNIT_SPELLCAST_START") then
-        Name, _, Icon, StartTime, EndTime, _, _, Interrupt = UnitCastingInfo(Unit)
+        Name, _, Icon, StartTime, EndTime, _, CastID, Interrupt, SpellID = UnitCastingInfo(Unit)
     end
 
     -- Channel / Empower Casts
     if (not Name) then
-        Name, _, Icon, StartTime, EndTime, _, Interrupt, _, _, EmpowerStages = UnitChannelInfo(Unit)
+        Name, _, Icon, StartTime, EndTime, _, Interrupt, SpellID, _, EmpowerStages = UnitChannelInfo(Unit)
         
-        if (EmpowerStages and EmpowerStages > 0) then
+        if (EmpowerStages) then
             Event = "UNIT_SPELLCAST_EMPOWER_START"
         else
             Event = "UNIT_SPELLCAST_CHANNEL_START"
@@ -53,18 +52,10 @@ function UF:CastStarted(Unit, Event)
     Castbar.Casting = (Event == "UNIT_SPELLCAST_START")
     Castbar.Channel = (Event == "UNIT_SPELLCAST_CHANNEL_START" or Event == "UNIT_SPELLCAST_EMPOWER_START")
 
-    -- Convert milliseconds to seconds
-    StartTime = StartTime / 1000
-    EndTime = EndTime / 1000
-
     -- Cache
-    Castbar.Max = EndTime - StartTime
-    Castbar.StartTime = StartTime
-    Castbar.EndTime = EndTime
     Castbar.Interrupt = Interrupt
-
-    -- Create Empower
-    self:SetupEmpowerPips(Castbar, EmpowerStages)
+    Castbar.CastID = CastID
+    Castbar.SpellID = SpellID
 
     -- Icon
     if (Castbar.Icon) then
@@ -77,35 +68,50 @@ function UF:CastStarted(Unit, Event)
     end
 
     -- Safe Zone
-    if (Castbar.SafeZone) then
-        local _, _, MSHome, MSWorld = GetNetStats()
-        local MS = (MSHome + MSWorld) / 2
-        local Latency = MS / 1000
-        local Ratio = math.min(Latency / Castbar.Max, 1)
-        local Width = Castbar:GetWidth() * Ratio
+    if (Unit == "player") then
+        -- Convert milliseconds to seconds
+        StartTime = StartTime / 1000
+        EndTime = EndTime / 1000
 
-        Castbar.SafeZone:ClearAllPoints()
-        Castbar.SafeZone:Width(Width)
-        Castbar.SafeZone:Show()
+        -- Cache
+        Castbar.Max = EndTime - StartTime
+        Castbar.StartTime = StartTime
+        Castbar.EndTime = EndTime
 
-        Castbar.SafeZoneText:ClearAllPoints()
-        Castbar.SafeZoneText:SetText(string.format("%.0f", MS).."ms")
+        if (Castbar.SafeZone) then
+            local _, _, MSHome, MSWorld = GetNetStats()
+            local MS = (MSHome + MSWorld) / 2
+            local Latency = MS / 1000
+            local Ratio = math.min(Latency / Castbar.Max, 1)
+            local Width = Castbar:GetWidth() * Ratio
 
-        if (Castbar.Channel) then
-            Castbar.SafeZoneText:Point("LEFT", Castbar, "BOTTOMLEFT", 0, 0)
-            Castbar.SafeZone:Point("TOPLEFT", Castbar, "TOPLEFT")
-            Castbar.SafeZone:Point("BOTTOMLEFT", Castbar, "BOTTOMLEFT")
-        else
-            Castbar.SafeZoneText:Point("RIGHT", Castbar, "BOTTOMRIGHT", 0, 0)
-            Castbar.SafeZone:Point("TOPRIGHT", Castbar, "TOPRIGHT")
-            Castbar.SafeZone:Point("BOTTOMRIGHT", Castbar, "BOTTOMRIGHT")
+            Castbar.SafeZone:Show()
+            Castbar.SafeZone:ClearAllPoints()
+            Castbar.SafeZone:Width(Width)
+
+            Castbar.SafeZoneText:ClearAllPoints()
+            Castbar.SafeZoneText:SetText(string.format("%.0f", MS).."ms")
+
+            if (Castbar.Channel) then
+                Castbar.SafeZoneText:Point("LEFT", Castbar, "BOTTOMLEFT", 0, 0)
+                Castbar.SafeZone:Point("TOPLEFT", Castbar, "TOPLEFT")
+                Castbar.SafeZone:Point("BOTTOMLEFT", Castbar, "BOTTOMLEFT")
+            else
+                Castbar.SafeZoneText:Point("RIGHT", Castbar, "BOTTOMRIGHT", 0, 0)
+                Castbar.SafeZone:Point("TOPRIGHT", Castbar, "TOPRIGHT")
+                Castbar.SafeZone:Point("BOTTOMRIGHT", Castbar, "BOTTOMRIGHT")
+            end
         end
     end
 
     if (Castbar.Channel) then
         Castbar.Duration = UnitChannelDuration(Unit)
+
+        Castbar:SetReverseFill(true)
     else
         Castbar.Duration = UnitCastingDuration(Unit)
+    
+        Castbar:SetReverseFill(false)
     end
 
     -- Set Values
@@ -120,46 +126,44 @@ function UF:CastStarted(Unit, Event)
 end
 
 function UF:CastStopped(Unit, Event)
-    local Frame = self.Frames[Unit]
-    local Castbar = Frame.Castbar
+    local Castbar = self.Frames[Unit] and self.Frames[Unit].Castbar
 
-    if (not Frame or not Castbar) then
+    if (not Castbar) then
         return
     end
 
-    -- Reset CastBar
-    UF:ResetCastBar(Castbar)
+    if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
+        UF:ResetCastBar(Castbar)
+    end
 end
 
 function UF:CastFailed(Unit, Event)
-    local Frame = self.Frames[Unit]
-    local Castbar = Frame.Castbar
+    local Castbar = self.Frames[Unit] and self.Frames[Unit].Castbar
 
-    if (not Frame or not Castbar) then
+    if (not Castbar) then
         return
     end
-    
-    -- Update Events
-    if (Event == "UNIT_SPELLCAST_FAILED") then
-        Castbar.Text:SetText(FAILED)
-        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
-    elseif (Event == "UNIT_SPELLCAST_INTERRUPTED") then
-        Castbar.Text:SetText(INTERRUPTED)
-        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
+
+    if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
+        return
     end
+
+    -- Update Events
+    Castbar.Text:SetText(Event == "UNIT_SPELLCAST_FAILED" and FAILED or INTERRUPTED)
+    Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
 
     -- Reset CastBar
     UF:ResetCastBar(Castbar)
 end
 
 function UF:CastNonInterruptable(Unit, Event)
-    local Frame = self.Frames[Unit]
-    local Castbar = Frame.Castbar
+    local Castbar = self.Frames[Unit] and self.Frames[Unit].Castbar
 
-    if (not Frame or not Castbar) then
+    if (not Castbar) then
         return
     end
 
+    -- Update Events
     if (Event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
         Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
         Castbar.Icon:SetDesaturated(true)
@@ -173,129 +177,33 @@ function UF:CastNonInterruptable(Unit, Event)
     end
 end
 
-function UF:CastUpdated(Unit, Event)
-    local Frame = self.Frames[Unit]
-    local Castbar = Frame.Castbar
-
-    if (not Frame or not Castbar) then
-        return
-    end
-
-    local Name, StartTime, EndTime
-
-    -- Normal Casts
-    if (Event == "UNIT_SPELLCAST_DELAYED") then
-        Name, _, _, StartTime, EndTime = UnitCastingInfo(Unit)
-
-        -- Channel Casts
-    elseif (Event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or Event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
-        Name, _, _, StartTime, EndTime = UnitChannelInfo(Unit)
-    end
-
-    if (not Name) then 
-        return 
-    end
-end
-
 function UF.OnUpdate(Castbar)
     local Duration = Castbar:GetTimerDuration():GetElapsedDuration()
     local Total = Castbar:GetTimerDuration():GetTotalDuration()
 
-    Castbar.Time:SetFormattedText("%.1fs / %.1fs", Duration, Total)
-end
-
-function UF:CreateEmpowerPips(Castbar)
-    if (Castbar.StagePips) then
-        return
-    end
-
-    Castbar.StagePips = {}
-
-    for i = 1, 5 do
-        local Pip = CreateFrame("Frame", nil, Castbar, "CastingBarFrameStagePipTemplate")
-        Pip:Hide()
-
-        Pip.Texture = Pip:CreateTexture(nil, "BORDER", nil, 7)
-        Pip.Texture:SetTexture(Media.Global.Texture)
-        Pip.Texture:SetInside()
-
-        Pip.Overlay = CreateFrame("Frame", nil, Pip)
-        Pip.Overlay:SetFrameLevel(Castbar:GetFrameLevel() - 1)
-        Pip.Overlay:SetInside(Pip.Texture)
-        Pip.Overlay:SetTemplate()
-
-        if (Pip.FillPip) then
-            Pip.FillPip:Hide()
-        end
-
-        if (Pip.BasePip) then
-            Pip.BasePip:SetAlpha(0)
-        end
-
-        Castbar.StagePips[i] = Pip
-    end
-end
-
-function UF:SetupEmpowerPips(Castbar, EmpowerStages)
-    if (not EmpowerStages or EmpowerStages <= 0) then
-        return
-    end
-
-    self:CreateEmpowerPips(Castbar)
-
-    local Width = Castbar:GetWidth()
-    local Height = Castbar:GetHeight()
-    local TotalStages = EmpowerStages + 1
-
-    for i, Pip in ipairs(Castbar.StagePips) do
-        if (i <= EmpowerStages) then
-            local Offset = Width * (i / TotalStages)
-
-            Pip:ClearAllPoints()
-            Pip:Point("TOP", Castbar, "TOPLEFT", Offset, 0)
-            Pip:Point("BOTTOM", Castbar, "BOTTOMLEFT", Offset, 0)
-
-            Pip.Stage = i
-
-            local Color = UI.Colors.EmpowerStagesColors[i]
-            Pip.Texture:SetVertexColor(Color.r, Color.g, Color.b)
-
-            Pip:Show()
-        else
-            Pip:Hide()
-        end
-    end
-
-    Castbar.EmpowerStages = EmpowerStages
+    Castbar.Time:SetFormattedText("%.1fs/%.1fs", Duration, Total)
 end
 
 function UF:ResetCastBar(Castbar)
-    if (not Castbar or not Castbar.StagePips) then
+    if (not Castbar) then    
         return
     end
 
+    -- Reset Cache
     Castbar.Casting = nil
     Castbar.Channel = nil
-    Castbar.EmpowerStages = nil
     Castbar.Interrupt = nil
+    Castbar.CastID = nil
+    Castbar.SpellID = nil
 
-    for _, Pip in ipairs(Castbar.StagePips) do
-        if (Pip.FillPip) then
-            Pip.FillPip:Hide()
-        end
-
-        Pip:Hide()
-        Pip.Stage = nil
-    end
-
+    -- Call Fade
     UI:UIFrameFadeOut(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 0)
 end
 
 function UF:ClearCastBarOnUnit(Unit)
-    local Frame = self.Frames[Unit]
-    local Castbar = Frame.Castbar
+    local Castbar = self.Frames[Unit] and self.Frames[Unit].Castbar
 
-    if (not Frame or not Castbar) then
+    if (not Castbar) then
         return
     end
 

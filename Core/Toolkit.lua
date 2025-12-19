@@ -350,23 +350,61 @@ local function CreateBackdrop(self)
 end
 
 local function CreateShadow(self)
-	if (not self or self.Shadow) then
+	if (not self or self.ShadowIsCreated) then
 		return
 	end
 
-	local Shadow = CreateFrame("Frame", nil, self, "BackdropTemplate")
+    local Size = 1
+    local Offset = 1
+    local TextureSize = 64
+    local TexCoordSize = (Size -1) / TextureSize
 
-	if (self.FrameRaised) then
-		Shadow:SetFrameStrata(self.FrameRaised:GetFrameStrata())
-	end
+    local Shadow = CreateFrame("Frame", nil, self)
+    Shadow:SetOutside(self, 3, 3)
 
-	Shadow:SetFrameLevel(0)
-	Shadow:SetOutside(self, 2, 2)
-	Shadow:SetBackdrop({edgeFile = Media.Global.Shadow, edgeSize = UI:Scale(3)})
-	Shadow:SetBackdropColor(0, 0, 0, 0)
-	Shadow:SetBackdropBorderColor(unpack(DB.Global.General.ShadowColor))
+    if (self.FrameRaised) then
+    	Shadow:SetFrameLevel(0)
+        Shadow:SetFrameStrata(self.FrameRaised:GetFrameStrata())
+    end
 
-	self.Shadow = Shadow
+    self.ShadowBorder = {}
+
+    for i = 1, 8 do
+        self.ShadowBorder[i] = Shadow:CreateTexture(nil, "BACKGROUND", nil, -8)
+        self.ShadowBorder[i]:Size(Size, Size)
+        self.ShadowBorder[i]:SetTexture(Media.Global.ShadowBorder)
+        self.ShadowBorder[i]:SetVertexColor(unpack(DB.Global.General.ShadowColor))
+    end
+
+    self.ShadowBorder[1]:Point("TOPLEFT", self, "TOPLEFT", -Offset, Offset)
+    self.ShadowBorder[1]:Point("TOPRIGHT", self, "TOPRIGHT", Offset, Offset)
+    self.ShadowBorder[1]:SetTexCoord(TexCoordSize, 1-TexCoordSize, 0, TexCoordSize)
+
+    self.ShadowBorder[2]:Point("BOTTOMLEFT", self, "BOTTOMLEFT", -Offset, -Offset)
+    self.ShadowBorder[2]:Point("BOTTOMRIGHT", self, "BOTTOMRIGHT", Offset, -Offset)
+    self.ShadowBorder[2]:SetTexCoord(TexCoordSize, 1-TexCoordSize, 1-TexCoordSize, 1)
+
+    self.ShadowBorder[3]:Point("TOPLEFT", self, "TOPLEFT", -Offset, Offset)
+    self.ShadowBorder[3]:Point("BOTTOMLEFT", self, "BOTTOMLEFT", -Offset, -Offset)
+    self.ShadowBorder[3]:SetTexCoord(0, TexCoordSize, TexCoordSize, 1-TexCoordSize)
+
+    self.ShadowBorder[4]:Point("TOPRIGHT", self, "TOPRIGHT", Offset, Offset)
+    self.ShadowBorder[4]:Point("BOTTOMRIGHT", self, "BOTTOMRIGHT", Offset, -Offset)
+    self.ShadowBorder[4]:SetTexCoord(1-TexCoordSize, 1, TexCoordSize, 1-TexCoordSize)
+
+    self.ShadowBorder[5]:Point("TOPLEFT", self, "TOPLEFT", -Offset, Offset)
+    self.ShadowBorder[5]:SetTexCoord(0, TexCoordSize, 0, TexCoordSize)
+
+    self.ShadowBorder[6]:Point("TOPRIGHT", self, "TOPRIGHT", Offset, Offset)
+    self.ShadowBorder[6]:SetTexCoord(1-TexCoordSize, 1, 0, TexCoordSize)
+
+    self.ShadowBorder[7]:Point("BOTTOMLEFT", self, "BOTTOMLEFT", -Offset, -Offset)
+    self.ShadowBorder[7]:SetTexCoord(0, TexCoordSize, 1-TexCoordSize, 1)
+
+    self.ShadowBorder[8]:Point("BOTTOMRIGHT", self, "BOTTOMRIGHT", Offset, -Offset)
+    self.ShadowBorder[8]:SetTexCoord(1-TexCoordSize, 1, 1-TexCoordSize, 1)
+
+    self.ShadowIsCreated = true
 end
 
 local function CreateGlow(self, Scale, EdgeSize, R, G, B, Alpha)
