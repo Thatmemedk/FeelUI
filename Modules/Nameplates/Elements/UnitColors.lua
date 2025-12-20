@@ -73,15 +73,23 @@ function NP:GetUnitColor(Unit, IsCaster)
 end
 
 function NP:SetNameplateColor(Unit, IsCaster)
+    if (not DB.Global.Nameplates.UnitColors) then
+        return
+    end
+
     if (not Unit or not UnitIsEnemy("player", Unit)) then
         return
     end
 
-    local NamePlates = C_NamePlate.GetNamePlateForUnit(Unit)
-    local EnemyFrame = NamePlates.FeelUINameplatesEnemy
-    local IsCasting = UnitCastingInfo(Unit) ~= nil or UnitChannelInfo(Unit) ~= nil
+    local NamePlate = C_NamePlate.GetNamePlateForUnit(Unit)
+    
+    if (not NamePlate) then
+        return
+    end
 
-    if (not NamePlates or not EnemyFrame or not EnemyFrame.Health) then
+    local EnemyFrame = NamePlate.FeelUINameplatesEnemy
+
+    if (not EnemyFrame or not EnemyFrame.Health) then
         return
     end
 

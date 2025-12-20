@@ -8,6 +8,13 @@ function UF:SetupGroupFrame(Frame, type)
         return 
     end
 
+    -- Never touch secure frames during combat
+    if InCombatLockdown() then
+        Frame.NeedsSetup = true
+
+        return
+    end
+
     Frame:RegisterForClicks("AnyUp")
     Frame:SetAttribute("type1", "target")
     Frame:SetAttribute("type2", "togglemenu")
@@ -40,50 +47,46 @@ function UF:SetupGroupFrame(Frame, type)
     self:CreatePhaseIcon(Frame)
     self:CreateReadyCheckIcon(Frame)
     -- THREAT
-    self:CreateThreatHighlightRaid(Frame)
+    self:CreateThreatHighlight(Frame)
+
+    -- REGISTER UNIT WATCH
+    RegisterUnitWatch(Frame)
 
     Frame:HookScript("OnAttributeChanged", function(self, name, value)
-        if (name == "unit" and value) then
-            self.unit = value
-
-            -- HEALTH
-            UF:UpdateHealth(self)
-            -- HEALTH PRED
-            UF:UpdateHealthPred(self)
-            -- NAME
-
-            if (type == "party") then
-                UF:UpdateHealthTextCur(self)
-                UF:UpdateHealthTextPer(self)
-                UF:UpdatePower(self)
-
-                UF:UpdateName(self, "Party")
-            else
-                UF:UpdateName(self, "Raid")
-            end
-
-            -- AURAS
-            UF:UpdateAuras(self, self.unit, true)
-            -- ICONS
-            UF:UpdateRaidIcon(self)
-            UF:UpdateResurrectionIcon(self)
-            UF:UpdateLeaderIcon(self)
-            UF:UpdateAssistantIcon(self)
-            UF:UpdateSummonIcon(self)
-            UF:UpdatePhaseIcon(self)
-            UF:UpdateReadyCheckIcon(self)
-            -- THREAT
-            UF:UpdateThreatHighlightRaid(self)
-
-            -- CACHE
-            if (type == "party") then
-                UF.Frames.Party[value] = self
-            else
-                UF.Frames.Raid[value] = self
-            end
-
-            RegisterUnitWatch(self)
+        if (name ~= "unit") then
+            return
         end
+
+        self.unit = value
+
+        -- HEALTH
+        UF:UpdateHealth(self)
+        -- HEALTH PRED
+        UF:UpdateHealthPred(self)
+        -- NAME
+
+        if (type == "party") then
+            UF:UpdateHealthTextCur(self)
+            UF:UpdateHealthTextPer(self)
+            UF:UpdatePower(self)
+
+            UF:UpdateName(self, "Party")
+        else
+            UF:UpdateName(self, "Raid")
+        end
+
+        -- AURAS
+        UF:UpdateAuras(self, self.unit, true)
+        -- ICONS
+        UF:UpdateRaidIcon(self)
+        UF:UpdateResurrectionIcon(self)
+        UF:UpdateLeaderIcon(self)
+        UF:UpdateAssistantIcon(self)
+        UF:UpdateSummonIcon(self)
+        UF:UpdatePhaseIcon(self)
+        UF:UpdateReadyCheckIcon(self)
+        -- THREAT
+        UF:UpdateThreatHighlightRaid(self)
     end)
 
     Frame.UnitIsCreated = true
@@ -139,17 +142,32 @@ function UF:SpawnGroupHeader(type)
     Header:RegisterEvent("GROUP_ROSTER_UPDATE")
     Header:RegisterEvent("UPDATE_INSTANCE_INFO")
     Header:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-    Header:SetScript("OnEvent", function(self)
+    Header:SetScript("OnEvent", function(self, event)
+        if InCombatLockdown() then
+            self:RegisterEvent("PLAYER_REGEN_ENABLED")
+            return
+        end
+
+        if (event == "PLAYER_REGEN_ENABLED") then
+            self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+        end
+
         local Index = 1
 
         while true do
-            local Frame = self:GetAttribute("child"..Index)
+            local Frame = self:GetAttribute("child" .. Index)
 
-            if (not Frame) then 
-                break 
+            if (not Frame) then
+                break
             end
 
             UF:SetupGroupFrame(Frame, type)
+
+            if (Frame.NeedsSetup) then
+                Frame.NeedsSetup = nil
+
+                UF:SetupGroupFrame(Frame, type)
+            end
 
             Index = Index + 1
         end

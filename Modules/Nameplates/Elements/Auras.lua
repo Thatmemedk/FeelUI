@@ -92,6 +92,8 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
                         Region:SetTextColor(1, 0.82, 0)
                     end
                 end
+            else
+                Button.Cooldown:Hide()
             end
         end
 

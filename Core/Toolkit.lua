@@ -350,61 +350,23 @@ local function CreateBackdrop(self)
 end
 
 local function CreateShadow(self)
-	if (not self or self.ShadowIsCreated) then
+	if (not self or self.Shadow) then
 		return
 	end
 
-    local Size = 1
-    local Offset = 1
-    local TextureSize = 64
-    local TexCoordSize = (Size -1) / TextureSize
+	local Shadow = CreateFrame("Frame", nil, self, "BackdropTemplate")
 
-    local Shadow = CreateFrame("Frame", nil, self)
-    Shadow:SetOutside(self, 3, 3)
+	if (self.FrameRaised) then
+		Shadow:SetFrameLevel(0)
+		Shadow:SetFrameStrata(self.FrameRaised:GetFrameStrata())
+	end
 
-    if (self.FrameRaised) then
-    	Shadow:SetFrameLevel(0)
-        Shadow:SetFrameStrata(self.FrameRaised:GetFrameStrata())
-    end
+	Shadow:SetOutside(self, 2, 2)
+	Shadow:SetBackdrop({edgeFile = Media.Global.Shadow, edgeSize = UI:Scale(3)})
+	Shadow:SetBackdropColor(0, 0, 0, 0)
+	Shadow:SetBackdropBorderColor(unpack(DB.Global.General.ShadowColor))
 
-    self.ShadowBorder = {}
-
-    for i = 1, 8 do
-        self.ShadowBorder[i] = Shadow:CreateTexture(nil, "BACKGROUND", nil, -8)
-        self.ShadowBorder[i]:Size(Size, Size)
-        self.ShadowBorder[i]:SetTexture(Media.Global.ShadowBorder)
-        self.ShadowBorder[i]:SetVertexColor(unpack(DB.Global.General.ShadowColor))
-    end
-
-    self.ShadowBorder[1]:Point("TOPLEFT", self, "TOPLEFT", -Offset, Offset)
-    self.ShadowBorder[1]:Point("TOPRIGHT", self, "TOPRIGHT", Offset, Offset)
-    self.ShadowBorder[1]:SetTexCoord(TexCoordSize, 1-TexCoordSize, 0, TexCoordSize)
-
-    self.ShadowBorder[2]:Point("BOTTOMLEFT", self, "BOTTOMLEFT", -Offset, -Offset)
-    self.ShadowBorder[2]:Point("BOTTOMRIGHT", self, "BOTTOMRIGHT", Offset, -Offset)
-    self.ShadowBorder[2]:SetTexCoord(TexCoordSize, 1-TexCoordSize, 1-TexCoordSize, 1)
-
-    self.ShadowBorder[3]:Point("TOPLEFT", self, "TOPLEFT", -Offset, Offset)
-    self.ShadowBorder[3]:Point("BOTTOMLEFT", self, "BOTTOMLEFT", -Offset, -Offset)
-    self.ShadowBorder[3]:SetTexCoord(0, TexCoordSize, TexCoordSize, 1-TexCoordSize)
-
-    self.ShadowBorder[4]:Point("TOPRIGHT", self, "TOPRIGHT", Offset, Offset)
-    self.ShadowBorder[4]:Point("BOTTOMRIGHT", self, "BOTTOMRIGHT", Offset, -Offset)
-    self.ShadowBorder[4]:SetTexCoord(1-TexCoordSize, 1, TexCoordSize, 1-TexCoordSize)
-
-    self.ShadowBorder[5]:Point("TOPLEFT", self, "TOPLEFT", -Offset, Offset)
-    self.ShadowBorder[5]:SetTexCoord(0, TexCoordSize, 0, TexCoordSize)
-
-    self.ShadowBorder[6]:Point("TOPRIGHT", self, "TOPRIGHT", Offset, Offset)
-    self.ShadowBorder[6]:SetTexCoord(1-TexCoordSize, 1, 0, TexCoordSize)
-
-    self.ShadowBorder[7]:Point("BOTTOMLEFT", self, "BOTTOMLEFT", -Offset, -Offset)
-    self.ShadowBorder[7]:SetTexCoord(0, TexCoordSize, 1-TexCoordSize, 1)
-
-    self.ShadowBorder[8]:Point("BOTTOMRIGHT", self, "BOTTOMRIGHT", Offset, -Offset)
-    self.ShadowBorder[8]:SetTexCoord(1-TexCoordSize, 1, 1-TexCoordSize, 1)
-
-    self.ShadowIsCreated = true
+	self.Shadow = Shadow
 end
 
 local function CreateGlow(self, Scale, EdgeSize, R, G, B, Alpha)
@@ -415,11 +377,11 @@ local function CreateGlow(self, Scale, EdgeSize, R, G, B, Alpha)
 	local Glow = CreateFrame("Frame", nil, self, "BackdropTemplate")
 
 	if (self.FrameRaised) then
+		Glow:SetFrameLevel(0)
 		Glow:SetFrameStrata(self.FrameRaised:GetFrameStrata())
 	end
 
-	Glow:SetFrameLevel(0)
-	Glow:SetScale(UI:Scale(Scale))
+	Glow:SetScale(Scale)
 	Glow:SetOutside(self, 3, 3)
 	Glow:SetBackdrop({edgeFile = Media.Global.Shadow, edgeSize = UI:Scale(EdgeSize)})
 	Glow:SetBackdropBorderColor(R, G, B, Alpha)
@@ -427,11 +389,24 @@ local function CreateGlow(self, Scale, EdgeSize, R, G, B, Alpha)
 	self.Glow = Glow
 end
 
+local function SetShadowOverlay(self, ShadowOverlayAlpha)
+	if (not self or self.ShadowOverlay) then
+		return
+	end
+
+	local ShadowOverlay = self:CreateTexture(nil, "OVERLAY", nil, 7)
+	ShadowOverlay:SetInside()
+	ShadowOverlay:SetTexture(Media.Global.Overlay)
+	ShadowOverlay:SetVertexColor(1, 1, 1, ShadowOverlayAlpha or 0.7)
+
+	self.ShadowOverlay = ShadowOverlay
+end
+
 ----------------------
 -- ActionBars Style --
 ----------------------
 
-local function CreateButtonPanel(self, ExtraShadowBorders)
+local function CreateButtonPanel(self)
 	if (not self or self.ButtonPanel) then
 		return
 	end
@@ -439,7 +414,7 @@ local function CreateButtonPanel(self, ExtraShadowBorders)
 	local ButtonPanel = CreateFrame("Frame", nil, self)
 	ButtonPanel:SetFrameLevel(self:GetFrameLevel() + 1)
 	ButtonPanel:SetInside()
-	ButtonPanel:SetTemplate(ExtraShadowBorders)
+	ButtonPanel:SetTemplate()
 
 	self.ButtonPanel = ButtonPanel
 end
@@ -503,19 +478,6 @@ local function StyleButtonHighlight(self, X, Y)
 		self:GetHighlightTexture():SetInside(self, X or 0, Y or 0)
 		self:GetHighlightTexture():SetColorTexture(unpack(DB.Global.ActionBars.HighlightColor))
 	end
-end
-
-local function SetShadowOverlay(self, ShadowOverlayAlpha)
-	if (not self or self.ShadowOverlay) then
-		return
-	end
-
-	local ShadowOverlay = self:CreateTexture(nil, "OVERLAY", nil, 7)
-	ShadowOverlay:SetInside()
-	ShadowOverlay:SetTexture(Media.Global.Overlay)
-	ShadowOverlay:SetVertexColor(1, 1, 1, ShadowOverlayAlpha or 0.7)
-
-	self.ShadowOverlay = ShadowOverlay
 end
 
 ----------
@@ -601,7 +563,7 @@ local function HandleButton(self, Strip, Pulse)
 	if self.SetPushedTexture then self:SetPushedTexture(UI.ClearTexture) end
 	if self.SetDisabledTexture then self:SetDisabledTexture(UI.ClearTexture) end
 
-	if Strip then 
+	if (Strip) then 
 		self:StripTexture() 
 	end
 	
@@ -763,12 +725,12 @@ local function AddAPI(object)
 	if not object.CreateBackdrop then mt.CreateBackdrop = CreateBackdrop end
 	if not object.CreateShadow then mt.CreateShadow = CreateShadow end
 	if not object.CreateGlow then mt.CreateGlow = CreateGlow end
+	if not object.SetShadowOverlay then mt.SetShadowOverlay = SetShadowOverlay end
 	if not object.CreateButtonPanel then mt.CreateButtonPanel = CreateButtonPanel end
 	if not object.CreateButtonBackdrop then mt.CreateButtonBackdrop = CreateButtonBackdrop end
 	if not object.CreateButtonHighlight then mt.CreateButtonHighlight = CreateButtonHighlight end
 	if not object.StyleButton then mt.StyleButton = StyleButton end
 	if not object.StyleButtonHighlight then mt.StyleButtonHighlight = StyleButtonHighlight end
-	if not object.SetShadowOverlay then mt.SetShadowOverlay = SetShadowOverlay end
 	if not object.CreateSpark then mt.CreateSpark = CreateSpark end
 	-- Skining
 	if not object.ClearFrameRegions then mt.ClearFrameRegions = ClearFrameRegions end

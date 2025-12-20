@@ -108,7 +108,7 @@ function NP:CastStopped(Unit, Event)
         return
     end
 
-    if (Castbar.CastID == CastID or Castbar.SpellID == SpellID) then
+    if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
         NP:ResetCastBar(Castbar)
     end
 end
@@ -124,6 +124,7 @@ function NP:CastFailed(Unit, Event)
     if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
         return
     end
+    
     -- Update Events
     if (Event == "UNIT_SPELLCAST_FAILED") then
         Castbar.Text:SetText(FAILED)

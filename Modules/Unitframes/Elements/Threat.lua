@@ -18,11 +18,3 @@ function UF:CreateThreatHighlight(Frame)
 
     Frame.Threat = Threat
 end
-
-function UF:CreateThreatHighlightRaid(Frame)
-    local ThreatRaid = CreateFrame("Frame", nil, Frame)
-    ThreatRaid:SetInside(Frame, 1, 1)
-    ThreatRaid:CreateGlow(2.5, 3, 0, 0, 0, 0)
-
-    Frame.ThreatRaid = ThreatRaid
-end

@@ -26,18 +26,13 @@ NP.FadeInTime = 0.5
 -- HEALTH UPDATE
 
 function NP:UpdateHealth(Frame, Unit)
-    if (not Frame or not Unit) then 
+    if (not Frame or not Unit or not Frame.Health) then 
         return 
-    end
-
-    if (not Frame.Health) then
-        return
     end
 
     local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
     local Reaction = UnitReaction(Unit, "player") or 5
     local Color = UI.Colors.Reaction[Reaction]
-
     Frame.Health:SetMinMaxValues(0, Max)
     Frame.Health:SetValue(Min, UI.SmoothBars)
 
@@ -54,11 +49,7 @@ function NP:UpdateHealth(Frame, Unit)
 end
 
 function NP:UpdateHealthText(Frame, Unit)
-    if (not Frame or not Unit) then 
-        return
-    end
-
-    if (not Frame.HealthText) then
+    if (not Frame or not Unit or not Frame.HealthText) then 
         return
     end
 
@@ -69,19 +60,12 @@ end
 -- NAME UPDATE
 
 function NP:UpdateName(Frame, Unit)
-    if (not Frame or not Unit) then 
+    if (not Frame or not Unit or not Frame.Name) then 
         return 
     end
 
-    if (not Frame.Name) then
-        return
-    end
-
     local Name = UnitName(Unit) or ""
-
-    if (Name) then
-        Frame.Name:SetText(Name)
-    end
+    Frame.Name:SetText(Name)
 
     if UnitIsPlayer(Unit) then
         local _, Class = UnitClass(Unit)
@@ -99,15 +83,11 @@ end
 -- ICONS
 
 function NP:UpdateRaidIcon(Frame, Unit)
-    local Index = GetRaidTargetIndex(Unit)
-
-    if (not Frame or not Unit) then 
+    if (not Frame or not Unit or not Frame.RaidIcon) then 
         return 
     end
 
-    if (not Frame.RaidIcon) then
-        return
-    end
+    local Index = GetRaidTargetIndex(Unit)
 
     if (Index) then
         Frame.RaidIcon:Show()
@@ -120,12 +100,8 @@ end
 -- THREAT
 
 function NP:UpdateThreatHighlight(Frame, Unit)
-    if (not Frame or not Unit) then 
+    if (not Frame or not Unit or not Frame.Threat) then 
         return 
-    end
-
-    if (not Frame.Threat) then
-        return
     end
 
     local Threat = UnitThreatSituation("player", Unit)
@@ -212,6 +188,8 @@ function NP:OnEvent(event, unit, ...)
                 EnemyFrame.Unit = unit
 
                 self:UpdateEnemy(EnemyFrame)
+
+
                 self:SetNameplateColor(EnemyFrame.Unit, false)
             end
         end
@@ -300,38 +278,37 @@ function NP:OnEvent(event, unit, ...)
 
         -- CASTBARS
     elseif (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START") then
-        if not unit or UnitIsFriend("player", unit) then 
-            return 
+        if not unit or UnitIsFriend("player", unit) then
+            return
         end
 
         self:CastStarted(unit, event)
         self:SetNameplateColor(unit, true)
     elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP") then
-        if not unit or UnitIsFriend("player", unit) then 
-            return 
+        if not unit or UnitIsFriend("player", unit) then
+            return
         end
 
         self:CastStopped(unit)
+    elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE") then
+        if not unit or UnitIsFriend("player", unit) then
+            return
+        end
+    
+        self:CastUpdated(unit, event)
     elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
-        if not unit or UnitIsFriend("player", unit) then 
-            return 
+        if not unit or UnitIsFriend("player", unit) then
+            return
         end
 
         self:CastFailed(unit, event)
     elseif (event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_INTERRUPTIBLE") then
-        if not unit or UnitIsFriend("player", unit) then 
-            return 
+        if not unit or UnitIsFriend("player", unit) then
+            return
         end
-    end
 
         self:CastNonInterruptable(unit, event)
-    --elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE") then
-    --    if not unit or UnitIsFriend("player", unit) then 
-    --        return 
-    --    end
-    --
-    --    self:CastUpdated(unit, event)
-    --end
+    end
 end
 
 -- SET CVARS

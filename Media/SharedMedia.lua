@@ -15,7 +15,6 @@ Media.Global = {
 	Texture = M..[[Textures\SmoothV2.tga]],
 	Overlay = M..[[Textures\Overlay.tga]],
 	Shadow = M..[[Textures\ShadowTex.tga]],
-	ShadowBorder = M..[[Textures\ShadowBorder.tga]],
 	Highlight = M..[[Textures\Highlight.tga]],
 	Backdrop = M..[[Textures\BackdropBlizz.tga]],
 	-- Icons/Misc

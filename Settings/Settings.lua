@@ -152,10 +152,7 @@ DB.Global = {
 	Nameplates = {
 		Enable = true,
 		-- Colors
-		BossColor = { 1, 0, 0 },
-		RareColor = { 0.89, 0.2, 0.89 },
-		CasterColor = { 0, 0.7, 1 },
-		EliteColor = { 0.8, 0, 0.8 },
+		UnitColors = false,
 		-- Target Indicator Color
 		TargetIndicatorColor = { 0.30, 0.70, 1 },
 	},

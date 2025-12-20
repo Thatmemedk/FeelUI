@@ -27,7 +27,7 @@ function AB:StanceBarUpdateState()
             local Button = _G["StanceButton"..i]
 
             if (Button) then 
-            	Button:Hide() 
+            	Button:SetAlpha(0) 
             end
         end
 
@@ -43,7 +43,7 @@ function AB:StanceBarUpdateState()
         local Button = _G["StanceButton"..i]
 		local Icon = Button.icon
 
-        if i <= NumForms then
+        if (i <= NumForms) then
             local Texture, IsActive, IsCastable = GetShapeshiftFormInfo(i)
 
             if (not Texture) then 
@@ -54,7 +54,7 @@ function AB:StanceBarUpdateState()
 			Icon:SetTexture(Texture)
 
             Button:SetChecked(IsActive)
-            Button:Show()
+            Button:SetAlpha(1)
 
             if (IsCastable) then
                 Button.icon:SetVertexColor(1, 1, 1)
@@ -62,7 +62,7 @@ function AB:StanceBarUpdateState()
                 Button.icon:SetVertexColor(0.4, 0.4, 0.4)
             end
         else
-            Button:Hide()
+            Button:SetAlpha(0)
         end
     end
 end
@@ -118,6 +118,5 @@ function AB:CreateBarStance()
 		RegisterStateDriver(Bar, "visibility", "[vehicleui][petbattle][overridebar] hide; show")
 	else
 		UnregisterStateDriver(Bar, "visibility")
-		Bar:Hide()
 	end
 end

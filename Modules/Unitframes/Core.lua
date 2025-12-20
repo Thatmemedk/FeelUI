@@ -148,7 +148,7 @@ function UF:UpdateHealth(Frame)
         Frame.Health:SetStatusBarColor(0.25, 0, 0)
         Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
     else
-        Frame.Health:SetStatusBarColor(0.1, 0.1, 0.1, 0.7)
+        Frame.Health:SetStatusBarColor(unpack(DB.Global.UnitFrames.HealthBarColor))
         Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
     end
 end
@@ -310,14 +310,12 @@ function UF:UpdateName(Frame, TypeFrame)
     local Unit = Frame.unit
     local Name = UnitName(Unit) or ""
 
-    if (Name) then
-        if (TypeFrame == "Raid") then
-            Frame.Name:SetText(UTF8Sub(Name, 8))
-        elseif (TypeFrame == "Party") then
-            Frame.Name:SetText(UTF8Sub(Name, 12))
-        else
-            Frame.Name:SetText(Name)
-        end
+    if (TypeFrame == "Raid") then
+        Frame.Name:SetText(UTF8Sub(Name, 8))
+    elseif (TypeFrame == "Party") then
+        Frame.Name:SetText(UTF8Sub(Name, 12))
+    else
+        Frame.Name:SetText(Name)
     end
 
     if UnitIsPlayer(Unit) then
@@ -374,10 +372,8 @@ function UF:UpdateTargetNameLevel(Frame)
         LevelText = tostring(Level)
     end
 
-    if (Name and Level) then
-        Frame.NameLevel:SetText(format("%s%s|r %s%s|r", NameColor or "", Name, LevelColor or "", LevelText))
-        --Frame.NameLevel:SetText(format("%s%s|r %s%s|r", NameColor or "", UTF8Sub(Name, 14), LevelColor or "", LevelText))
-    end
+    Frame.NameLevel:SetText(format("%s%s|r %s%s|r", NameColor or "", Name, LevelColor or "", LevelText))
+    --Frame.NameLevel:SetText(format("%s%s|r %s%s|r", NameColor or "", UTF8Sub(Name, 14), LevelColor or "", LevelText))
 end
 
 -- UPDATE PORTRAITS
@@ -394,7 +390,7 @@ function UF:UpdatePortrait(Frame)
         return
     end
 
-    C_Timer.After(0, function()
+    C_Timer.After(0.1, function()
         if (not Frame or not Frame.unit or not Frame.Portrait or not UnitExists(Unit)) then
             if (Frame and Frame.Portrait) then
                 Frame.Portrait:ClearModel()
@@ -600,9 +596,9 @@ function UF:UpdateThreatHighlightRaid(Frame)
 
     if (Threat and Threat > 0) then
         local R, G, B = GetThreatStatusColor(Threat)
-        Frame.ThreatRaid.Glow:SetBackdropBorderColor(R * 0.55, G * 0.55, B * 0.55, 0.8)
+        Frame.Threat.Glow:SetBackdropBorderColor(R * 0.55, G * 0.55, B * 0.55, 0.8)
     else
-        Frame.ThreatRaid.Glow:SetBackdropBorderColor(0, 0, 0, 0)
+        Frame.Threat.Glow:SetBackdropBorderColor(0, 0, 0, 0)
     end
 end
 
@@ -644,7 +640,6 @@ function UF:UpdateFrame(Unit)
     if (Frame.ReadyCheckIcon) then self:UpdateReadyCheckIcon(Frame) end
     -- THREAT
     if (Frame.Threat) then self:UpdateThreatHighlight(Frame) end
-    if (Frame.ThreatRaid) then self:UpdateThreatHighlightRaid(Frame) end
 end
 
 function UF:UpdateAll()
@@ -767,8 +762,8 @@ function UF:OnEvent(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") then
         UF:CastStopped(unit)
 
-    --elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
-        --UF:CastUpdated(unit, event)
+    elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
+        UF:CastUpdated(unit, event)
 
     elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
         UF:CastFailed(unit, event)

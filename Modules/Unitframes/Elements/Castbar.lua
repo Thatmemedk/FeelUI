@@ -21,8 +21,8 @@ local INTERRUPTED = _G.INTERRUPTED or "Interrupted"
 function UF:CastStarted(Unit, Event)
     local Castbar = self.Frames[Unit] and self.Frames[Unit].Castbar
 
-    if (not Castbar) then 
-        return 
+    if (not Castbar) then
+        return
     end
 
     -- Cache Names
@@ -149,11 +149,45 @@ function UF:CastFailed(Unit, Event)
     end
 
     -- Update Events
-    Castbar.Text:SetText(Event == "UNIT_SPELLCAST_FAILED" and FAILED or INTERRUPTED)
-    Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
+    if (Event == "UNIT_SPELLCAST_FAILED") then
+        Castbar.Text:SetText(FAILED)
+        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
+    elseif (Event == "UNIT_SPELLCAST_INTERRUPTED") then
+        Castbar.Text:SetText(INTERRUPTED)
+        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
+    else
+        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
+    end
 
     -- Reset CastBar
     UF:ResetCastBar(Castbar)
+end
+
+function UF:CastUpdated(Unit, Event)
+    local Castbar = self.Frames[Unit] and self.Frames[Unit].Castbar
+
+    if (not Castbar) then
+        return
+    end
+
+    if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
+        return
+    end
+
+    local Name, StartTime, EndTime, CastID, SpellID
+
+    -- Normal Casts
+    if (Event == "UNIT_SPELLCAST_DELAYED") then
+        Name, _, _, StartTime, EndTime, _, CastID, _, SpellID = UnitCastingInfo(Unit)
+
+        -- Channel Casts
+    elseif (Event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or Event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
+        Name, _, _, StartTime, EndTime, _, _, SpellID = UnitChannelInfo(Unit)
+    end
+
+    if (not Name) then 
+        return 
+    end
 end
 
 function UF:CastNonInterruptable(Unit, Event)

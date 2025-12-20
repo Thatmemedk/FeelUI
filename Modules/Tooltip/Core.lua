@@ -63,7 +63,7 @@ local ClassificationText = {
 }
 
 function TT:GetColor(Unit)
-    if not (Unit) then
+    if (not Unit) then
         return
     end
 
@@ -77,7 +77,7 @@ function TT:GetColor(Unit)
         Color = UI.Colors.Reaction[Reaction]
     end
 
-    if not (Color) then
+    if (not Color) then
         return
     end
 
@@ -85,7 +85,7 @@ function TT:GetColor(Unit)
 end
 
 function TT:ApplyStatusBarColor(Tooltip, Unit, ClassFile, Reaction)
-    if not Tooltip or Tooltip:IsForbidden() or not Unit then
+    if (not Tooltip or Tooltip:IsForbidden() or not Unit) then
         return
     end
 
@@ -144,7 +144,7 @@ end
 function TT:FormatGuildInfo(Unit)
     local GuildName, GuildRankName = GetGuildInfo(Unit)
 
-    if not (GuildName) then 
+    if (not GuildName) then 
     	return 
     end
 
@@ -155,7 +155,7 @@ function TT:FormatGuildInfo(Unit)
 end
 
 function TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Race, CreatureType, ClassificationUnit, Level)
-    local ClassColor = UI.Colors.Class[ClassFile] or {1, 1, 1}
+    local ClassColor = UI.Colors.Class[ClassFile]
     local DiffColor = GetQuestDifficultyColor(Level)
     local LevelColor
 
@@ -170,7 +170,7 @@ function TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Ra
         local Text = Line and Line:GetText()
         local LowerText = Text:lower()
 
-        if not (Text) then 
+        if (not Text) then 
         	break 
         end
 
@@ -183,7 +183,7 @@ function TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Ra
             if (Player) then
                 Line:SetFormattedText("Level |cff%02x%02x%02x%s|r %s", DiffColor.r * 255, DiffColor.g * 255, DiffColor.b * 255, Level > 0 and Level or "??", Race or "")
             else
-               local ClassText = ClassificationText[ClassificationUnit] or ""
+                local ClassText = ClassificationText[ClassificationUnit] or ""
                 Line:SetFormattedText("Level |cff%02x%02x%02x%s|r %s%s", LevelColor.r * 255, LevelColor.g * 255, LevelColor.b * 255, Level > 0 and Level or "??", ClassText, CreatureType or "")
             end
         end
@@ -211,7 +211,7 @@ function TT:OnTooltipSetUnit()
         end
     end
 
-    if not Unit or issecretvalue(Unit) or not UnitExists(Unit) then
+    if (not Unit or issecretvalue(Unit) or not UnitExists(Unit)) then
         return
     end
 
@@ -241,19 +241,21 @@ function TT:StyleHealthBar()
 end
 
 function TT:SetBackdropStyle(tt)
-	if not tt or (tt.IsEmbedded) or tt:IsForbidden() then 
+	if (not tt or tt.IsEmbedded or tt:IsForbidden() or tt.IsSkinned) then 
 		return 
 	end
 
-    if not issecretvalue or not issecretvalue(tt:GetWidth()) then
-        tt:DisableBackdrops()
+    tt:DisableBackdrops()
 
+    if not issecretvalue or not issecretvalue(tt:GetWidth()) then
         local Frame = CreateFrame("Frame", nil, tt)
         Frame:SetFrameLevel(tt:GetFrameLevel() -1)
         Frame:SetInside(tt, 2, 2)
         Frame:CreateBackdrop()
         Frame:CreateShadow()
     end
+
+    tt.IsSkinned = true
 end
 
 function TT:StyleTooltips()
@@ -289,7 +291,7 @@ function TT:StyleTooltips()
 end
 
 function TT:StyleCloseButton()
-	_G.ItemRefTooltip.CloseButton:HandleCloseButton(3, 4)
+	_G.ItemRefTooltip.CloseButton:HandleCloseButton(-6, -6)
 end
 
 function TT:CreateAnchor()	
@@ -304,11 +306,11 @@ function TT:CreateAnchor()
 	self.Anchor = Anchor
 end
 
-function TT:TooltipAnchorUpdate(tt, parent)
+function TT:TooltipAnchorUpdate(tt, Parent)
 	local Anchor = TT.Anchor
 
 	if (DB.Global.Tooltip.TooltipOnMouseOver) then
-		if (parent ~= _G.UIParent) then
+		if (Parent ~= _G.UIParent) then
 			self:SetOwner(Anchor)
 			self:SetAnchorType("ANCHOR_TOPRIGHT", 0, 18)
 		else
