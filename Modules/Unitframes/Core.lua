@@ -383,22 +383,21 @@ function UF:UpdatePortrait(Frame)
         return
     end
 
-    local Unit = Frame.unit
-
-    if (not UnitExists(Unit)) then
-        Frame.Portrait:ClearModel()
+    if (Frame.PortraitUpdatePending) then
         return
     end
 
+    Frame.PortraitUpdatePending = true
+
     C_Timer.After(0.1, function()
-        if (not Frame or not Frame.unit or not Frame.Portrait or not UnitExists(Unit)) then
-            if (Frame and Frame.Portrait) then
-                Frame.Portrait:ClearModel()
-            end
+        Frame.PortraitUpdatePending = nil
+
+        if (not Frame.unit or not UnitExists(Frame.unit)) then
+            Frame.Portrait:ClearModel()
             return
         end
 
-        Frame.Portrait:SetUnit(Unit)
+        Frame.Portrait:SetUnit(Frame.unit)
         Frame.Portrait:SetCamDistanceScale(2.5)
         Frame.Portrait:SetPortraitZoom(1)
         Frame.Portrait:SetPosition(0, 0, 0)
@@ -557,13 +556,16 @@ function UF:UpdateReadyCheckIcon(Frame, event)
         Frame.ReadyCheckIcon:Show()
     else
         if (event == "READY_CHECK_FINISHED") then
-            C_Timer.After(5, function()
-                if (Frame.ReadyCheckIcon:IsShown() and Frame.Animation.FadeOut) then
-                    Frame.Animation.FadeOut:Play()
-                end
-            end)
-        else
-            Frame.ReadyCheckIcon:Hide()
+            if not Frame.ReadyCheckFadePending then
+                Frame.ReadyCheckFadePending = true
+
+                C_Timer.After(5, function()
+                    Frame.ReadyCheckFadePending = nil
+                    if Frame.ReadyCheckIcon:IsShown() and Frame.Animation.FadeOut then
+                        Frame.Animation.FadeOut:Play()
+                    end
+                end)
+            end
         end
     end
 end
