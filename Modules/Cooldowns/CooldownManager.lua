@@ -1,7 +1,7 @@
 local UI, DB, Media, Language = select(2, ...):Call()
 
 -- Call Modules
-local CooldownManager = UI:RegisterModule("CooldownManager")
+local CDM = UI:RegisterModule("CooldownManager")
 
 -- Lib Globals
 local _G = _G
@@ -11,14 +11,99 @@ local unpack = unpack
 -- WoW Globals
 local EssentialCooldownViewer = _G.EssentialCooldownViewer
 local UtilityCooldownViewer = _G.UtilityCooldownViewer
-local CooldownViewerSettings = _G.CooldownViewerSettings
+local BuffIconCooldownViewer = _G.BuffIconCooldownViewer
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local LoadAddOn = C_AddOns.LoadAddOn
 
 -- WoW Globals
 local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
 
-function CooldownManager:SkinIcons(Button)
+-- Locals
+CDM.Anchors = {}
+
+function CDM:ForceLayout(Viewer)
+	if (not Viewer or not Viewer.layoutFrame) then
+		return
+	end
+
+	if InCombatLockdown() then
+		return
+	end
+
+	Viewer.layoutFrame:MarkDirty()
+
+	if (Viewer.layoutFrame.Layout) then
+		Viewer.layoutFrame:Layout()
+	end
+end
+
+function CDM:ApplyAnchors(Viewer)
+    if (not Viewer or not self.Anchors[Viewer]) then
+        return
+    end
+
+    if InCombatLockdown() then
+        return
+    end
+
+    local AnchorData = self.Anchors[Viewer]
+    local AnchorFrame = AnchorData.Frame
+
+    if (not AnchorFrame) then
+        return
+    end
+
+    local Container = Viewer.viewerFrame or Viewer
+    local Icons = {}
+
+    for _, Child in ipairs({ Container:GetChildren() }) do
+        if Child:IsShown() then
+            Icons[#Icons + 1] = Child
+        end
+    end
+
+    if (#Icons == 0) then
+        return
+    end
+
+    local First = Icons[1]
+    local Width = First:GetWidth()
+    local Spacing = AnchorData.IconSpacing
+    local TotalWidth = (#Icons * Width) + ((#Icons - 1) * Spacing)
+    local StartX = -TotalWidth / 2 + Width / 2
+
+    for i, Icon in ipairs(Icons) do
+        Icon:ClearAllPoints()
+        Icon:Point("CENTER", AnchorFrame, "CENTER", StartX + (i - 1) * (Width + Spacing), 0)
+    end
+end
+
+function CDM:CreateAnchor(Viewer, Point, Anchor, X, Y, IconSpacing)
+    if (not Viewer) then 
+        return 
+    end
+
+    local AnchorFrame = CreateFrame("Frame", nil, _G.UIParent)
+    AnchorFrame:Point(Point, Anchor, X or 0, Y or 0)
+    AnchorFrame:Size(unpack(DB.Global.CooldownManager.ButtonSize))
+
+    Viewer:SetParent(AnchorFrame)
+    Viewer:ClearAllPoints()
+    Viewer:Point("CENTER", AnchorFrame, "CENTER", 0, 0)
+
+    self.Anchors[Viewer] = {
+        Frame = AnchorFrame,
+        IconSpacing = IconSpacing
+    }
+
+    -- Always Apply Anchors
+    self:ApplyAnchors(Viewer)
+    self:ForceLayout(Viewer)
+
+    return AnchorFrame
+end
+
+function CDM:SkinIcons(Button)
 	if (Button.CDMIsSkinned) then
 		return
 	end
@@ -114,25 +199,50 @@ function CooldownManager:SkinIcons(Button)
 	Button.CDMIsSkinned = true
 end
 
-function CooldownManager:UpdateAcquireItemsFrame(Frames)
-	CooldownManager:SkinIcons(Frames)
+function CDM:UpdateAnchors()
+    for Frame in pairs(self.Anchors) do
+        self:ApplyAnchors(Frame)
+        self:ForceLayout(Frame)
+    end
 end
 
-function CooldownManager:UpdateIcons(Elements)
-	hooksecurefunc(Elements, "OnAcquireItemFrame", CooldownManager.UpdateAcquireItemsFrame)
+function CDM:UpdateAcquireItemsFrame(Frames)
+	CDM:SkinIcons(Frames)
+	CDM:ApplyAnchors(Frames)
+end
+
+function CDM:UpdateIcons(Elements)
+	hooksecurefunc(Elements, "OnAcquireItemFrame", CDM.UpdateAcquireItemsFrame)
 
 	for Frames in Elements.itemFramePool:EnumerateActive() do
-		CooldownManager:SkinIcons(Frames)
+		CDM:SkinIcons(Frames)
+		CDM:ApplyAnchors(Frames)
 	end
 end
 
-function CooldownManager:Update()
+function CDM:Update()
 	self:UpdateIcons(UtilityCooldownViewer)
 	self:UpdateIcons(BuffIconCooldownViewer)
 	self:UpdateIcons(EssentialCooldownViewer)
 end
 
-function CooldownManager:Initialize()
+function CDM:CreateAnchors()
+    local EssentialContainer = self:CreateAnchor(EssentialCooldownViewer, "CENTER", _G.UIParent, 0, -142, 0)
+    local BuffContainer = self:CreateAnchor(BuffIconCooldownViewer, "BOTTOM", EssentialContainer, 0, -24, 0)
+    local UtilityContainer = self:CreateAnchor(UtilityCooldownViewer, "BOTTOM", BuffContainer, 0, -24, 0)
+end
+
+function CDM:Register()
+	EventRegistry:RegisterCallback("CooldownViewerSettings.OnDataChanged", function()
+	    CDM:UpdateAnchors()
+	end)
+
+    EventRegistry:RegisterCallback("EditMode.Exit", function()
+        CDM:UpdateAnchors()
+    end)
+end
+
+function CDM:Initialize()
 	if (not DB.Global.CooldownManager.Enable) then
 		return
 	end
@@ -142,4 +252,7 @@ function CooldownManager:Initialize()
 	end
 
 	self:Update()
+	self:CreateAnchors()
+	self:UpdateAnchors()
+	self:Register()
 end
