@@ -15,8 +15,8 @@ local BuffIconCooldownViewer = _G.BuffIconCooldownViewer
 local EditModeManager = _G.EditModeManager
 local C_EditMode = _G.C_EditMode
 
-function CDM:CreateContainers(Viewer, Point, Anchor, X, Y, IconSpacing)
-    if (not Viewer) then 
+function CDM:CreateContainers(Frame, Point, Anchor, X, Y, IconSpacing)
+    if (not Frame) then 
         return 
     end
 
@@ -24,7 +24,7 @@ function CDM:CreateContainers(Viewer, Point, Anchor, X, Y, IconSpacing)
     AnchorFrame:Point(Point, Anchor, X or 0, Y or 0)
     AnchorFrame:Size(unpack(DB.Global.CooldownManager.ButtonSize))
 
-    self.Anchors[Viewer] = {
+    self.Anchors[Frame] = {
         Frame = AnchorFrame,
         IconSpacing = IconSpacing
     }
@@ -33,57 +33,132 @@ function CDM:CreateContainers(Viewer, Point, Anchor, X, Y, IconSpacing)
 end
 
 function CDM:PositionContainers()
-	local EssentialContainer = self:CreateContainers(EssentialCooldownViewer, "CENTER", _G.UIParent, 0, -136, 2)
-    local BuffContainer = self:CreateContainers(BuffIconCooldownViewer, "BOTTOM", EssentialContainer, 0, -24, 2)
-    local UtilityContainer = self:CreateContainers(UtilityCooldownViewer, "BOTTOM", BuffContainer, 0, -24, 2)
+    local Spacing = DB.Global.CooldownManager.ButtonSpacing
+    local RowSpacing = DB.Global.CooldownManager.ButtonRowSpacing
+    local AnchorPoint, AnchorParent, AnchorX, AnchorY = unpack(DB.Global.CooldownManager.AnchorPoint)
+
+	local EssentialContainer = self:CreateContainers(EssentialCooldownViewer, AnchorPoint, AnchorParent, AnchorX, AnchorY, Spacing)
+    local BuffContainer = self:CreateContainers(BuffIconCooldownViewer, "BOTTOM", EssentialContainer, 0, RowSpacing, Spacing)
+    local UtilityContainer = self:CreateContainers(UtilityCooldownViewer, "BOTTOM", BuffContainer, 0, RowSpacing, Spacing)
 end
 
-function CDM:ForceLayoutUpdate(Viewer)
-	if (not Viewer or not Viewer.layoutFrame) then
-		return
-	end
+function CDM:GetShownViewerIcons(ViewerIcons)
+    local Icons = {}
 
-	Viewer.layoutFrame:MarkDirty()
+    for _, Child in ipairs(ViewerIcons) do
+        if (Child:IsShown()) then
+            table.insert(Icons, Child)
+        end
+    end
 
-	if (Viewer.layoutFrame.Layout) then
-		Viewer.layoutFrame:Layout()
-	end
+    return Icons
+end
+
+function CDM:LockIconAnchor(Icon)
+    if (Icon.AnchorLocked) then
+        return
+    end
+
+    Icon.AnchorLocked = true
+
+    hooksecurefunc(Icon, "SetPoint", function()
+        if (Icon.IsUpdating) then
+            return
+        end
+
+        Icon.IsUpdating = true
+        Icon:ClearAllPoints()
+        Icon.IsUpdating = false
+    end)
 end
 
 function CDM:ApplyIconPositions(Viewer)
-    if (not Viewer or not self.Anchors[Viewer]) then
-        return
+    if (not Viewer or not self.Anchors[Viewer]) then 
+        return 
     end
 
     local AnchorData = self.Anchors[Viewer]
     local AnchorFrame = AnchorData.Frame
 
-    if (not AnchorFrame) then
-        return
+    if (not AnchorFrame) then 
+        return 
     end
 
-    local Container = Viewer.viewerFrame or Viewer
-    local Icons = {}
+    local ActiveIcons = Viewer:GetItemFrames()
+    local VisibleIcons = self:GetShownViewerIcons(ActiveIcons)
 
-    for _, Child in ipairs({ Container:GetChildren() }) do
-        if Child:IsShown() then
-            Icons[#Icons + 1] = Child
+    if (#VisibleIcons == 0) then 
+        return 
+    end
+
+    for _, Icon in ipairs(VisibleIcons) do
+        self:LockIconAnchor(Icon)
+        Icon.IsUpdating = true
+    end
+
+    local ReversedIcons = {}
+
+    for Index = #VisibleIcons, 1, -1 do
+        ReversedIcons[#ReversedIcons + 1] = VisibleIcons[Index]
+    end
+
+    VisibleIcons = ReversedIcons
+
+    local IconSpacing = AnchorData.IconSpacing
+    local IconCount = #VisibleIcons
+    local HasTwoCenters = IconCount % 2 == 0
+    local LeftMiddle = HasTwoCenters and (IconCount / 2) or nil
+    local RightMiddle = HasTwoCenters and (LeftMiddle + 1) or nil
+    local Middle = not HasTwoCenters and math.ceil(IconCount / 2) or nil
+
+    if (HasTwoCenters) then
+        local LeftMiddleIcon = VisibleIcons[LeftMiddle]
+        local RightMiddleIcon = VisibleIcons[RightMiddle]
+
+        if (LeftMiddleIcon) then
+            LeftMiddleIcon:ClearAllPoints()
+            LeftMiddleIcon:Point("RIGHT", AnchorFrame, "CENTER", -IconSpacing / 2, 0)
+        end
+
+        if (RightMiddleIcon) then
+            RightMiddleIcon:ClearAllPoints()
+            RightMiddleIcon:Point("LEFT", AnchorFrame, "CENTER", IconSpacing / 2, 0)
+        end
+    else
+        local MiddleIcon = VisibleIcons[Middle]
+
+        if (MiddleIcon) then
+            MiddleIcon:ClearAllPoints()
+            MiddleIcon:Point("CENTER", AnchorFrame, "CENTER", 0, 0)
         end
     end
 
-    if (#Icons == 0) then
-        return
+    local LeftStart = (HasTwoCenters and (LeftMiddle - 1)) or (Middle - 1)
+
+    for i = LeftStart, 1, -1 do
+        local Icon = VisibleIcons[i]
+        local NextIcon = VisibleIcons[i + 1]
+
+        if (Icon and NextIcon) then
+            Icon:ClearAllPoints()
+            Icon:Point("RIGHT", NextIcon, "LEFT", -IconSpacing, 0)
+        end
     end
 
-    local First = Icons[1]
-    local Width = First:GetWidth()
-    local Spacing = AnchorData.IconSpacing
-    local TotalWidth = (#Icons * Width) + ((#Icons - 1) * Spacing)
-    local StartX = -TotalWidth / 2 + Width / 2
+    local RightStart = (HasTwoCenters and (RightMiddle + 1)) or (Middle + 1)
 
-    for i, Icon in ipairs(Icons) do
-        Icon:ClearAllPoints()
-        Icon:Point("CENTER", AnchorFrame, "CENTER", StartX + (i - 1) * (Width + Spacing), 0)
+    for i = RightStart, IconCount do
+        local Icon = VisibleIcons[i]
+        local NextIcon = VisibleIcons[i - 1]
+
+        if (Icon and NextIcon) then
+            Icon:ClearAllPoints()
+            Icon:Point("LEFT", NextIcon, "RIGHT", IconSpacing, 0)
+        end
+    end
+
+    for _, Icon in ipairs(VisibleIcons) do
+        Icon.IsUpdating = false
     end
 end
 
@@ -95,26 +170,17 @@ function CDM:UpdateAnchors()
             return
         end
 
-        Viewer:SetParent(AnchorFrame)
-        Viewer:ClearAllPoints()
-        Viewer:Point("CENTER", AnchorFrame, "CENTER", 0, 0)
+        --Viewer:SetParent(AnchorFrame)
+        --Viewer:ClearAllPoints()
+        --Viewer:Point("CENTER", AnchorFrame, "CENTER", 0, 0)
     end
-end
-
-function CDM:UpdateIconsLayout(Viewer)
-    if not Viewer or InCombatLockdown() then 
-    	return 
-    end
-
-    self:ApplyIconPositions(Viewer)
-    self:ForceLayoutUpdate(Viewer)
 end
 
 function CDM:UpdateEditMode()
-	self:UpdateAnchors()
+	--self:UpdateAnchors()
 
     for Viewer in pairs(self.Anchors) do
-        self:UpdateIconsLayout(Viewer)
+        self:ApplyIconPositions(Viewer)
     end
 end
 
@@ -174,10 +240,13 @@ function CDM:HookViewers(Viewer)
     	return
     end
 
-    hooksecurefunc(Viewer, "Layout", function() self:UpdateIconsLayout(Viewer) end)
-    hooksecurefunc(Viewer, "SetSize", function() self:UpdateIconsLayout(Viewer) end)
-    hooksecurefunc(Viewer, "SetPoint", function() self:UpdateIconsLayout(Viewer) end)
-    --hooksecurefunc(Viewer, "SetParent", function() self:UpdateIconsLayout(Viewer) end)
+    hooksecurefunc(Viewer, "Layout", function()
+        self:ApplyIconPositions(Viewer)
+    end)
+
+    --hooksecurefunc(Viewer, "SetPoint", function()
+    --  self:ApplyIconPositions(Viewer)
+    --end)
 end
 
 function CDM:UpdateAllHooks(Viewer)
@@ -186,49 +255,9 @@ function CDM:UpdateAllHooks(Viewer)
     end
 end
 
-function CDM:OnEvent(event)
-    if (event == "PLAYER_ENTERING_WORLD") then
-        self:UpdateEditMode()
-
-    elseif (event == "EDIT_MODE_LAYOUTS_UPDATED") then
-        self:UpdateEditMode()
-
-    elseif (event == "PLAYER_PVP_TALENT_UPDATE" or event == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED") then
-        C_Timer.After(0.5, function()
-            self:UpdateEditMode()
-        end)
-    end
-end
-
-function CDM:RunAfterEditMode()
-    if (not C_EditMode) then
-        return
-    end
-
-    hooksecurefunc(C_EditMode, "OnEditModeExit", function()
-        self:UpdateEditMode()
-    end)
-
-    hooksecurefunc(C_EditMode, "SetActiveLayout", function()
-        self:UpdateEditMode()
-    end)
-
-    self:UpdateEditMode()
-end
-
-function CDM:RegisterEvents()
-    self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
-    self:RegisterEvent("PLAYER_PVP_TALENT_UPDATE")
-    self:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
-    self:SetScript("OnEvent", self.OnEvent)
-end
-
 function CDM:UpdateLayout()
 	self:PositionContainers()
 	self:UpdateAllHooks()
 	self:RegisterEditMode()
-	self:UpdateAnchors()
-    self:RegisterEvents()
-    self:RunAfterEditMode()
+	--self:UpdateAnchors()
 end
