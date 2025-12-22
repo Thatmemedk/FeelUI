@@ -25,9 +25,12 @@
 	<Script file="Chat\CopyChat.lua"/>
 	<Script file="Chat\CopyURL.lua"/>
 	<Script file="Chat\CombatLog.lua"/>
-	<!-- Cooldown -->
-	<Script file="Cooldowns\Core.lua"/>
-	<Script file="Cooldowns\CooldownManager.lua"/>
+	<!-- CooldownFrame -->
+	<Script file="CooldownFrame\Core.lua"/>
+	<!-- CooldownManager -->
+	<Script file="CooldownManager\Core.lua"/>
+	<Script file="CooldownManager\Icons.lua"/>
+	<Script file="CooldownManager\Layout.lua"/>
 	<!-- DataBars -->
 	<Script file="DataBars\ClassPowerBar.lua"/>
 	<Script file="DataBars\ExperienceBar.lua"/>

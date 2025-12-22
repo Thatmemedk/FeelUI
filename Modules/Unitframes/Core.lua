@@ -38,6 +38,9 @@ local UnitGetTotalHealAbsorbs = UnitGetTotalHealAbsorbs
 local UnitGetIncomingHeals = UnitGetIncomingHeals
 local UnitGetTotalAbsorbs = UnitGetTotalAbsorbs
 local UnitIsUnit = UnitIsUnit
+local PLAYER_OFFLINE = _G.PLAYER_OFFLINE
+local DEAD = _G.DEAD
+local GHOST = "Ghost"
 
 -- WoW Globals
 local ADDITIONAL_POWER_BAR_NAME = "MANA"
@@ -161,7 +164,19 @@ function UF:UpdateHealthTextCur(Frame)
     local Unit = Frame.unit
     local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
 
-    Frame.HealthTextCur:SetText(AbbreviateNumbers(Min))
+    if not (UnitIsConnected(Unit)) then
+        Frame.HealthTextCur:SetText(PLAYER_OFFLINE)
+        Frame.HealthTextCur:SetTextColor(0.35, 0.35, 0.35)
+    elseif(UnitIsGhost(Unit)) then
+        Frame.HealthTextCur:SetText(GHOST)
+        Frame.HealthTextCur:SetTextColor(0.35, 0.35, 0.35)
+    elseif (UnitIsDead(Unit)) then
+        Frame.HealthTextCur:SetText(DEAD)
+        Frame.HealthTextCur:SetTextColor(0.35, 0.35, 0.35)
+    else
+        Frame.HealthTextCur:SetText(AbbreviateNumbers(Min))
+        Frame.HealthTextCur:SetTextColor(1, 1, 1)
+    end
 end
 
 function UF:UpdateHealthTextPer(Frame)
@@ -711,7 +726,7 @@ function UF:OnEvent(event, unit, ...)
         UF:UpdateAuras(FramesUF, unit, true)
 
     -- HEALTH
-    elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
+    elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
         UF:UpdateHealth(FramesUF)
         UF:UpdateHealthTextCur(FramesUF)
         UF:UpdateHealthTextPer(FramesUF)
@@ -786,6 +801,7 @@ function UF:RegisterEvents()
     -- HEALTH
     SecureEventFrame:RegisterEvent("UNIT_HEALTH")
     SecureEventFrame:RegisterEvent("UNIT_MAXHEALTH")
+    SecureEventFrame:RegisterEvent("UNIT_CONNECTION")
     -- HEALTH PRED
     SecureEventFrame:RegisterEvent("UNIT_HEAL_PREDICTION")
     SecureEventFrame:RegisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")

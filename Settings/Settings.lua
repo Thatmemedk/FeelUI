@@ -69,7 +69,7 @@ DB.Global = {
 		Enable = true,
 	},
 
-	Cooldowns = {
+	CooldownFrame = {
 		Enable = true,
 		-- Colors Settings
 		NormalColor = { 1, 1, 1 },

@@ -90,9 +90,9 @@ function Maps:Style()
 
 	if (QueueStatusButton) then
 		local MapsQueueStatus = CreateFrame("Frame", "FeelUIQueueStatus", _G.UIParent)
-		MapsQueueStatus:Point("BOTTOMLEFT", Minimap, 4, 2)
 		MapsQueueStatus:SetFrameLevel(10)
 		MapsQueueStatus:Size(32)
+		MapsQueueStatus:Point("BOTTOMLEFT", Minimap, 4, 2)
 
 		hooksecurefunc(QueueStatusButton, "SetParent", Maps.QueueStatusSetParent)
 		hooksecurefunc(QueueStatusButton, "SetPoint", Maps.QueueStatusSetPoint)

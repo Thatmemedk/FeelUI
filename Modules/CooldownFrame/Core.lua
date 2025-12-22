@@ -1,7 +1,7 @@
 local UI, DB, Media, Language = select(2, ...):Call()
 
 -- Call Modules
-local Cooldown = UI:RegisterModule("Cooldown")
+local Cooldown = UI:RegisterModule("CooldownFrame")
 
 -- Lib Globals
 local _G = _G
@@ -17,7 +17,7 @@ function Cooldown:IsActionBarParent(CD)
 end
 
 function Cooldown:UpdateCooldown(Start, Duration, Enable, ForceShowDrawEdge, ModRate)
-    if (self.CDTextModified) then
+    if (not DB.Global.CooldownFrame.Enable or self.CDTextModified) then
         return
     end
 

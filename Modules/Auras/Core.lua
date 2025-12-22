@@ -235,8 +235,8 @@ function Auras:RegisterEditMode()
 		"OnEditModeStateChanged" 
 	}
 
-	for _, func in ipairs(tryFuncs) do
-		if (type(EditModeManager[EditModeFuncs]) == "function") then
+	for _, func in ipairs(EditModeFuncs) do
+		if (type(EditModeManager[func]) == "function") then
 			hooksecurefunc(EditModeManager, func, function()
 				self:UpdateEditMode()
 			end)
