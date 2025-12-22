@@ -38,6 +38,15 @@ function CDM:SkinIcons(Button)
 	-- Button Size
 	Button:Size(unpack(DB.Global.CooldownManager.ButtonSize))
 
+	-- Diable Tooltip
+	Button:HookScript("OnEnter", function()
+		GameTooltip:Hide()
+	end)
+
+	Button:HookScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+
 	-- Keep Aspect Ratio
 	UI:KeepAspectRatio(Button, Icon)
 

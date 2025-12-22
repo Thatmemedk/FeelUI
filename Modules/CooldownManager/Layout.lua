@@ -43,10 +43,6 @@ function CDM:ForceLayoutUpdate(Viewer)
 		return
 	end
 
-	if InCombatLockdown() then
-		return
-	end
-
 	Viewer.layoutFrame:MarkDirty()
 
 	if (Viewer.layoutFrame.Layout) then
@@ -56,10 +52,6 @@ end
 
 function CDM:ApplyIconPositions(Viewer)
     if (not Viewer or not self.Anchors[Viewer]) then
-        return
-    end
-
-    if InCombatLockdown() then
         return
     end
 
@@ -96,10 +88,6 @@ function CDM:ApplyIconPositions(Viewer)
 end
 
 function CDM:UpdateAnchors()
-	if InCombatLockdown() then 
-		return 
-	end
-
     for Viewer, AnchorData in pairs(self.Anchors) do
         local AnchorFrame = AnchorData.Frame
 
@@ -189,7 +177,7 @@ function CDM:HookViewers(Viewer)
     hooksecurefunc(Viewer, "Layout", function() self:UpdateIconsLayout(Viewer) end)
     hooksecurefunc(Viewer, "SetSize", function() self:UpdateIconsLayout(Viewer) end)
     hooksecurefunc(Viewer, "SetPoint", function() self:UpdateIconsLayout(Viewer) end)
-    hooksecurefunc(Viewer, "SetParent", function() self:UpdateIconsLayout(Viewer) end)
+    --hooksecurefunc(Viewer, "SetParent", function() self:UpdateIconsLayout(Viewer) end)
 end
 
 function CDM:UpdateAllHooks(Viewer)
@@ -198,53 +186,38 @@ function CDM:UpdateAllHooks(Viewer)
     end
 end
 
-function CDM:DeferredEditModeUpdate()
-    if InCombatLockdown() then
-        self:RegisterEvent("PLAYER_REGEN_ENABLED")
-        return
-    end
-
-    self:UpdateEditMode()
-end
-
 function CDM:OnEvent(event)
     if (event == "PLAYER_ENTERING_WORLD") then
-        self:DeferredEditModeUpdate()
+        self:UpdateEditMode()
 
     elseif (event == "EDIT_MODE_LAYOUTS_UPDATED") then
-        self:DeferredEditModeUpdate()
+        self:UpdateEditMode()
 
     elseif (event == "PLAYER_PVP_TALENT_UPDATE" or event == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED") then
         C_Timer.After(0.5, function()
-            self:DeferredEditModeUpdate()
+            self:UpdateEditMode()
         end)
-
-    elseif (event == "PLAYER_REGEN_ENABLED") then
-        self:UnregisterEvent("PLAYER_REGEN_ENABLED")
-        self:UpdateEditMode()
     end
 end
 
-function CDM:RunAfterEditMode(RunNow)
+function CDM:RunAfterEditMode()
     if (not C_EditMode) then
         return
     end
 
-    local Func = function()
-        self:DeferredEditModeUpdate()
-    end
+    hooksecurefunc(C_EditMode, "OnEditModeExit", function()
+        self:UpdateEditMode()
+    end)
 
-    hooksecurefunc(C_EditMode, "OnEditModeExit", Func)
-    hooksecurefunc(C_EditMode, "SetActiveLayout", Func)
+    hooksecurefunc(C_EditMode, "SetActiveLayout", function()
+        self:UpdateEditMode()
+    end)
 
-    if (RunNow) then
-        Func()
-    end
+    self:UpdateEditMode()
 end
 
 function CDM:RegisterEvents()
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:RegisterEvent("PLAYER_REGEN_ENABLED")
     self:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
     self:RegisterEvent("PLAYER_PVP_TALENT_UPDATE")
     self:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
@@ -254,8 +227,8 @@ end
 function CDM:UpdateLayout()
 	self:PositionContainers()
 	self:UpdateAllHooks()
-	--self:RegisterEditMode()
+	self:RegisterEditMode()
 	self:UpdateAnchors()
     self:RegisterEvents()
-    self:RunAfterEditMode(true)
+    self:RunAfterEditMode()
 end
