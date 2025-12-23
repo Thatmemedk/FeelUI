@@ -34,6 +34,6 @@ function CDM:Initialize()
 		LoadAddOn("Blizzard_CooldownViewer")
 	end
 
-	self:UpdateIcons()
 	self:UpdateLayout()
+	self:UpdateIcons()
 end

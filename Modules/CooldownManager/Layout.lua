@@ -12,8 +12,6 @@ local unpack = unpack
 local EssentialCooldownViewer = _G.EssentialCooldownViewer
 local UtilityCooldownViewer = _G.UtilityCooldownViewer
 local BuffIconCooldownViewer = _G.BuffIconCooldownViewer
-local EditModeManager = _G.EditModeManager
-local C_EditMode = _G.C_EditMode
 
 function CDM:CreateContainers(Frame, Point, Anchor, X, Y, IconSpacing)
     if (not Frame) then 
@@ -21,8 +19,8 @@ function CDM:CreateContainers(Frame, Point, Anchor, X, Y, IconSpacing)
     end
 
     local AnchorFrame = CreateFrame("Frame", nil, _G.UIParent)
-    AnchorFrame:Point(Point, Anchor, X or 0, Y or 0)
     AnchorFrame:Size(unpack(DB.Global.CooldownManager.ButtonSize))
+    AnchorFrame:Point(Point, Anchor, X or 0, Y or 0)
 
     self.Anchors[Frame] = {
         Frame = AnchorFrame,
@@ -33,43 +31,44 @@ function CDM:CreateContainers(Frame, Point, Anchor, X, Y, IconSpacing)
 end
 
 function CDM:PositionContainers()
+    local Point, Parent, X, Y
     local Spacing = DB.Global.CooldownManager.ButtonSpacing
-    local RowSpacing = DB.Global.CooldownManager.ButtonRowSpacing
-    local AnchorPoint, AnchorParent, AnchorX, AnchorY = unpack(DB.Global.CooldownManager.AnchorPoint)
 
-	local EssentialContainer = self:CreateContainers(EssentialCooldownViewer, AnchorPoint, AnchorParent, AnchorX, AnchorY, Spacing)
-    local BuffContainer = self:CreateContainers(BuffIconCooldownViewer, "BOTTOM", EssentialContainer, 0, RowSpacing, Spacing)
-    local UtilityContainer = self:CreateContainers(UtilityCooldownViewer, "BOTTOM", BuffContainer, 0, RowSpacing, Spacing)
+    -- Buff
+    Point, Parent, X, Y = unpack(DB.Global.CooldownManager.BuffAnchorPoint)
+    local BuffContainer = self:CreateContainers(BuffIconCooldownViewer, Point, Parent, X, Y, Spacing)
+
+    -- Essential
+    Point, Parent, X, Y = unpack(DB.Global.CooldownManager.EssentialAnchorPoint)
+    local EssentialContainer = self:CreateContainers(EssentialCooldownViewer, Point, Parent, X, Y, Spacing)
+
+    -- Utility
+    Point, Parent, X, Y = unpack(DB.Global.CooldownManager.UtilityAnchorPoint)
+    local UtilityContainer = self:CreateContainers(UtilityCooldownViewer, Point, Parent, X, Y, Spacing)
 end
 
-function CDM:GetShownViewerIcons(ViewerIcons)
-    local Icons = {}
-
-    for _, Child in ipairs(ViewerIcons) do
-        if (Child:IsShown()) then
-            table.insert(Icons, Child)
-        end
-    end
-
-    return Icons
-end
-
-function CDM:LockIconAnchor(Icon)
-    if (Icon.AnchorLocked) then
+function CDM:DisableViewerLayout(Viewer)
+    if (not Viewer or Viewer.LayoutDisabled) then
         return
     end
 
-    Icon.AnchorLocked = true
+    local Container = Viewer:GetItemContainerFrame()
 
-    hooksecurefunc(Icon, "SetPoint", function()
-        if (Icon.IsUpdating) then
-            return
-        end
+    if (not Container) then
+        return
+    end
 
-        Icon.IsUpdating = true
-        Icon:ClearAllPoints()
-        Icon.IsUpdating = false
-    end)
+    Viewer.LayoutDisabled = true
+end
+
+function CDM:GetViewerIcons(Viewer)
+    local Container = Viewer:GetItemContainerFrame()
+
+    if (not Container) then 
+        return nil 
+    end
+
+    return Container:GetLayoutChildren()
 end
 
 function CDM:ApplyIconPositions(Viewer)
@@ -84,180 +83,114 @@ function CDM:ApplyIconPositions(Viewer)
         return 
     end
 
-    local ActiveIcons = Viewer:GetItemFrames()
-    local VisibleIcons = self:GetShownViewerIcons(ActiveIcons)
+    -- Disable Layout
+    self:DisableViewerLayout(Viewer)
 
-    if (#VisibleIcons == 0) then 
+    -- GetIcons
+    local Icons = self:GetViewerIcons(Viewer)
+
+    if (not Icons or #Icons == 0) then 
         return 
     end
 
-    for _, Icon in ipairs(VisibleIcons) do
-        self:LockIconAnchor(Icon)
-        Icon.IsUpdating = true
-    end
+    local ShownIcons = {}
 
-    local ReversedIcons = {}
-
-    for Index = #VisibleIcons, 1, -1 do
-        ReversedIcons[#ReversedIcons + 1] = VisibleIcons[Index]
-    end
-
-    VisibleIcons = ReversedIcons
-
-    local IconSpacing = AnchorData.IconSpacing
-    local IconCount = #VisibleIcons
-    local HasTwoCenters = IconCount % 2 == 0
-    local LeftMiddle = HasTwoCenters and (IconCount / 2) or nil
-    local RightMiddle = HasTwoCenters and (LeftMiddle + 1) or nil
-    local Middle = not HasTwoCenters and math.ceil(IconCount / 2) or nil
-
-    if (HasTwoCenters) then
-        local LeftMiddleIcon = VisibleIcons[LeftMiddle]
-        local RightMiddleIcon = VisibleIcons[RightMiddle]
-
-        if (LeftMiddleIcon) then
-            LeftMiddleIcon:ClearAllPoints()
-            LeftMiddleIcon:Point("RIGHT", AnchorFrame, "CENTER", -IconSpacing / 2, 0)
-        end
-
-        if (RightMiddleIcon) then
-            RightMiddleIcon:ClearAllPoints()
-            RightMiddleIcon:Point("LEFT", AnchorFrame, "CENTER", IconSpacing / 2, 0)
-        end
-    else
-        local MiddleIcon = VisibleIcons[Middle]
-
-        if (MiddleIcon) then
-            MiddleIcon:ClearAllPoints()
-            MiddleIcon:Point("CENTER", AnchorFrame, "CENTER", 0, 0)
+    for _, Icon in ipairs(Icons) do
+        if Icon:IsShown() then
+            table.insert(ShownIcons, Icon)
         end
     end
 
-    local LeftStart = (HasTwoCenters and (LeftMiddle - 1)) or (Middle - 1)
-
-    for i = LeftStart, 1, -1 do
-        local Icon = VisibleIcons[i]
-        local NextIcon = VisibleIcons[i + 1]
-
-        if (Icon and NextIcon) then
-            Icon:ClearAllPoints()
-            Icon:Point("RIGHT", NextIcon, "LEFT", -IconSpacing, 0)
-        end
+    if (#ShownIcons == 0) then 
+        return
     end
 
-    local RightStart = (HasTwoCenters and (RightMiddle + 1)) or (Middle + 1)
+    local FirstIcon = ShownIcons[1]
+    local Width = FirstIcon:GetWidth()
+    local Spacing = AnchorData.IconSpacing
+    local TotalWidth = (#ShownIcons * Width) + ((#ShownIcons - 1) * Spacing)
+    local StartX = -TotalWidth / 2 + Width / 2
 
-    for i = RightStart, IconCount do
-        local Icon = VisibleIcons[i]
-        local NextIcon = VisibleIcons[i - 1]
-
-        if (Icon and NextIcon) then
-            Icon:ClearAllPoints()
-            Icon:Point("LEFT", NextIcon, "RIGHT", IconSpacing, 0)
-        end
-    end
-
-    for _, Icon in ipairs(VisibleIcons) do
-        Icon.IsUpdating = false
+    for i, Icon in ipairs(ShownIcons) do
+        Icon:ClearAllPoints()
+        Icon:Point("CENTER", AnchorFrame, "CENTER", StartX + (i - 1) * (Width + Spacing), 0)
     end
 end
 
 function CDM:UpdateAnchors()
-    for Viewer, AnchorData in pairs(self.Anchors) do
-        local AnchorFrame = AnchorData.Frame
+    for Viewer, Data in pairs(self.Anchors) do
+        local AnchorFrame = Data.Frame
 
-        if (not AnchorFrame) then
-            return
-        end
-
-        --Viewer:SetParent(AnchorFrame)
-        --Viewer:ClearAllPoints()
-        --Viewer:Point("CENTER", AnchorFrame, "CENTER", 0, 0)
-    end
-end
-
-function CDM:UpdateEditMode()
-	--self:UpdateAnchors()
-
-    for Viewer in pairs(self.Anchors) do
-        self:ApplyIconPositions(Viewer)
-    end
-end
-
-function CDM:RegisterEditMode()
-    if (not EditModeManager) then
-        self:RegisterEvent("PLAYER_LOGIN")
-        self:SetScript("OnEvent", function()
-            self:UnregisterEvent("PLAYER_LOGIN")
-            self:UpdateEditMode()
-        end)
-
-        return
-    end
-
-    if (EditModeManager.OnEditModeEnter) then
-        hooksecurefunc(EditModeManager, "OnEditModeEnter", function()
-            self:UpdateEditMode()
-        end)
-    end
-
-    if (EditModeManager.OnEditModeExit) then
-        hooksecurefunc(EditModeManager, "OnEditModeExit", function()
-            self:UpdateEditMode()
-        end)
-    end
-
-    local EditModeFuncs = {
-        "Refresh",
-        "RefreshAll",
-        "RefreshEditMode",
-        "OnEditModeStateChanged"
-    }
-
-    for _, func in ipairs(EditModeFuncs) do
-        if (type(EditModeManager[func]) == "function") then
-            hooksecurefunc(EditModeManager, func, function()
-                self:UpdateEditMode()
-            end)
+        if (AnchorFrame) then
+            Viewer:SetParent(AnchorFrame)
+            Viewer:ClearAllPoints()
+            Viewer:Point("CENTER", AnchorFrame, "CENTER", 0, 0)
         end
     end
-
-    if (EditModeManager.RegisterCallback) then
-        pcall(function()
-            EditModeManager:RegisterCallback("EditMode.Enter", function()
-            	self:UpdateEditMode()
-            end)
-
-            EditModeManager:RegisterCallback("EditMode.Exit", function()
-            	self:UpdateEditMode()
-            end)
-        end)
-    end
 end
 
-function CDM:HookViewers(Viewer)
-    if (not Viewer) then
-    	return
+function CDM:HookViewer(Viewer)
+    if (not Viewer or Viewer.Hooked) then 
+        return 
     end
 
-    hooksecurefunc(Viewer, "Layout", function()
-        self:ApplyIconPositions(Viewer)
+    Viewer:HookScript("OnShow", function()
+        CDM:ApplyIconPositions(Viewer)
     end)
 
-    --hooksecurefunc(Viewer, "SetPoint", function()
-    --  self:ApplyIconPositions(Viewer)
-    --end)
+    Viewer:HookScript("OnSizeChanged", function()
+        CDM:ApplyIconPositions(Viewer)
+    end)
+
+    local UpdateInterval = (Viewer == BuffIconCooldownViewer) and 1.0 or 2.0
+
+    if (not self.EventFrame) then
+        self.EventFrame = self 
+        self:RegisterEvent("UNIT_AURA")
+        self:RegisterEvent("SPELL_UPDATE_COOLDOWN")
+        self:RegisterEvent("BAG_UPDATE_COOLDOWN")
+        self:RegisterEvent("PET_BAR_UPDATE_COOLDOWN")
+        self:SetScript("OnEvent", function(_, Event, Unit)
+            if (Event == "UNIT_AURA" and Unit == "player") then
+                if BuffIconCooldownViewer:IsShown() then
+                    CDM:ApplyIconPositions(BuffIconCooldownViewer)
+                end
+            elseif (Event ~= "UNIT_AURA") then
+                for _, Frames in ipairs({ EssentialCooldownViewer, UtilityCooldownViewer }) do
+                    if Frames:IsShown() then
+                        CDM:ApplyIconPositions(Frames)
+                    end
+                end
+            end
+        end)
+    end
+
+    if (not Viewer.OnUpdateHooked) then
+        Viewer:HookScript("OnUpdate", function(self, Elapsed)
+            self.LastUpdate = (self.LastUpdate or 0) + Elapsed
+
+            if (self.LastUpdate > UpdateInterval and not InCombatLockdown()) then
+                self.LastUpdate = 0
+
+                CDM:ApplyIconPositions(Viewer)
+            end
+        end)
+
+        Viewer.OnUpdateHooked = true
+    end
+
+    Viewer.Hooked = true
 end
 
-function CDM:UpdateAllHooks(Viewer)
-	for _, Viewer in ipairs(self.Viewers) do
-        self:HookViewers(Viewer)
+function CDM:UpdateHooks()
+    for _, Viewer in ipairs(self.Viewers) do
+        self:HookViewer(Viewer)
+        self:ApplyIconPositions(Viewer)
     end
 end
 
 function CDM:UpdateLayout()
-	self:PositionContainers()
-	self:UpdateAllHooks()
-	self:RegisterEditMode()
-	--self:UpdateAnchors()
+    self:PositionContainers()
+    self:UpdateAnchors()
+    self:UpdateHooks()
 end

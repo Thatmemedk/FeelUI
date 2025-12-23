@@ -81,9 +81,10 @@ DB.Global = {
 	CooldownManager = {
 		Enable = true,
 		ButtonSize = { 36, 18 },
-		ButtonSpacing = -1,
-		ButtonRowSpacing = -24,
-		AnchorPoint = { "CENTER", _G.UIParent, 0, -136 },
+		ButtonSpacing = 1,
+		BuffAnchorPoint = { "CENTER", _G.UIParent, 0, -136 },
+		EssentialAnchorPoint = { "CENTER", _G.UIParent, 0, -160 },
+		UtilityAnchorPoint = { "CENTER", _G.UIParent, 0, -184 },
 	},
 
 	DataBars = {
