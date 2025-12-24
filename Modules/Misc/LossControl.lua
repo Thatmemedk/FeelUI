@@ -22,7 +22,7 @@ function LossControl:UpdateSkin()
 	self.TimeLeft.SecondsText.scrollTime = nil
 	self.TimeLeft.SecondsText:SetFontTemplate("Default", 20, 2, 2)
 
-	self.Cooldown:SetAlpha(0)
+	--self.Cooldown:SetAlpha(0)
 end
 
 function LossControl:Skin()

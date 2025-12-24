@@ -31,20 +31,13 @@ function CDM:CreateContainers(Frame, Point, Anchor, X, Y, IconSpacing)
 end
 
 function CDM:PositionContainers()
-    local Point, Parent, X, Y
+    local Point, Parent, X, Y = unpack(DB.Global.CooldownManager.AnchorPoint)
     local Spacing = DB.Global.CooldownManager.ButtonSpacing
+    local RowSpacing = DB.Global.CooldownManager.ButtonRowSpacing
 
-    -- Buff
-    Point, Parent, X, Y = unpack(DB.Global.CooldownManager.BuffAnchorPoint)
     local BuffContainer = self:CreateContainers(BuffIconCooldownViewer, Point, Parent, X, Y, Spacing)
-
-    -- Essential
-    Point, Parent, X, Y = unpack(DB.Global.CooldownManager.EssentialAnchorPoint)
-    local EssentialContainer = self:CreateContainers(EssentialCooldownViewer, Point, Parent, X, Y, Spacing)
-
-    -- Utility
-    Point, Parent, X, Y = unpack(DB.Global.CooldownManager.UtilityAnchorPoint)
-    local UtilityContainer = self:CreateContainers(UtilityCooldownViewer, Point, Parent, X, Y, Spacing)
+    local EssentialContainer = self:CreateContainers(EssentialCooldownViewer, "BOTTOM", BuffContainer, 0, RowSpacing, Spacing)
+    local UtilityContainer = self:CreateContainers(UtilityCooldownViewer, "BOTTOM", EssentialContainer, 0, RowSpacing, Spacing)
 end
 
 function CDM:DisableViewerLayout(Viewer)

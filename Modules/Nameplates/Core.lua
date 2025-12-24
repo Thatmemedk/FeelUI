@@ -46,6 +46,12 @@ function NP:UpdateHealth(Frame, Unit)
         Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
         Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
     end
+
+    if UnitIsUnit("target", Unit) then
+        UI:UIFrameFadeOut(Frame.Health, NP.FadeInTime, Frame.Health:GetAlpha(), 1)
+    else
+        UI:UIFrameFadeOut(Frame.Health, NP.FadeInTime, Frame.Health:GetAlpha(), 0.5)
+    end
 end
 
 function NP:UpdateHealthText(Frame, Unit)
@@ -55,6 +61,12 @@ function NP:UpdateHealthText(Frame, Unit)
 
     local Percent = UnitHealthPercent(Unit, false, CurveConstants.ScaleTo100)
     Frame.HealthText:SetFormattedText("%d%%", Percent or 0)
+
+    if UnitIsUnit("target", Unit) then
+        UI:UIFrameFadeOut(Frame.HealthText, NP.FadeInTime, Frame.HealthText:GetAlpha(), 1)
+    else
+        UI:UIFrameFadeOut(Frame.HealthText, NP.FadeInTime, Frame.HealthText:GetAlpha(), 0.5)
+    end
 end
 
 -- NAME UPDATE
@@ -77,6 +89,12 @@ function NP:UpdateName(Frame, Unit)
         local Color = UI.Colors.Reaction[Reaction]
 
         Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+    end
+
+    if UnitIsUnit("target", Unit) then
+        UI:UIFrameFadeOut(Frame.Name, NP.FadeInTime, Frame.Name:GetAlpha(), 1)
+    else
+        UI:UIFrameFadeOut(Frame.Name, NP.FadeInTime, Frame.Name:GetAlpha(), 0.5)
     end
 end
 
@@ -111,6 +129,18 @@ function NP:UpdateThreatHighlight(Frame, Unit)
         Frame.Threat.Glow:SetBackdropBorderColor(R * 0.55, G * 0.55, B * 0.55, 0.8)
     else
         Frame.Threat.Glow:SetBackdropBorderColor(0, 0, 0, 0)
+    end
+end
+
+-- HIGHLIGHT
+
+function NP:HighlightOnNameplateTarget(Frame, Unit)
+    if UnitIsUnit("target", Unit) then
+        Frame.TargetIndicator.Left:Show()
+        Frame.TargetIndicator.Right:Show()
+    else
+        Frame.TargetIndicator.Left:Hide()
+        Frame.TargetIndicator.Right:Hide()
     end
 end
 

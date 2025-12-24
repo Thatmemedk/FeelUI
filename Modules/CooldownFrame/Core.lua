@@ -43,7 +43,7 @@ function Cooldown:UpdateCooldown(Start, Duration, Enable, ForceShowDrawEdge, Mod
             if (Cooldown:IsActionBarParent(self)) then
                 Region:Point("CENTER", InvisFrame, 0, 0)
             else
-                Region:Point("CENTER", InvisFrame, 0, -7)
+                Region:Point("CENTER", InvisFrame, 0, -6)
             end
 
             Region:SetFontTemplate("Default", FontSize)

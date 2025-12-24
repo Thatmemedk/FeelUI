@@ -268,7 +268,7 @@ end
 -- Borders & Backdrop --
 ------------------------
 
-local function SetTemplate(self)
+local function SetTemplate(self, ExtraShadowBorders)
 	if (not self or self.BorderIsCreated) then
 		return
 	end
@@ -297,6 +297,40 @@ local function SetTemplate(self)
 	
 	self.Border[4]:Point("TOPRIGHT", self, "TOPRIGHT", 0, 0)
 	self.Border[4]:Point("BOTTOMRIGHT", self, "BOTTOMRIGHT", 0, 0)
+
+	if (ExtraShadowBorders) then
+		self.BorderThick = {}
+	
+		for i = 1, 8 do
+			self.BorderThick[i] = self.FrameRaised:CreateTexture(nil, "OVERLAY")
+			self.BorderThick[i]:Size(1, 1)
+			self.BorderThick[i]:SetColorTexture(0, 0, 0, 1)
+		end
+		
+		self.BorderThick[1]:Point("TOPLEFT", self, "TOPLEFT", -1, 1)
+		self.BorderThick[1]:Point("TOPRIGHT", self, "TOPRIGHT", 1, -1)
+
+		self.BorderThick[2]:Point("BOTTOMLEFT", self, "BOTTOMLEFT", -1, -1)
+		self.BorderThick[2]:Point("BOTTOMRIGHT", self, "BOTTOMRIGHT", 1, -1)
+
+		self.BorderThick[3]:Point("TOPLEFT", self, "TOPLEFT", -1, 1)
+		self.BorderThick[3]:Point("BOTTOMLEFT", self, "BOTTOMLEFT", 1, -1)
+
+		self.BorderThick[4]:Point("TOPRIGHT", self, "TOPRIGHT", 1, 1)
+		self.BorderThick[4]:Point("BOTTOMRIGHT", self, "BOTTOMRIGHT", -1, -1)
+
+		self.BorderThick[5]:Point("TOPLEFT", self, "TOPLEFT", 1, -1)
+		self.BorderThick[5]:Point("TOPRIGHT", self, "TOPRIGHT", -1, 1)
+
+		self.BorderThick[6]:Point("BOTTOMLEFT", self, "BOTTOMLEFT", 1, 1)
+		self.BorderThick[6]:Point("BOTTOMRIGHT", self, "BOTTOMRIGHT", -1, 1)
+
+		self.BorderThick[7]:Point("TOPLEFT", self, "TOPLEFT", 1, -1)
+		self.BorderThick[7]:Point("BOTTOMLEFT", self, "BOTTOMLEFT", -1, 1)
+
+		self.BorderThick[8]:Point("TOPRIGHT", self, "TOPRIGHT", -1, -1)
+		self.BorderThick[8]:Point("BOTTOMRIGHT", self, "BOTTOMRIGHT", 1, 1)
+	end
 	
 	self.BorderIsCreated = true
 end
@@ -335,7 +369,7 @@ function SetBackdropColorTemplate(self, R, G, B, Alpha)
 	end
 end
 
-local function CreateBackdrop(self)
+local function CreateBackdrop(self, ExtraShadowBorders)
 	if (not self or self.Backdrop) then
 		return
 	end
@@ -344,7 +378,7 @@ local function CreateBackdrop(self)
 
 	local Backdrop = CreateFrame("Frame", nil, self)
 	Backdrop:SetOutside()
-	Backdrop:SetTemplate()
+	Backdrop:SetTemplate(ExtraShadowBorders)
 	
 	self.Backdrop = Backdrop
 end
@@ -406,7 +440,7 @@ end
 -- ActionBars Style --
 ----------------------
 
-local function CreateButtonPanel(self)
+local function CreateButtonPanel(self, ExtraShadowBorders)
 	if (not self or self.ButtonPanel) then
 		return
 	end
@@ -414,7 +448,7 @@ local function CreateButtonPanel(self)
 	local ButtonPanel = CreateFrame("Frame", nil, self)
 	ButtonPanel:SetFrameLevel(self:GetFrameLevel() + 1)
 	ButtonPanel:SetInside()
-	ButtonPanel:SetTemplate()
+	ButtonPanel:SetTemplate(ExtraShadowBorders)
 
 	self.ButtonPanel = ButtonPanel
 end

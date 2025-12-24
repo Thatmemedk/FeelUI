@@ -14,6 +14,7 @@ function NP:CreateHealth(Frame)
     Health:SetStatusBarTexture(Media.Global.Texture)
     Health:CreateBackdrop()
     Health:CreateShadow()
+    Health:SetAlpha(0.5)
 
     Frame.Health = Health
 end

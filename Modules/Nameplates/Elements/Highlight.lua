@@ -49,13 +49,3 @@ function NP:CreateTargetIndicator(Frame)
     Frame.TargetIndicator.Left = Left
     Frame.TargetIndicator.Right = Right
 end
-
-function NP:HighlightOnNameplateTarget(Frame, Unit)
-    if UnitIsUnit("target", Unit) then
-        Frame.TargetIndicator.Left:Show()
-        Frame.TargetIndicator.Right:Show()
-    else
-        Frame.TargetIndicator.Left:Hide()
-        Frame.TargetIndicator.Right:Hide()
-    end
-end

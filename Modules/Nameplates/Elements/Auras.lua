@@ -13,58 +13,74 @@ local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
 function NP:UpdateAuras(Frame, Unit, IsDebuff)
     local Auras = IsDebuff and Frame.Debuffs or Frame.Buffs
 
-    if (not Auras) then 
-        return 
+    if (not Auras) then
+        return
     end
 
-    local AuraWidth, AuraHeight = Auras:GetWidth(), Auras:GetHeight()
-    local AurasToShow = Auras.NumAuras or 6
+    local ButtonWidth = Auras.Width or 16
+    local ButtonHeight = Auras.Height or 16
     local Spacing = Auras.Spacing or 4
-    local OnlyPlayerDebuffs = Auras.ShowOnlyPlayer
-    local ActiveButtons = 0
+    local Direction = Auras.Direction or "RIGHT"
+    local MaxAuras = Auras.NumAuras or 6
+    local OnlyPlayer = Auras.ShowOnlyPlayer
+    local HarmState = OnlyPlayer and "HARMFUL|PLAYER" or "HARMFUL"
+
+    local PreviousButton
+    local Active = 0
     local Index = 1
-    local HarmState
 
-    for _, Buttons in ipairs(Auras.Buttons) do
-        Buttons:Hide()
+    for _, Button in ipairs(Auras.Buttons) do
+        Button:Hide()
+        Button:ClearAllPoints()
     end
 
-    if (OnlyPlayerDebuffs) then
-        HarmState = "HARMFUL|PLAYER"
+    if UnitIsUnit("target", Unit) then
+        UI:UIFrameFadeIn(Auras, NP.FadeInTime, Auras:GetAlpha(), 1)
     else
-        HarmState = "HARMFUl"
+        UI:UIFrameFadeOut(Auras, NP.FadeInTime, Auras:GetAlpha(), 0.5)
     end
 
-    while ActiveButtons < AurasToShow do
+    while Active < MaxAuras do
         local AuraData = GetAuraDataByIndex(Unit, Index, IsDebuff and HarmState or "HELPFUL")
+        Index = Index + 1
 
         if (not AuraData or not AuraData.name) then
             break
         end
 
-        local Name = AuraData.name
         local Icon = AuraData.icon
         local Count = AuraData.applications
         local Duration = AuraData.duration
         local ExpirationTime = AuraData.expirationTime
         local AuraInstanceID = AuraData.auraInstanceID
-        local Button = Auras.Buttons[ActiveButtons + 1]
+        local Button = Auras.Buttons[Active + 1]
 
         if (not Button) then
             break
         end
 
-        local Direction = Auras.Direction or "RIGHT"
-        local OffsetMultiplier = (Direction == "RIGHT") and 1 or -1
-
-        Button:Size(AuraWidth, AuraHeight)
+        Button:Size(ButtonWidth, ButtonHeight)
         Button:ClearAllPoints()
-        Button:Point(Auras.InitialAnchor, Auras, Auras.InitialAnchor, ActiveButtons * (AuraWidth + Spacing) * OffsetMultiplier, 0)
+
+        if not PreviousButton then
+            if (Direction == "RIGHT") then
+                Button:Point("TOPLEFT", Auras, "TOPLEFT", 0, 0)
+            else
+                Button:Point("TOPRIGHT", Auras, "TOPRIGHT", 0, 0)
+            end
+        else
+            if (Direction == "RIGHT") then
+                Button:Point("LEFT", PreviousButton, "RIGHT", Spacing, 0)
+            else
+                Button:Point("RIGHT", PreviousButton, "LEFT", -Spacing, 0)
+            end
+        end
+
         Button:Show()
 
         if (Button.Icon) then
             Button.Icon:SetTexture(Icon)
-            UI:KeepAspectRatio(Auras, Button.Icon)
+            UI:KeepAspectRatio(Button, Button.Icon)
         end
 
         if (Button.Count) then
@@ -107,20 +123,14 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
             Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
         end
 
-        ActiveButtons = ActiveButtons + 1
-        Index = Index + 1
-    end
-
-    for i = ActiveButtons + 1, #Auras.Buttons do
-        if Auras.Buttons[i] then
-            Auras.Buttons[i]:Hide()
-        end
+        PreviousButton = Button
+        Active = Active + 1
     end
 end
 
-function NP:CreateAuraButton(Frame)
+function NP:CreateAuraButton(Frame, ExtraBorder)
     local Button = CreateFrame("Button", nil, Frame)
-    Button:SetTemplate()
+    Button:SetTemplate(ExtraBorder)
     Button:CreateShadow()
     Button:StyleButton()
     Button:SetShadowOverlay()
@@ -153,27 +163,34 @@ function NP:CreateAuraButton(Frame)
     return Button
 end
 
+function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, NumAuras, Spacing, InitialAnchor, Direction, ShowOnlyPlayer, ExtraBorder, Point, PointX, PointY)
+    local Container = CreateFrame("Frame", nil, Frame)
+    Container:Size(100, 100)
+    Container:Point(Point or "TOPLEFT", Frame, PointX or 0, PointY or 0)
+    Container:SetAlpha(0.5)
+    Container.Width = ButtonWidth
+    Container.Height = ButtonHeight
+    Container.NumAuras = NumAuras
+    Container.Spacing = Spacing
+    Container.InitialAnchor = InitialAnchor
+    Container.Direction = Direction
+    Container.ShowOnlyPlayer = ShowOnlyPlayer
+    Container.Buttons = {}
+
+    for i = 1, NumAuras do
+        local Button = NP:CreateAuraButton(Container, ExtraBorder)
+        Button:Hide()
+
+        Container.Buttons[i] = Button
+    end
+
+    return Container
+end
+
 function NP:CreateDebuffs(Frame)
     if (Frame.Debuffs) then
         return
     end
-    
-    local Debuffs = CreateFrame("Frame", nil, Frame)
-    Debuffs:Size(28, 16)
-    Debuffs:Point("TOPLEFT", Frame, -8, 12)
-    Debuffs.NumAuras = 6
-    Debuffs.Spacing = 3
-    Debuffs.InitialAnchor = "TOPRIGHT"
-    Debuffs.Direction = "RIGHT"
-    Debuffs.ShowOnlyPlayer = true
-    Debuffs.Buttons = {}
 
-    for i = 1, Debuffs.NumAuras do
-        local Button = NP:CreateAuraButton(Debuffs)
-        Button:Hide()
-
-        Debuffs.Buttons[i] = Button
-    end
-
-    Frame.Debuffs = Debuffs
+    Frame.Debuffs = NP:CreateAuraContainer(Frame, 30, 18, 7, 4, "TOPRIGHT", "RIGHT", true, true, "TOPLEFT", -28, 10)
 end

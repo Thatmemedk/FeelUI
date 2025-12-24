@@ -298,7 +298,7 @@ function UF:UpdateAdditionalPower(Frame)
     local Unit = Frame.unit
     local PowerType = UnitPowerType("player")
     local Min, Max = UnitPower("player", ADDITIONAL_POWER_BAR_INDEX), UnitPowerMax("player", ADDITIONAL_POWER_BAR_INDEX)
-    local Percent = UnitPowerPercent("player", PowerType, false, CurveConstants.ScaleTo100)
+    local Percent = UnitPowerPercent("player", ADDITIONAL_POWER_BAR_INDEX, false, CurveConstants.ScaleTo100)
     local Bar = Frame.AdditionalPower
     local Text = Frame.AdditionalPowerText
 
