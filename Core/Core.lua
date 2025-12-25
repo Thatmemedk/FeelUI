@@ -5,10 +5,18 @@ local _G = _G
 local select = select
 local unpack = unpack
 local type = type
+local match = string.match
+local min, max = math.min, math.max
+local floor = math.floor
 
 -- WoW Globals
 local C_AddOns_GetAddOnEnableState = C_AddOns.GetAddOnEnableState
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
+
+-- WoW Globals
+local GetPhysicalScreenSize = GetPhysicalScreenSize
+local Resolution = select(1, GetPhysicalScreenSize()).."x"..select(2, GetPhysicalScreenSize())
+local PixelPerfectScale = 768 / match(Resolution, "%d+x(%d+)")
 
 -- Locals
 UI.Modules = {}
@@ -80,6 +88,13 @@ end
 
 -- PLAYER LOGIN
 function UI:PLAYER_LOGIN(event)
+	local Scale = max(DB.Global.General.UIScaleMin, min(1.15, DB.Global.General.UIScaleMax))
+
+	if (DB.Global.General.UseUIScale) then
+		SetCVar("useUiScale", 1)
+		SetCVar("uiScale", Scale)
+	end
+
 	if (C_AddOns_GetAddOnEnableState(UI.MyName, "ElvUI") == 2) then
 		UI:Print(Language.ElvUI.Print)
 		StaticPopup_Show("ELVUI_INCOMPATIBLE")
@@ -91,6 +106,11 @@ function UI:PLAYER_LOGIN(event)
 	end
 	
 	self:UnregisterEvent(event)
+end
+
+function UI:Scale(x)
+	local Mult = PixelPerfectScale / GetCVar("uiScale")
+	return Mult * floor(x / Mult + 0.5)
 end
 
 -- ON EVENT

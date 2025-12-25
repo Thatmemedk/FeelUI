@@ -39,6 +39,7 @@ function AB:StyleActionButton(Button, Icon, Name)
     local Corners = Button.AutoCastOverlay and Button.AutoCastOverlay.Corners
     local AutoCastOverlay = Button.AutoCastOverlay
     local AutoCastable = Button.AutoCastable
+    local LossControlCD = Button.lossOfControlCooldown
     
     -- HIDE TEXTURES
     AB:SafeHide(Normal)
@@ -83,7 +84,7 @@ function AB:StyleActionButton(Button, Icon, Name)
 
     if (Cooldown) then
         Cooldown:ClearAllPoints()
-        Cooldown:SetInside()
+        Cooldown:SetInside(Button, 1, 1)
 
         local NumRegions = Cooldown:GetNumRegions()
 
@@ -99,6 +100,11 @@ function AB:StyleActionButton(Button, Icon, Name)
                 Region:SetTextColor(1, 0.82, 0)
             end
         end
+    end
+
+    if (LossControlCD) then
+        LossControlCD:ClearAllPoints()
+        LossControlCD:SetInside(Button, 1, 1)
     end
 
     if (Count) then

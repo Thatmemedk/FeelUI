@@ -20,17 +20,13 @@ local EditModeManager = _G.EditModeManager
 -- WoW Globals
 local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
 
-function Auras:Skin(Frame)
-	if (Frame.isAuraAnchor or not Frame.Icon) then
+function Auras:Skin(Frame, ExtraBorder)
+	if (Frame.isAuraAnchor or Frame.AurasIsSkinned or not Frame.Icon) then
 		return 
 	end
 
-	if (Frame.AurasIsSkinned) then
-		return
-	end
-
 	Frame:Size(unpack(DB.Global.Auras.ButtonSize))
-	Frame:SetTemplate()
+	Frame:SetTemplate(ExtraBorder)
 	Frame:CreateShadow()
 	Frame:StyleButton()
 	Frame:SetShadowOverlay()
@@ -185,7 +181,7 @@ function Auras:StyleDebuffs()
 	end
 
 	for Index, Frame in ipairs(DebuffFrameAuraFrames) do
-		Auras:Skin(Frame)
+		Auras:Skin(Frame, true)
 		Auras:AnchorDebuffs(Frame, Index)
 	end
 end

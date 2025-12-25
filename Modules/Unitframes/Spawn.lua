@@ -136,8 +136,8 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         -- HEALTH PRED
         self:CreateHealthPrediction(Frame)
         -- AURAS
-        self:CreateBuffs(Frame)
-        self:CreateDebuffs(Frame)
+        self:CreateBuffsTarget(Frame)
+        self:CreateDebuffsTarget(Frame)
         -- THREAT
         self:CreateThreatHighlight(Frame)
     elseif (Unit == "targettarget") then

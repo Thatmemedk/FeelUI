@@ -11,21 +11,27 @@ local select = select
 -- WoW Globals
 local LossOfControlFrame = _G.LossOfControlFrame
 
-function LossControl:UpdateSkin()
-	self.AbilityName.scrollTime = nil
-	self.AbilityName:SetFontTemplate("Default", 24, 2, 2)
+function LossControl:UpdateSetUpDisplay()
+	if (self.AbilityName) then
+		self.AbilityName:SetFontTemplate("Default", 24, 2, 2)
+		self.AbilityName.scrollTime = nil
+	end
 
-	self.TimeLeft.NumberText.scrollTime = nil
-	self.TimeLeft.NumberText:SetFontTemplate("Default", 20, 2, 2)
-	self.TimeLeft.NumberText:SetTextColor(unpack(DB.Global.Cooldowns.SecondsColor))
+	if (self.TimeLeft) then
+		self.TimeLeft.NumberText:SetFontTemplate("Default", 20, 2, 2)
+		self.TimeLeft.NumberText:SetTextColor(unpack(DB.Global.CooldownFrame.SecondsColor))
+		self.TimeLeft.NumberText.scrollTime = nil
 
-	self.TimeLeft.SecondsText.scrollTime = nil
-	self.TimeLeft.SecondsText:SetFontTemplate("Default", 20, 2, 2)
+		self.TimeLeft.SecondsText:SetFontTemplate("Default", 20, 2, 2)
+		self.TimeLeft.SecondsText.scrollTime = nil
+	end
 
-	--self.Cooldown:SetAlpha(0)
+	if (self.Cooldown) then
+		self.Cooldown:SetAlpha(0)
+	end
 end
 
-function LossControl:Skin()
+function LossControl:Update()
 	LossOfControlFrame:StripTexture()
 	
 	LossOfControlFrame.IconOverlay = CreateFrame("Frame", nil, LossOfControlFrame)
@@ -34,16 +40,14 @@ function LossControl:Skin()
 	LossOfControlFrame.IconOverlay:CreateShadow()
 	LossOfControlFrame.IconOverlay:SetShadowOverlay()
 	LossOfControlFrame.IconOverlay:CreateGlow(6, 3, 1 * 0.55, 0, 0, 0.80)
-	
+
 	LossOfControlFrame.Icon:Size(48, 28)
 	UI:KeepAspectRatio(LossOfControlFrame.Icon, LossOfControlFrame.Icon)
-end
 
-function LossControl:AddHooks()
-	hooksecurefunc(LossOfControlFrame, "SetUpDisplay", self.UpdateSkin)
+	-- Hook Secure
+	hooksecurefunc(LossOfControlFrame, "SetUpDisplay", self.UpdateSetUpDisplay)
 end
 
 function LossControl:Initialize()
-	self:Skin()
-	self:AddHooks()
+	self:Update()
 end

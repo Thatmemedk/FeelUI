@@ -20,11 +20,6 @@ local match, floor = string.match, math.floor
 local min, max = math.min, math.max
 
 -- WoW Globals
-local GetPhysicalScreenSize = GetPhysicalScreenSize
-local Resolution = select(1, GetPhysicalScreenSize()).."x"..select(2, GetPhysicalScreenSize())
-local PixelPerfectScale = 768 / match(Resolution, "%d+x(%d+)")
-
--- WoW Globals
 local GetMouseFocus = GetMouseFocus
 local GetMouseFoci = GetMouseFoci
 
@@ -63,7 +58,7 @@ function UI:RegisterChatCommand(Command, Func)
 				UI:Print(Language.Help.Discord)
 				--UI:Print(Language.Help.Website)
 			elseif (Func == "Options") then
-				local Options = UI:CallModule("Options")
+				local Options = UI:CallModule("OptionsUI")
 				
 				if (Options) then
 					Options:Toggle()
@@ -121,27 +116,6 @@ function FeelUI:LoadCommands()
 	UI:RegisterChatCommand("fgrid", "Grid")
 end
 
--- Pixel Perfect
-function FeelUI:SetUIScale()
-	self:RegisterEvent("PLAYER_LOGIN")
-	self:SetScript("OnEvent", function(self, event)
-		if (event ~= "PLAYER_LOGIN") then 
-			return 
-		end
-
-		if (DB.Global.General.UseUIScale) then
-			local Scale = max(DB.Global.General.UIScaleMin, min(1.15, DB.Global.General.UIScaleMax))
-			SetCVar("useUiScale", 1)
-			SetCVar("uiScale", Scale)
-		end
-	end)
-end
-
-function UI:Scale(x)
-	local Mult = PixelPerfectScale / GetCVar("uiScale")
-	return Mult * floor(x / Mult + 0.5)
-end
-
 -- Keep Aspect Ratio
 function UI:KeepAspectRatio(Button, Icon)
 	if (not Button or not Icon) then
@@ -166,6 +140,7 @@ function UI:KeepAspectRatio(Button, Icon)
 	Icon:SetTexCoord(BaseLeft, BaseRight, BaseTop, BaseBottom)
 end
 
+-- CD Font Scaling
 function UI:GetCooldownFontScale(CD)
     if (not CD) then 
     	return
@@ -235,7 +210,7 @@ function UI:GetMouseFocus()
 	end
 end
 
--- Update Update Media
+-- Update Fonts
 function FeelUI:UpdateMedia()
 	UI:UpdateBlizzardFonts()
 end
@@ -248,7 +223,6 @@ end
 
 -- Initialize The Core
 function FeelUI:Initialize()
-	self:SetUIScale()
 	self:UpdateMedia()
 	self:LoadCommands()
 end

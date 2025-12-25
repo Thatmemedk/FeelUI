@@ -17,7 +17,7 @@ DB.Global = {
 		BorderColor = { 0, 0, 0, 1 },
 		BackdropColor = { 0.1, 0.1, 0.1, 0.70 },
 		PanelColor = { 0.2, 0.2, 0.2, 0.70 },
-		ShadowColor = { 0.05, 0.05, 0.05, 0.50 },
+		ShadowColor = { 0.05, 0.05, 0.05, 0.5 },
 	},
 
 	ActionBars = {

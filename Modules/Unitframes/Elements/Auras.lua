@@ -205,7 +205,7 @@ function UF:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, NumAuras, Spac
     return Container
 end
 
-function UF:CreateBuffs(Frame)
+function UF:CreateBuffsTarget(Frame)
     if (Frame.Buffs) then 
         return 
     end
@@ -213,7 +213,7 @@ function UF:CreateBuffs(Frame)
     Frame.Buffs = UF:CreateAuraContainer(Frame, 30, 18, 7, 3, "TOPLEFT", "RIGHT", false, false, "TOPLEFT", 0, 32)
 end
 
-function UF:CreateDebuffs(Frame)
+function UF:CreateDebuffsTarget(Frame)
     if (Frame.Debuffs) then 
         return 
     end
@@ -226,7 +226,7 @@ function UF:CreatePartyDebuffs(Frame)
         return 
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame, 32, 18, 7, 4, "TOPLEFT", "RIGHT", false, true, "RIGHT", 40, 0)
+    Frame.Debuffs = UF:CreateAuraContainer(Frame, 32, 18, 7, 4, "TOPLEFT", "RIGHT", false, true, "RIGHT", 108, -42)
 end
 
 function UF:CreateRaidDebuffs(Frame)
@@ -234,5 +234,5 @@ function UF:CreateRaidDebuffs(Frame)
         return 
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame, 26, 16, 2, 4, "TOPLEFT", "RIGHT", false, true, "LEFT", 12, 0)
+    Frame.Debuffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 26, 16, 2, 4, "TOPLEFT", "RIGHT", false, true, "LEFT", 12, -42)
 end
