@@ -38,18 +38,16 @@ function NP:CastStarted(Unit, Event)
     end
 
     -- Cache Names
-    local Name, Icon, StartTime, EndTime, Interrupt, CastID, SpellID, EmpowerStages
+    local Name, Icon, StartTime, EndTime, Interrupt, CastID, SpellID, Empowered
 
     -- Normal Casts
     if (Event == "UNIT_SPELLCAST_START") then
         Name, _, Icon, StartTime, EndTime, _, CastID, Interrupt, SpellID = UnitCastingInfo(Unit)
-    end
-
-    -- Channel / Empower Casts
-    if (not Name) then
-        Name, _, Icon, StartTime, EndTime, _, Interrupt, SpellID, _, EmpowerStages = UnitChannelInfo(Unit)
+    else
+        -- Channel / Empower Casts
+        Name, _, Icon, StartTime, EndTime, _, Interrupt, SpellID, Empowered, _, CastID = UnitChannelInfo(Unit)
         
-        if (EmpowerStages) then
+        if (Empowered) then
             Event = "UNIT_SPELLCAST_EMPOWER_START"
         else
             Event = "UNIT_SPELLCAST_CHANNEL_START"
@@ -62,12 +60,26 @@ function NP:CastStarted(Unit, Event)
 
     -- Update Events
     Castbar.Casting = (Event == "UNIT_SPELLCAST_START")
-    Castbar.Channel = (Event == "UNIT_SPELLCAST_CHANNEL_START" or Event == "UNIT_SPELLCAST_EMPOWER_START")
+    Castbar.Channel = (Event == "UNIT_SPELLCAST_CHANNEL_START")
+    Castbar.Empower = (Event == "UNIT_SPELLCAST_EMPOWER_START")
 
     -- Cache
     Castbar.Interrupt = Interrupt
     Castbar.CastID = CastID
     Castbar.SpellID = SpellID
+
+    if (Castbar.Channel) then
+        Castbar.Duration = UnitChannelDuration(Unit)
+        Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
+    elseif (Castbar.Empower) then
+        Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
+    else
+        Castbar.Duration = UnitCastingDuration(Unit)
+    end
+
+    -- Set Values
+    Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBarsImmediate, Castbar.Direction)
+    Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
 
     -- Icon
     if (Castbar.Icon) then
@@ -81,17 +93,20 @@ function NP:CastStarted(Unit, Event)
 
     if (Castbar.Channel) then
         Castbar.Duration = UnitChannelDuration(Unit)
-
-        Castbar:SetReverseFill(true)
+    elseif (Castbar.Empower) then
+        Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
     else
         Castbar.Duration = UnitCastingDuration(Unit)
-    
-        Castbar:SetReverseFill(false)
     end
 
     -- Set Values
-    Castbar:SetTimerDuration(Castbar.Duration)
+    Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBars, Enum.StatusBarTimerDirection.ElapsedTime)
     Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
+
+    -- Create EmpowerPips
+    if (Castbar.Empower) then
+        NP:SetupEmpowerPips(Castbar, UnitEmpoweredStagePercentages(Unit))
+    end
 
     -- Call On Update
     Castbar:SetScript("OnUpdate", NP.OnUpdate)
@@ -117,14 +132,14 @@ function NP:CastFailed(Unit, Event)
     local Frame = self:GetFrameForUnit(Unit)
     local Castbar = Frame and Frame.Castbar
 
-    if (not Castbar) then 
-        return 
+    if (not Castbar) then
+        return
     end
 
     if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
         return
     end
-    
+
     -- Update Events
     if (Event == "UNIT_SPELLCAST_FAILED") then
         Castbar.Text:SetText(FAILED)
@@ -135,9 +150,54 @@ function NP:CastFailed(Unit, Event)
     else
         Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
     end
-    
+
     -- Reset CastBar
     NP:ResetCastBar(Castbar)
+end
+
+function NP:CastUpdated(Unit, Event)
+    local Frame = self:GetFrameForUnit(Unit)
+    local Castbar = Frame and Frame.Castbar
+
+    if (not Castbar) then
+        return
+    end
+
+    if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
+        return
+    end
+
+    -- Cache Names
+    local Name, Icon, StartTime, EndTime
+
+    -- Normal Casts
+    if (Event == "UNIT_SPELLCAST_DELAYED") then
+        Name, _, _, StartTime, EndTime = UnitCastingInfo(Unit)
+
+        Castbar.Duration = UnitChannelDuration(Unit)
+        Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
+    else
+        -- Channel Casts / Empower Casts
+        Name, _, _, StartTime, EndTime = UnitChannelInfo(Unit)
+
+        if (Event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
+            Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
+        else
+            Castbar.Duration = UnitChannelDuration(Unit)
+            Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
+        end
+    end
+
+    if (not Name) then
+        return
+    end
+
+    -- Update Events
+    Castbar.Casting = (Event == "UNIT_SPELLCAST_DELAYED")
+    Castbar.Channel = (Event == "UNIT_SPELLCAST_CHANNEL_UPDATE")
+    Castbar.Empower = (Event == "UNIT_SPELLCAST_EMPOWER_UPDATE")
+
+    Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBarsImmediate, Castbar.Direction)
 end
 
 function NP:CastNonInterruptable(Unit, Event)
@@ -161,33 +221,6 @@ function NP:CastNonInterruptable(Unit, Event)
     end
 end
 
-function NP:CastUpdated(Unit, Event)
-    local Frame = self:GetFrameForUnit(Unit)
-
-    if (not Castbar) then
-        return
-    end
-
-    if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
-        return
-    end
-
-    local Name, StartTime, EndTime, CastID, SpellID
-
-    -- Normal Casts
-    if (Event == "UNIT_SPELLCAST_DELAYED") then
-        Name, _, _, StartTime, EndTime, _, CastID, _, SpellID = UnitCastingInfo(Unit)
-
-        -- Channel Casts
-    elseif (Event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or Event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
-        Name, _, _, StartTime, EndTime, _, _, SpellID = UnitChannelInfo(Unit)
-    end
-
-    if (not Name) then 
-        return 
-    end
-end
-
 function NP.OnUpdate(Castbar)
     local Duration = Castbar:GetTimerDuration():GetElapsedDuration()
     local Total = Castbar:GetTimerDuration():GetTotalDuration()
@@ -195,19 +228,91 @@ function NP.OnUpdate(Castbar)
     Castbar.Time:SetFormattedText("%.1fs / %.1fs", Duration, Total)
 end
 
-function NP:ResetCastBar(Castbar)
-    if (not Castbar) then
+function NP:CreateEmpowerPips(Castbar, NumStages)
+    Castbar.StagePips = Castbar.StagePips or {}
+
+    for i = 1, NumStages do
+        if (not Castbar.StagePips[i]) then
+            local Pip = CreateFrame("Frame", nil, Castbar, "CastingBarFrameStagePipTemplate")
+            Pip:Hide()
+
+            Pip.Texture = Pip:CreateTexture(nil, "BACKGROUND", nil, 7)
+            Pip.Texture:SetTexture(Media.Global.Texture)
+            Pip.Texture:SetAllPoints()
+
+            Pip.Overlay = CreateFrame("Frame", nil, Pip)
+            Pip.Overlay:SetFrameLevel(Pip:GetFrameLevel() - 1)
+            Pip.Overlay:SetInside(Pip.Texture)
+            Pip.Overlay:SetTemplate()
+
+            if (Pip.FillPip) then
+                Pip.FillPip:Hide()
+            end
+
+            if (Pip.BasePip) then
+                Pip.BasePip:SetAlpha(0)
+            end
+
+            Castbar.StagePips[i] = Pip
+        end
+    end
+
+    for i = NumStages + 1, #Castbar.StagePips do
+        Castbar.StagePips[i]:Hide()
+    end
+end
+
+function NP:SetupEmpowerPips(Castbar, StagePercentages)
+    if (type(StagePercentages) ~= "table") then
         return
     end
 
+    local NumPips = #StagePercentages -1
+
+    if (NumPips <= 0) then
+        return
+    end
+
+    local TotalStages = NumPips + 1
+    local PipWidth = 6
+
+    -- Create Pip Frame
+    self:CreateEmpowerPips(Castbar, NumPips)
+
+    for i = 1, NumPips do
+        local Pip = Castbar.StagePips[i]
+        local OffsetX = (i / TotalStages) * Castbar:GetWidth()
+        local Color = UI.Colors.EmpowerStagesColors[i]
+
+        Pip:ClearAllPoints()
+        Pip:Width(PipWidth)
+        Pip:Point("TOP", Castbar, "TOPLEFT", OffsetX, 0)
+        Pip:Point("BOTTOM", Castbar, "BOTTOMLEFT", OffsetX, 0)
+        Pip:Show()
+
+        if (Color) then
+            Pip.Texture:SetVertexColor(Color.r, Color.g, Color.b)
+        end
+
+        Pip.Stage = i
+    end
+end
+
+function NP:ResetCastBar(Castbar)
     -- Reset Cache
     Castbar.Casting = nil
     Castbar.Channel = nil
+    Castbar.Empower = nil
     Castbar.Interrupt = nil
     Castbar.CastID = nil
     Castbar.SpellID = nil
 
-    -- Call Fade
+    if (Castbar.StagePips) then
+        for _, Pip in ipairs(Castbar.StagePips) do
+            Pip:Hide()
+        end
+    end
+
     UI:UIFrameFadeOut(Castbar, NP.FadeInTime, Castbar:GetAlpha(), 0)
 end
 
@@ -216,7 +321,7 @@ end
 function NP:CreateCastBar(Frame)
     local Castbar = CreateFrame("StatusBar", nil, Frame)
     Castbar:Size(192, 20) 
-    Castbar:Point("BOTTOM", Frame, 0, -6)
+    Castbar:Point("BOTTOM", Frame, 0, -10)
     Castbar:SetStatusBarTexture(Media.Global.Texture)
     Castbar:CreateBackdrop()
     Castbar:CreateShadow()

@@ -34,6 +34,7 @@ UI.ClearTexture = UI.Retail and 0 or ""
 UI.Noop = function() return end
 UI.TexCoords = { 0.08, 0.92, 0.08, 0.92 }
 UI.SmoothBars = Enum.StatusBarInterpolation.ExponentialEaseOut
+UI.SmoothBarsImmediate = Enum.StatusBarInterpolation.Immediate
 
 -- Print
 function UI:Print(...)

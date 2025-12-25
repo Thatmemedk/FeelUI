@@ -307,20 +307,20 @@ function NP:OnEvent(event, unit, ...)
         end
 
         -- CASTBARS
-    elseif (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START") then
+    elseif (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then
         if not unit or UnitIsFriend("player", unit) then
             return
         end
 
         self:CastStarted(unit, event)
         self:SetNameplateColor(unit, true)
-    elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP") then
+    elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") then
         if not unit or UnitIsFriend("player", unit) then
             return
         end
 
         self:CastStopped(unit)
-    elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE") then
+    elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
         if not unit or UnitIsFriend("player", unit) then
             return
         end
@@ -373,15 +373,18 @@ function NP:RegisterEvents()
     self:RegisterEvent("UNIT_AURA")
     -- CASTBAR
     self:RegisterEvent("UNIT_SPELLCAST_START")
+    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+    self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
     self:RegisterEvent("UNIT_SPELLCAST_STOP")
+    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+    self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
+    self:RegisterEvent("UNIT_SPELLCAST_DELAYED")
+    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
+    self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE")
     self:RegisterEvent("UNIT_SPELLCAST_FAILED")
     self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
-    self:RegisterEvent("UNIT_SPELLCAST_DELAYED")
-    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
-    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
-    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
-    self:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
     self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE")
+    self:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
     -- ICONS
     self:RegisterEvent("RAID_TARGET_UPDATE")
     -- ON EVENT

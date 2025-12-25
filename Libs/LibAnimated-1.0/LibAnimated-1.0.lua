@@ -207,8 +207,7 @@ local function FadeUpdate(Frame, DeltaTime, Index)
 end
 
 function UI:CreateAnimationGroup(Parent)
-    local Group = {Parent = Parent, Animations = {}} 
-    return Group
+    return {Parent = Parent, Animations = {}} 
 end
 
 function UI:CreateAnimation(Group, Style)

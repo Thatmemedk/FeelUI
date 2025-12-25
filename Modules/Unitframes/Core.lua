@@ -774,19 +774,19 @@ function UF:OnEvent(event, unit, ...)
 
     -- CASTBARS
     elseif (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then
-        UF:CastStarted(unit, event)
+        UF:CastStarted(event, unit)
 
     elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") then
-        UF:CastStopped(unit)
+        UF:CastStopped(event, unit, ...)
 
     elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
-        UF:CastUpdated(unit, event)
+        UF:CastUpdated(event, unit, ...)
 
     elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
-        UF:CastFailed(unit, event)
+        UF:CastFailed(event, unit, ...)
 
     elseif (event == "UNIT_SPELLCAST_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
-        UF:CastInterrupted(unit, event)
+        UF:CastInterrupted(event, unit)
     end
 end
 

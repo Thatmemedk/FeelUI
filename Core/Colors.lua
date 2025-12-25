@@ -62,11 +62,11 @@ end
 
 UI.Colors = {
 	EmpowerStagesColors = {
-	    [1] = UI:CreateColor(0.3, 0.75, 1),
-	    [2] = UI:CreateColor(0.4, 1, 0.4),
-	    [3] = UI:CreateColor(1, 0.85, 0),
-	    [4] = UI:CreateColor(1, 0.5, 0),
-	    [5] = UI:CreateColor(1, 0.2, 0.2),
+	    [1] = UI:CreateColor(0, 0.82, 0),
+	    [2] = UI:CreateColor(0.82, 0, 0),
+	    [3] = UI:CreateColor(1, 0.42, 0),
+	    [4] = UI:CreateColor(1, 0.82, 0),
+	    [5] = UI:CreateColor(1, 1, 0.42),
 	},
 
     Reaction = {

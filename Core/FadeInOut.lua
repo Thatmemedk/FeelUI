@@ -2,26 +2,26 @@ local UI, DB, Media, Language = select(2, ...):Call()
 
 UI.FadeUpdater = CreateFrame("Frame")
 UI.ActiveFades = {}
-UI.FadeUpdater.TickDelay = 0
+UI.TickDelay = 0
 
-function UI:EaseInOutCubic(t)
-    if (t < 0.5) then
-        return 4 * t * t * t
+function UI:EaseInOutCubic(Time)
+    if (Time < 0.5) then
+        return 4 * Time * Time * Time
     else
-        local f = (2 * t) - 2
-        return 0.5 * f * f * f + 1
+        local AdjustedTime = (2 * Time) - 2
+        return 0.5 * AdjustedTime * AdjustedTime * AdjustedTime + 1
     end
 end
 
 function UI:FadeOnUpdate(Elapsed)
     UI.FadeUpdater.Timer = (UI.FadeUpdater.Timer or 0) + Elapsed
 
-    if (UI.FadeUpdater.Timer > UI.FadeUpdater.TickDelay) then
+    if (UI.FadeUpdater.Timer > UI.TickDelay) then
         UI.FadeUpdater.Timer = 0
 
         for Frame, Data in next, UI.ActiveFades do
             if (Frame:IsVisible()) then
-                Data.FadeTimer = (Data.FadeTimer or 0) + (Elapsed + UI.FadeUpdater.TickDelay)
+                Data.FadeTimer = (Data.FadeTimer or 0) + (Elapsed + UI.TickDelay)
             else
                 Data.FadeTimer = (Data.TimeToFade or 0.3) + 1
             end

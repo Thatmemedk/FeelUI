@@ -226,6 +226,22 @@ function Status:CreateStatus()
 	Frame:CreateShadow()
 	Frame:SetAlpha(0)
 	Frame:Hide()
+
+	-- CREATE ANIMATIONS
+	Frame.Fade = UI:CreateAnimationGroup(Frame)
+
+	Frame.FadeIn = UI:CreateAnimation(Frame.Fade, "Fade")
+	Frame.FadeIn:SetDuration(1)
+	Frame.FadeIn:SetChange(1)
+	Frame.FadeIn:SetEasing("In-SineEase")
+
+	Frame.FadeOut = UI:CreateAnimation(Frame.Fade, "Fade")
+	Frame.FadeOut:SetDuration(1)
+	Frame.FadeOut:SetChange(0)
+	Frame.FadeOut:SetEasing("Out-SineEase")
+	Frame.FadeOut:SetScript("OnFinished", function(self)
+		self:GetParent():Hide()
+	end)
 	
 	_G.GameMenuFrame:HookScript("OnShow", function()
 		if Status.Frame:IsShown() then
@@ -290,17 +306,16 @@ function Status:Toggle()
 	end
 
 	if self.Frame:IsShown() then
-		UI:UIFrameFadeOut(self.Frame, 1, self.Frame:GetAlpha(), 0)
+		self.Frame.FadeOut:Play()
 	else
 		self.Frame:Show()
-		UI:UIFrameFadeIn(self.Frame, 1, self.Frame:GetAlpha(), 1)
+		self.Frame.FadeIn:Play()
 	end
 end
 
 function Status:PLAYER_REGEN_DISABLED()
 	if self.Frame:IsShown() then
-		UI:UIFrameFadeOut(self.Frame, 1, self.Frame:GetAlpha(), 0)
-
+		self.Frame:SetAlpha(0)
 		self.Frame:Hide()
 		self.Frame.CombatClosed = true
 	end
@@ -309,8 +324,7 @@ end
 function Status:PLAYER_REGEN_ENABLED()
 	if self.Frame.CombatClosed then
 		self.Frame:Show()
-		UI:UIFrameFadeIn(self.Frame, 1, self.Frame:GetAlpha(), 1)
-
+		self.Frame:SetAlpha(1)
 		self.Frame.CombatClosed = false
 	end
 end
