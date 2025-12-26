@@ -21,7 +21,10 @@ local UnitThreatSituation = UnitThreatSituation
 -- Locals
 NP.Hooked = {}
 NP.ForcedCasters = {}
+
+-- Locals
 NP.FadeInTime = 0.5
+NP.CastHoldTime = 2
 
 -- HEALTH UPDATE
 

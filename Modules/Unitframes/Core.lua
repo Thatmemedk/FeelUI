@@ -65,6 +65,7 @@ UF.Frames.Raid = {}
 
 -- Locals
 UF.FadeInTime = 0.5
+UF.CastHoldTime = 2
 
 -- SecureFrame
 UF.SecureFrame = CreateFrame("Frame", "UF_SecureFrame", _G.UIParent, "SecureHandlerStateTemplate")

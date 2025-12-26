@@ -30,14 +30,23 @@ function UF:CastStarted(Event, Unit)
     -- Normal Casts
     if (Event == "UNIT_SPELLCAST_START") then
         Name, _, Icon, StartTime, EndTime, _, CastID, Interrupt, SpellID = UnitCastingInfo(Unit)
+
+        Castbar.Duration = UnitCastingDuration(Unit)
+        Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
     else
         -- Channel / Empower Casts
         Name, _, Icon, StartTime, EndTime, _, Interrupt, SpellID, Empowered, _, CastID = UnitChannelInfo(Unit)
         
         if (Empowered) then
             Event = "UNIT_SPELLCAST_EMPOWER_START"
+
+            Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
+            Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
         else
             Event = "UNIT_SPELLCAST_CHANNEL_START"
+
+            Castbar.Duration = UnitChannelDuration(Unit)
+            Castbar.Direction = Enum.StatusBarTimerDirection.RemainingTime
         end
     end
 
@@ -55,18 +64,11 @@ function UF:CastStarted(Event, Unit)
     Castbar.CastID = CastID
     Castbar.SpellID = SpellID
 
-    if (Castbar.Channel) then
-        Castbar.Duration = UnitChannelDuration(Unit)
-        Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
-    elseif (Castbar.Empower) then
-        Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
-    else
-        Castbar.Duration = UnitCastingDuration(Unit)
-    end
-
     -- Set Values
     Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBarsImmediate, Castbar.Direction)
-    Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
+
+    -- Interrupt Color
+    Castbar:GetStatusBarTexture():SetVertexColorFromBoolean(Interrupt, CreateColor(0.67, 0, 0, 0.7), CreateColor(0.45, 0.45, 0.45, 0.7))
 
     -- Icon
     if (Castbar.Icon) then
@@ -137,6 +139,9 @@ function UF:CastStopped(Event, Unit, _, _, ...)
     if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
         UF:ResetCastBar(Castbar)
     end
+
+    -- Call Fade
+    UI:UIFrameFadeOut(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 0)
 end
 
 function UF:CastFailed(Event, Unit, _, _, ...)
@@ -157,12 +162,13 @@ function UF:CastFailed(Event, Unit, _, _, ...)
     elseif (Event == "UNIT_SPELLCAST_INTERRUPTED") then
         Castbar.Text:SetText(INTERRUPTED)
         Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
-    else
-        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
     end
 
     -- Reset CastBar
     UF:ResetCastBar(Castbar)
+
+    -- Call Fade
+    UI:UIFrameFadeOut(Castbar, UF.HoldTime, Castbar:GetAlpha(), 0)
 end
 
 function UF:CastUpdated(Event, Unit, _, _, CastID)
@@ -191,9 +197,10 @@ function UF:CastUpdated(Event, Unit, _, _, CastID)
 
         if (Event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
             Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
+            Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
         else
             Castbar.Duration = UnitChannelDuration(Unit)
-            Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
+            Castbar.Direction = Enum.StatusBarTimerDirection.RemainingTime
         end
     end
 
@@ -218,15 +225,7 @@ function UF:CastNonInterruptable(Event, Unit)
 
     -- Update Events
     if (Event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
-        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
-        Castbar.Icon:SetDesaturated(true)
-
-        Castbar.Interrupt = true
-    elseif (Event == "UNIT_SPELLCAST_INTERRUPTIBLE") then
-        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
-        Castbar.Icon:SetDesaturated(false)
-
-        Castbar.Interrupt = nil
+        Castbar:GetStatusBarTexture():SetVertexColorFromBoolean(Castbar.Interrupt, CreateColor(0.67, 0, 0, 0.7), CreateColor(0.45, 0.45, 0.45, 0.7))
     end
 end
 
@@ -320,8 +319,6 @@ function UF:ResetCastBar(Castbar)
             Pip:Hide()
         end
     end
-
-    UI:UIFrameFadeOut(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 0)
 end
 
 function UF:ClearCastBarOnUnit(Unit)
@@ -333,6 +330,9 @@ function UF:ClearCastBarOnUnit(Unit)
 
     -- Reset CastBar
     UF:ResetCastBar(Castbar)
+
+    -- Call Fade
+    UI:UIFrameFadeOut(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 0)
 end
 
 -- CREATE CASTBARS
@@ -465,8 +465,8 @@ function UF:CreateFocusCastbar(Frame)
     Castbar:SetAlpha(0)
     
     local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
-    CastbarIcon:Size(42, 36)
-    CastbarIcon:Point("RIGHT", Castbar, "LEFT", -4, 1)
+    CastbarIcon:Size(42, 32)
+    CastbarIcon:Point("RIGHT", Castbar, "LEFT", -4, 0)
     UI:KeepAspectRatio(CastbarIcon, CastbarIcon)
     
     local IconOverlay = CreateFrame("Frame", nil, Castbar)

@@ -43,14 +43,23 @@ function NP:CastStarted(Unit, Event)
     -- Normal Casts
     if (Event == "UNIT_SPELLCAST_START") then
         Name, _, Icon, StartTime, EndTime, _, CastID, Interrupt, SpellID = UnitCastingInfo(Unit)
+
+        Castbar.Duration = UnitCastingDuration(Unit)
+        Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
     else
         -- Channel / Empower Casts
         Name, _, Icon, StartTime, EndTime, _, Interrupt, SpellID, Empowered, _, CastID = UnitChannelInfo(Unit)
         
         if (Empowered) then
             Event = "UNIT_SPELLCAST_EMPOWER_START"
+
+            Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
+            Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
         else
             Event = "UNIT_SPELLCAST_CHANNEL_START"
+
+            Castbar.Duration = UnitChannelDuration(Unit)
+            Castbar.Direction = Enum.StatusBarTimerDirection.RemainingTime
         end
     end
 
@@ -68,18 +77,11 @@ function NP:CastStarted(Unit, Event)
     Castbar.CastID = CastID
     Castbar.SpellID = SpellID
 
-    if (Castbar.Channel) then
-        Castbar.Duration = UnitChannelDuration(Unit)
-        Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
-    elseif (Castbar.Empower) then
-        Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
-    else
-        Castbar.Duration = UnitCastingDuration(Unit)
-    end
-
     -- Set Values
     Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBarsImmediate, Castbar.Direction)
-    Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
+
+    -- Interrupt Color
+    Castbar:GetStatusBarTexture():SetVertexColorFromBoolean(Interrupt, CreateColor(0.67, 0, 0, 0.7), CreateColor(0.45, 0.45, 0.45, 0.7))
 
     -- Icon
     if (Castbar.Icon) then
@@ -90,18 +92,6 @@ function NP:CastStarted(Unit, Event)
     if (Castbar.Text) then
         Castbar.Text:SetText(Name)
     end
-
-    if (Castbar.Channel) then
-        Castbar.Duration = UnitChannelDuration(Unit)
-    elseif (Castbar.Empower) then
-        Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
-    else
-        Castbar.Duration = UnitCastingDuration(Unit)
-    end
-
-    -- Set Values
-    Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBars, Enum.StatusBarTimerDirection.ElapsedTime)
-    Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
 
     -- Create EmpowerPips
     if (Castbar.Empower) then
@@ -126,6 +116,9 @@ function NP:CastStopped(Unit, Event)
     if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
         NP:ResetCastBar(Castbar)
     end
+
+    -- Call Fade
+    UI:UIFrameFadeOut(Castbar, NP.FadeInTime, Castbar:GetAlpha(), 0)
 end
 
 function NP:CastFailed(Unit, Event)
@@ -147,12 +140,13 @@ function NP:CastFailed(Unit, Event)
     elseif (Event == "UNIT_SPELLCAST_INTERRUPTED") then
         Castbar.Text:SetText(INTERRUPTED)
         Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
-    else
-        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
     end
 
     -- Reset CastBar
     NP:ResetCastBar(Castbar)
+
+    -- Call Fade
+    UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
 end
 
 function NP:CastUpdated(Unit, Event)
@@ -182,9 +176,10 @@ function NP:CastUpdated(Unit, Event)
 
         if (Event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
             Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
+            Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
         else
             Castbar.Duration = UnitChannelDuration(Unit)
-            Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
+            Castbar.Direction = Enum.StatusBarTimerDirection.RemainingTime
         end
     end
 
@@ -197,6 +192,7 @@ function NP:CastUpdated(Unit, Event)
     Castbar.Channel = (Event == "UNIT_SPELLCAST_CHANNEL_UPDATE")
     Castbar.Empower = (Event == "UNIT_SPELLCAST_EMPOWER_UPDATE")
 
+    -- Set Values
     Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBarsImmediate, Castbar.Direction)
 end
 
@@ -208,16 +204,9 @@ function NP:CastNonInterruptable(Unit, Event)
         return
     end
 
+    -- Update Events
     if (Event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
-        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
-        Castbar.Icon:SetDesaturated(true)
-
-        Castbar.Interrupt = true
-    elseif (Event == "UNIT_SPELLCAST_INTERRUPTIBLE") then
-        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
-        Castbar.Icon:SetDesaturated(false)
-
-        Castbar.Interrupt = nil
+        Castbar:GetStatusBarTexture():SetVertexColorFromBoolean(Castbar.Interrupt, CreateColor(0.67, 0, 0, 0.7), CreateColor(0.45, 0.45, 0.45, 0.7))
     end
 end
 
@@ -312,8 +301,6 @@ function NP:ResetCastBar(Castbar)
             Pip:Hide()
         end
     end
-
-    UI:UIFrameFadeOut(Castbar, NP.FadeInTime, Castbar:GetAlpha(), 0)
 end
 
 -- CREATE CASTBAR
