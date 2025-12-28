@@ -147,17 +147,18 @@ function B:CreateContainer()
     SearchBox:SetScript("OnEditFocusGained", function(self) self:SetText(""); self.Title:Hide() end)
 
     SearchBox:SetScript("OnTextChanged", function(self)
-        local text = (self:GetText() or ""):lower()
+        local Text = (self:GetText() or ""):lower()
 
         if (SetItemSearch) then
-            SetItemSearch(text)
+            SetItemSearch(Text)
         end
 
-        for _, slotTable in ipairs(SlotTables) do
-            for _, btn in ipairs(slotTable) do
-                local info = (C_Container and C_Container.GetContainerItemInfo) and C_Container.GetContainerItemInfo(btn.bag, btn.slot)
-                local name = B:GetCachedItemName(info and info.itemID)
-                btn:SetAlpha((text == "" or name:find(text)) and 1 or 0.5)
+        for _, Frames in ipairs(SlotTables) do
+            for _, Button in ipairs(Frames) do
+                local Info = (C_Container and C_Container.GetContainerItemInfo) and C_Container.GetContainerItemInfo(Button.bag, Button.slot)
+                local Name = B:GetCachedItemName(Info and Info.itemID)
+
+                Button:SetAlpha((Text == "" or Name:find(Text)) and 1 or 0.5)
             end
         end
     end)
@@ -287,8 +288,9 @@ function B:UpdateItemSlots(BagID, StartIndex, SlotTable, ParentFrame, isReagent)
     for Slot = 1, NumSlots do
         local Button = SlotTable[Index]
 
-        if not Button then
+        if (not Button) then
             Button = B:CreateItemSlot(ParentFrame)
+
             SlotTable[Index] = Button
         end
 
@@ -300,28 +302,31 @@ function B:UpdateItemSlots(BagID, StartIndex, SlotTable, ParentFrame, isReagent)
         Button:SetAttribute("bag", BagID)
         Button:SetAttribute("slot", Slot)
 
-        -- Set secure item location for proper click handling
-        local il = ItemLocation:CreateFromBagAndSlot(BagID, Slot)
-        if Button.SetItemLocation then
-            Button:SetItemLocation(il)
-        else
-            Button.itemLocation = il
-        end
-
         -- Get item info
         local Info = B:GetContainerItemInfo(BagID, Slot)
         local Quest = B:GetContainerItemQuestInfo(BagID, Slot)
         Button.ItemID, Button.ItemLink = Info.itemID, Info.hyperlink
 
-        -- Hide Battlepay texture if present
-        if Button.BattlepayItemTexture then
-            Button.BattlepayItemTexture:Hide()
-        end
+        -- Handle tooltip & new item glow
+        Button:HookScript("OnEnter", function(self)
+            if C_NewItems.IsNewItem(self.bag, self.slot) then
+                C_NewItems.RemoveNewItem(self.bag, self.slot)
+
+                if (self.NewItemTexture) then 
+                    self.NewItemTexture:Hide() 
+                end
+
+                if self.NewItemAnimation and self.NewItemAnimation:IsPlaying() then
+                    self.NewItemAnimation:Stop()
+                end
+            end
+        end)
 
         -- Update visuals
-        if Button.ItemLink then
+        if (Button.ItemLink) then
             Button.Icon:SetTexture(Info.iconFileID)
-            if Info.stackCount and Info.stackCount > 1 then
+
+            if (Info.stackCount and Info.stackCount > 1) then
                 Button.Count:Show()
                 Button.Count:SetText(Info.stackCount)
             else
@@ -329,28 +334,32 @@ function B:UpdateItemSlots(BagID, StartIndex, SlotTable, ParentFrame, isReagent)
             end
 
             Button.name, _, Button.quality, _, _, Button.type = GetItemInfo(Button.ItemLink)
-            if not Button.quality then Button.quality = Info.quality end
+
+            if not (Button.quality) then 
+                Button.quality = Info.quality 
+            end
         else
             Button.name, Button.quality, Button.type = nil, nil, nil
             Button.Icon:SetTexture(nil)
             Button.Count:Hide()
         end
 
-        if Quest and (Quest.questID or Quest.isQuestItem) then
+        if (Quest and Quest.questID or Quest.isQuestItem) then
             Button.type = QUESTS_LABEL
         end
 
         B:UpdateBorderColors(Button)
 
         -- New item glow
-        if C_NewItems and C_NewItems.IsNewItem(BagID, Slot) then
+        if (C_NewItems.IsNewItem(BagID, Slot)) then
             local quality = Button.quality or Info.quality or 0
             local atlas
-            if quality >= Enum.ItemQuality.Epic then
+
+            if (quality >= Enum.ItemQuality.Epic) then
                 atlas = "bags-glow-purple"
-            elseif quality >= Enum.ItemQuality.Rare then
+            elseif (quality >= Enum.ItemQuality.Rare) then
                 atlas = "bags-glow-blue"
-            elseif quality >= Enum.ItemQuality.Uncommon then
+            elseif (quality >= Enum.ItemQuality.Uncommon) then
                 atlas = "bags-glow-green"
             else
                 atlas = "bags-glow-white"
@@ -358,19 +367,51 @@ function B:UpdateItemSlots(BagID, StartIndex, SlotTable, ParentFrame, isReagent)
 
             Button.NewItemTexture:SetAtlas(atlas)
             Button.NewItemTexture:Show()
+
             if Button.NewItemAnimation and not Button.NewItemAnimation:IsPlaying() then
                 Button.NewItemAnimation:Play()
             end
         else
             Button.NewItemTexture:Hide()
+
             if Button.NewItemAnimation and Button.NewItemAnimation:IsPlaying() then
                 Button.NewItemAnimation:Stop()
             end
         end
 
+        --[[
+        if Info.itemID then  -- Reagent bank
+            if C_TradeSkillUI and C_TradeSkillUI.GetReagentQuality then
+                local qualityTier = C_TradeSkillUI.GetReagentQuality(itemInfo)
+
+                local atlas
+                if qualityTier == 1 then
+                    atlas = "bags-glow-bronze"
+                elseif qualityTier == 2 then
+                    atlas = "bags-glow-silver"
+                elseif qualityTier == 3 then
+                    atlas = "bags-glow-gold"
+                end
+
+                if atlas then
+                    Button.ReagentQualityTexture:SetAtlas(atlas, true)
+                    Button.ReagentQualityTexture:Show()
+                else
+                    Button.ReagentQualityTexture:Hide()
+                end
+            else
+                -- Handle the case where the function is not available
+                Button.ReagentQualityTexture:Hide()
+            end
+        else
+            Button.ReagentQualityTexture:Hide()
+        end
+        --]]
+
         -- Position
         Button:Show()
         Button:ClearAllPoints()
+
         if isReagent then
             local rows = math.floor((Slot - 1) / 4)
             local cols = (Slot - 1) % 4

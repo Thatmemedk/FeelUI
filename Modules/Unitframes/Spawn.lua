@@ -120,9 +120,13 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         -- CASTBAR
         self:CreatePlayerCastbar(Frame)
         -- PORTRAITS
-        self:CreatePortrait(Frame)
+        if (DB.Global.UnitFrames.Portraits) then
+            self:CreatePortrait(Frame)
+        end
         -- ADDITIONAL POWER
         self:CreateAdditionalPower(Frame)
+        -- DEBUFF HIGHLIGHT
+        --self:CreateDebuffHighlight(Frame)
     elseif (Unit == "target") then
         -- TEXTS
         self:CreateTargetTexts(Frame)
@@ -132,7 +136,9 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         -- CASTBARS
         self:CreateTargetCastbar(Frame)
         -- PORTRAITS
-        self:CreatePortrait(Frame)
+        if (DB.Global.UnitFrames.Portraits) then
+            self:CreatePortrait(Frame)
+        end
         -- HEALTH PRED
         self:CreateHealthPrediction(Frame)
         -- AURAS

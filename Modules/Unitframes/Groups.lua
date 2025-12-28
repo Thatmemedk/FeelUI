@@ -30,10 +30,12 @@ function UF:SetupGroupFrame(Frame, type)
         self:CreateHealth(Frame)
         self:CreatePartyTexts(Frame)
         self:CreatePartyDebuffs(Frame)
+        self:CreatePartyBuffs(Frame)
     else
         self:CreateHealth(Frame, 42, "VERTICAL")
         self:CreateRaidTexts(Frame)
         self:CreateRaidDebuffs(Frame)
+        self:CreateRaidBuffs(Frame)
     end
 
     -- HEALTH PRED
@@ -48,6 +50,8 @@ function UF:SetupGroupFrame(Frame, type)
     self:CreateReadyCheckIcon(Frame)
     -- THREAT
     self:CreateThreatHighlight(Frame)
+    -- DEBUFF HIGHLIGHT
+    --self:CreateDebuffHighlight(Frame)
 
     -- REGISTER UNIT WATCH
     RegisterUnitWatch(Frame)
@@ -77,6 +81,7 @@ function UF:SetupGroupFrame(Frame, type)
 
         -- AURAS
         UF:UpdateAuras(self, self.unit, true)
+        UF:UpdateAuras(self, self.unit, false)
         -- ICONS
         UF:UpdateRaidIcon(self)
         UF:UpdateResurrectionIcon(self)
@@ -87,6 +92,8 @@ function UF:SetupGroupFrame(Frame, type)
         UF:UpdateReadyCheckIcon(self)
         -- THREAT
         UF:UpdateThreatHighlightRaid(self)
+        -- DEBUFF HIGHLIGHT
+        UF:UpdateDebuffHighlight(self)
     end)
 
     Frame.UnitIsCreated = true
@@ -110,7 +117,7 @@ function UF:SpawnGroupHeader(type)
         Header:SetAttribute("initial-width", 202)
         Header:SetAttribute("initial-height", 36)
         Header:SetAttribute("point", "TOP")
-        Header:SetAttribute("yOffset", -18)
+        Header:SetAttribute("yOffset", -22)
         Header:SetAttribute("columnAnchorPoint", "BOTTOM")
     else
         -- RAID SETTINGS

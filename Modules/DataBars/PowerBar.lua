@@ -31,7 +31,6 @@ function PowerBar:CreateBar()
 	InvisFrame:SetInside()
 
 	local Text = InvisFrame:CreateFontString(nil, "OVERLAY")
-	Text:Point("CENTER", Bar, 0, 6)
 	Text:SetFontTemplate("Default", 16)
 	
 	self.Bar = Bar
@@ -41,7 +40,7 @@ end
 function PowerBar:Update()
 	local PowerType, PowerToken = UnitPowerType("player")
 	local Min, Max = UnitPower("player", PowerType), UnitPowerMax("player", PowerType)
-	local Percent = UnitPowerPercent("player", PowerType, false, CurveConstants.ScaleTo100)
+	local Percent = UnitPowerPercent("player", PowerType, false, UI.CurvePercent)
 	local PowerColor = UI.Colors.Power[PowerToken]
 
 	self.Bar:SetMinMaxValues(0, Max)
@@ -49,8 +48,10 @@ function PowerBar:Update()
 
 	if (PowerType == Enum.PowerType.Mana) then
 		self.Text:SetFormattedText("%.0f%%", Percent)
+		self.Text:Point("CENTER", Bar, 2, 6)
 	else
 		self.Text:SetText(Min)
+		self.Text:Point("CENTER", Bar, 0, 6)
 	end
 
 	if (PowerColor) then

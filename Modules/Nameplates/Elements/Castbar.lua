@@ -12,6 +12,7 @@ local UnitCastingInfo = UnitCastingInfo
 local UnitChannelInfo = UnitChannelInfo
 local UnitChannelDuration = UnitChannelDuration
 local UnitCastingDuration = UnitCastingDuration
+local UnitEmpoweredChannelDuration = UnitEmpoweredChannelDuration
 
 -- WoW Globals
 local FAILED = _G.FAILED or "Failed"
@@ -29,7 +30,7 @@ function NP:GetFrameForUnit(Unit)
     return nil
 end
 
-function NP:CastStarted(Unit, Event)
+function NP:CastStarted(Event, Unit)
     local Frame = self:GetFrameForUnit(Unit)
     local Castbar = Frame and Frame.Castbar
 
@@ -45,7 +46,7 @@ function NP:CastStarted(Unit, Event)
         Name, _, Icon, StartTime, EndTime, _, CastID, Interrupt, SpellID = UnitCastingInfo(Unit)
 
         Castbar.Duration = UnitCastingDuration(Unit)
-        Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
+        Castbar.Direction = UI.DirectionElapsed
     else
         -- Channel / Empower Casts
         Name, _, Icon, StartTime, EndTime, _, Interrupt, SpellID, Empowered, _, CastID = UnitChannelInfo(Unit)
@@ -54,12 +55,12 @@ function NP:CastStarted(Unit, Event)
             Event = "UNIT_SPELLCAST_EMPOWER_START"
 
             Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
-            Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
+            Castbar.Direction = UI.DirectionElapsed
         else
             Event = "UNIT_SPELLCAST_CHANNEL_START"
 
             Castbar.Duration = UnitChannelDuration(Unit)
-            Castbar.Direction = Enum.StatusBarTimerDirection.RemainingTime
+            Castbar.Direction = UI.DirectionRemaining
         end
     end
 
@@ -99,13 +100,18 @@ function NP:CastStarted(Unit, Event)
     end
 
     -- Call On Update
-    Castbar:SetScript("OnUpdate", NP.OnUpdate)
+    if (Castbar.Casting or Castbar.Channel or Castbar.Empower) then
+        Castbar:SetScript("OnUpdate", NP.OnUpdate)
+    else
+        -- Stop Update
+        Castbar:SetScript("OnUpdate", nil)
+    end
 
     -- Call Fade
     UI:UIFrameFadeIn(Castbar, NP.FadeInTime, Castbar:GetAlpha(), 1)
 end
 
-function NP:CastStopped(Unit, Event)
+function NP:CastStopped(Event, Unit)
     local Frame = self:GetFrameForUnit(Unit)
     local Castbar = Frame and Frame.Castbar
 
@@ -121,7 +127,7 @@ function NP:CastStopped(Unit, Event)
     UI:UIFrameFadeOut(Castbar, NP.FadeInTime, Castbar:GetAlpha(), 0)
 end
 
-function NP:CastFailed(Unit, Event)
+function NP:CastFailed(Event, Unit)
     local Frame = self:GetFrameForUnit(Unit)
     local Castbar = Frame and Frame.Castbar
 
@@ -149,7 +155,7 @@ function NP:CastFailed(Unit, Event)
     UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
 end
 
-function NP:CastUpdated(Unit, Event)
+function NP:CastUpdated(Event, Unit)
     local Frame = self:GetFrameForUnit(Unit)
     local Castbar = Frame and Frame.Castbar
 
@@ -169,17 +175,17 @@ function NP:CastUpdated(Unit, Event)
         Name, _, _, StartTime, EndTime = UnitCastingInfo(Unit)
 
         Castbar.Duration = UnitChannelDuration(Unit)
-        Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
+        Castbar.Direction = UI.DirectionElapsed
     else
         -- Channel Casts / Empower Casts
         Name, _, _, StartTime, EndTime = UnitChannelInfo(Unit)
 
         if (Event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
             Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
-            Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
+            Castbar.Direction = UI.DirectionElapsed
         else
             Castbar.Duration = UnitChannelDuration(Unit)
-            Castbar.Direction = Enum.StatusBarTimerDirection.RemainingTime
+            Castbar.Direction = UI.DirectionRemaining
         end
     end
 
@@ -196,7 +202,7 @@ function NP:CastUpdated(Unit, Event)
     Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBarsImmediate, Castbar.Direction)
 end
 
-function NP:CastNonInterruptable(Unit, Event)
+function NP:CastNonInterruptable(Event, Unit)
     local Frame = self:GetFrameForUnit(Unit)
     local Castbar = Frame and Frame.Castbar
 
@@ -308,7 +314,7 @@ end
 function NP:CreateCastBar(Frame)
     local Castbar = CreateFrame("StatusBar", nil, Frame)
     Castbar:Size(192, 20) 
-    Castbar:Point("BOTTOM", Frame, 0, -10)
+    Castbar:Point("BOTTOM", Frame, 0, -8)
     Castbar:SetStatusBarTexture(Media.Global.Texture)
     Castbar:CreateBackdrop()
     Castbar:CreateShadow()

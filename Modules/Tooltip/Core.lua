@@ -238,6 +238,7 @@ function TT:StyleHealthBar()
 	GameTooltipStatusBar:SetStatusBarTexture(Media.Global.Texture)
 	GameTooltipStatusBar:CreateBackdrop()
 	GameTooltipStatusBar:CreateShadow()
+    GameTooltipStatusBar:SetScript("OnValueChanged", nil)
 end
 
 function TT:SetBackdropStyle(tt)

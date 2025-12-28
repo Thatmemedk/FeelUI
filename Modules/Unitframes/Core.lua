@@ -38,12 +38,19 @@ local UnitGetTotalHealAbsorbs = UnitGetTotalHealAbsorbs
 local UnitGetIncomingHeals = UnitGetIncomingHeals
 local UnitGetTotalAbsorbs = UnitGetTotalAbsorbs
 local UnitIsUnit = UnitIsUnit
+local UnitThreatSituation = UnitThreatSituation
+local GetThreatStatusColor = GetThreatStatusColor
+
+-- WoW Globals
 local PLAYER_OFFLINE = _G.PLAYER_OFFLINE
 local DEAD = _G.DEAD
 local GHOST = "Ghost"
 
 -- WoW Globals
-local ADDITIONAL_POWER_BAR_NAME = "MANA"
+local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
+local GetAuraDispelTypeColor = C_UnitAuras.GetAuraDispelTypeColor
+
+-- WoW Globals
 local ADDITIONAL_POWER_BAR_INDEX = 0
 
 -- WoW Globals
@@ -65,7 +72,7 @@ UF.Frames.Raid = {}
 
 -- Locals
 UF.FadeInTime = 0.5
-UF.CastHoldTime = 2
+UF.CastHoldTime = 1.25
 
 -- SecureFrame
 UF.SecureFrame = CreateFrame("Frame", "UF_SecureFrame", _G.UIParent, "SecureHandlerStateTemplate")
@@ -152,8 +159,26 @@ function UF:UpdateHealth(Frame)
         Frame.Health:SetStatusBarColor(0.25, 0, 0)
         Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
     else
-        Frame.Health:SetStatusBarColor(unpack(DB.Global.UnitFrames.HealthBarColor))
-        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
+        if (DB.Global.UnitFrames.ClassColor) then
+            if UnitIsPlayer(Unit) then
+                local _, Class = UnitClass(Unit)
+                local Color = UI.Colors.Class[Class]
+
+                Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
+            else
+                local Reaction = UnitReaction(Unit, "player") or 5
+                local Color = UI.Colors.Reaction[Reaction]
+
+                Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
+            end
+        else
+            Frame.Health:SetStatusBarColor(unpack(DB.Global.UnitFrames.HealthBarColor))
+
+            --local Color = UnitHealthPercent(Unit, true, UI.HealthColorCurve)
+            --Frame.Health:GetStatusBarTexture():SetVertexColor(Color:GetRGB())
+        end
+
+        Frame.Health:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
     end
 end
 
@@ -186,7 +211,7 @@ function UF:UpdateHealthTextPer(Frame)
     end
 
     local Unit = Frame.unit
-    local Percent = UnitHealthPercent(Unit, false, CurveConstants.ScaleTo100)
+    local Percent = UnitHealthPercent(Unit, false, UI.CurvePercent)
 
     Frame.HealthTextPer:SetFormattedText("%d%%", Percent or 0)
 end
@@ -277,7 +302,7 @@ function UF:UpdatePower(Frame)
     local Unit = Frame.unit
     local PowerType, PowerToken = UnitPowerType(Unit)
     local Min, Max = UnitPower(Unit, PowerType), UnitPowerMax(Unit, PowerType)
-    local Percent = UnitPowerPercent(Unit, PowerType, false, CurveConstants.ScaleTo100)
+    local Percent = UnitPowerPercent(Unit, PowerType, false, UI.CurvePercent)
     local PowerColor = UI.Colors.Power[PowerToken]
 
     if (PowerType == Enum.PowerType.Mana) then
@@ -297,23 +322,25 @@ function UF:UpdateAdditionalPower(Frame)
     end
 
     local Unit = Frame.unit
-    local PowerType = UnitPowerType("player")
-    local Min, Max = UnitPower("player", ADDITIONAL_POWER_BAR_INDEX), UnitPowerMax("player", ADDITIONAL_POWER_BAR_INDEX)
-    local Percent = UnitPowerPercent("player", ADDITIONAL_POWER_BAR_INDEX, false, CurveConstants.ScaleTo100)
-    local Bar = Frame.AdditionalPower
-    local Text = Frame.AdditionalPowerText
+    local _, Class = UnitClass(Unit)
+    local PowerType = UnitPowerType(Unit)
+    local DisplayInfo = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO
+    local Min, Max = UnitPower(Unit, ADDITIONAL_POWER_BAR_INDEX), UnitPowerMax(Unit, ADDITIONAL_POWER_BAR_INDEX)
+    local Percent = UnitPowerPercent(Unit, ADDITIONAL_POWER_BAR_INDEX, false, UI.CurvePercent)
+    local EnableState = (Max ~= 0 and DisplayInfo[Class] and DisplayInfo[Class][PowerType])
 
-    if (Max == 0 or PowerType == Enum.PowerType.Mana) then
-        UI:UIFrameFadeOut(Bar, 0.25, Bar:GetAlpha(), 0)
-        UI:UIFrameFadeOut(Text, 0.25, Text:GetAlpha(), 0)
-    else
-        UI:UIFrameFadeIn(Bar, 0.25, Bar:GetAlpha(), 1)
-        UI:UIFrameFadeIn(Text, 0.25, Text:GetAlpha(), 1)
-
-        Bar:SetMinMaxValues(0, Max)
-        Bar:SetValue(Min, UI.SmoothBars)
-        Text:SetFormattedText("%.0f%%", Percent)
+    if (not EnableState) then
+        Frame.AdditionalPower:Hide()
+        Frame.AdditionalPowerText:Hide()
+        return
     end
+
+    Frame.AdditionalPower:SetMinMaxValues(0, Max)
+    Frame.AdditionalPower:SetValue(Min, UI.SmoothBars)
+    Frame.AdditionalPower:Show()
+
+    Frame.AdditionalPowerText:SetFormattedText("%.0f%%", Percent)
+    Frame.AdditionalPowerText:Show()
 end
 
 --- UPDATE NAME
@@ -334,16 +361,20 @@ function UF:UpdateName(Frame, TypeFrame)
         Frame.Name:SetText(Name)
     end
 
-    if UnitIsPlayer(Unit) then
-        local _, Class = UnitClass(Unit)
-        local Color = UI.Colors.Class[Class]
-
-        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+    if (DB.Global.UnitFrames.ClassColor) then
+        Frame.Name:SetTextColor(1, 1, 1)
     else
-        local Reaction = UnitReaction(Unit, "player") or 5
-        local Color = UI.Colors.Reaction[Reaction]
+        if UnitIsPlayer(Unit) then
+            local _, Class = UnitClass(Unit)
+            local Color = UI.Colors.Class[Class]
 
-        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+            Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+        else
+            local Reaction = UnitReaction(Unit, "player") or 5
+            local Color = UI.Colors.Reaction[Reaction]
+
+            Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+        end
     end
 end
 
@@ -359,16 +390,20 @@ function UF:UpdateTargetNameLevel(Frame)
     local Level = UnitLevel(Unit) or -1
     local NameColor, LevelColor, LevelText
 
-    if UnitIsPlayer(Unit) then
-        local _, Class = UnitClass(Unit)
-        local Color = UI.Colors.Class[Class]
-
-        NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
+    if (DB.Global.UnitFrames.ClassColor) then
+        NameColor = format("|cff%02x%02x%02x", 1*255, 1*255, 1*255)
     else
-        local Reaction = UnitReaction(Unit, "player") or 5
-        local Color = UI.Colors.Reaction[Reaction]
+        if UnitIsPlayer(Unit) then
+            local _, Class = UnitClass(Unit)
+            local Color = UI.Colors.Class[Class]
 
-        NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
+            NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
+        else
+            local Reaction = UnitReaction(Unit, "player") or 5
+            local Color = UI.Colors.Reaction[Reaction]
+
+            NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
+        end
     end
 
     if (Level < 0) then
@@ -394,30 +429,41 @@ end
 
 -- UPDATE PORTRAITS
 
-function UF:UpdatePortrait(Frame)
+function UF:UpdatePortrait(Frame, Unit)
     if (not Frame or not Frame.unit or not Frame.Portrait) then
         return
     end
 
-    if (Frame.PortraitUpdatePending) then
+    if (not UnitIsUnit(Frame.unit, Unit)) then
         return
     end
 
-    Frame.PortraitUpdatePending = true
+    local GUID = UnitGUID(Unit)
+    local State = UnitIsConnected(Unit) and UnitIsVisible(Unit)
+    local StateChanged = Frame.Portrait.GUID ~= GUID or Frame.Portrait.State ~= State
 
-    C_Timer.After(0.1, function()
-        Frame.PortraitUpdatePending = nil
+    if (not StateChanged) then
+        return
+    end
 
-        if (not Frame.unit or not UnitExists(Frame.unit)) then
+    Frame.Portrait.GUID = GUID
+    Frame.Portrait.State = State
+
+    if (Frame.Portrait:IsObjectType("PlayerModel")) then
+        if (not StateChanged) then
+            Frame.Portrait:SetCamDistanceScale(1)
+            Frame.Portrait:SetPortraitZoom(1)
+            Frame.Portrait:SetPosition(0, 0, 0.20)
             Frame.Portrait:ClearModel()
-            return
+            Frame.Portrait:SetModel("Interface\\Buttons\\TalkToMeQuestionMark.m2")
+        else
+            Frame.Portrait:SetCamDistanceScale(2.5)
+            Frame.Portrait:SetPortraitZoom(1)
+            Frame.Portrait:SetPosition(0, 0, 0)
+            Frame.Portrait:ClearModel()
+            Frame.Portrait:SetUnit(Unit)
         end
-
-        Frame.Portrait:SetUnit(Frame.unit)
-        Frame.Portrait:SetCamDistanceScale(2.5)
-        Frame.Portrait:SetPortraitZoom(1)
-        Frame.Portrait:SetPosition(0, 0, 0)
-    end)
+    end
 end
 
 -- ICONS
@@ -620,6 +666,35 @@ function UF:UpdateThreatHighlightRaid(Frame)
     end
 end
 
+-- DEBUFF HIGHLIGHT
+
+function UF:UpdateDebuffHighlight(Frame)
+    if (not Frame or not Frame.unit or not Frame.DebuffHighlight) then
+        return
+    end
+
+    local Unit = Frame.unit
+    local Index = 1
+
+    while true do
+        local AuraData = GetAuraDataByIndex(Unit, Index, "HARMFUL|RAID")
+
+        if (not AuraData) then
+            break
+        end
+
+        local Color = GetAuraDispelTypeColor(Unit, AuraData.auraInstanceID, UI.DispelColorCurve)
+
+        if (Color) then
+            Frame.DebuffHighlight.Glow:SetBackdropBorderColor(Color.r * 0.55, Color.g * 0.55, Color.b * 0.55, 0.8)
+        else
+            Frame.DebuffHighlight.Glow:SetBackdropBorderColor(0, 0, 0, 0)
+        end
+        
+        Index = Index + 1
+    end
+end
+
 --- UPDATE FRAMES
 
 function UF:UpdateFrame(Unit)
@@ -645,7 +720,7 @@ function UF:UpdateFrame(Unit)
     if (Frame.Name) then self:UpdateName(Frame) end
     if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame) end
     -- PORTRAITS
-    if (Frame.Portrait) then self:UpdatePortrait(Frame) end
+    if (Frame.Portrait) then self:UpdatePortrait(Frame, Unit) end
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame) end
     if (Frame.CombatIcon) then self:UpdateCombatIcon(Frame) end
@@ -658,6 +733,8 @@ function UF:UpdateFrame(Unit)
     if (Frame.ReadyCheckIcon) then self:UpdateReadyCheckIcon(Frame) end
     -- THREAT
     if (Frame.Threat) then self:UpdateThreatHighlight(Frame) end
+    -- DEBUFF HIGHLIGHT
+    --if (Frame.DebuffHighlight) then self:UpdateDebuffHighlight(Frame) end
 end
 
 function UF:UpdateAll()
@@ -725,6 +802,7 @@ function UF:OnEvent(event, unit, ...)
     if (event == "UNIT_AURA") then
         UF:UpdateAuras(FramesUF, unit, false)
         UF:UpdateAuras(FramesUF, unit, true)
+        UF:UpdateDebuffHighlight(FramesUF)
 
     -- HEALTH
     elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
@@ -771,7 +849,7 @@ function UF:OnEvent(event, unit, ...)
 
     -- PORTRAITS
     elseif (event == "UNIT_MODEL_CHANGED" or event == "UNIT_PORTRAIT_UPDATE") then
-        UF:UpdatePortrait(FramesUF)
+        UF:UpdatePortrait(FramesUF, unit)
 
     -- CASTBARS
     elseif (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then

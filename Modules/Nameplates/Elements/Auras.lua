@@ -24,6 +24,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
     local MaxAuras = Auras.NumAuras or 6
     local OnlyPlayer = Auras.ShowOnlyPlayer
     local HarmState = OnlyPlayer and "HARMFUL|PLAYER" or "HARMFUL"
+    local HelpState = OnlyPlayer and "HELPFUL|PLAYER" or "HELPFUL"
 
     local PreviousButton
     local Active = 0
@@ -41,7 +42,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
     end
 
     while Active < MaxAuras do
-        local AuraData = GetAuraDataByIndex(Unit, Index, IsDebuff and HarmState or "HELPFUL")
+        local AuraData = GetAuraDataByIndex(Unit, Index, IsDebuff and HarmState or HelpState)
         Index = Index + 1
 
         if (not AuraData or not AuraData.name) then
@@ -163,7 +164,7 @@ function NP:CreateAuraButton(Frame, ExtraBorder)
     return Button
 end
 
-function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, NumAuras, Spacing, InitialAnchor, Direction, ShowOnlyPlayer, ExtraBorder, Point, PointX, PointY)
+function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, Point, PointX, PointY, InitialAnchor, Direction, NumAuras, ShowOnlyPlayer, ExtraBorder)
     local Container = CreateFrame("Frame", nil, Frame)
     Container:Size(100, 100)
     Container:Point(Point or "TOPLEFT", Frame, PointX or 0, PointY or 0)
@@ -192,5 +193,5 @@ function NP:CreateDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = NP:CreateAuraContainer(Frame, 30, 18, 7, 4, "TOPRIGHT", "RIGHT", true, true, "TOPLEFT", -28, 10)
+    Frame.Debuffs = NP:CreateAuraContainer(Frame, 30, 18, 4, "TOPLEFT", -32, 10, "TOPRIGHT", "RIGHT", 7, true, true)
 end

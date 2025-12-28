@@ -47,8 +47,8 @@ local DEBUFF_DISPLAY_COLOR_INFO = {
     [2] = DEBUFF_TYPE_CURSE_COLOR,
     [3] = DEBUFF_TYPE_DISEASE_COLOR,
     [4] = DEBUFF_TYPE_POISON_COLOR,
-    [9] = DEBUFF_TYPE_BLEED_COLOR, -- Enrage
-    [11] = DEBUFF_TYPE_BLEED_COLOR,
+    [9] = DEBUFF_TYPE_BLEED_COLOR, -- Enrage Color
+    [11] = DEBUFF_TYPE_BLEED_COLOR, -- Bleed Color
 }
 
 UI.DispelColorCurve = C_CurveUtil.CreateColorCurve()
@@ -57,6 +57,14 @@ UI.DispelColorCurve:SetType(Enum.LuaCurveType.Step)
 for i, c in pairs(DEBUFF_DISPLAY_COLOR_INFO) do
     UI.DispelColorCurve:AddPoint(i, c)
 end
+
+-- Gradient Color Green To Red
+UI.HealthColorCurve = C_CurveUtil.CreateColorCurve()
+UI.HealthColorCurve:SetType(Enum.LuaCurveType.Cosine)
+UI.HealthColorCurve:AddPoint(0, CreateColor(0.38, 0, 0, 0.7))
+UI.HealthColorCurve:AddPoint(0.5, CreateColor(0.46, 0.40, 0, 0.7))
+UI.HealthColorCurve:AddPoint(0.9, CreateColor(0, 0.20, 0, 0.7))
+UI.HealthColorCurve:AddPoint(1, CreateColor(0.10, 0.10, 0.10, 0.7))
 
 -- COLOR TABLES
 

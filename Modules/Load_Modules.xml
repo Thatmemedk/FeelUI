@@ -89,6 +89,7 @@
 	<Script file="UnitFrames\Elements\AdditionalPower.lua"/>
 	<Script file="UnitFrames\Elements\Auras.lua"/>
 	<Script file="UnitFrames\Elements\Castbar.lua"/>
+	<Script file="UnitFrames\Elements\DebuffHighlight.lua"/>
 	<Script file="UnitFrames\Elements\Health.lua"/>
 	<Script file="UnitFrames\Elements\HealthPred.lua"/>
 	<Script file="UnitFrames\Elements\Highlight.lua"/>

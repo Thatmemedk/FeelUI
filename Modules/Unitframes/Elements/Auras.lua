@@ -28,6 +28,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
     local MaxAuras = Auras.NumAuras or 6
     local OnlyPlayer = Auras.ShowOnlyPlayer
     local HarmState = OnlyPlayer and "HARMFUL|PLAYER" or "HARMFUL"
+    local HelpState = OnlyPlayer and "HELPFUL|RAID" or "HELPFUL"
 
     local PreviousButton
     local Active = 0
@@ -39,7 +40,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
     end
 
     while Active < MaxAuras do
-        local AuraData = GetAuraDataByIndex(Unit, Index, IsDebuff and HarmState or "HELPFUL")
+        local AuraData = GetAuraDataByIndex(Unit, Index, IsDebuff and HarmState or HelpState)
         Index = Index + 1
 
         if (not AuraData or not AuraData.name) then
@@ -123,7 +124,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
 
         Button.Unit = Unit
         Button.AuraInstanceID = AuraInstanceID
-        Button.AuraFilter = IsDebuff and HarmState or "HELPFUL"
+        Button.AuraFilter = IsDebuff and HarmState or HelpState
         Button.AuraIndex = Index
 
         PreviousButton = Button
@@ -148,7 +149,7 @@ function AuraTooltipOnLeave()
     _G.GameTooltip:Hide()
 end
 
-function UF:CreateAuraButton(Frame, ExtraBorder)
+function UF:CreateAuraButton(Frame, ExtraBorder, HideNumbers)
     local Button = CreateFrame("Button", nil, Frame)
     Button:SetTemplate(ExtraBorder)
     Button:CreateShadow()
@@ -168,6 +169,7 @@ function UF:CreateAuraButton(Frame, ExtraBorder)
     local Cooldown = CreateFrame("Cooldown", nil, Button, "CooldownFrameTemplate")
     Cooldown:SetInside()
     Cooldown:SetDrawEdge(false)
+    Cooldown:SetDrawBling(false)
     Cooldown:SetReverse(true)
 
     local Count = Overlay:CreateFontString(nil, "OVERLAY")
@@ -182,7 +184,7 @@ function UF:CreateAuraButton(Frame, ExtraBorder)
     return Button
 end
 
-function UF:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, NumAuras, Spacing, InitialAnchor, Direction, ShowOnlyPlayer, ExtraBorder, Point, PointX, PointY)
+function UF:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, Point, PointX, PointY, InitialAnchor, Direction, NumAuras, ShowOnlyPlayer, ExtraBorder)
     local Container = CreateFrame("Frame", nil, Frame)
     Container:Size(100, 100)
     Container:Point(Point or "TOPLEFT", Frame, PointX or 0, PointY or 0)
@@ -210,7 +212,7 @@ function UF:CreateBuffsTarget(Frame)
         return 
     end
 
-    Frame.Buffs = UF:CreateAuraContainer(Frame, 30, 18, 7, 3, "TOPLEFT", "RIGHT", false, false, "TOPLEFT", 0, 32)
+    Frame.Buffs = UF:CreateAuraContainer(Frame, 30, 18, 3, "TOPLEFT", 0, 32, "TOPLEFT", "RIGHT", 7, false, false)
 end
 
 function UF:CreateDebuffsTarget(Frame)
@@ -218,7 +220,7 @@ function UF:CreateDebuffsTarget(Frame)
         return 
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame, 30, 18, 7, 3, "TOPRIGHT", "LEFT", false, true, "TOPRIGHT", 0, 56)
+    Frame.Debuffs = UF:CreateAuraContainer(Frame, 30, 18, 3, "TOPRIGHT", 0, 56, "TOPRIGHT", "LEFT", 7, false, true)
 end
 
 function UF:CreatePartyDebuffs(Frame)
@@ -226,7 +228,15 @@ function UF:CreatePartyDebuffs(Frame)
         return 
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame, 32, 18, 7, 4, "TOPLEFT", "RIGHT", false, true, "RIGHT", 108, -42)
+    Frame.Debuffs = UF:CreateAuraContainer(Frame, 32, 18, 4, "TOPRIGHT", 108, -12, "RIGHT", "RIGHT", 7, false, true)
+end
+
+function UF:CreatePartyBuffs(Frame)
+    if (Frame.Buffs) then 
+        return 
+    end
+
+    Frame.Buffs = UF:CreateAuraContainer(Frame, 32, 18, 3, "TOPLEFT", -108, -8, "TOPLEFT", "LEFT", 7, true, false)
 end
 
 function UF:CreateRaidDebuffs(Frame)
@@ -234,5 +244,21 @@ function UF:CreateRaidDebuffs(Frame)
         return 
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 26, 16, 2, 4, "TOPLEFT", "RIGHT", false, true, "LEFT", 12, -42)
+    Frame.Debuffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 26, 16, 4, "TOPLEFT", 12, -14, "LEFT", "RIGHT", 2, false, true)
+end
+
+function UF:CreateRaidBuffs(Frame)
+    if (Frame.Buffs) then 
+        return 
+    end
+
+    Frame.Buffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 18, 12, 2, "TOPLEFT", 1, 4, "LEFT", "RIGHT", 4, true, false)
+
+    for i = 1, #Frame.Buffs.Buttons do
+        local Button = Frame.Buffs.Buttons[i]
+
+        if (Button and Button.Cooldown) then
+            Button.Cooldown:SetHideCountdownNumbers(true)
+        end
+    end
 end

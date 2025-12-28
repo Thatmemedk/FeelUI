@@ -62,7 +62,7 @@ function NP:UpdateHealthText(Frame, Unit)
         return
     end
 
-    local Percent = UnitHealthPercent(Unit, false, CurveConstants.ScaleTo100)
+    local Percent = UnitHealthPercent(Unit, false, UI.CurvePercent)
     Frame.HealthText:SetFormattedText("%d%%", Percent or 0)
 
     if UnitIsUnit("target", Unit) then
@@ -263,8 +263,8 @@ function NP:OnEvent(event, unit, ...)
         end
 
         -- HEALTH
-    elseif ((event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") and unit) then
-        if (not GNPFU) then
+    elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
+        if (not unit or not GNPFU) then
             return
         end
 
@@ -315,32 +315,32 @@ function NP:OnEvent(event, unit, ...)
             return
         end
 
-        self:CastStarted(unit, event)
+        self:CastStarted(event, unit)
         self:SetNameplateColor(unit, true)
     elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") then
         if not unit or UnitIsFriend("player", unit) then
             return
         end
 
-        self:CastStopped(unit)
+        self:CastStopped(event, unit)
     elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
         if not unit or UnitIsFriend("player", unit) then
             return
         end
     
-        self:CastUpdated(unit, event)
+        self:CastUpdated(event, unit)
     elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
         if not unit or UnitIsFriend("player", unit) then
             return
         end
 
-        self:CastFailed(unit, event)
+        self:CastFailed(event, unit)
     elseif (event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_INTERRUPTIBLE") then
         if not unit or UnitIsFriend("player", unit) then
             return
         end
 
-        self:CastNonInterruptable(unit, event)
+        self:CastNonInterruptable(event, unit)
     end
 end
 

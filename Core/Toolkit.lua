@@ -431,7 +431,7 @@ local function SetShadowOverlay(self, ShadowOverlayAlpha)
 	local ShadowOverlay = self:CreateTexture(nil, "OVERLAY", nil, 7)
 	ShadowOverlay:SetInside()
 	ShadowOverlay:SetTexture(Media.Global.Overlay)
-	ShadowOverlay:SetVertexColor(1, 1, 1, ShadowOverlayAlpha or 0.7)
+	ShadowOverlay:SetVertexColor(1, 1, 1, ShadowOverlayAlpha or 0.5)
 
 	self.ShadowOverlay = ShadowOverlay
 end

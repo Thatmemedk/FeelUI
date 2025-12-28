@@ -163,13 +163,16 @@ DB.Global = {
 	UnitFrames = {
 		Enable = true,
 		BossFrames = true,
-		PartyFrames = false,
-		RaidFrames = true,
+		PartyFrames = true,
+		RaidFrames = false,
 		-- Health / Power
-		HealthBarColor = { 0.1, 0.1, 0.1, 0.7 },
+		HealthBarColor = { 0.1, 0.1, 0.1, 1 },
+		ClassColor = false,
 		-- Castbar
 		CastBarColor = { 0.45, 0.45, 0.45, 0.7 },
 		CastBarInterruptColor = { 0.67, 0, 0, 0.70 },
+		-- Portraits
+		Portraits = true,
 		-- Points Settings
 		PlayerPoint = { "BOTTOMLEFT", _G.UIParent, 482, 244 },
 		TargetPoint = { "BOTTOMRIGHT", _G.UIParent, -482, 244 },

@@ -12,6 +12,7 @@ local UnitCastingInfo = UnitCastingInfo
 local UnitChannelInfo = UnitChannelInfo
 local UnitChannelDuration = UnitChannelDuration
 local UnitCastingDuration = UnitCastingDuration
+local UnitEmpoweredChannelDuration = UnitEmpoweredChannelDuration
 
 -- WoW Globals
 local FAILED = _G.FAILED or "Failed"
@@ -32,7 +33,7 @@ function UF:CastStarted(Event, Unit)
         Name, _, Icon, StartTime, EndTime, _, CastID, Interrupt, SpellID = UnitCastingInfo(Unit)
 
         Castbar.Duration = UnitCastingDuration(Unit)
-        Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
+        Castbar.Direction = UI.DirectionElapsed
     else
         -- Channel / Empower Casts
         Name, _, Icon, StartTime, EndTime, _, Interrupt, SpellID, Empowered, _, CastID = UnitChannelInfo(Unit)
@@ -41,12 +42,12 @@ function UF:CastStarted(Event, Unit)
             Event = "UNIT_SPELLCAST_EMPOWER_START"
 
             Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
-            Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
+            Castbar.Direction = UI.DirectionElapsed
         else
             Event = "UNIT_SPELLCAST_CHANNEL_START"
 
             Castbar.Duration = UnitChannelDuration(Unit)
-            Castbar.Direction = Enum.StatusBarTimerDirection.RemainingTime
+            Castbar.Direction = UI.DirectionRemaining
         end
     end
 
@@ -123,7 +124,12 @@ function UF:CastStarted(Event, Unit)
     end
 
     -- Call On Update
-    Castbar:SetScript("OnUpdate", UF.OnUpdate)
+    if (Castbar.Casting or Castbar.Channel or Castbar.Empower) then
+        Castbar:SetScript("OnUpdate", UF.OnUpdate)
+    else
+        -- Stop Update
+        Castbar:SetScript("OnUpdate", nil)
+    end
 
     -- Call Fade
     UI:UIFrameFadeIn(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 1)
@@ -137,11 +143,12 @@ function UF:CastStopped(Event, Unit, _, _, ...)
     end
 
     if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
+        -- Reset CastBar
         UF:ResetCastBar(Castbar)
+        
+        -- Call Fade
+        UI:UIFrameFadeOut(Castbar, UF.CastHoldTime, Castbar:GetAlpha(), 0)
     end
-
-    -- Call Fade
-    UI:UIFrameFadeOut(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 0)
 end
 
 function UF:CastFailed(Event, Unit, _, _, ...)
@@ -168,7 +175,7 @@ function UF:CastFailed(Event, Unit, _, _, ...)
     UF:ResetCastBar(Castbar)
 
     -- Call Fade
-    UI:UIFrameFadeOut(Castbar, UF.HoldTime, Castbar:GetAlpha(), 0)
+    UI:UIFrameFadeOut(Castbar, UF.CastHoldTime, Castbar:GetAlpha(), 0)
 end
 
 function UF:CastUpdated(Event, Unit, _, _, CastID)
@@ -190,17 +197,17 @@ function UF:CastUpdated(Event, Unit, _, _, CastID)
         Name, _, _, StartTime, EndTime = UnitCastingInfo(Unit)
 
         Castbar.Duration = UnitChannelDuration(Unit)
-        Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
+        Castbar.Direction = UI.DirectionElapsed
     else
         -- Channel Casts / Empower Casts
         Name, _, _, StartTime, EndTime = UnitChannelInfo(Unit)
 
         if (Event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
             Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
-            Castbar.Direction = Enum.StatusBarTimerDirection.ElapsedTime
+            Castbar.Direction = UI.DirectionElapsed
         else
             Castbar.Duration = UnitChannelDuration(Unit)
-            Castbar.Direction = Enum.StatusBarTimerDirection.RemainingTime
+            Castbar.Direction = UI.DirectionRemaining
         end
     end
 

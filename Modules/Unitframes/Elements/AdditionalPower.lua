@@ -17,13 +17,13 @@ function UF:CreateAdditionalPower(Frame)
     AdditionalPower:SetStatusBarColor(0.31, 0.45, 0.63)
     AdditionalPower:CreateBackdrop()
     AdditionalPower:CreateShadow()
-    AdditionalPower:SetAlpha(0)
+    AdditionalPower:Hide()
 
     local AdditionalPowerText = Frame.InvisFrameHigher:CreateFontString(nil, "OVERLAY")
     AdditionalPowerText:SetFontTemplate("Default", 14)
     AdditionalPowerText:Point("CENTER", AdditionalPower, 0, 0)
     AdditionalPowerText:SetTextColor(1, 1, 1)
-    AdditionalPowerText:SetAlpha(0)
+    AdditionalPowerText:Hide()
 
     Frame.AdditionalPower = AdditionalPower
     Frame.AdditionalPowerText = AdditionalPowerText

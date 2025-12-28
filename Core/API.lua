@@ -28,21 +28,26 @@ UI.HiddenParent = CreateFrame("Frame", nil, _G.UIParent)
 UI.HiddenParent:SetAllPoints()
 UI.HiddenParent:Hide()
 
--- Functions
+-- Tables
 UI.Texts = {}
+UI.Commands = {}
+
+-- Functions
 UI.ClearTexture = UI.Retail and 0 or ""
-UI.Noop = function() return end
 UI.TexCoords = { 0.08, 0.92, 0.08, 0.92 }
+UI.Noop = function() return end
+
+-- Blizzard Functions
 UI.SmoothBars = Enum.StatusBarInterpolation.ExponentialEaseOut
 UI.SmoothBarsImmediate = Enum.StatusBarInterpolation.Immediate
+UI.DirectionElapsed = Enum.StatusBarTimerDirection.ElapsedTime
+UI.DirectionRemaining = Enum.StatusBarTimerDirection.RemainingTime
+UI.CurvePercent = CurveConstants.ScaleTo100
 
 -- Print
 function UI:Print(...)
 	print("|CFF00AAFF" .. "FeelUI" .. "|r:", ...)
 end
-
--- Chat Commands
-UI.Commands = {}
 
 function UI:RegisterChatCommand(Command, Func)
 	local Name = Command:upper()
