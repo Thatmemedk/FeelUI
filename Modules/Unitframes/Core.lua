@@ -870,12 +870,9 @@ function UF:UpdateFrame(Unit)
     -- THREAT
     if (Frame.Threat) then self:UpdateThreatHighlight(Frame) end
     -- DEBUFF HIGHLIGHT
-    if (Frame.DebuffHighlight) then self:UpdateDebuffHighlight(Frame, Unit) end
+    --if (Frame.DebuffHighlight) then self:UpdateDebuffHighlight(Frame, Unit) end
     -- RANGE
-    if (Frame.Range) then
-        self:UpdateRange(Frame, Unit)
-        self:SetupRangeTicker(Frame, Unit) 
-    end
+    if (Frame.Range) then self:SetupRangeTicker(Frame, Unit) end
 end
 
 function UF:UpdateAllUnits()
@@ -919,7 +916,8 @@ function UF:OnEvent(event, unit, ...)
         -- TARGET OF TARGET
     elseif (event == "UNIT_TARGET" and unit == "target") then
         UF:UpdateFrame("target")
-
+        UF:UpdateFrame("targettarget")
+        
         -- PET
     elseif (event == "UNIT_PET") then
         UF:UpdateFrame("pet")
@@ -959,7 +957,7 @@ function UF:OnEvent(event, unit, ...)
     if (event == "UNIT_AURA") then
         UF:UpdateAuras(FramesUF, unit, false)
         UF:UpdateAuras(FramesUF, unit, true)
-        UF:UpdateDebuffHighlight(FramesUF, unit)
+        --UF:UpdateDebuffHighlight(FramesUF, unit)
 
     -- HEALTH
     elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then

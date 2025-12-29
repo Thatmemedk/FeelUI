@@ -125,7 +125,7 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         -- ADDITIONAL POWER
         self:CreateAdditionalPower(Frame)
         -- DEBUFF HIGHLIGHT
-        self:CreateDebuffHighlight(Frame)
+        --self:CreateDebuffHighlight(Frame)
     elseif (Unit == "target") then
         -- TEXTS
         self:CreateTargetTexts(Frame)

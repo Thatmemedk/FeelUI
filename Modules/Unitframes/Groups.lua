@@ -50,7 +50,7 @@ function UF:SetupGroupFrame(Frame, type)
     -- THREAT
     self:CreateThreatHighlight(Frame)
     -- DEBUFF HIGHLIGHT
-    self:CreateDebuffHighlight(Frame)
+    --self:CreateDebuffHighlight(Frame)
     -- RANGE
     self:CreateRange(Frame)
 
