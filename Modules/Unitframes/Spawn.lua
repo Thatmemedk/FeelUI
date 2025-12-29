@@ -6,7 +6,7 @@ local UF = UI:CallModule("UnitFrames")
 --- HIDE BLIZZARD UF
 
 function UF:SafeHide(Frame, SkipParent)
-    if (not Frame or UF.HiddenFrames[Frame]) then 
+    if (not Frame or UF.Frames.Hidden[Frame]) then 
         return 
     end
 
@@ -17,7 +17,7 @@ function UF:SafeHide(Frame, SkipParent)
         Frame:SetParent(UI.HiddenParent)
     end
 
-    UF.HiddenFrames[Frame] = true
+    UF.Frames.Hidden[Frame] = true
 end
 
 function UF:HideBlizzardFrames()
@@ -99,7 +99,6 @@ function UF:Spawn(Unit, Width, Height, Orientation)
     self:CreateOnEnterLeave(Frame)
     self:CreatePanels(Frame)
     self:CreateHightlight(Frame)
-    self:CreateFadeInOut(Frame)
     -- HEALTH
     self:CreateHealth(Frame, Height, Orientation)
     -- ICONS
@@ -126,7 +125,7 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         -- ADDITIONAL POWER
         self:CreateAdditionalPower(Frame)
         -- DEBUFF HIGHLIGHT
-        --self:CreateDebuffHighlight(Frame)
+        self:CreateDebuffHighlight(Frame)
     elseif (Unit == "target") then
         -- TEXTS
         self:CreateTargetTexts(Frame)
@@ -146,11 +145,15 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         self:CreateDebuffsTarget(Frame)
         -- THREAT
         self:CreateThreatHighlight(Frame)
+        -- RANGE
+        self:CreateRange(Frame)
     elseif (Unit == "targettarget") then
         -- TEXT
         self:CreateNameTextCenter(Frame)
         -- THREAT
         self:CreateThreatHighlight(Frame)
+        -- RANGE
+        self:CreateRange(Frame)
     elseif (Unit == "pet") then
         -- TEXT
         self:CreateNameTextCenter(Frame)
@@ -158,6 +161,8 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         self:CreateThreatHighlight(Frame)
         -- CASTBAR
         self:CreatePetCastbar(Frame)
+        -- RANGE
+        self:CreateRange(Frame)
     elseif (Unit == "focus") then
         -- TEXT
         self:CreateNameTextCenter(Frame)
@@ -165,6 +170,8 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         self:CreateThreatHighlight(Frame)
         -- CASTBAR
         self:CreateFocusCastbar(Frame)
+        -- RANGE
+        self:CreateRange(Frame)
     elseif (Unit:match("^boss%d$")) then
         -- TEXT
         self:CreateTargetTexts(Frame)
@@ -172,6 +179,8 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         self:CreateThreatHighlight(Frame)
         -- CASTBAR
         self:CreateBossCastbar(Frame)
+        -- RANGE
+        self:CreateRange(Frame)
     end
 
     return Frame

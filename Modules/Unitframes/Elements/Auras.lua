@@ -12,12 +12,13 @@ local floor = math.floor
 local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
 
 function UF:UpdateAuras(Frame, Unit, IsDebuff)
-    if not Frame or not Frame.unit then
+    if (not Frame or not Frame.unit) then
         return
     end
 
     local Auras = IsDebuff and Frame.Debuffs or Frame.Buffs
-    if not Auras then
+
+    if (not Auras) then
         return
     end
 
@@ -27,7 +28,8 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
     local Direction = Auras.Direction or "RIGHT"
     local MaxAuras = Auras.NumAuras or 6
     local OnlyPlayer = Auras.ShowOnlyPlayer
-    local HarmState = OnlyPlayer and "HARMFUL|PLAYER" or "HARMFUL"
+    local OnlyRaidDebuff = Auras.ShowOnlyRaidDebuff
+    local HarmState = OnlyPlayer and "HARMFUL|PLAYER" or OnlyRaidDebuff and "HARMFUL|RAID" or "HARMFUL"
     local HelpState = OnlyPlayer and "HELPFUL|RAID" or "HELPFUL"
 
     local PreviousButton
@@ -184,7 +186,7 @@ function UF:CreateAuraButton(Frame, ExtraBorder, HideNumbers)
     return Button
 end
 
-function UF:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, Point, PointX, PointY, InitialAnchor, Direction, NumAuras, ShowOnlyPlayer, ExtraBorder)
+function UF:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, Point, PointX, PointY, InitialAnchor, Direction, NumAuras, ShowOnlyPlayer, OnlyRaidDebuff, ExtraBorder)
     local Container = CreateFrame("Frame", nil, Frame)
     Container:Size(100, 100)
     Container:Point(Point or "TOPLEFT", Frame, PointX or 0, PointY or 0)
@@ -195,6 +197,7 @@ function UF:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, Point
     Container.InitialAnchor = InitialAnchor
     Container.Direction = Direction
     Container.ShowOnlyPlayer = ShowOnlyPlayer
+    Container.ShowOnlyRaidDebuff = OnlyRaidDebuff
     Container.Buttons = {}
 
     for i = 1, NumAuras do
@@ -212,7 +215,7 @@ function UF:CreateBuffsTarget(Frame)
         return 
     end
 
-    Frame.Buffs = UF:CreateAuraContainer(Frame, 30, 18, 3, "TOPLEFT", 0, 32, "TOPLEFT", "RIGHT", 7, false, false)
+    Frame.Buffs = UF:CreateAuraContainer(Frame, 30, 18, 3, "TOPLEFT", 0, 32, "TOPLEFT", "RIGHT", 7, false, false, false)
 end
 
 function UF:CreateDebuffsTarget(Frame)
@@ -220,7 +223,7 @@ function UF:CreateDebuffsTarget(Frame)
         return 
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame, 30, 18, 3, "TOPRIGHT", 0, 56, "TOPRIGHT", "LEFT", 7, false, true)
+    Frame.Debuffs = UF:CreateAuraContainer(Frame, 30, 18, 3, "TOPRIGHT", 0, 56, "TOPRIGHT", "LEFT", 7, false, false, true)
 end
 
 function UF:CreatePartyDebuffs(Frame)
@@ -228,7 +231,7 @@ function UF:CreatePartyDebuffs(Frame)
         return 
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame, 32, 18, 4, "TOPRIGHT", 108, -12, "RIGHT", "RIGHT", 7, false, true)
+    Frame.Debuffs = UF:CreateAuraContainer(Frame, 32, 18, 4, "TOPRIGHT", 108, -12, "RIGHT", "RIGHT", 7, false, true, true)
 end
 
 function UF:CreatePartyBuffs(Frame)
@@ -236,7 +239,7 @@ function UF:CreatePartyBuffs(Frame)
         return 
     end
 
-    Frame.Buffs = UF:CreateAuraContainer(Frame, 32, 18, 3, "TOPLEFT", -108, -8, "TOPLEFT", "LEFT", 7, true, false)
+    Frame.Buffs = UF:CreateAuraContainer(Frame, 32, 18, 3, "TOPLEFT", -108, -8, "TOPLEFT", "LEFT", 7, true, false, false)
 end
 
 function UF:CreateRaidDebuffs(Frame)
@@ -244,7 +247,7 @@ function UF:CreateRaidDebuffs(Frame)
         return 
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 26, 16, 4, "TOPLEFT", 12, -14, "LEFT", "RIGHT", 2, false, true)
+    Frame.Debuffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 26, 16, 4, "TOPLEFT", 12, -14, "LEFT", "RIGHT", 2, false, true, true)
 end
 
 function UF:CreateRaidBuffs(Frame)
@@ -252,7 +255,7 @@ function UF:CreateRaidBuffs(Frame)
         return 
     end
 
-    Frame.Buffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 18, 12, 2, "TOPLEFT", 1, 4, "LEFT", "RIGHT", 4, true, false)
+    Frame.Buffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 18, 12, 2, "TOPLEFT", 1, 4, "LEFT", "RIGHT", 4, true, false, false)
 
     for i = 1, #Frame.Buffs.Buttons do
         local Button = Frame.Buffs.Buttons[i]

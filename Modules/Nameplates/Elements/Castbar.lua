@@ -219,7 +219,6 @@ end
 function NP.OnUpdate(Castbar)
     local Duration = Castbar:GetTimerDuration():GetElapsedDuration()
     local Total = Castbar:GetTimerDuration():GetTotalDuration()
-
     Castbar.Time:SetFormattedText("%.1fs / %.1fs", Duration, Total)
 end
 
@@ -314,7 +313,7 @@ end
 function NP:CreateCastBar(Frame)
     local Castbar = CreateFrame("StatusBar", nil, Frame)
     Castbar:Size(192, 20) 
-    Castbar:Point("BOTTOM", Frame, 0, -8)
+    Castbar:Point("BOTTOM", Frame, 0, -6)
     Castbar:SetStatusBarTexture(Media.Global.Texture)
     Castbar:CreateBackdrop()
     Castbar:CreateShadow()

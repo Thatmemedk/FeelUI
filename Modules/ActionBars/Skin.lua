@@ -84,7 +84,7 @@ function AB:StyleActionButton(Button, Icon, Name)
 
     if (Cooldown) then
         Cooldown:ClearAllPoints()
-        Cooldown:SetInside(Button, 1, 1)
+        Cooldown:SetInside()
 
         local NumRegions = Cooldown:GetNumRegions()
 
@@ -104,7 +104,7 @@ function AB:StyleActionButton(Button, Icon, Name)
 
     if (LossControlCD) then
         LossControlCD:ClearAllPoints()
-        LossControlCD:SetInside(Button, 1, 1)
+        LossControlCD:SetInside()
     end
 
     if (Count) then

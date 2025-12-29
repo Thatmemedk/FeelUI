@@ -23,8 +23,7 @@ function UF:SetupGroupFrame(Frame, type)
     -- PANELS
     self:CreatePanels(Frame)
     self:CreateHightlight(Frame)
-    self:CreateFadeInOut(Frame)
-
+    
     -- HEALTH
     if (type == "party") then
         self:CreateHealth(Frame)
@@ -51,7 +50,9 @@ function UF:SetupGroupFrame(Frame, type)
     -- THREAT
     self:CreateThreatHighlight(Frame)
     -- DEBUFF HIGHLIGHT
-    --self:CreateDebuffHighlight(Frame)
+    self:CreateDebuffHighlight(Frame)
+    -- RANGE
+    self:CreateRange(Frame)
 
     -- REGISTER UNIT WATCH
     RegisterUnitWatch(Frame)
@@ -93,7 +94,9 @@ function UF:SetupGroupFrame(Frame, type)
         -- THREAT
         UF:UpdateThreatHighlightRaid(self)
         -- DEBUFF HIGHLIGHT
-        UF:UpdateDebuffHighlight(self)
+        UF:UpdateDebuffHighlight(self, self.unit)
+        -- RANGE
+        UF:UpdateRange(self, self.unit)
     end)
 
     Frame.UnitIsCreated = true

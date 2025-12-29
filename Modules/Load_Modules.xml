@@ -84,6 +84,7 @@
 	<Script file="Nameplates\Elements\UnitColors.lua"/>
 	<!-- UnitFrames -->
 	<Script file="UnitFrames\Core.lua"/>
+	<Script file="UnitFrames\Filters.lua"/>
 	<Script file="UnitFrames\Groups.lua"/>
 	<Script file="UnitFrames\Spawn.lua"/>
 	<Script file="UnitFrames\Elements\AdditionalPower.lua"/>
@@ -95,6 +96,7 @@
 	<Script file="UnitFrames\Elements\Highlight.lua"/>
 	<Script file="UnitFrames\Elements\Icons.lua"/>
 	<Script file="UnitFrames\Elements\Portraits.lua"/>
+	<Script file="UnitFrames\Elements\Range.lua"/>
 	<Script file="UnitFrames\Elements\Texts.lua"/>
 	<Script file="UnitFrames\Elements\Threat.lua"/>
 </Ui>

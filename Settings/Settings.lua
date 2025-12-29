@@ -163,10 +163,10 @@ DB.Global = {
 	UnitFrames = {
 		Enable = true,
 		BossFrames = true,
-		PartyFrames = true,
-		RaidFrames = false,
+		PartyFrames = false,
+		RaidFrames = true,
 		-- Health / Power
-		HealthBarColor = { 0.1, 0.1, 0.1, 1 },
+		HealthBarColor = { 0.1, 0.1, 0.1, 0.7 },
 		ClassColor = false,
 		-- Castbar
 		CastBarColor = { 0.45, 0.45, 0.45, 0.7 },

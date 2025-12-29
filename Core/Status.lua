@@ -26,13 +26,13 @@ local R, G, B = unpack(UI.GetClassColors)
 -- Class Tables
 local ClassNames = {
 	HUNTER = "Hunter",
-	MAGE = "Mage",
-	PALADIN = "Paladin",
+	WARLOCK = "Warlock",
 	PRIEST = "Priest",
+	PALADIN = "Paladin",
+	MAGE = "Mage",
 	ROGUE = "Rogue",
 	DRUID = "Druid",
 	SHAMAN = "Shaman",
-	WARLOCK = "Warlock",
 	WARRIOR = "Warrior",
 	DEATHKNIGHT = "Death Knight",
 	MONK = "Monk",
@@ -46,18 +46,22 @@ local SpecNames = {
 	[253] = "Beast Mastery",
 	[254] = "Marksmanship",
 	[255] = "Survival",
-	-- Mage
-	[62] = "Arcane",
-	[63] = "Fire",
-	[64] = "Frost",
-	-- Paladin
-	[65] = "Holy",
-	[66] = "Protection",
-	[70] = "Retribution",
+	-- Warlock
+	[265] = "Affliction",
+	[266] = "Demonology",
+	[267] = "Destruction",
 	-- Priest
 	[256] = "Discipline",
 	[257] = "Holy",
 	[258] = "Shadow",
+	-- Paladin
+	[65] = "Holy",
+	[66] = "Protection",
+	[70] = "Retribution",
+	-- Mage
+	[62] = "Arcane",
+	[63] = "Fire",
+	[64] = "Frost",
 	-- Rogue
 	[259] = "Assassination",
 	[260] = "Combat",
@@ -71,10 +75,6 @@ local SpecNames = {
 	[262] = "Elemental",
 	[263] = "Enhancement",
 	[264] = "Restoration",
-	-- Warlock
-	[265] = "Affliction",
-	[266] = "Demonology",
-	[267] = "Destruction",
 	-- Warrior
 	[71] = "Arms",
 	[72] = "Fury",

@@ -54,17 +54,9 @@ local DEBUFF_DISPLAY_COLOR_INFO = {
 UI.DispelColorCurve = C_CurveUtil.CreateColorCurve()
 UI.DispelColorCurve:SetType(Enum.LuaCurveType.Step)
 
-for i, c in pairs(DEBUFF_DISPLAY_COLOR_INFO) do
-    UI.DispelColorCurve:AddPoint(i, c)
+for DebuffType, ColorInfo in pairs(DEBUFF_DISPLAY_COLOR_INFO) do
+    UI.DispelColorCurve:AddPoint(DebuffType, ColorInfo)
 end
-
--- Gradient Color Green To Red
-UI.HealthColorCurve = C_CurveUtil.CreateColorCurve()
-UI.HealthColorCurve:SetType(Enum.LuaCurveType.Cosine)
-UI.HealthColorCurve:AddPoint(0, CreateColor(0.38, 0, 0, 0.7))
-UI.HealthColorCurve:AddPoint(0.5, CreateColor(0.46, 0.40, 0, 0.7))
-UI.HealthColorCurve:AddPoint(0.9, CreateColor(0, 0.20, 0, 0.7))
-UI.HealthColorCurve:AddPoint(1, CreateColor(0.10, 0.10, 0.10, 0.7))
 
 -- COLOR TABLES
 
@@ -117,17 +109,17 @@ UI.Colors = {
     },
 
 	Class = {
+		HUNTER = UI:CreateColor(0.67, 0.83, 0.45),
+		WARLOCK = UI:CreateColor(0.53, 0.53, 0.93),
+		PRIEST = UI:CreateColor(0.659, 0.843, 1),
+		PALADIN = UI:CreateColor(0.96, 0.55, 0.73),
+		MAGE = UI:CreateColor(0.25, 0.78, 0.92),
+		ROGUE = UI:CreateColor(1.00, 0.96, 0.41),
+		DRUID = UI:CreateColor(1.00, 0.49, 0.04),
+		SHAMAN = UI:CreateColor(0.00, 0.44, 0.87),
 	    WARRIOR = UI:CreateColor(0.78, 0.61, 0.43),
-	    MAGE = UI:CreateColor(0.25, 0.78, 0.92),
-	    ROGUE = UI:CreateColor(1.00, 0.96, 0.41),
-	    DRUID = UI:CreateColor(1.00, 0.49, 0.04),
-	    HUNTER = UI:CreateColor(0.67, 0.83, 0.45),
-	    SHAMAN = UI:CreateColor(0.00, 0.44, 0.87),
-	    PRIEST = UI:CreateColor(0.659, 0.843, 1),
-	    WARLOCK = UI:CreateColor(0.53, 0.53, 0.93),
-	    PALADIN = UI:CreateColor(0.96, 0.55, 0.73),
-	    MONK = UI:CreateColor(0.00, 1.00, 0.59),
 	    DEATHKNIGHT = UI:CreateColor(0.77, 0.12, 0.23),
+	    MONK = UI:CreateColor(0.00, 1.00, 0.59),
 	    DEMONHUNTER = UI:CreateColor(0.64, 0.19, 0.79),
 	    EVOKER = UI:CreateColor(0.20, 0.58, 0.50),
 	},

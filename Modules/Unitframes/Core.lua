@@ -64,13 +64,17 @@ local READY_CHECK_READY_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Ready"
 local READY_CHECK_NOT_READY_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-NotReady"
 local READY_CHECK_WAITING_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Waiting"
 
--- Locals
-UF.HiddenFrames = {}
+-- Tables
 UF.Frames = {}
 UF.Frames.Party = {}
 UF.Frames.Raid = {}
+UF.Frames.Hidden = {}
+UF.Frames.Range = {}
 
--- Locals
+-- Tables
+UF.FramesUpdatePending = false
+
+-- Tables
 UF.FadeInTime = 0.5
 UF.CastHoldTime = 1.25
 
@@ -147,7 +151,6 @@ function UF:UpdateHealth(Frame)
 
     Frame.Health:SetMinMaxValues(0, Max)
     Frame.Health:SetValue(Min, UI.SmoothBars)
-    Frame.Health:Show()
 
     if not (UnitIsConnected(Unit)) then
         Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
@@ -174,8 +177,14 @@ function UF:UpdateHealth(Frame)
         else
             Frame.Health:SetStatusBarColor(unpack(DB.Global.UnitFrames.HealthBarColor))
 
-            --local Color = UnitHealthPercent(Unit, true, UI.HealthColorCurve)
-            --Frame.Health:GetStatusBarTexture():SetVertexColor(Color:GetRGB())
+            local HealthColorCurve = C_CurveUtil.CreateColorCurve()
+            HealthColorCurve:SetType(Enum.LuaCurveType.Cosine)
+            HealthColorCurve:AddPoint(0, CreateColor(0.6, 0, 0, 0.7))
+            HealthColorCurve:AddPoint(0.90, CreateColor(0.6, 0.6, 0, 0.7))
+            HealthColorCurve:AddPoint(1, CreateColor(unpack(DB.Global.UnitFrames.HealthBarColor)))
+
+            local Color = UnitHealthPercent(Unit, true, HealthColorCurve)
+            Frame.Health:GetStatusBarTexture():SetVertexColor(Color:GetRGB())
         end
 
         Frame.Health:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
@@ -434,36 +443,34 @@ function UF:UpdatePortrait(Frame, Unit)
         return
     end
 
-    if (not UnitIsUnit(Frame.unit, Unit)) then
+    Unit = Unit or Frame.unit
+
+    if (Unit and not UnitIsUnit(Frame.unit, Unit)) then
         return
     end
 
-    local GUID = UnitGUID(Unit)
-    local State = UnitIsConnected(Unit) and UnitIsVisible(Unit)
-    local StateChanged = Frame.Portrait.GUID ~= GUID or Frame.Portrait.State ~= State
-
-    if (not StateChanged) then
-        return
-    end
-
-    Frame.Portrait.GUID = GUID
-    Frame.Portrait.State = State
+    local UnitIsVisible = UnitIsVisible(Unit)
+    local UnitIsConnected = UnitIsConnected(Unit)
+    local State = UnitIsVisible and UnitIsConnected
 
     if (Frame.Portrait:IsObjectType("PlayerModel")) then
-        if (not StateChanged) then
+        Frame.Portrait:ClearModel()
+
+        if (not State) then
             Frame.Portrait:SetCamDistanceScale(1)
             Frame.Portrait:SetPortraitZoom(1)
             Frame.Portrait:SetPosition(0, 0, 0.20)
-            Frame.Portrait:ClearModel()
             Frame.Portrait:SetModel("Interface\\Buttons\\TalkToMeQuestionMark.m2")
         else
             Frame.Portrait:SetCamDistanceScale(2.5)
             Frame.Portrait:SetPortraitZoom(1)
             Frame.Portrait:SetPosition(0, 0, 0)
-            Frame.Portrait:ClearModel()
             Frame.Portrait:SetUnit(Unit)
         end
     end
+
+    Frame.Portrait.Unit = Unit
+    Frame.Portrait.State = State
 end
 
 -- ICONS
@@ -618,11 +625,12 @@ function UF:UpdateReadyCheckIcon(Frame, event)
         Frame.ReadyCheckIcon:Show()
     else
         if (event == "READY_CHECK_FINISHED") then
-            if not Frame.ReadyCheckFadePending then
+            if (not Frame.ReadyCheckFadePending) then
                 Frame.ReadyCheckFadePending = true
 
                 C_Timer.After(5, function()
                     Frame.ReadyCheckFadePending = nil
+
                     if Frame.ReadyCheckIcon:IsShown() and Frame.Animation.FadeOut then
                         Frame.Animation.FadeOut:Play()
                     end
@@ -668,12 +676,12 @@ end
 
 -- DEBUFF HIGHLIGHT
 
-function UF:UpdateDebuffHighlight(Frame)
+function UF:UpdateDebuffHighlight(Frame, Unit)
     if (not Frame or not Frame.unit or not Frame.DebuffHighlight) then
         return
     end
 
-    local Unit = Frame.unit
+    local FoundColor = nil
     local Index = 1
 
     while true do
@@ -686,13 +694,141 @@ function UF:UpdateDebuffHighlight(Frame)
         local Color = GetAuraDispelTypeColor(Unit, AuraData.auraInstanceID, UI.DispelColorCurve)
 
         if (Color) then
-            Frame.DebuffHighlight.Glow:SetBackdropBorderColor(Color.r * 0.55, Color.g * 0.55, Color.b * 0.55, 0.8)
-        else
-            Frame.DebuffHighlight.Glow:SetBackdropBorderColor(0, 0, 0, 0)
+            FoundColor = Color
+            break
         end
-        
+
         Index = Index + 1
     end
+
+    if (FoundColor) then
+        Frame.DebuffHighlight.Glow:SetBackdropBorderColor(FoundColor.r * 0.55, FoundColor.g * 0.55, FoundColor.b * 0.55, 0.8)
+    else
+        Frame.DebuffHighlight.Glow:SetBackdropBorderColor(0, 0, 0, 0)
+    end
+end
+
+-- RANGE
+
+function UF:IsAnySpellInRange(Unit, Spells)
+    local AnySpellChecked = false
+
+    for SpellID in pairs(Spells) do
+        local Spell = C_Spell.IsSpellInRange(SpellID, Unit)
+
+        if (Spell == true) then
+            return true
+        elseif (Spell ~= nil) then
+            AnySpellChecked = true
+        end
+    end
+
+    if (AnySpellChecked) then
+        return false
+    end
+
+    return nil
+end
+
+function UF:CheckUnitCategoryRange(Unit, Category)
+    local Spells = UF.RangeSpells[Category]
+    local Class = select(2, UnitClass("player"))
+
+    if (not Spells or not Class or not Spells[Class]) then
+        return nil
+    end
+
+    local SpellList = Spells[Class]
+
+    if (type(SpellList) == "number") then
+        SpellList = { SpellList }
+    end
+
+    local Range = UF:IsAnySpellInRange(Unit, SpellList)
+
+    if (Category == "FRIENDLY") then
+        if (Range == nil) then
+            return nil
+        end
+
+        return Range
+    end
+
+    if (Range ~= nil) then
+        return Range
+    end
+
+    if InCombatLockdown() then
+        return nil
+    end
+
+    return CheckInteractDistance(Unit, 4)
+end
+
+
+function UF:IsFriendlyUnitReachable(Unit)
+    if (UnitIsPlayer(Unit) and UnitPhaseReason(Unit)) then
+        return false
+    end
+
+    local Range = UF:CheckUnitCategoryRange(Unit, "FRIENDLY")
+
+    if (Range == nil) then
+        return true
+    end
+
+    return Range
+end
+
+function UF:UpdateRange(Frame, Unit)
+    if (not Frame or not Frame.unit or not Frame.Range) then
+        return
+    end
+
+    local Range = UF.Frames.Range[Unit]
+
+    if UnitIsDeadOrGhost(Unit) then
+        return
+    elseif UnitCanAttack("player", Unit) then
+        Range = UF:CheckUnitCategoryRange(Unit, "ENEMY")
+    --elseif UnitIsUnit("pet", Unit) then
+        --Range = UF:CheckUnitCategoryRange(Unit, "PET")
+    elseif UnitIsConnected(Unit) then
+        Range = UF:IsFriendlyUnitReachable(Unit)
+    else
+        Range = false
+    end
+
+    if (Range == true) then
+        UI:UIFrameFadeIn(Frame, Frame.Range.FadeTime, Frame:GetAlpha(), Frame.Range.InRangeAlpha)
+    elseif (Range == false) then
+        UI:UIFrameFadeOut(Frame, Frame.Range.FadeTime, Frame:GetAlpha(), Frame.Range.OutOfRangeAlpha)
+    end
+end
+
+function UF:SetupRangeTicker(Frame, Unit)
+    if (Frame.Range.Ticker) then 
+        return 
+    end
+
+    Frame.Range.Ticker = C_Timer.NewTicker(0.2, function()
+        if (Unit and UnitExists(Unit)) then
+            UF:UpdateRange(Frame, Unit)
+        end
+    end)
+
+    Frame:SetScript("OnShow", function(self)
+        if (not self.Range.Ticker) then
+            UF:SetupRangeTicker(self, Unit)
+        end
+    end)
+
+    Frame:SetScript("OnHide", function(self)
+        if (self.Range.Ticker) then
+            self.Range.Ticker:Cancel()
+            self.Range.Ticker = nil
+        end
+    end)
 end
 
 --- UPDATE FRAMES
@@ -734,15 +870,33 @@ function UF:UpdateFrame(Unit)
     -- THREAT
     if (Frame.Threat) then self:UpdateThreatHighlight(Frame) end
     -- DEBUFF HIGHLIGHT
-    --if (Frame.DebuffHighlight) then self:UpdateDebuffHighlight(Frame) end
+    if (Frame.DebuffHighlight) then self:UpdateDebuffHighlight(Frame, Unit) end
+    -- RANGE
+    if (Frame.Range) then
+        self:UpdateRange(Frame, Unit)
+        self:SetupRangeTicker(Frame, Unit) 
+    end
 end
 
-function UF:UpdateAll()
+function UF:UpdateAllUnits()
     for Units, Frames in pairs(self.Frames) do
         if (Frames and UnitExists(Units)) then
             self:UpdateFrame(Units)
         end
     end
+end
+
+function UF:UpdateAll()
+    if (self.FramesUpdatePending) then
+        return
+    end
+
+    self.FramesUpdatePending = true
+
+    C_Timer.After(0, function()
+        self.FramesUpdatePending = false
+        self:UpdateAllUnits()
+    end)
 end
 
 -- ON EVENTS
@@ -758,24 +912,27 @@ function UF:OnEvent(event, unit, ...)
 
         -- TARGET
     elseif (event == "PLAYER_TARGET_CHANGED") then
-        UF:UpdateAll()
+        UF:UpdateFrame("target")
+        UF:UpdateFrame("targettarget")
         UF:ClearCastBarOnUnit("target")
 
         -- TARGET OF TARGET
     elseif (event == "UNIT_TARGET" and unit == "target") then
-        UF:UpdateAll()
+        UF:UpdateFrame("target")
 
         -- PET
     elseif (event == "UNIT_PET") then
-        UF:UpdateAll()
+        UF:UpdateFrame("pet")
 
         -- FOCUS
     elseif (event == "PLAYER_FOCUS_CHANGED") then
-        UF:UpdateAll()
+        UF:UpdateFrame("focus")
 
         -- BOSS FRAMES
     elseif (event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" or event == "UNIT_TARGETABLE_CHANGED") then
-        UF:UpdateAll()
+        for i = 1, 5 do
+            UF:UpdateFrame("boss"..i)
+        end
 
         -- ICONS
     elseif (event == "PLAYER_UPDATE_RESTING") then
@@ -802,7 +959,7 @@ function UF:OnEvent(event, unit, ...)
     if (event == "UNIT_AURA") then
         UF:UpdateAuras(FramesUF, unit, false)
         UF:UpdateAuras(FramesUF, unit, true)
-        UF:UpdateDebuffHighlight(FramesUF)
+        UF:UpdateDebuffHighlight(FramesUF, unit)
 
     -- HEALTH
     elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then

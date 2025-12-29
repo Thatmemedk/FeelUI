@@ -47,8 +47,18 @@ function NP:UpdateHealth(Frame, Unit)
         Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
     else
         Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
-        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
+
+        local HealthColorCurve = C_CurveUtil.CreateColorCurve()
+        HealthColorCurve:SetType(Enum.LuaCurveType.Cosine)
+        HealthColorCurve:AddPoint(0, CreateColor(0.6, 0, 0, 0.7))
+        HealthColorCurve:AddPoint(0.90, CreateColor(0.6, 0.6, 0, 0.7))
+        HealthColorCurve:AddPoint(1, CreateColor(Color.r, Color.g, Color.b, 0.7))
+
+        local Color = UnitHealthPercent(Unit, true, HealthColorCurve)
+        Frame.Health:GetStatusBarTexture():SetVertexColor(Color:GetRGB())
     end
+
+    Frame.Health:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
 
     if UnitIsUnit("target", Unit) then
         UI:UIFrameFadeOut(Frame.Health, NP.FadeInTime, Frame.Health:GetAlpha(), 1)
@@ -221,8 +231,6 @@ function NP:OnEvent(event, unit, ...)
                 EnemyFrame.Unit = unit
 
                 self:UpdateEnemy(EnemyFrame)
-
-
                 self:SetNameplateColor(EnemyFrame.Unit, false)
             end
         end

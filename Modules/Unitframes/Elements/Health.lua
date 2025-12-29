@@ -15,7 +15,6 @@ function UF:CreateHealth(Frame, Size, Orientation)
     Health:SetOrientation(Orientation or "HORIZONTAL")
     Health:SetStatusBarTexture(Media.Global.Texture)
     Health:CreateBackdrop()
-    Health:Hide()
 
     Frame.Health = Health
 end

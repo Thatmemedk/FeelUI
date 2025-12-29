@@ -9,7 +9,7 @@ local unpack = unpack
 
 function UF:CreateDebuffHighlight(Frame)
     local DebuffHighlight = CreateFrame("Frame", nil, Frame)
-    DebuffHighlight:SetInside()
+    DebuffHighlight:SetInside(Frame, 1, 1)
     DebuffHighlight:CreateGlow(2.5, 3, 0, 0, 0, 0)
 
     Frame.DebuffHighlight = DebuffHighlight
