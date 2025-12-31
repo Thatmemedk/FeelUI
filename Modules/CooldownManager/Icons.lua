@@ -16,7 +16,7 @@ local BuffIconCooldownViewer = _G.BuffIconCooldownViewer
 -- WoW Globals
 local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
 
-function CDM:SkinIcons(Button)
+function CDM:SkinIcons(Button, ButtonSize)
 	if (Button.CDMIsSkinned) then
 		return
 	end
@@ -36,7 +36,7 @@ function CDM:SkinIcons(Button)
 	end
 
 	-- Button Size
-	Button:Size(unpack(DB.Global.CooldownManager.ButtonSize))
+	Button:Size(unpack(ButtonSize))
 
 	-- Diable Tooltip
 	Button:HookScript("OnEnter", function()
@@ -121,20 +121,18 @@ function CDM:SkinIcons(Button)
 	Button.CDMIsSkinned = true
 end
 
-function CDM:UpdateAcquireItemsFrame(Frames)
-	CDM:SkinIcons(Frames)
-end
+function CDM:UpdateIconPool(Elements, ButtonSize)
+    hooksecurefunc(Elements, "OnAcquireItemFrame", function(self, Frame)
+        CDM:SkinIcons(Frame, ButtonSize)
+    end)
 
-function CDM:UpdateIconPool(Elements)
-	hooksecurefunc(Elements, "OnAcquireItemFrame", CDM.UpdateAcquireItemsFrame)
-
-	for Frames in Elements.itemFramePool:EnumerateActive() do
-		CDM:SkinIcons(Frames)
-	end
+    for Frame in Elements.itemFramePool:EnumerateActive() do
+        CDM:SkinIcons(Frame, ButtonSize)
+    end
 end
 
 function CDM:UpdateIcons()
-	self:UpdateIconPool(UtilityCooldownViewer)
-	self:UpdateIconPool(BuffIconCooldownViewer)
-	self:UpdateIconPool(EssentialCooldownViewer)
+	self:UpdateIconPool(BuffIconCooldownViewer, DB.Global.CooldownManager.BuffViewerButtonSize)
+	self:UpdateIconPool(EssentialCooldownViewer, DB.Global.CooldownManager.EssentialViewerButtonSize)
+	self:UpdateIconPool(UtilityCooldownViewer, DB.Global.CooldownManager.UtilityViewerButtonSize)
 end

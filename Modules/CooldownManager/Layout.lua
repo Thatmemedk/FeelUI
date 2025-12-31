@@ -19,7 +19,7 @@ function CDM:CreateContainers(Frame, Point, Anchor, X, Y, IconSpacing)
     end
 
     local AnchorFrame = CreateFrame("Frame", nil, _G.UIParent)
-    AnchorFrame:Size(unpack(DB.Global.CooldownManager.ButtonSize))
+    AnchorFrame:Size(36, 18)
     AnchorFrame:Point(Point, Anchor, X or 0, Y or 0)
 
     self.Anchors[Frame] = {
@@ -31,14 +31,19 @@ function CDM:CreateContainers(Frame, Point, Anchor, X, Y, IconSpacing)
 end
 
 function CDM:PositionContainers()
-    local Point, Parent, X, Y = unpack(DB.Global.CooldownManager.AnchorPoint)
+    local Point, Parent, X, Y
     local Spacing = DB.Global.CooldownManager.ButtonSpacing
-    local RowSpacing = DB.Global.CooldownManager.ButtonRowSpacing
 
+    Point, Parent, X, Y = unpack(DB.Global.CooldownManager.BuffViewerPoint)
     local BuffContainer = self:CreateContainers(BuffIconCooldownViewer, Point, Parent, X, Y, Spacing)
-    local EssentialContainer = self:CreateContainers(EssentialCooldownViewer, "BOTTOM", BuffContainer, 0, RowSpacing, Spacing)
-    local UtilityContainer = self:CreateContainers(UtilityCooldownViewer, "BOTTOM", EssentialContainer, 0, RowSpacing, Spacing)
+
+    Point, Parent, X, Y = unpack(DB.Global.CooldownManager.EssentialViewerPoint)
+    local EssentialContainer = self:CreateContainers(EssentialCooldownViewer, Point, Parent, X, Y, Spacing)
+
+    Point, Parent, X, Y = unpack(DB.Global.CooldownManager.UtilityViewerPoint)
+    local UtilityContainer = self:CreateContainers(UtilityCooldownViewer, Point, Parent, X, Y, Spacing)
 end
+
 
 function CDM:DisableViewerLayout(Viewer)
     if (not Viewer or Viewer.LayoutDisabled) then

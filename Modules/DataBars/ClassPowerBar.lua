@@ -41,7 +41,7 @@ local Mult = 0.5
 function ClassPowerBar:CreateBar()
     local Bar = CreateFrame("Frame", nil, _G.UIParent)
     Bar:SetFrameStrata("LOW")
-    Bar:Size(222, 8)
+    Bar:Size(242, 8)
     Bar:Point(unpack(DB.Global.DataBars.ClassPowerPoint))
     Bar:Hide()
 
@@ -103,7 +103,7 @@ function ClassPowerBar:Update()
         self.Backdrops = {}
     end
 
-    local BarWidth = 222
+    local BarWidth = 242
     local SegmentSpacing = 4
     local TotalSpacing = (BarCount - 1) * SegmentSpacing
     local BaseWidth = (BarWidth - TotalSpacing) / BarCount
@@ -131,6 +131,7 @@ function ClassPowerBar:Update()
             Segment = CreateFrame("StatusBar", nil, self.Bar)
             Segment:SetStatusBarTexture(Media.Global.Texture)
             Segment:SetAlpha(0)
+
             self.Segment[i] = Segment
         end
 
@@ -139,6 +140,7 @@ function ClassPowerBar:Update()
             Backdrop:SetStatusBarTexture(Media.Global.Texture)
             Backdrop:CreateBackdrop()
             Backdrop:CreateShadow()
+            
             self.Backdrops[i] = Backdrop
         end
 
@@ -147,6 +149,7 @@ function ClassPowerBar:Update()
 
         Segment:ClearAllPoints()
         Segment:Point("LEFT", self.Bar, "LEFT", X, 0)
+        
         Backdrop:ClearAllPoints()
         Backdrop:Point("LEFT", self.Bar, "LEFT", X, 0)
 
@@ -208,7 +211,7 @@ function ClassPowerBar:Update()
         self.Bar[i] = Segment
     end
 
-    self.Text:SetText(Min == 0 and "" or Min)
+    --self.Text:SetText(Min == 0 and "" or Min)
 end
 
 function ClassPowerBar:UpdateSpec()

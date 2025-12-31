@@ -14,7 +14,7 @@ local UnitExists = UnitExists
 local UnitHasVehicleUI = UnitHasVehicleUI
 
 function AB:UpdatePetBar(event, unit)
-    if (event == "UNIT_FLAGS" and unit ~= "pet") or (event == "UNIT_PET" and unit ~= "player") then 
+    if (event == "UNIT_FLAGS" and unit ~= "pet" or event == "UNIT_PET" and unit ~= "player") then 
         return 
     end
 
@@ -47,13 +47,13 @@ function AB:UpdatePetBar(event, unit)
         if (IsActive and Name ~= "PET_ACTION_FOLLOW") then
             Button:SetChecked(true)
 
-            if IsPetAttackAction(i) then 
+            if (IsPetAttackAction(i)) then 
             	Button:StartFlash() 
             end
         else
             Button:SetChecked(false)
 
-            if IsPetAttackAction(i) then 
+            if (IsPetAttackAction(i)) then 
             	Button:StopFlash()
            	end
         end
@@ -73,7 +73,7 @@ function AB:UpdatePetBar(event, unit)
             Icon:Hide()
         end
 
-        if (not UnitExists("pet") or UnitHasVehicleUI("pet")) and Texture and Name ~= "PET_ACTION_FOLLOW" then
+        if (not UnitExists("pet") or UnitHasVehicleUI("pet") and Texture and Name ~= "PET_ACTION_FOLLOW") then
             Button:StopFlash()
             SetDesaturation(Icon, 1)
             Button:SetChecked(false)

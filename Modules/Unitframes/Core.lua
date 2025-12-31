@@ -40,6 +40,8 @@ local UnitGetTotalAbsorbs = UnitGetTotalAbsorbs
 local UnitIsUnit = UnitIsUnit
 local UnitThreatSituation = UnitThreatSituation
 local GetThreatStatusColor = GetThreatStatusColor
+local UnitIsDeadOrGhost = UnitIsDeadOrGhost
+local UnitCanAttack = UnitCanAttack
 
 -- WoW Globals
 local PLAYER_OFFLINE = _G.PLAYER_OFFLINE
@@ -330,26 +332,32 @@ function UF:UpdateAdditionalPower(Frame)
         return
     end
 
-    local Unit = Frame.unit
-    local _, Class = UnitClass(Unit)
-    local PowerType = UnitPowerType(Unit)
-    local DisplayInfo = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO
-    local Min, Max = UnitPower(Unit, ADDITIONAL_POWER_BAR_INDEX), UnitPowerMax(Unit, ADDITIONAL_POWER_BAR_INDEX)
-    local Percent = UnitPowerPercent(Unit, ADDITIONAL_POWER_BAR_INDEX, false, UI.CurvePercent)
-    local EnableState = (Max ~= 0 and DisplayInfo[Class] and DisplayInfo[Class][PowerType])
+    local Min, Max = UnitPower("player", ADDITIONAL_POWER_BAR_INDEX), UnitPowerMax("player", ADDITIONAL_POWER_BAR_INDEX)
+    local Percent = UnitPowerPercent("player", ADDITIONAL_POWER_BAR_INDEX, false, UI.CurvePercent)
+    local PowerType = UnitPowerType("player")
+    local Class = select(2, UnitClass("player"))
+    local DisplayInfo = DisplayInfo
+    local EnableState = false
 
-    if (not EnableState) then
-        Frame.AdditionalPower:Hide()
-        Frame.AdditionalPowerText:Hide()
-        return
+    if (not DisplayInfo) then
+        DisplayInfo = CopyTable(ALT_POWER_BAR_PAIR_DISPLAY_INFO)
     end
 
-    Frame.AdditionalPower:SetMinMaxValues(0, Max)
-    Frame.AdditionalPower:SetValue(Min, UI.SmoothBars)
-    Frame.AdditionalPower:Show()
+    if (not UnitHasVehicleUI("player") and Max ~= 0 and DisplayInfo[Class]) then
+        EnableState = DisplayInfo[Class][PowerType]
+    end
 
-    Frame.AdditionalPowerText:SetFormattedText("%.0f%%", Percent)
-    Frame.AdditionalPowerText:Show()
+    if (EnableState) then
+        Frame.AdditionalPower:SetMinMaxValues(0, Max)
+        Frame.AdditionalPower:SetValue(Min, UI.SmoothBars)
+        Frame.AdditionalPower:Show()
+
+        Frame.AdditionalPowerText:SetFormattedText("%.0f%%", Percent)
+        Frame.AdditionalPowerText:Show()
+    else
+        Frame.AdditionalPower:Hide()
+        Frame.AdditionalPowerText:Hide()
+    end
 end
 
 --- UPDATE NAME
@@ -445,13 +453,17 @@ function UF:UpdatePortrait(Frame, Unit)
 
     Unit = Unit or Frame.unit
 
-    if (Unit and not UnitIsUnit(Frame.unit, Unit)) then
+    if (not UnitIsUnit(Frame.unit, Unit)) then
         return
     end
 
     local UnitIsVisible = UnitIsVisible(Unit)
     local UnitIsConnected = UnitIsConnected(Unit)
     local State = UnitIsVisible and UnitIsConnected
+
+    if (Frame.Portrait.State == State and Frame.Portrait.Unit == Unit) then
+        return
+    end
 
     if (Frame.Portrait:IsObjectType("PlayerModel")) then
         Frame.Portrait:ClearModel()
@@ -631,7 +643,7 @@ function UF:UpdateReadyCheckIcon(Frame, event)
                 C_Timer.After(5, function()
                     Frame.ReadyCheckFadePending = nil
 
-                    if Frame.ReadyCheckIcon:IsShown() and Frame.Animation.FadeOut then
+                    if (Frame.ReadyCheckIcon:IsShown() and Frame.Animation.FadeOut) then
                         Frame.Animation.FadeOut:Play()
                     end
                 end)
@@ -735,7 +747,15 @@ function UF:CheckUnitCategoryRange(Unit, Category)
     local Class = select(2, UnitClass("player"))
 
     if (not Spells or not Class or not Spells[Class]) then
-        return nil
+        if (Category == "FRIENDLY") then
+            if InCombatLockdown() then
+                return true
+            else
+                return CheckInteractDistance(Unit, 4)
+            end
+        else
+            return nil
+        end
     end
 
     local SpellList = Spells[Class]
@@ -746,25 +766,16 @@ function UF:CheckUnitCategoryRange(Unit, Category)
 
     local Range = UF:IsAnySpellInRange(Unit, SpellList)
 
-    if (Category == "FRIENDLY") then
-        if (Range == nil) then
-            return nil
+    if (Category == "FRIENDLY" and Range == nil) then
+        if InCombatLockdown() then
+            return true
+        else
+            return CheckInteractDistance(Unit, 4)
         end
-
-        return Range
     end
 
-    if (Range ~= nil) then
-        return Range
-    end
-
-    if InCombatLockdown() then
-        return nil
-    end
-
-    return CheckInteractDistance(Unit, 4)
+    return Range
 end
-
 
 function UF:IsFriendlyUnitReachable(Unit)
     if (UnitIsPlayer(Unit) and UnitPhaseReason(Unit)) then
@@ -780,7 +791,7 @@ function UF:IsFriendlyUnitReachable(Unit)
     return Range
 end
 
-function UF:UpdateRange(Frame, Unit)
+function UF:UpdateRangeState(Frame, Unit)
     if (not Frame or not Frame.unit or not Frame.Range) then
         return
     end
@@ -792,7 +803,7 @@ function UF:UpdateRange(Frame, Unit)
     elseif UnitCanAttack("player", Unit) then
         Range = UF:CheckUnitCategoryRange(Unit, "ENEMY")
     --elseif UnitIsUnit("pet", Unit) then
-        --Range = UF:CheckUnitCategoryRange(Unit, "PET")
+    --    Range = UF:CheckUnitCategoryRange(Unit, "PET")
     elseif UnitIsConnected(Unit) then
         Range = UF:IsFriendlyUnitReachable(Unit)
     else
@@ -806,20 +817,28 @@ function UF:UpdateRange(Frame, Unit)
     end
 end
 
-function UF:SetupRangeTicker(Frame, Unit)
-    if (Frame.Range.Ticker) then 
+function UF:UpdateRange(Frame, Unit)
+    if (not Frame or not Frame.Range) then 
         return 
     end
 
-    Frame.Range.Ticker = C_Timer.NewTicker(0.2, function()
-        if (Unit and UnitExists(Unit)) then
-            UF:UpdateRange(Frame, Unit)
-        end
-    end)
+    UF:UpdateRangeState(Frame, Unit)
+
+    if (not Frame.Range.Ticker) then
+        Frame.Range.Ticker = C_Timer.NewTicker(0.2, function()
+            if (Unit and UnitExists(Unit)) then
+                UF:UpdateRangeState(Frame, Unit)
+            end
+        end)
+    end
 
     Frame:SetScript("OnShow", function(self)
         if (not self.Range.Ticker) then
-            UF:SetupRangeTicker(self, Unit)
+            self.Range.Ticker = C_Timer.NewTicker(0.2, function()
+                if (Unit and UnitExists(Unit)) then
+                    UF:UpdateRangeState(self, Unit)
+                end
+            end)
         end
     end)
 
@@ -856,7 +875,7 @@ function UF:UpdateFrame(Unit)
     if (Frame.Name) then self:UpdateName(Frame) end
     if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame) end
     -- PORTRAITS
-    if (Frame.Portrait) then self:UpdatePortrait(Frame, Unit) end
+    if (Frame.Portrait) then self:UpdatePortrait(self.Frames["target"], Unit) end
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame) end
     if (Frame.CombatIcon) then self:UpdateCombatIcon(Frame) end
@@ -872,7 +891,7 @@ function UF:UpdateFrame(Unit)
     -- DEBUFF HIGHLIGHT
     --if (Frame.DebuffHighlight) then self:UpdateDebuffHighlight(Frame, Unit) end
     -- RANGE
-    if (Frame.Range) then self:SetupRangeTicker(Frame, Unit) end
+    if (Frame.Range) then self:UpdateRange(Frame, Unit) end
 end
 
 function UF:UpdateAllUnits()
@@ -889,10 +908,10 @@ function UF:UpdateAll()
     end
 
     self.FramesUpdatePending = true
+    self:UpdateAllUnits()
 
-    C_Timer.After(0, function()
+    C_Timer.After(0.5, function()
         self.FramesUpdatePending = false
-        self:UpdateAllUnits()
     end)
 end
 
@@ -901,126 +920,87 @@ end
 function UF:OnEvent(event, unit, ...)
     local FramesUF = unit and UF.Frames[unit]
 
-    -- LOGIN UPDATE
     if (event == "PLAYER_ENTERING_WORLD") then
         C_Timer.After(0.7, function()
-            UF:UpdateAll()
+            UF:UpdateAllUnits()
         end)
+    end
 
-        -- TARGET
-    elseif (event == "PLAYER_TARGET_CHANGED") then
-        UF:UpdateFrame("target")
-        UF:UpdateFrame("targettarget")
+    if (event == "PLAYER_TARGET_CHANGED") then
+        UF:UpdateAll()
         UF:ClearCastBarOnUnit("target")
-
-        -- TARGET OF TARGET
     elseif (event == "UNIT_TARGET" and unit == "target") then
-        UF:UpdateFrame("target")
-        UF:UpdateFrame("targettarget")
-        
-        -- PET
+        UF:UpdateAll()
     elseif (event == "UNIT_PET") then
-        UF:UpdateFrame("pet")
-
-        -- FOCUS
+        UF:UpdateAll()
     elseif (event == "PLAYER_FOCUS_CHANGED") then
-        UF:UpdateFrame("focus")
-
-        -- BOSS FRAMES
+        UF:UpdateAll()
     elseif (event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" or event == "UNIT_TARGETABLE_CHANGED") then
-        for i = 1, 5 do
-            UF:UpdateFrame("boss"..i)
-        end
+        UF:UpdateAll()
+    end
 
-        -- ICONS
-    elseif (event == "PLAYER_UPDATE_RESTING") then
+    if (event == "PLAYER_UPDATE_RESTING") then
         for _, Frame in pairs(UF.Frames) do
             UF:UpdateRestingIcon(Frame)
         end
-
     elseif (event == "RAID_TARGET_UPDATE") then
         for _, Frame in pairs(UF.Frames) do
             UF:UpdateRaidIcon(Frame)
         end
-
     elseif (event == "READY_CHECK" or event == "READY_CHECK_CONFIRM" or event == "READY_CHECK_FINISHED") then
         for _, Frame in pairs(UF.Frames) do
             UF:UpdateReadyCheckIcon(Frame, event)
         end
     end
 
+    if (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then
+        UF:CastStarted(event, unit)
+    elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") then
+        UF:CastStopped(event, unit, ...)
+    elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
+        UF:CastUpdated(event, unit, ...)
+    elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
+        UF:CastFailed(event, unit, ...)
+    elseif (event == "UNIT_SPELLCAST_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
+        UF:CastInterrupted(event, unit)
+    end
+
     if (not FramesUF) then
         return
     end
 
-    -- AURAS
     if (event == "UNIT_AURA") then
         UF:UpdateAuras(FramesUF, unit, false)
         UF:UpdateAuras(FramesUF, unit, true)
         --UF:UpdateDebuffHighlight(FramesUF, unit)
-
-    -- HEALTH
     elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
         UF:UpdateHealth(FramesUF)
         UF:UpdateHealthTextCur(FramesUF)
         UF:UpdateHealthTextPer(FramesUF)
         UF:UpdateHealthPred(FramesUF)
-
-    -- HEALTH PRED
     elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
         UF:UpdateHealthPred(FramesUF)
-
-    -- POWER
     elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER") then
         UF:UpdatePower(FramesUF)
         UF:UpdateAdditionalPower(FramesUF)
-
-    -- THREAT
     elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
         UF:UpdateThreatHighlight(FramesUF)
-
-    -- NAME
     elseif (event == "UNIT_NAME_UPDATE") then
         UF:UpdateName(FramesUF)
-
-    -- LEVEL
     elseif (event == "UNIT_LEVEL" or event == "PLAYER_LEVEL_UP") then
         UF:UpdateTargetNameLevel(FramesUF)
-
-    -- ICONS
     elseif (event == "UNIT_FLAGS" or event == "PARTY_LEADER_CHANGED" or event == "GROUP_ROSTER_UPDATE") then
         UF:UpdateCombatIcon(FramesUF)
         UF:UpdateLeaderIcon(FramesUF)
         UF:UpdateAssistantIcon(FramesUF)
-
     elseif (event == "INCOMING_RESURRECT_CHANGED") then
         UF:UpdateResurrectionIcon(FramesUF)
-
     elseif (event == "INCOMING_SUMMON_CHANGED") then
         UF:UpdateSummonIcon(FramesUF)
-
     elseif (event == "UNIT_PHASE") then
         UF:UpdatePhaseIcon(FramesUF)
-
-    -- PORTRAITS
     elseif (event == "UNIT_MODEL_CHANGED" or event == "UNIT_PORTRAIT_UPDATE") then
         UF:UpdatePortrait(FramesUF, unit)
-
-    -- CASTBARS
-    elseif (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then
-        UF:CastStarted(event, unit)
-
-    elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") then
-        UF:CastStopped(event, unit, ...)
-
-    elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
-        UF:CastUpdated(event, unit, ...)
-
-    elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
-        UF:CastFailed(event, unit, ...)
-
-    elseif (event == "UNIT_SPELLCAST_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
-        UF:CastInterrupted(event, unit)
     end
 end
 

@@ -47,7 +47,7 @@ LibAnimated.Groups = {
         if (self.Stopped or not self.Playing) then
             LibAnimated.Constructors[self.Type](self)
             self:Callback("OnPlay")
-        elseif self.Paused then
+        elseif (self.Paused) then
             self:StartUpdating()
             self:Callback("OnResume")
         end
@@ -139,7 +139,7 @@ LibAnimated.Groups = {
     end,
 
     Callback = function(self, Handler)
-        if LibAnimated.Callbacks[Handler] and LibAnimated.Callbacks[Handler][self] then
+        if (LibAnimated.Callbacks[Handler] and LibAnimated.Callbacks[Handler][self]) then
             LibAnimated.Callbacks[Handler][self](self)
         end
     end,
@@ -196,12 +196,7 @@ local function FadeUpdate(Frame, DeltaTime, Index)
         Frame.Stopped = true
         Frame:Callback("OnFinished")
     else
-        Frame.CurrentValue = LibAnimated.Easing[Frame.Easing](
-            Frame.Timer,
-            Frame.StartAlpha,
-            Frame.DeltaAlpha,
-            Frame.Duration
-        )
+        Frame.CurrentValue = LibAnimated.Easing[Frame.Easing](Frame.Timer, Frame.StartAlpha, Frame.DeltaAlpha, Frame.Duration)
         Frame.Parent:SetAlpha(Frame.CurrentValue)
     end
 end

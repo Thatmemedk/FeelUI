@@ -80,10 +80,13 @@ DB.Global = {
 
 	CooldownManager = {
 		Enable = true,
-		ButtonSize = { 36, 18 },
-		ButtonSpacing = 2,
-		ButtonRowSpacing = -22,
-		AnchorPoint = { "CENTER", _G.UIParent, 0, -136 },
+		BuffViewerButtonSize = { 42, 18 },
+		EssentialViewerButtonSize = { 36, 18 },
+		UtilityViewerButtonSize = { 36, 18 },
+		ButtonSpacing = 1,
+		BuffViewerPoint = { "CENTER", _G.UIParent, 0, -162 },
+		EssentialViewerPoint = { "CENTER", _G.UIParent, 0, -188 },
+		UtilityViewerPoint = { "CENTER", _G.UIParent, 0, -248 },
 	},
 
 	DataBars = {
@@ -180,6 +183,6 @@ DB.Global = {
 		PartyPoint = { "LEFT", _G.UIParent, 219, 1 },
 		RaidPoint = { "LEFT", _G.UIParent, 78, -1 },
 		-- Points Settings
-		CastBarPlayerPoint = { "CENTER", _G.UIParent, 0, -282 },
+		CastBarPlayerPoint = { "CENTER", _G.UIParent, 0, -288 },
 	},
 }

@@ -25,34 +25,56 @@ local UnholyColor = { 0.25 * Mult, 0.55 * Mult, 0.10 * Mult }
 
 function RuneBar:CreateBar()
     local Bar = CreateFrame("StatusBar", nil, _G.UIParent)
-    Bar:Size(222, 8)
+    Bar:Size(242, 8)
     Bar:Point(unpack(DB.Global.DataBars.RuneBarPoint))
-    
+
     local RunesBars = {}
     local RunesBarsBackdrop = {}
 
-    for i = 1, 6 do
+    local BarCount = 6
+    local BarWidth = 242
+    local SegmentSpacing = 2
+    local TotalSpacing = (BarCount - 1) * SegmentSpacing
+    local BaseWidth = (BarWidth - TotalSpacing) / BarCount
+    local Widths = {}
+    local SumWidths = 0
+
+    for i = 1, BarCount do
+        Widths[i] = math.floor(BaseWidth)
+        SumWidths = SumWidths + Widths[i]
+    end
+
+    local Remainder = BarWidth - TotalSpacing - SumWidths
+
+    for i = 1, Remainder do
+        Widths[i] = Widths[i] + 1
+    end
+
+    local X = 0
+
+    for i = 1, BarCount do
         local Bars = CreateFrame("StatusBar", nil, Bar)
-        Bars:Size(212/6, 8)
         Bars:SetStatusBarTexture(Media.Global.Texture)
 
         local Backdrop = CreateFrame("Frame", nil, Bar)
-        Backdrop:Size(212/6, 8)
         Backdrop:CreateBackdrop()
         Backdrop:CreateShadow()
-        
-        if (i == 1) then
-            Bars:Point("LEFT", Bar, 0, 0)
-            Backdrop:Point("LEFT", Bar, 0, 0)
-        else
-            Bars:Point("LEFT", RunesBars[i-1], "RIGHT", 2, 0)
-            Backdrop:Point("LEFT", RunesBarsBackdrop[i-1], "RIGHT", 2, 0)
-        end
-        
+
+        Bars:Size(Widths[i], 8)
+        Backdrop:Size(Widths[i], 8)
+
+        Bars:ClearAllPoints()
+        Bars:Point("LEFT", Bar, "LEFT", X, 0)
+
+        Backdrop:ClearAllPoints()
+        Backdrop:Point("LEFT", Bar, "LEFT", X, 0)
+
+        X = X + Widths[i] + SegmentSpacing
+
         RunesBars[i] = Bars
         RunesBarsBackdrop[i] = Backdrop
     end
-    
+
     self.Bar = Bar
     self.RunesBars = RunesBars
     self.RunesBarsBackdrop = RunesBarsBackdrop

@@ -29,9 +29,9 @@ function AB:CreateBar5()
         end
 
         if (i == 1) then
-            Button:SetPoint("TOPRIGHT", Bar, -Spacing, -Spacing)
+            Button:Point("TOPRIGHT", Bar, -Spacing, -Spacing)
         else
-            Button:SetPoint("TOP", _G["MultiBarLeftButton"..(i - 1)], "BOTTOM", 0, -Spacing)
+            Button:Point("TOP", _G["MultiBarLeftButton"..(i - 1)], "BOTTOM", 0, -Spacing)
         end
 
         Bar["Button"..i] = Button

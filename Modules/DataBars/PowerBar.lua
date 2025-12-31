@@ -2,7 +2,6 @@ local UI, DB, Media, Language = select(2, ...):Call()
 
 -- Call Modules
 local PowerBar = UI:RegisterModule("PowerBar")
-local Panels = UI:CallModule("Panels")
 
 -- Lib Globals
 local select = select
@@ -20,7 +19,7 @@ local R, G, B = unpack(UI.GetClassColors)
 
 function PowerBar:CreateBar()
 	local Bar = CreateFrame("StatusBar", nil, _G.UIParent)
-	Bar:Size(222, 8)
+	Bar:Size(242, 8)
 	Bar:Point(unpack(DB.Global.DataBars.PowerBarPoint))
 	Bar:SetStatusBarTexture(Media.Global.Texture)
 	Bar:CreateBackdrop()
@@ -48,7 +47,7 @@ function PowerBar:Update()
 
 	if (PowerType == Enum.PowerType.Mana) then
 		self.Text:SetFormattedText("%.0f%%", Percent)
-		self.Text:Point("CENTER", Bar, 2, 6)
+		self.Text:Point("CENTER", Bar, 0, 6)
 	else
 		self.Text:SetText(Min)
 		self.Text:Point("CENTER", Bar, 0, 6)

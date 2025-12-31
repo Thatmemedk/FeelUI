@@ -12,11 +12,11 @@ local unpack = unpack
 local ActionButtonSpellAlertManager = _G.ActionButtonSpellAlertManager
 
 function AB:StartButtonHighlight()
-    if self.SpellActivationAlert and self.SpellActivationAlert:GetParent() ~= UI.HiddenParent then
+    if (self.SpellActivationAlert and self.SpellActivationAlert:GetParent() ~= UI.HiddenParent) then
         self.SpellActivationAlert:SetParent(UI.HiddenParent)
     end
 
-    if not self.Animation then
+    if (not self.Animation) then
         self.NewProc = CreateFrame("Frame", nil, self)
         self.NewProc:SetFrameLevel(self:GetFrameLevel() + 5)
         self.NewProc:SetInside()
@@ -34,14 +34,14 @@ function AB:StartButtonHighlight()
         self.Animation.FadeOut:SetSmoothing("IN_OUT")
     end
 
-    if not self.Animation:IsPlaying() then
+    if (not self.Animation:IsPlaying()) then
         self.NewProc:Show()
         self.Animation:Play()
     end
 end
 
 function AB:StopButtonHighlight()
-    if self.Animation and self.Animation:IsPlaying() then
+    if (self.Animation and self.Animation:IsPlaying()) then
         self.Animation:Stop()
         self.NewProc:Hide()
     end
@@ -49,11 +49,11 @@ end
 
 function AB:CreateGlow()
     hooksecurefunc(ActionButtonSpellAlertManager, "ShowAlert", function(self, Button)
-        if not (Button) then 
+        if (not Button) then 
         	return 
         end
 
-        if not (Button.StartButtonHighlight) then
+        if (not Button.StartButtonHighlight) then
             Button.StartButtonHighlight = AB.StartButtonHighlight
             Button.StopButtonHighlight  = AB.StopButtonHighlight
         end
