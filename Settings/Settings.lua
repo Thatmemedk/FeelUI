@@ -91,10 +91,10 @@ DB.Global = {
 
 	DataBars = {
 		ExperienceBar = true,
+		ReputationBar = false,
 		ClassPowerBar = true,
 		PowerBar = true,
 		RuneBar = true,
-		RuneBarSpecColor = false,
 		StaggerBar = true,
 		SoulFragmentsBar = true,
 		MaelstromBar = true,

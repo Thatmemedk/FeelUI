@@ -75,6 +75,7 @@ UF.Frames.Range = {}
 
 -- Tables
 UF.FramesUpdatePending = false
+UF.PortraitUpdatePending = false
 
 -- Tables
 UF.FadeInTime = 0.5
@@ -165,7 +166,7 @@ function UF:UpdateHealth(Frame)
         Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
     else
         if (DB.Global.UnitFrames.ClassColor) then
-            if UnitIsPlayer(Unit) then
+            if (UnitIsPlayer(Unit)) then
                 local _, Class = UnitClass(Unit)
                 local Color = UI.Colors.Class[Class]
 
@@ -204,7 +205,7 @@ function UF:UpdateHealthTextCur(Frame)
     if not (UnitIsConnected(Unit)) then
         Frame.HealthTextCur:SetText(PLAYER_OFFLINE)
         Frame.HealthTextCur:SetTextColor(0.35, 0.35, 0.35)
-    elseif(UnitIsGhost(Unit)) then
+    elseif (UnitIsGhost(Unit)) then
         Frame.HealthTextCur:SetText(GHOST)
         Frame.HealthTextCur:SetTextColor(0.35, 0.35, 0.35)
     elseif (UnitIsDead(Unit)) then
@@ -223,7 +224,6 @@ function UF:UpdateHealthTextPer(Frame)
 
     local Unit = Frame.unit
     local Percent = UnitHealthPercent(Unit, false, UI.CurvePercent)
-
     Frame.HealthTextPer:SetFormattedText("%d%%", Percent or 0)
 end
 
@@ -256,28 +256,28 @@ function UF:UpdateHealthPred(Frame)
     local FourthBar = Frame.HealthPrediction.HealAbsorbs
 
     -- Update bars
-    FirstBar:SetOrientation(Orientation)
     FirstBar:Size(BarWidth, BarHeight)
+    FirstBar:SetOrientation(Orientation)
     FirstBar:SetMinMaxValues(0, Max)
     FirstBar:SetValue(MyIncomingHeal, UI.SmoothBars)
     FirstBar:Show()
 
-    SecondBar:SetOrientation(Orientation)
     SecondBar:Size(BarWidth, BarHeight)
+    SecondBar:SetOrientation(Orientation)
     SecondBar:SetMinMaxValues(0, Max)
     SecondBar:SetValue(AllIncomingHeal, UI.SmoothBars)
     SecondBar:Show()
 
+    ThirdBar:Size(BarWidth, BarHeight)
     ThirdBar:SetOrientation(Orientation)
     ThirdBar:SetReverseFill(true)
-    ThirdBar:Size(BarWidth, BarHeight)
     ThirdBar:SetMinMaxValues(0, Max)
     ThirdBar:SetValue(Absorb, UI.SmoothBars)
     ThirdBar:Show()
 
+    FourthBar:Size(BarWidth, BarHeight)
     FourthBar:SetOrientation(Orientation)
     FourthBar:SetReverseFill(true)
-    FourthBar:Size(BarWidth, BarHeight)
     FourthBar:SetMinMaxValues(0, Max)
     FourthBar:SetValue(HealAbsorb, UI.SmoothBars)
     FourthBar:Show()
@@ -381,7 +381,7 @@ function UF:UpdateName(Frame, TypeFrame)
     if (DB.Global.UnitFrames.ClassColor) then
         Frame.Name:SetTextColor(1, 1, 1)
     else
-        if UnitIsPlayer(Unit) then
+        if (UnitIsPlayer(Unit)) then
             local _, Class = UnitClass(Unit)
             local Color = UI.Colors.Class[Class]
 
@@ -410,7 +410,7 @@ function UF:UpdateTargetNameLevel(Frame)
     if (DB.Global.UnitFrames.ClassColor) then
         NameColor = format("|cff%02x%02x%02x", 1*255, 1*255, 1*255)
     else
-        if UnitIsPlayer(Unit) then
+        if (UnitIsPlayer(Unit)) then
             local _, Class = UnitClass(Unit)
             local Color = UI.Colors.Class[Class]
 
@@ -447,42 +447,33 @@ end
 -- UPDATE PORTRAITS
 
 function UF:UpdatePortrait(Frame, Unit)
-    if (not Frame or not Frame.unit or not Frame.Portrait) then
+    if (not Frame or not Frame.Portrait or not UnitExists(Unit)) then
         return
     end
 
-    Unit = Unit or Frame.unit
+    local GUID = UnitGUID(Unit)
 
-    if (not UnitIsUnit(Frame.unit, Unit)) then
+    if (Frame.Portrait.GUID == GUID) then
         return
     end
 
-    local UnitIsVisible = UnitIsVisible(Unit)
-    local UnitIsConnected = UnitIsConnected(Unit)
-    local State = UnitIsVisible and UnitIsConnected
-
-    if (Frame.Portrait.State == State and Frame.Portrait.Unit == Unit) then
-        return
-    end
+    Frame.Portrait.GUID = GUID
 
     if (Frame.Portrait:IsObjectType("PlayerModel")) then
         Frame.Portrait:ClearModel()
 
-        if (not State) then
+        if (not UnitIsVisible(Unit) or not UnitIsConnected(Unit)) then
             Frame.Portrait:SetCamDistanceScale(1)
             Frame.Portrait:SetPortraitZoom(1)
             Frame.Portrait:SetPosition(0, 0, 0.20)
             Frame.Portrait:SetModel("Interface\\Buttons\\TalkToMeQuestionMark.m2")
         else
-            Frame.Portrait:SetCamDistanceScale(2.5)
+            Frame.Portrait:SetCamDistanceScale(3)
             Frame.Portrait:SetPortraitZoom(1)
             Frame.Portrait:SetPosition(0, 0, 0)
             Frame.Portrait:SetUnit(Unit)
         end
     end
-
-    Frame.Portrait.Unit = Unit
-    Frame.Portrait.State = State
 end
 
 -- ICONS
@@ -874,8 +865,6 @@ function UF:UpdateFrame(Unit)
     -- NAME
     if (Frame.Name) then self:UpdateName(Frame) end
     if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame) end
-    -- PORTRAITS
-    if (Frame.Portrait) then self:UpdatePortrait(self.Frames["target"], Unit) end
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame) end
     if (Frame.CombatIcon) then self:UpdateCombatIcon(Frame) end
@@ -910,8 +899,44 @@ function UF:UpdateAll()
     self.FramesUpdatePending = true
     self:UpdateAllUnits()
 
-    C_Timer.After(0.5, function()
+    C_Timer.After(0.1, function()
         self.FramesUpdatePending = false
+    end)
+end
+
+function UF:QueuePlayerPortraitUpdate()
+    if (self.PortraitUpdatePending) then
+        return
+    end
+
+    self.PortraitUpdatePending = true
+
+    C_Timer.After(0.1, function()
+        self.PortraitUpdatePending = false
+
+        local Frame = self.Frames["player"]
+
+        if (Frame and Frame.Portrait) then
+            self:UpdatePortrait(Frame, "player")
+        end
+    end)
+end
+
+function UF:QueueTargetPortraitUpdate()
+    if (self.PortraitUpdatePending) then
+        return
+    end
+
+    self.PortraitUpdatePending = true
+
+    C_Timer.After(0.1, function()
+        self.PortraitUpdatePending = false
+
+        local Frame = self.Frames["target"]
+
+        if (Frame and Frame.Portrait) then
+            self:UpdatePortrait(Frame, "target")
+        end
     end)
 end
 
@@ -924,11 +949,14 @@ function UF:OnEvent(event, unit, ...)
         C_Timer.After(0.7, function()
             UF:UpdateAllUnits()
         end)
+
+        UF:QueuePlayerPortraitUpdate()
     end
 
     if (event == "PLAYER_TARGET_CHANGED") then
         UF:UpdateAll()
         UF:ClearCastBarOnUnit("target")
+        UF:QueueTargetPortraitUpdate()
     elseif (event == "UNIT_TARGET" and unit == "target") then
         UF:UpdateAll()
     elseif (event == "UNIT_PET") then
@@ -977,7 +1005,6 @@ function UF:OnEvent(event, unit, ...)
         UF:UpdateHealth(FramesUF)
         UF:UpdateHealthTextCur(FramesUF)
         UF:UpdateHealthTextPer(FramesUF)
-        UF:UpdateHealthPred(FramesUF)
     elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
         UF:UpdateHealthPred(FramesUF)
     elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER") then
@@ -999,7 +1026,7 @@ function UF:OnEvent(event, unit, ...)
         UF:UpdateSummonIcon(FramesUF)
     elseif (event == "UNIT_PHASE") then
         UF:UpdatePhaseIcon(FramesUF)
-    elseif (event == "UNIT_MODEL_CHANGED" or event == "UNIT_PORTRAIT_UPDATE") then
+    elseif (event == "UNIT_MODEL_CHANGED" or event == "UNIT_PORTRAIT_UPDATE" or event == "PORTRAITS_UPDATED") then
         UF:UpdatePortrait(FramesUF, unit)
     end
 end
@@ -1009,35 +1036,8 @@ end
 function UF:RegisterEvents()
     local SecureEventFrame = UF.SecureFrame
 
-    SecureEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    -- BUFFS / DEBUFFS
-    SecureEventFrame:RegisterEvent("UNIT_AURA")
-    -- HEALTH
-    SecureEventFrame:RegisterEvent("UNIT_HEALTH")
-    SecureEventFrame:RegisterEvent("UNIT_MAXHEALTH")
-    SecureEventFrame:RegisterEvent("UNIT_CONNECTION")
-    -- HEALTH PRED
-    SecureEventFrame:RegisterEvent("UNIT_HEAL_PREDICTION")
-    SecureEventFrame:RegisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
-    SecureEventFrame:RegisterEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
-    SecureEventFrame:RegisterEvent("UNIT_MAX_HEALTH_MODIFIERS_CHANGED")
-    -- ICONS
-    SecureEventFrame:RegisterEvent("UNIT_FLAGS")
-    SecureEventFrame:RegisterEvent("PLAYER_UPDATE_RESTING")
-    SecureEventFrame:RegisterEvent("RAID_TARGET_UPDATE")
-    SecureEventFrame:RegisterEvent("INCOMING_RESURRECT_CHANGED")
-    SecureEventFrame:RegisterEvent("PARTY_LEADER_CHANGED")
-    SecureEventFrame:RegisterEvent("INCOMING_SUMMON_CHANGED")
-    SecureEventFrame:RegisterEvent("UNIT_PHASE")
-    SecureEventFrame:RegisterEvent("READY_CHECK")
-    SecureEventFrame:RegisterEvent("READY_CHECK_CONFIRM")
-    SecureEventFrame:RegisterEvent("READY_CHECK_FINISHED")
-    -- POWER
-    SecureEventFrame:RegisterEvent("UNIT_POWER_FREQUENT")
-    SecureEventFrame:RegisterEvent("UNIT_MAXPOWER")
-    SecureEventFrame:RegisterEvent("UNIT_DISPLAYPOWER")
-    SecureEventFrame:RegisterEvent("UNIT_POWER_UPDATE")
     -- UNITS
+    SecureEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     SecureEventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
     SecureEventFrame:RegisterEvent("PLAYER_FOCUS_CHANGED")
     SecureEventFrame:RegisterEvent("UNIT_TARGETABLE_CHANGED")
@@ -1059,17 +1059,45 @@ function UF:RegisterEvents()
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE")
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
-    -- THREAT
-    SecureEventFrame:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE")
-    SecureEventFrame:RegisterEvent("UNIT_THREAT_LIST_UPDATE")
+    -- BUFFS / DEBUFFS
+    SecureEventFrame:RegisterEvent("UNIT_AURA")
+    -- HEALTH
+    SecureEventFrame:RegisterEvent("UNIT_HEALTH")
+    SecureEventFrame:RegisterEvent("UNIT_MAXHEALTH")
+    SecureEventFrame:RegisterEvent("UNIT_CONNECTION")
+    -- HEALTH PRED
+    SecureEventFrame:RegisterEvent("UNIT_HEAL_PREDICTION")
+    SecureEventFrame:RegisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
+    SecureEventFrame:RegisterEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
+    SecureEventFrame:RegisterEvent("UNIT_MAX_HEALTH_MODIFIERS_CHANGED")
+    -- POWER
+    SecureEventFrame:RegisterEvent("UNIT_POWER_FREQUENT")
+    SecureEventFrame:RegisterEvent("UNIT_MAXPOWER")
+    SecureEventFrame:RegisterEvent("UNIT_DISPLAYPOWER")
+    SecureEventFrame:RegisterEvent("UNIT_POWER_UPDATE")
     -- NAME
     SecureEventFrame:RegisterEvent("UNIT_NAME_UPDATE")
     -- LEVEL
     SecureEventFrame:RegisterEvent("UNIT_LEVEL")
     SecureEventFrame:RegisterEvent("PLAYER_LEVEL_UP")
+    -- THREAT
+    SecureEventFrame:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE")
+    SecureEventFrame:RegisterEvent("UNIT_THREAT_LIST_UPDATE")
+    -- ICONS
+    SecureEventFrame:RegisterEvent("UNIT_FLAGS")
+    SecureEventFrame:RegisterEvent("PLAYER_UPDATE_RESTING")
+    SecureEventFrame:RegisterEvent("RAID_TARGET_UPDATE")
+    SecureEventFrame:RegisterEvent("INCOMING_RESURRECT_CHANGED")
+    SecureEventFrame:RegisterEvent("PARTY_LEADER_CHANGED")
+    SecureEventFrame:RegisterEvent("INCOMING_SUMMON_CHANGED")
+    SecureEventFrame:RegisterEvent("UNIT_PHASE")
+    SecureEventFrame:RegisterEvent("READY_CHECK")
+    SecureEventFrame:RegisterEvent("READY_CHECK_CONFIRM")
+    SecureEventFrame:RegisterEvent("READY_CHECK_FINISHED")
     -- PORTRAITS
     SecureEventFrame:RegisterEvent("UNIT_MODEL_CHANGED")
     SecureEventFrame:RegisterEvent("UNIT_PORTRAIT_UPDATE")
+    SecureEventFrame:RegisterEvent("PORTRAITS_UPDATED")
     -- ON EVENT
     SecureEventFrame:SetScript("OnEvent", function(_, event, ...)
         UF:OnEvent(event, ...)

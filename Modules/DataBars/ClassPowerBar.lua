@@ -104,24 +104,8 @@ function ClassPowerBar:Update()
     end
 
     local BarWidth = 242
-    local SegmentSpacing = 4
+    local SegmentSpacing = 2
     local TotalSpacing = (BarCount - 1) * SegmentSpacing
-    local BaseWidth = (BarWidth - TotalSpacing) / BarCount
-    local Widths = {}
-    local SumWidths = 0
-
-    for i = 1, BarCount do
-        Widths[i] = math.floor(BaseWidth)
-        SumWidths = SumWidths + Widths[i]
-    end
-
-    local Remainder = BarWidth - TotalSpacing - SumWidths
-
-    for i = 1, Remainder do
-        Widths[i] = Widths[i] + 1
-    end
-
-    local X = 0
 
     for i = 1, BarCount do
         local Segment = self.Segment[i]
@@ -137,23 +121,35 @@ function ClassPowerBar:Update()
 
         if (not Backdrop) then
             Backdrop = CreateFrame("StatusBar", nil, self.Bar)
-            Backdrop:SetStatusBarTexture(Media.Global.Texture)
             Backdrop:CreateBackdrop()
             Backdrop:CreateShadow()
-            
+
             self.Backdrops[i] = Backdrop
         end
 
-        Segment:Size(Widths[i], 8)
-        Backdrop:Size(Widths[i], 8)
+        local SegmentWidth = math.floor((BarWidth - TotalSpacing) * i / BarCount) - math.floor((BarWidth - TotalSpacing) * (i - 1) / BarCount)
+
+        Segment:Size(SegmentWidth, 8)
+        Backdrop:Size(SegmentWidth, 8)
 
         Segment:ClearAllPoints()
-        Segment:Point("LEFT", self.Bar, "LEFT", X, 0)
-        
         Backdrop:ClearAllPoints()
-        Backdrop:Point("LEFT", self.Bar, "LEFT", X, 0)
 
-        X = X + Widths[i] + SegmentSpacing
+        if (i == 1) then
+            Segment:Point("LEFT", self.Bar, "LEFT", 0, 0)
+            Backdrop:Point("LEFT", self.Bar, "LEFT", 0, 0)
+
+        elseif (i == BarCount) then
+            Segment:Point("RIGHT", self.Bar, "RIGHT", 0, 0)
+            Segment:Point("LEFT", self.Segment[i - 1], "RIGHT", SegmentSpacing, 0)
+
+            Backdrop:Point("RIGHT", self.Bar, "RIGHT", 0, 0)
+            Backdrop:Point("LEFT", self.Backdrops[i - 1], "RIGHT", SegmentSpacing, 0)
+
+        else
+            Segment:Point("LEFT", self.Segment[i - 1], "RIGHT", SegmentSpacing, 0)
+            Backdrop:Point("LEFT", self.Backdrops[i - 1], "RIGHT", SegmentSpacing, 0)
+        end
 
         if (i == 1) then
             Segment:SetStatusBarColor(R1, G1, B1)

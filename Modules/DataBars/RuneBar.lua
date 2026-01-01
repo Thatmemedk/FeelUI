@@ -28,56 +28,7 @@ function RuneBar:CreateBar()
     Bar:Size(242, 8)
     Bar:Point(unpack(DB.Global.DataBars.RuneBarPoint))
 
-    local RunesBars = {}
-    local RunesBarsBackdrop = {}
-
-    local BarCount = 6
-    local BarWidth = 242
-    local SegmentSpacing = 2
-    local TotalSpacing = (BarCount - 1) * SegmentSpacing
-    local BaseWidth = (BarWidth - TotalSpacing) / BarCount
-    local Widths = {}
-    local SumWidths = 0
-
-    for i = 1, BarCount do
-        Widths[i] = math.floor(BaseWidth)
-        SumWidths = SumWidths + Widths[i]
-    end
-
-    local Remainder = BarWidth - TotalSpacing - SumWidths
-
-    for i = 1, Remainder do
-        Widths[i] = Widths[i] + 1
-    end
-
-    local X = 0
-
-    for i = 1, BarCount do
-        local Bars = CreateFrame("StatusBar", nil, Bar)
-        Bars:SetStatusBarTexture(Media.Global.Texture)
-
-        local Backdrop = CreateFrame("Frame", nil, Bar)
-        Backdrop:CreateBackdrop()
-        Backdrop:CreateShadow()
-
-        Bars:Size(Widths[i], 8)
-        Backdrop:Size(Widths[i], 8)
-
-        Bars:ClearAllPoints()
-        Bars:Point("LEFT", Bar, "LEFT", X, 0)
-
-        Backdrop:ClearAllPoints()
-        Backdrop:Point("LEFT", Bar, "LEFT", X, 0)
-
-        X = X + Widths[i] + SegmentSpacing
-
-        RunesBars[i] = Bars
-        RunesBarsBackdrop[i] = Backdrop
-    end
-
     self.Bar = Bar
-    self.RunesBars = RunesBars
-    self.RunesBarsBackdrop = RunesBarsBackdrop
 end
 
 function RuneBar:OnUpdate(Elapsed)
@@ -94,87 +45,106 @@ function RuneBar:OnUpdate(Elapsed)
 end
 
 function RuneBar:Update()
-    for i = 1, 6 do
-        local Bar = self.RunesBars[i]
+    if (not self.Segment) then 
+        self.Segment = {} 
+    end 
 
-        if not (Bar) then
-            return
+    if (not self.Backdrops) then 
+        self.Backdrops = {} 
+    end
+
+    local BarCount = 6
+    local BarWidth = 242
+    local SegmentSpacing = 2
+    local TotalSpacing = (BarCount - 1) * SegmentSpacing
+
+    for i = 1, BarCount do
+        local Segment = self.Segment[i]
+        local Backdrop = self.Backdrops[i]
+
+        if (not Segment) then
+            Segment = CreateFrame("StatusBar", nil, self.Bar)
+            Segment:SetStatusBarTexture(Media.Global.Texture)
+            Segment:SetAlpha(0)
+
+            self.Segment[i] = Segment
+        end
+
+        if (not Backdrop) then
+            Backdrop = CreateFrame("StatusBar", nil, self.Bar)
+            Backdrop:CreateBackdrop()
+            Backdrop:CreateShadow()
+
+            self.Backdrops[i] = Backdrop
+        end
+
+        local SegmentWidth = math.floor((BarWidth - TotalSpacing) * i / BarCount) - math.floor((BarWidth - TotalSpacing) * (i - 1) / BarCount)
+
+        Segment:Size(SegmentWidth, 8)
+        Backdrop:Size(SegmentWidth, 8)
+
+        Segment:ClearAllPoints()
+        Backdrop:ClearAllPoints()
+
+        if (i == 1) then
+            Segment:Point("LEFT", self.Bar, "LEFT", 0, 0)
+            Backdrop:Point("LEFT", self.Bar, "LEFT", 0, 0)
+
+        elseif (i == BarCount) then
+            Segment:Point("RIGHT", self.Bar, "RIGHT", 0, 0)
+            Segment:Point("LEFT", self.Segment[i - 1], "RIGHT", SegmentSpacing, 0)
+
+            Backdrop:Point("RIGHT", self.Bar, "RIGHT", 0, 0)
+            Backdrop:Point("LEFT", self.Backdrops[i - 1], "RIGHT", SegmentSpacing, 0)
+
+        else
+            Segment:Point("LEFT", self.Segment[i - 1], "RIGHT", SegmentSpacing, 0)
+            Backdrop:Point("LEFT", self.Backdrops[i - 1], "RIGHT", SegmentSpacing, 0)
+        end
+
+        if (i <= 2) then
+            Segment:SetStatusBarColor(unpack(BloodColor))
+        elseif (i <= 4) then
+            Segment:SetStatusBarColor(unpack(FrostColor))
+        else
+            Segment:SetStatusBarColor(unpack(UnholyColor))
         end
 
         local Start, Duration, RuneIsReady = GetRuneCooldown(i)
 
         if (Start and Duration) then
             local Elapsed = GetTime() - Start
-            
-            Bar.Duration = Elapsed
-            Bar.Max = Duration
-            Bar:SetMinMaxValues(0, Duration)
+            Segment.Duration = Elapsed
+            Segment.Max = Duration
+            Segment:SetMinMaxValues(0, Duration)
 
             if (RuneIsReady) then
-                Bar:SetValue(Duration, UI.SmoothBars)
-                Bar:SetScript("OnUpdate", nil)
+                Segment:SetValue(Duration, UI.SmoothBars)
+                Segment:SetScript("OnUpdate", nil)
 
-                UI:UIFrameFadeIn(Bar, 0.25, Bar:GetAlpha(), 1)
+                UI:UIFrameFadeIn(Segment, 0.25, Segment:GetAlpha(), 1)
             else
-                Bar:SetValue(Elapsed, UI.SmoothBars)
-                Bar:SetScript("OnUpdate", self.OnUpdate)
+                Segment:SetValue(Elapsed, UI.SmoothBars)
+                Segment:SetScript("OnUpdate", self.OnUpdate)
 
-                UI:UIFrameFadeOut(Bar, 0.25, Bar:GetAlpha(), 0.50)
+                UI:UIFrameFadeOut(Segment, 0.25, Segment:GetAlpha(), 0.50)
             end
         else
-            Bar:SetMinMaxValues(0, 1)
-            Bar:SetValue(1, UI.SmoothBars)
-            Bar:SetScript("OnUpdate", nil)
+            Segment:SetMinMaxValues(0, 1)
+            Segment:SetValue(1, UI.SmoothBars)
+            Segment:SetScript("OnUpdate", nil)
         end
-    end
-end
-
-function RuneBar:UpdateSpec()   
-    local GetSpecialization = GetSpecialization()
-
-    if (DB.Global.DataBars.RuneBarSpecColor) then
-        local RuneBarColor
-
-        if (GetSpecialization == 1) then
-            RuneBarColor = BloodColor
-        elseif (GetSpecialization == 2) then
-            RuneBarColor = FrostColor
-        elseif (GetSpecialization == 3) then
-            RuneBarColor = UnholyColor
-        end
-
-        if (RuneBarColor) then
-            for i = 1, 6 do
-                self.RunesBars[i]:SetStatusBarColor(unpack(RuneBarColor))
-            end
-        end
-    else
-        local Bar = self.RunesBars
-        local Backdrop = self.RunesBarsBackdrop
-
-        Bar[1]:SetStatusBarColor(unpack(BloodColor))
-        Bar[2]:SetStatusBarColor(unpack(BloodColor))
-        Bar[3]:SetStatusBarColor(unpack(FrostColor))
-        Bar[4]:SetStatusBarColor(unpack(FrostColor))
-        Bar[5]:SetStatusBarColor(unpack(UnholyColor))
-        Bar[6]:SetStatusBarColor(unpack(UnholyColor))
     end
 end
 
 function RuneBar:OnEvent(event)
-    if (event == "RUNE_POWER_UPDATE") or (event == "RUNE_TYPE_UPDATE") then
-        self:Update()
-    elseif (event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_SPECIALIZATION_CHANGED" or event == "PLAYER_TALENT_UPDATE") then
-        self:UpdateSpec()
-    end
+    self:Update()
 end
 
 function RuneBar:RegisterEvents()
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("RUNE_POWER_UPDATE")
     self:RegisterEvent("RUNE_TYPE_UPDATE")
-    self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-    self:RegisterEvent("PLAYER_TALENT_UPDATE")
     self:SetScript("OnEvent", self.OnEvent)
 end
 

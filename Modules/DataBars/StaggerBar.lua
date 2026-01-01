@@ -20,7 +20,7 @@ local Class = select(2, UnitClass("player"))
 
 function StaggerBar:CreateBar()
 	local Bar = CreateFrame("StatusBar", nil, _G.UIParent)
-	Bar:Size(222, 8)
+	Bar:Size(242, 8)
 	Bar:Point(unpack(DB.Global.DataBars.StaggerBarPoint))
 	Bar:SetStatusBarTexture(Media.Global.Texture)
 	Bar:CreateBackdrop()

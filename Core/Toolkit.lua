@@ -395,7 +395,12 @@ local function CreateShadow(self)
 		Shadow:SetFrameStrata(self.FrameRaised:GetFrameStrata())
 	end
 
-	Shadow:SetOutside(self, 2, 2)
+	if (self.BorderThick) then
+		Shadow:SetOutside(self, 3, 3)
+	else
+		Shadow:SetOutside(self, 2, 2)
+	end
+
 	Shadow:SetBackdrop({edgeFile = Media.Global.Shadow, edgeSize = UI:Scale(3)})
 	Shadow:SetBackdropColor(0, 0, 0, 0)
 	Shadow:SetBackdropBorderColor(unpack(DB.Global.General.ShadowColor))

@@ -47,7 +47,7 @@ function PowerBar:Update()
 
 	if (PowerType == Enum.PowerType.Mana) then
 		self.Text:SetFormattedText("%.0f%%", Percent)
-		self.Text:Point("CENTER", Bar, 0, 6)
+		self.Text:Point("CENTER", Bar, 2, 6)
 	else
 		self.Text:SetText(Min)
 		self.Text:Point("CENTER", Bar, 0, 6)
