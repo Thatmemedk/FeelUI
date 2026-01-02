@@ -121,6 +121,7 @@ function ClassPowerBar:Update()
 
         if (not Backdrop) then
             Backdrop = CreateFrame("StatusBar", nil, self.Bar)
+            Backdrop:SetStatusBarTexture(Media.Global.Texture)
             Backdrop:CreateBackdrop()
             Backdrop:CreateShadow()
 
@@ -227,11 +228,14 @@ function ClassPowerBar:UpdateSpec()
 end
 
 function ClassPowerBar:OnEvent(event)
-    if (event == "PLAYER_ENTERING_WORLD" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_MAXPOWER" or event == "UNIT_DISPLAYPOWER") then
+    if (event == "PLAYER_ENTERING_WORLD") then
         self:Update()
+        self:UpdateSpec()
+    elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_MAXPOWER" or event == "UNIT_POWER_UPDATE") then
+        self:Update()
+    elseif (event == "PLAYER_SPECIALIZATION_CHANGED" or event == "PLAYER_TALENT_UPDATE" or event == "SPELLS_CHANGED") then
+        self:UpdateSpec()
     end
-
-    self:UpdateSpec()
 end
 
 function ClassPowerBar:RegisterEvents()
@@ -239,6 +243,7 @@ function ClassPowerBar:RegisterEvents()
     self:RegisterEvent("UNIT_DISPLAYPOWER")
     self:RegisterEvent("UNIT_MAXPOWER")
     self:RegisterEvent("UNIT_POWER_FREQUENT")
+    self:RegisterEvent("UNIT_POWER_UPDATE")
     self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
     self:RegisterEvent("PLAYER_TALENT_UPDATE")
     self:RegisterEvent("SPELLS_CHANGED")

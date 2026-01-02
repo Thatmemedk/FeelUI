@@ -65,13 +65,13 @@ function RuneBar:Update()
         if (not Segment) then
             Segment = CreateFrame("StatusBar", nil, self.Bar)
             Segment:SetStatusBarTexture(Media.Global.Texture)
-            Segment:SetAlpha(0)
 
             self.Segment[i] = Segment
         end
 
         if (not Backdrop) then
             Backdrop = CreateFrame("StatusBar", nil, self.Bar)
+            Backdrop:SetStatusBarTexture(Media.Global.Texture)
             Backdrop:CreateBackdrop()
             Backdrop:CreateShadow()
 
@@ -89,14 +89,12 @@ function RuneBar:Update()
         if (i == 1) then
             Segment:Point("LEFT", self.Bar, "LEFT", 0, 0)
             Backdrop:Point("LEFT", self.Bar, "LEFT", 0, 0)
-
         elseif (i == BarCount) then
             Segment:Point("RIGHT", self.Bar, "RIGHT", 0, 0)
             Segment:Point("LEFT", self.Segment[i - 1], "RIGHT", SegmentSpacing, 0)
 
             Backdrop:Point("RIGHT", self.Bar, "RIGHT", 0, 0)
             Backdrop:Point("LEFT", self.Backdrops[i - 1], "RIGHT", SegmentSpacing, 0)
-
         else
             Segment:Point("LEFT", self.Segment[i - 1], "RIGHT", SegmentSpacing, 0)
             Backdrop:Point("LEFT", self.Backdrops[i - 1], "RIGHT", SegmentSpacing, 0)
@@ -104,10 +102,13 @@ function RuneBar:Update()
 
         if (i <= 2) then
             Segment:SetStatusBarColor(unpack(BloodColor))
+            Backdrop:SetStatusBarColor(1 * Mult, 0, 0, 0.5)
         elseif (i <= 4) then
             Segment:SetStatusBarColor(unpack(FrostColor))
+            Backdrop:SetStatusBarColor(0, 0.35 * Mult, 1 * Mult, 0.5)
         else
             Segment:SetStatusBarColor(unpack(UnholyColor))
+            Backdrop:SetStatusBarColor(0.25 * Mult, 0.55 * Mult, 0.10 * Mult, 0.5)
         end
 
         local Start, Duration, RuneIsReady = GetRuneCooldown(i)

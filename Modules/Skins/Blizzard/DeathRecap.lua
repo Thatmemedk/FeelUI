@@ -46,16 +46,12 @@ function DeathRecap:Skin()
 		IconOverlay:CreateShadow()
 		IconOverlay:SetShadowOverlay()
 		
-		if not (self.DeathRecapFrameIsSkinned) then		
-			local TombstoneIconOverlay = CreateFrame("Frame", nil, DeathRecapFrameSpellInfo)
-			TombstoneIconOverlay:SetFrameLevel(DeathRecapFrameSpellInfo:GetFrameLevel() + 10)
-			TombstoneIconOverlay:SetInside(Tombstone)
-			TombstoneIconOverlay:SetTemplate()
-			TombstoneIconOverlay:CreateShadow()
-			TombstoneIconOverlay:SetShadowOverlay()
-		
-			self.DeathRecapFrameIsSkinned = true
-		end
+		local TombstoneIconOverlay = CreateFrame("Frame", nil, DeathRecapFrameSpellInfo)
+		TombstoneIconOverlay:SetFrameLevel(DeathRecapFrameSpellInfo:GetFrameLevel() + 10)
+		TombstoneIconOverlay:SetInside(Tombstone)
+		TombstoneIconOverlay:SetTemplate()
+		TombstoneIconOverlay:CreateShadow()
+		TombstoneIconOverlay:SetShadowOverlay()
 	end
 		
 	self.IsSkinned = true

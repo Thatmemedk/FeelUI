@@ -15,6 +15,9 @@ local UnitPowerType = UnitPowerType
 local CreateFrame = CreateFrame
 
 -- Locals
+local _, Class = UnitClass("player")
+
+-- Locals
 local R, G, B = unpack(UI.GetClassColors)
 
 function PowerBar:CreateBar()
@@ -24,6 +27,7 @@ function PowerBar:CreateBar()
 	Bar:SetStatusBarTexture(Media.Global.Texture)
 	Bar:CreateBackdrop()
 	Bar:CreateShadow()
+	Bar:Hide()
 	
 	local InvisFrame = CreateFrame("Frame", nil, Bar)
 	InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
@@ -58,8 +62,30 @@ function PowerBar:Update()
 	end
 end
 
-function PowerBar:OnEvent(event)
-	self:Update()
+function PowerBar:UpdateSpec()
+    local Spec = GetSpecialization()
+
+    if (Class == "MAGE" or Class == "WARLOCK") then
+        self.Bar:Hide()
+    elseif (Class == "PALADIN" and (Spec == 2 or Spec == 3)) then
+        self.Bar:Hide()
+    elseif (Class == "SHAMAN" and (Spec == 2)) then
+    	self.Bar:Hide()
+    elseif (Class == "EVOKER" and (Spec == 1 or Spec == 3)) then
+    else
+        self.Bar:Show()
+    end
+end
+
+function PowerBar:OnEvent(event, unit)
+    if (event == "PLAYER_ENTERING_WORLD") then
+    	self:Update()
+        self:UpdateSpec()
+    elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_MAXPOWER" or event == "UNIT_POWER_UPDATE") then
+        self:Update()
+    elseif (event == "PLAYER_SPECIALIZATION_CHANGED" or event == "PLAYER_TALENT_UPDATE" or event == "SPELLS_CHANGED") then
+        self:UpdateSpec()
+    end
 end
 
 function PowerBar:RegisterEvents()
@@ -68,6 +94,9 @@ function PowerBar:RegisterEvents()
 	self:RegisterEvent("UNIT_MAXPOWER")
 	self:RegisterEvent("UNIT_POWER_UPDATE")
 	self:RegisterEvent("UNIT_DISPLAYPOWER")
+	self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+    self:RegisterEvent("PLAYER_TALENT_UPDATE")
+    self:RegisterEvent("SPELLS_CHANGED")
 	self:SetScript("OnEvent", self.OnEvent)
 end
 

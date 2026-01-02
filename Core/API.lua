@@ -167,7 +167,7 @@ function UI:GetCooldownFontScale(CD)
         Scale = 0.8 + (Scale * 0.2)
     end
 
-    local FontSize = floor(Scale * 16 + 0.5)
+    local FontSize = floor(Scale * 15 + 0.6)
 
     if (FontSize < 10) then
         FontSize = 10

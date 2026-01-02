@@ -29,7 +29,6 @@ function CDM:SkinIcons(Button, ButtonSize)
 	local CooldownFlash = Button.CooldownFlash
 	local Border = Button.DebuffBorder
 	local BorderTex = select(3, Button:GetRegions())
-	--local PandemIcon = Button.PandemicIcon or Button.pandemicIcon or Button.Pandemic or Button.pandemic
 
 	if (not Button and not Icon) then
 		return
@@ -66,21 +65,6 @@ function CDM:SkinIcons(Button, ButtonSize)
 
    	if (Border) then
 		Border:SetAlpha(0)
-
-		--[[
-		local Index = 10
-		local AuraData = GetAuraDataByIndex("Target", Index, "HARMFUL")
-
-	    if (AuraData) then
-			local Color = C_UnitAuras.GetAuraDispelTypeColor("Target", AuraData.auraInstanceID, UI.DispelColorCurve)
-			    
-		    if (Color) then
-		        OverlayFrame:SetColorTemplate(Color.r, Color.g, Color.b)
-		    else
-		   	    OverlayFrame:SetColorTemplate(unpack(DB.Global.General.BorderColor))
-		    end
-		end
-		--]]
 	end
 
 	if (Icon) then
@@ -89,10 +73,10 @@ function CDM:SkinIcons(Button, ButtonSize)
 	end
 
 	if (Cooldown) then
+		Cooldown:SetSwipeTexture(Media.Global.Blank)
 		Cooldown:ClearAllPoints()
 		Cooldown:SetInside(OverlayFrame, 1, 1)
 		Cooldown:SetReverse(true)
-		Cooldown:SetSwipeTexture(Media.Global.Blank)
 	end
 
 	if (CooldownFlash) then

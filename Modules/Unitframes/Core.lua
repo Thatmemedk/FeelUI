@@ -74,10 +74,6 @@ UF.Frames.Hidden = {}
 UF.Frames.Range = {}
 
 -- Tables
-UF.FramesUpdatePending = false
-UF.PortraitUpdatePending = false
-
--- Tables
 UF.FadeInTime = 0.5
 UF.CastHoldTime = 1.25
 
@@ -381,7 +377,7 @@ function UF:UpdateName(Frame, TypeFrame)
     if (DB.Global.UnitFrames.ClassColor) then
         Frame.Name:SetTextColor(1, 1, 1)
     else
-        if (UnitIsPlayer(Unit)) then
+        if (UnitIsPlayer(Unit) or Unit == "pet") then
             local _, Class = UnitClass(Unit)
             local Color = UI.Colors.Class[Class]
 
@@ -883,61 +879,47 @@ function UF:UpdateFrame(Unit)
     if (Frame.Range) then self:UpdateRange(Frame, Unit) end
 end
 
-function UF:UpdateAllUnits()
+function UF:UpdatePlayerPortrait()
+    local Frame = self.Frames["player"]
+
+    if (Frame and Frame.Portrait) then
+        self:UpdatePortrait(Frame, "player")
+    end
+end
+
+function UF:UpdateTargetPortrait()
+    local Frame = self.Frames["target"]
+
+    if (Frame and Frame.Portrait) then
+        self:UpdatePortrait(Frame, "target")
+    end
+end
+
+function UF:UpdateAllUnits() 
+    for Units, Frames in pairs(self.Frames) do 
+        if (Frames and UnitExists(Units)) then 
+            self:UpdateFrame(Units) 
+        end 
+    end 
+end
+
+function UF:RefreshUnit(Unit)
+    local Frame = self.Frames[Unit]
+
+    if (Frame and UnitExists(Unit)) then
+        self:UpdateFrame(Unit)
+    end
+end
+
+function UF:FullRefresh()
     for Units, Frames in pairs(self.Frames) do
         if (Frames and UnitExists(Units)) then
             self:UpdateFrame(Units)
         end
     end
-end
 
-function UF:UpdateAll()
-    if (self.FramesUpdatePending) then
-        return
-    end
-
-    self.FramesUpdatePending = true
-    self:UpdateAllUnits()
-
-    C_Timer.After(0.1, function()
-        self.FramesUpdatePending = false
-    end)
-end
-
-function UF:QueuePlayerPortraitUpdate()
-    if (self.PortraitUpdatePending) then
-        return
-    end
-
-    self.PortraitUpdatePending = true
-
-    C_Timer.After(0.1, function()
-        self.PortraitUpdatePending = false
-
-        local Frame = self.Frames["player"]
-
-        if (Frame and Frame.Portrait) then
-            self:UpdatePortrait(Frame, "player")
-        end
-    end)
-end
-
-function UF:QueueTargetPortraitUpdate()
-    if (self.PortraitUpdatePending) then
-        return
-    end
-
-    self.PortraitUpdatePending = true
-
-    C_Timer.After(0.1, function()
-        self.PortraitUpdatePending = false
-
-        local Frame = self.Frames["target"]
-
-        if (Frame and Frame.Portrait) then
-            self:UpdatePortrait(Frame, "target")
-        end
-    end)
+    self:UpdatePlayerPortrait()
+    self:UpdateTargetPortrait()
 end
 
 -- ON EVENTS
@@ -947,24 +929,27 @@ function UF:OnEvent(event, unit, ...)
 
     if (event == "PLAYER_ENTERING_WORLD") then
         C_Timer.After(0.7, function()
-            UF:UpdateAllUnits()
+            UF:FullRefresh()
         end)
-
-        UF:QueuePlayerPortraitUpdate()
-    end
-
-    if (event == "PLAYER_TARGET_CHANGED") then
-        UF:UpdateAll()
+    elseif (event == "PLAYER_TARGET_CHANGED") then
+        UF:RefreshUnit("target")
+        UF:RefreshUnit("player")
+        UF:RefreshUnit("targettarget")
         UF:ClearCastBarOnUnit("target")
-        UF:QueueTargetPortraitUpdate()
+        UF:UpdatePlayerPortrait()
+        UF:UpdateTargetPortrait()
     elseif (event == "UNIT_TARGET" and unit == "target") then
-        UF:UpdateAll()
+        if (UnitExists("targettarget")) then
+            UF:RefreshUnit("targettarget")
+        end
     elseif (event == "UNIT_PET") then
-        UF:UpdateAll()
+        UF:RefreshUnit("pet")
     elseif (event == "PLAYER_FOCUS_CHANGED") then
-        UF:UpdateAll()
+        UF:RefreshUnit("focus")
     elseif (event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" or event == "UNIT_TARGETABLE_CHANGED") then
-        UF:UpdateAll()
+        for i = 1, 5 do
+            UF:RefreshUnit("boss"..i)
+        end
     end
 
     if (event == "PLAYER_UPDATE_RESTING") then
@@ -1005,16 +990,21 @@ function UF:OnEvent(event, unit, ...)
         UF:UpdateHealth(FramesUF)
         UF:UpdateHealthTextCur(FramesUF)
         UF:UpdateHealthTextPer(FramesUF)
+
+        if (FramesUF.unit == "target" and UnitExists("targettarget")) then
+            local TargetTargetFrame = UF.Frames["targettarget"]
+
+            if (TargetTargetFrame) then
+                UF:UpdateHealth(TargetTargetFrame)
+            end
+        end
     elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
         UF:UpdateHealthPred(FramesUF)
     elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER") then
         UF:UpdatePower(FramesUF)
         UF:UpdateAdditionalPower(FramesUF)
-    elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
-        UF:UpdateThreatHighlight(FramesUF)
-    elseif (event == "UNIT_NAME_UPDATE") then
+    elseif (event == "UNIT_NAME_UPDATE" or event == "UNIT_LEVEL" or event == "PLAYER_LEVEL_UP") then
         UF:UpdateName(FramesUF)
-    elseif (event == "UNIT_LEVEL" or event == "PLAYER_LEVEL_UP") then
         UF:UpdateTargetNameLevel(FramesUF)
     elseif (event == "UNIT_FLAGS" or event == "PARTY_LEADER_CHANGED" or event == "GROUP_ROSTER_UPDATE") then
         UF:UpdateCombatIcon(FramesUF)
@@ -1026,6 +1016,8 @@ function UF:OnEvent(event, unit, ...)
         UF:UpdateSummonIcon(FramesUF)
     elseif (event == "UNIT_PHASE") then
         UF:UpdatePhaseIcon(FramesUF)
+    elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
+        UF:UpdateThreatHighlight(FramesUF) 
     elseif (event == "UNIT_MODEL_CHANGED" or event == "UNIT_PORTRAIT_UPDATE" or event == "PORTRAITS_UPDATED") then
         UF:UpdatePortrait(FramesUF, unit)
     end

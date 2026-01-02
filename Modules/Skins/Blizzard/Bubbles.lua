@@ -12,7 +12,7 @@ local pairs = pairs
 function ChatBubbles:SkinBubbles(Bubbles)
 	local Frame = Bubbles:GetChildren()
 
-	if Frame and not Frame:IsForbidden() then
+	if (Frame and not Frame:IsForbidden()) then
 		local Scale = _G.UIParent:GetScale()
 		Frame:SetScale(Scale)
 		Frame:CreateBackdrop()
@@ -32,7 +32,7 @@ function ChatBubbles:SkinBubbles(Bubbles)
 		Frame.String:SetFontTemplate("Default", 14)
 	end
 	
-	Bubbles.AllChatBubblesIsSkinned = true
+	self.IsSkinned = true
 end
 
 function ChatBubbles:OnUpdate(Elapsed)
@@ -45,7 +45,7 @@ function ChatBubbles:OnUpdate(Elapsed)
 	local C_ChatBubbles_GetAllChatBubbles = _G.C_ChatBubbles and _G.C_ChatBubbles.GetAllChatBubbles
 
 	for _, Bubbles in pairs(C_ChatBubbles_GetAllChatBubbles()) do
-		if not (Bubbles.AllChatBubblesIsSkinned) then
+		if (not self.IsSkinned) then
 			self:SkinBubbles(Bubbles)
 		end
 	end
@@ -54,5 +54,5 @@ function ChatBubbles:OnUpdate(Elapsed)
 end
 
 function ChatBubbles:Initialize()
-	--self:SetScript("OnUpdate", self.OnUpdate) -- Disable for now seems to give taints.
+	self:SetScript("OnUpdate", self.OnUpdate)
 end

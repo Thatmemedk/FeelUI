@@ -44,7 +44,6 @@ function CDM:PositionContainers()
     local UtilityContainer = self:CreateContainers(UtilityCooldownViewer, Point, Parent, X, Y, Spacing)
 end
 
-
 function CDM:DisableViewerLayout(Viewer)
     if (not Viewer or Viewer.LayoutDisabled) then
         return

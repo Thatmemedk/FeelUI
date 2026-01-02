@@ -46,5 +46,5 @@ function StackSplit:Initialize()
 		return
 	end
 
-	--self:Skin()
+	self:Skin()
 end

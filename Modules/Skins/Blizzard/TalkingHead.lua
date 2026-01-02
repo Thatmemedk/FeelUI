@@ -55,11 +55,9 @@ function TalkingHead:Initialize()
 		return
 	end
 
-	--[[
 	if not IsAddOnLoaded("Blizzard_TalkingHeadUI") then
 		LoadAddOn("Blizzard_TalkingHeadUI")
 	end
 	
 	self:Skin()
-	--]]
 end
