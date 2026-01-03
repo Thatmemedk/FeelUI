@@ -584,7 +584,7 @@ local function DisableBackdrops(self)
             local Frame = self.NineSlice[RegionKeyNS]
 
             if (Frame) then
-                Frame:Hide()
+                Frame:SetAlpha(0)
             end
         end
     end

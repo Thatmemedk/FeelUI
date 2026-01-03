@@ -13,15 +13,27 @@ local EssentialCooldownViewer = _G.EssentialCooldownViewer
 local UtilityCooldownViewer = _G.UtilityCooldownViewer
 local BuffIconCooldownViewer = _G.BuffIconCooldownViewer
 
--- WoW Globals
-local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
+function CDM:StripTextureMasks(Frame)
+	if (not Frame or not Frame.GetMaskTexture) then 
+		return 
+	end
+
+	local Index = 1
+	local Mask = Frame:GetMaskTexture(Index)
+
+	while Mask do
+		Frame:RemoveMaskTexture(Mask)
+		Index = Index + 1
+		Mask = Frame:GetMaskTexture(Index)
+	end
+end
 
 function CDM:SkinIcons(Button, ButtonSize)
 	if (Button.CDMIsSkinned) then
 		return
 	end
 
-	local Icon = Button.Icon or Button.icon or Button.Texture or Button.texture
+	local Icon = Button.Icon
 	local Count = Button.Applications and Button.Applications.Applications
 	local Charges = Button.ChargeCount and Button.ChargeCount.Current
 	local Cooldown = Button.Cooldown
@@ -34,8 +46,10 @@ function CDM:SkinIcons(Button, ButtonSize)
 		return
 	end
 
-	-- Button Size
 	Button:Size(unpack(ButtonSize))
+	Button:SetTemplate()
+	Button:CreateShadow()
+	Button:SetShadowOverlay()
 
 	-- Diable Tooltip
 	Button:HookScript("OnEnter", function()
@@ -45,15 +59,6 @@ function CDM:SkinIcons(Button, ButtonSize)
 	Button:HookScript("OnLeave", function()
 		GameTooltip:Hide()
 	end)
-
-	-- Keep Aspect Ratio
-	UI:KeepAspectRatio(Button, Icon)
-
-	local OverlayFrame = CreateFrame("Frame", nil, Button)
-	OverlayFrame:SetInside(Button, 1, 1)
-	OverlayFrame:SetTemplate()
-	OverlayFrame:CreateShadow()
-	OverlayFrame:SetShadowOverlay()
 
 	local InvisFrame = CreateFrame("Frame", nil, Button)
 	InvisFrame:SetFrameLevel(Button:GetFrameLevel() + 10)
@@ -69,29 +74,35 @@ function CDM:SkinIcons(Button, ButtonSize)
 
 	if (Icon) then
 		Icon:ClearAllPoints()
-		Icon:SetInside(OverlayFrame, 1, 1)
+		Icon:SetInside()
+
+		-- Keep Aspect Ratio
+		UI:KeepAspectRatio(Button, Icon)
+
+		-- Remove Masks
+		self:StripTextureMasks(Icon)
 	end
 
 	if (Cooldown) then
 		Cooldown:SetSwipeTexture(Media.Global.Blank)
 		Cooldown:ClearAllPoints()
-		Cooldown:SetInside(OverlayFrame, 1, 1)
+		Cooldown:SetInside()
 		Cooldown:SetReverse(true)
 	end
 
 	if (CooldownFlash) then
 		CooldownFlash:ClearAllPoints()
-		CooldownFlash:SetInside(OverlayFrame, 1, 1)
+		CooldownFlash:SetInside(Button, 1, 1)
 	end
 
 	if (OutOfRange) then
 		OutOfRange:ClearAllPoints()
-		OutOfRange:SetInside(OverlayFrame, 1, 1)
+		OutOfRange:SetInside()
 	end
  
 	if (Charges) then
     	Charges:ClearAllPoints()
-    	Charges:Point("TOPRIGHT", Button, -1, -1)
+    	Charges:Point("TOPRIGHT", Button, -1, 0)
     	Charges:SetFontTemplate("Default", 12)
 	end
 

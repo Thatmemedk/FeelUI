@@ -447,14 +447,6 @@ function UF:UpdatePortrait(Frame, Unit)
         return
     end
 
-    local GUID = UnitGUID(Unit)
-
-    if (Frame.Portrait.GUID == GUID) then
-        return
-    end
-
-    Frame.Portrait.GUID = GUID
-
     if (Frame.Portrait:IsObjectType("PlayerModel")) then
         Frame.Portrait:ClearModel()
 
@@ -895,14 +887,6 @@ function UF:UpdateTargetPortrait()
     end
 end
 
-function UF:UpdateAllUnits() 
-    for Units, Frames in pairs(self.Frames) do 
-        if (Frames and UnitExists(Units)) then 
-            self:UpdateFrame(Units) 
-        end 
-    end 
-end
-
 function UF:RefreshUnit(Unit)
     local Frame = self.Frames[Unit]
 
@@ -917,9 +901,6 @@ function UF:FullRefresh()
             self:UpdateFrame(Units)
         end
     end
-
-    self:UpdatePlayerPortrait()
-    self:UpdateTargetPortrait()
 end
 
 -- ON EVENTS
@@ -930,18 +911,17 @@ function UF:OnEvent(event, unit, ...)
     if (event == "PLAYER_ENTERING_WORLD") then
         C_Timer.After(0.7, function()
             UF:FullRefresh()
+            UF:UpdatePlayerPortrait()
+            UF:UpdateTargetPortrait()
         end)
     elseif (event == "PLAYER_TARGET_CHANGED") then
         UF:RefreshUnit("target")
         UF:RefreshUnit("player")
         UF:RefreshUnit("targettarget")
         UF:ClearCastBarOnUnit("target")
-        UF:UpdatePlayerPortrait()
         UF:UpdateTargetPortrait()
     elseif (event == "UNIT_TARGET" and unit == "target") then
-        if (UnitExists("targettarget")) then
-            UF:RefreshUnit("targettarget")
-        end
+        UF:RefreshUnit("targettarget")
     elseif (event == "UNIT_PET") then
         UF:RefreshUnit("pet")
     elseif (event == "PLAYER_FOCUS_CHANGED") then
@@ -990,14 +970,7 @@ function UF:OnEvent(event, unit, ...)
         UF:UpdateHealth(FramesUF)
         UF:UpdateHealthTextCur(FramesUF)
         UF:UpdateHealthTextPer(FramesUF)
-
-        if (FramesUF.unit == "target" and UnitExists("targettarget")) then
-            local TargetTargetFrame = UF.Frames["targettarget"]
-
-            if (TargetTargetFrame) then
-                UF:UpdateHealth(TargetTargetFrame)
-            end
-        end
+        UF:RefreshUnit("targettarget")
     elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
         UF:UpdateHealthPred(FramesUF)
     elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER") then
@@ -1057,6 +1030,7 @@ function UF:RegisterEvents()
     SecureEventFrame:RegisterEvent("UNIT_HEALTH")
     SecureEventFrame:RegisterEvent("UNIT_MAXHEALTH")
     SecureEventFrame:RegisterEvent("UNIT_CONNECTION")
+
     -- HEALTH PRED
     SecureEventFrame:RegisterEvent("UNIT_HEAL_PREDICTION")
     SecureEventFrame:RegisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")

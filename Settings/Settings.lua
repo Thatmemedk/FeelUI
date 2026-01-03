@@ -80,9 +80,9 @@ DB.Global = {
 
 	CooldownManager = {
 		Enable = true,
-		BuffViewerButtonSize = { 42, 18 },
-		EssentialViewerButtonSize = { 36, 18 },
-		UtilityViewerButtonSize = { 36, 18 },
+		BuffViewerButtonSize = { 36, 14 },
+		EssentialViewerButtonSize = { 36, 14 },
+		UtilityViewerButtonSize = { 36, 14 },
 		ButtonSpacing = 2,
 		BuffViewerPoint = { "CENTER", _G.UIParent, 0, -162 },
 		EssentialViewerPoint = { "CENTER", _G.UIParent, 0, -188 },

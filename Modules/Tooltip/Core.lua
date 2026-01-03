@@ -242,11 +242,13 @@ function TT:StyleHealthBar()
 end
 
 function TT:SetBackdropStyle(tt)
-	if (not tt or tt.IsEmbedded or tt:IsForbidden() or tt.IsSkinned) then 
+	if (not tt or not tt.NineSlice or tt:IsForbidden() or tt.IsSkinned) then 
 		return 
 	end
 
-    tt:DisableBackdrops()
+    if (tt.NineSlice) then 
+        tt.NineSlice:SetAlpha(0) 
+    end
 
     if not issecretvalue or not issecretvalue(tt:GetWidth()) then
         local Frame = CreateFrame("Frame", nil, tt)
@@ -330,7 +332,7 @@ end
 function TT:SetTooltipSetUnitUpdate()
 	if (AddTooltipPostCall) then
 		AddTooltipPostCall(Enum.TooltipDataType.Unit, self.OnTooltipSetUnit)
-	end
+	end   
 end
 
 function TT:Initialize()

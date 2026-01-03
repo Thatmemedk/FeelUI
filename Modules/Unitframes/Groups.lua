@@ -48,7 +48,7 @@ function UF:SetupGroupFrame(Frame, type)
     self:CreatePhaseIcon(Frame)
     self:CreateReadyCheckIcon(Frame)
     -- THREAT
-    self:CreateThreatHighlight(Frame)
+    --self:CreateThreatHighlight(Frame)
     -- DEBUFF HIGHLIGHT
     --self:CreateDebuffHighlight(Frame)
     -- RANGE

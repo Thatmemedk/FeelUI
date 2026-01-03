@@ -313,7 +313,7 @@ end
 function NP:CreateCastBar(Frame)
     local Castbar = CreateFrame("StatusBar", nil, Frame)
     Castbar:Size(192, 20) 
-    Castbar:Point("BOTTOM", Frame, 0, -6)
+    Castbar:Point("BOTTOM", Frame, 0, -26)
     Castbar:SetStatusBarTexture(Media.Global.Texture)
     Castbar:CreateBackdrop()
     Castbar:CreateShadow()
