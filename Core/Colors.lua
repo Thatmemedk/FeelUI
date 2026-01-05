@@ -58,6 +58,13 @@ for DebuffType, ColorInfo in pairs(DEBUFF_DISPLAY_COLOR_INFO) do
     UI.DispelColorCurve:AddPoint(DebuffType, ColorInfo)
 end
 
+UI.CooldownColorCurve = C_CurveUtil.CreateColorCurve()
+UI.CooldownColorCurve:SetType(Enum.LuaCurveType.Linear)
+UI.CooldownColorCurve:AddPoint(0.2, CreateColor(1, 0, 0, 1))
+UI.CooldownColorCurve:AddPoint(0.5, CreateColor(1, 0.42, 0, 1))
+UI.CooldownColorCurve:AddPoint(0.8, CreateColor(1, 0.82, 0, 1))
+UI.CooldownColorCurve:AddPoint(1, CreateColor(1, 1, 1, 1))
+
 -- COLOR TABLES
 
 UI.Colors = {

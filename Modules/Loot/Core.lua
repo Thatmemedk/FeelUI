@@ -41,41 +41,6 @@ Loot.IconWidth = 36
 Loot.IconHeight = 22
 Loot.Slots = {} 
 
-local function UTF8Sub(self, i, dots)
-	if not (self) then 
-		return 
-	end
-	
-	local Bytes = self:len()
-
-	if (Bytes <= i) then
-		return self
-	else
-		local Len, Pos = 0, 1
-		
-		while(Pos <= Bytes) do
-			Len = Len + 1
-			local c = self:byte(Pos)
-			if (c > 0 and c <= 127) then
-				Pos = Pos + 1
-			elseif (c >= 192 and c <= 223) then
-				Pos = Pos + 2
-			elseif (c >= 224 and c <= 239) then
-				Pos = Pos + 3
-			elseif (c >= 240 and c <= 247) then
-				Pos = Pos + 4
-			end
-			if (Len == i) then break end
-		end
-
-		if (Len == i and Pos <= Bytes) then
-			return self:sub(1, Pos - 1)..(dots and "..." or "")
-		else
-			return self
-		end
-	end
-end
-
 function Loot:OnEnter()
 	if not (self.Highlight) then 
 		return 
@@ -296,7 +261,7 @@ function Loot:LOOT_OPENED(_, AutoLootFlag)
 			end
 
 			SlotFrame.quality = Quality
-			SlotFrame.name:SetText(UTF8Sub(Item or LOOT, 24, true))
+			SlotFrame.name:SetText(UI:UTF8Sub(Item or LOOT, 24, true))
 			SlotFrame.icon:SetTexture(Texture)
 
 			SlotFrame:Enable()

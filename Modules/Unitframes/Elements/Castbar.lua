@@ -78,7 +78,11 @@ function UF:CastStarted(Event, Unit)
 
     -- Text
     if (Castbar.Text) then
-        Castbar.Text:SetText(Name)
+        if (Unit == "player") then
+            Castbar.Text:SetText(UI:UTF8Sub(Name, 22, true))
+        else
+            Castbar.Text:SetText(Name)
+        end
     end
 
     -- Safe Zone

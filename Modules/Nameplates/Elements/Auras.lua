@@ -25,10 +25,11 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
     local OnlyPlayer = Auras.ShowOnlyPlayer
     local HarmState = OnlyPlayer and "HARMFUL|PLAYER" or "HARMFUL"
     local HelpState = OnlyPlayer and "HELPFUL|PLAYER" or "HELPFUL"
-
-    local PreviousButton
+    local AuraMinCount = 2
+    local AuraMaxCount = 99
     local Active = 0
     local Index = 1
+    local PreviousButton
 
     for _, Button in ipairs(Auras.Buttons) do
         Button:Hide()
@@ -85,11 +86,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
         end
 
         if (Button.Count) then
-            if (Count) then
-                Button.Count:SetText(C_StringUtil.TruncateWhenZero(Count))
-            else
-                Button.Count:SetText("")
-            end
+            Button.Count:SetText(C_UnitAuras.GetAuraApplicationDisplayCount(Unit, AuraInstanceID, AuraMinCount, AuraMaxCount))
         end
 
         if (Button.Cooldown) then
@@ -106,7 +103,26 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
                         Region:ClearAllPoints()
                         Region:Point("CENTER", Button.Overlay, 0, -7)
                         Region:SetFontTemplate("Default")
-                        Region:SetTextColor(1, 0.82, 0)
+
+                        local Color = C_UnitAuras.GetAuraDurationRemainingPercent(Unit, AuraInstanceID, UI.CooldownColorCurve)
+
+                        if (Color) then 
+                            Region:SetTextColor(Color.r, Color.g, Color.b)
+                        end
+
+                        --[[
+                        local RemaningCD = C_UnitAuras.GetAuraDurationRemaining(Unit, AuraInstanceID)
+
+                        if (10 > RemaningCD) then
+                            Region:SetVertexColor(unpack(DB.Global.CooldownFrame.ExpireColor))
+                        elseif (30 > RemaningCD) then    
+                            Region:SetVertexColor(unpack(DB.Global.CooldownFrame.SecondsColor))
+                        elseif (60 > RemaningCD) then
+                            Region:SetVertexColor(unpack(DB.Global.CooldownFrame.SecondsColor2))
+                        else 
+                            Region:SetVertexColor(unpack(DB.Global.CooldownFrame.NormalColor))
+                        end
+                        --]]
                     end
                 end
             else

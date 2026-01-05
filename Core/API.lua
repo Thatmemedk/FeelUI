@@ -16,8 +16,13 @@ local select = select
 local unpack = unpack
 local print = print
 local type = type
-local match, floor = string.match, math.floor
-local min, max = math.min, math.max
+local match = string.match
+local floor = math.floor
+local min = math.min
+local max = math.max
+local len = string.len
+local byte = string.byte
+local sub = string.sub
 
 -- WoW Globals
 local GetMouseFocus = GetMouseFocus
@@ -43,6 +48,46 @@ UI.SmoothBarsImmediate = Enum.StatusBarInterpolation.Immediate
 UI.DirectionElapsed = Enum.StatusBarTimerDirection.ElapsedTime
 UI.DirectionRemaining = Enum.StatusBarTimerDirection.RemainingTime
 UI.CurvePercent = CurveConstants.ScaleTo100
+
+-- UFT8
+function UI:UTF8Sub(Text, Index, Dots)
+    if not (Text) then 
+        return 
+    end
+    
+    local Bytes = Text:len()
+
+    if (Bytes <= Index) then
+        return Text
+    else
+        local Len, Pos = 0, 1
+        
+        while (Pos <= Bytes) do
+            Len = Len + 1
+            local LeadByte = Text:byte(Pos)
+
+            if (LeadByte > 0 and LeadByte <= 127) then
+                Pos = Pos + 1
+            elseif (LeadByte >= 192 and LeadByte <= 223) then
+                Pos = Pos + 2
+            elseif (LeadByte >= 224 and LeadByte <= 239) then
+                Pos = Pos + 3
+            elseif (LeadByte >= 240 and LeadByte <= 247) then
+                Pos = Pos + 4
+            end
+
+            if (Len == Index) then 
+            	break 
+            end
+        end
+
+        if (Len == Index and Pos <= Bytes) then
+            return Text:sub(1, Pos - 1) .. (Dots and "..." or "")
+        else
+            return Text
+        end
+    end
+end
 
 -- Print
 function UI:Print(...)

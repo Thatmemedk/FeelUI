@@ -14,12 +14,12 @@ function DamageMeter:Skin()
 	end
 
 	for i = 1, 3 do
-		local DameMeters = _G["DamageMeterSessionWindow"..i]
+		local DamageMeters = _G["DamageMeterSessionWindow"..i]
 
-		if (DameMeters) then
-			DameMeters:StripTexture()
-			DameMeters.DamageMeterTypeDropdown.TypeName:SetFontTemplate("Default", 14)
-			DameMeters.DamageMeterTypeDropdown.TypeName:SetTextColor(1, 1, 1)
+		if (DamageMeters) then
+			DamageMeters:StripTexture()
+			DamageMeters.DamageMeterTypeDropdown.TypeName:SetFontTemplate("Default", 14)
+			DamageMeters.DamageMeterTypeDropdown.TypeName:SetTextColor(1, 1, 1)
 		end
 	end
 		

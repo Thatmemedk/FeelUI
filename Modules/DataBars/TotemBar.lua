@@ -16,24 +16,19 @@ local Class = select(2, UnitClass("player"))
 TotemBar.Buttons = {}
 
 function TotemBar:CreateBar()
-    local TotemSize = 36
-    local Spacing = 2
-    local TotalWidth = (TotemSize * _G.MAX_TOTEMS) + (Spacing * (_G.MAX_TOTEMS - 1))
-    local StartX = -TotalWidth/2
-
     for i = 1, _G.MAX_TOTEMS do
         local Totem = CreateFrame("Frame", nil, _G.UIParent)
         Totem:SetID(i)
-        Totem:Size(TotemSize, 16)
+        Totem:Size(36, 12)
         Totem:SetTemplate()
         Totem:CreateShadow()
         Totem:SetShadowOverlay()
         Totem:SetAlpha(0)
 
         if (i == 1) then
-            Totem:Point("BOTTOMLEFT", _G.UIParent, "BOTTOM", StartX, 282)
+            Totem:Point("CENTER", _G.UIParent, -353, -246)
         else
-            Totem:Point("LEFT", self.Buttons[i-1], "RIGHT", Spacing, 0)
+            Totem:Point("LEFT", self.Buttons[i-1], "RIGHT", 2, 0)
         end
 
         local Icon = Totem:CreateTexture(nil, "OVERLAY")
@@ -65,21 +60,36 @@ end
 
 function TotemBar:OnEvent(event)
     for i = 1, _G.MAX_TOTEMS do
-        local TotemBars = self.Buttons[i]
+        local Button = self.Buttons[i]
         local PlayerHaveTotem, Name, Start, Duration, Icon = GetTotemInfo(i)
 
-        if (PlayerHaveTotem) then
-            UI:UIFrameFadeIn(TotemBars, 0.25, TotemBars:GetAlpha(), 1)
+        if (Icon and Icon ~= "") then
+            UI:UIFrameFadeIn(Button, 0.25, Button:GetAlpha(), 1)
 
             if (Icon) then
-                TotemBars.Icon:SetTexture(Icon)
+                Button.Icon:SetTexture(Icon)
             end
 
             if (Duration and Start) then
-                TotemBars.Cooldown:SetCooldown(Start, Duration)
+                Button.Cooldown:SetCooldown(Start, Duration)
+
+                local NumRegions = Button.Cooldown:GetNumRegions()
+
+                for i = 1, NumRegions do
+                    local Region = select(i, Button.Cooldown:GetRegions())
+
+                    if (Region.GetText) then
+                        local FontSize = UI:GetCooldownFontScale(Button.Cooldown)
+
+                        Region:ClearAllPoints()
+                        Region:Point("CENTER", Button.Overlay, 0, -6)
+                        Region:SetFontTemplate("Default", FontSize)
+                        Region:SetTextColor(1, 0.82, 0)
+                    end
+                end
             end
       	else
-            UI:UIFrameFadeOut(TotemBars, 0.25, TotemBars:GetAlpha(), 0)
+            UI:UIFrameFadeOut(Button, 0.25, Button:GetAlpha(), 0)
         end
     end
 end
@@ -95,6 +105,6 @@ function TotemBar:Initialize()
 		return
 	end
 
-	--self:CreateBar()
-	--self:RegisterEvents()
+	self:CreateBar()
+	self:RegisterEvents()
 end

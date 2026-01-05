@@ -52,7 +52,7 @@ DB.Global = {
 		ButtonSize = { 36, 18 },
 		ButtonSpacing = 4,
 		ButtonPerRow = 12,
-		ButtonRowSpacing = 8,
+		ButtonRowSpacing = 12,
 		-- Points Settings
 		AuraPoint = { "TOPRIGHT", _G.UIParent, -188, 5 },
 	},
@@ -80,9 +80,9 @@ DB.Global = {
 
 	CooldownManager = {
 		Enable = true,
-		BuffViewerButtonSize = { 36, 14 },
-		EssentialViewerButtonSize = { 36, 14 },
-		UtilityViewerButtonSize = { 36, 14 },
+		BuffViewerButtonSize = { 36, 12 },
+		EssentialViewerButtonSize = { 32, 12 },
+		UtilityViewerButtonSize = { 32, 12 },
 		ButtonSpacing = 2,
 		BuffViewerPoint = { "CENTER", _G.UIParent, 0, -162 },
 		EssentialViewerPoint = { "CENTER", _G.UIParent, 0, -188 },

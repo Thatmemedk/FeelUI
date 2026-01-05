@@ -8,7 +8,6 @@ function UF:SetupGroupFrame(Frame, type)
         return 
     end
 
-    -- Never touch secure frames during combat
     if InCombatLockdown() then
         Frame.NeedsSetup = true
 
@@ -48,7 +47,7 @@ function UF:SetupGroupFrame(Frame, type)
     self:CreatePhaseIcon(Frame)
     self:CreateReadyCheckIcon(Frame)
     -- THREAT
-    --self:CreateThreatHighlight(Frame)
+    self:CreateThreatHighlight(Frame)
     -- DEBUFF HIGHLIGHT
     --self:CreateDebuffHighlight(Frame)
     -- RANGE
@@ -94,7 +93,7 @@ function UF:SetupGroupFrame(Frame, type)
         -- THREAT
         UF:UpdateThreatHighlightRaid(self)
         -- DEBUFF HIGHLIGHT
-        UF:UpdateDebuffHighlight(self, self.unit)
+        --UF:UpdateDebuffHighlight(self, self.unit)
         -- RANGE
         UF:UpdateRange(self, self.unit)
     end)

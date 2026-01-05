@@ -159,6 +159,20 @@ function Auras:AnchorDebuffs(Frame, Index)
 	    else
 	   	    Frame:SetColorTemplate(unpack(DB.Global.General.BorderColor))
 	    end
+
+	    --[[
+	    local RemaningCD = C_UnitAuras.GetAuraDurationRemaining("Player", AuraData.auraInstanceID)
+
+	    if (10 > RemaningCD) then
+	        Frame.Duration:SetVertexColor(unpack(DB.Global.CooldownFrame.ExpireColor))
+	    elseif (30 > RemaningCD) then    
+	        Frame.Duration:SetVertexColor(unpack(DB.Global.CooldownFrame.SecondsColor))
+	    elseif (60 > RemaningCD) then
+	        Frame.Duration:SetVertexColor(unpack(DB.Global.CooldownFrame.SecondsColor2))
+	    else 
+	        Frame.Duration:SetVertexColor(unpack(DB.Global.CooldownFrame.NormalColor))
+	    end
+	    --]]
 	end
 
 	Previous = Frame

@@ -274,8 +274,8 @@ local function SetTemplate(self, ExtraShadowBorders)
 	end
 	
 	self.FrameRaised = CreateFrame("Frame", nil, self)
-	self.FrameRaised:SetFrameStrata(self:GetFrameStrata())
 	self.FrameRaised:SetFrameLevel(self:GetFrameLevel() + 1)
+	self.FrameRaised:SetFrameStrata(self:GetFrameStrata())
 	self.FrameRaised:SetAllPoints()	
 
 	self.Border = {}
@@ -391,7 +391,7 @@ local function CreateShadow(self)
 	local Shadow = CreateFrame("Frame", nil, self, "BackdropTemplate")
 
 	if (self.FrameRaised) then
-		Shadow:SetFrameLevel(0)
+		Shadow:SetFrameLevel(self.FrameRaised:GetFrameLevel() -1)
 		Shadow:SetFrameStrata(self.FrameRaised:GetFrameStrata())
 	end
 
@@ -416,14 +416,14 @@ local function CreateGlow(self, Scale, EdgeSize, R, G, B, Alpha)
 	local Glow = CreateFrame("Frame", nil, self, "BackdropTemplate")
 
 	if (self.FrameRaised) then
-		Glow:SetFrameLevel(0)
+		Glow:SetFrameLevel(self.FrameRaised:GetFrameLevel() -1)
 		Glow:SetFrameStrata(self.FrameRaised:GetFrameStrata())
 	end
 
-	Glow:SetScale(Scale)
 	Glow:SetOutside(self, 3, 3)
 	Glow:SetBackdrop({edgeFile = Media.Global.Shadow, edgeSize = UI:Scale(EdgeSize)})
 	Glow:SetBackdropBorderColor(R, G, B, Alpha)
+	Glow:SetScale(Scale)
 
 	self.Glow = Glow
 end

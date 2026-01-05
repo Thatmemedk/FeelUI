@@ -14,3 +14,22 @@ function UF:CreateDebuffHighlight(Frame)
 
     Frame.DebuffHighlight = DebuffHighlight
 end
+
+UF.DebuffIcons = {
+    Magic = "RaidFrame-Icon-DebuffMagic",
+    Curse = "RaidFrame-Icon-DebuffCurse",
+    Disease = "RaidFrame-Icon-DebuffDisease",
+    Poison = "RaidFrame-Icon-DebuffPoison",
+    Bleed = "RaidFrame-Icon-DebuffBleed",
+}
+
+function UF:CreateDebuffIcon(Frame)
+    local DebuffIcon = CreateFrame("Frame", nil, Frame.InvisFrameHigher)
+    DebuffIcon:Hide()
+
+    DebuffIcon.Texture = DebuffIcon:CreateTexture(nil, "OVERLAY")
+    DebuffIcon.Texture:SetAllPoints()
+    DebuffIcon.Texture:SetAtlas(UF.DebuffIcons)
+
+    Frame.DebuffIcon = DebuffIcon
+end

@@ -92,7 +92,7 @@ function CDM:SkinIcons(Button, ButtonSize)
 
 	if (CooldownFlash) then
 		CooldownFlash:ClearAllPoints()
-		CooldownFlash:SetInside(Button, 1, 1)
+		CooldownFlash:SetInside()
 	end
 
 	if (OutOfRange) then
@@ -101,8 +101,9 @@ function CDM:SkinIcons(Button, ButtonSize)
 	end
  
 	if (Charges) then
+		--Charges:SetParent(InvisFrame)
     	Charges:ClearAllPoints()
-    	Charges:Point("TOPRIGHT", Button, -1, 0)
+    	Charges:Point("TOPRIGHT", Button, -2, 6)
     	Charges:SetFontTemplate("Default", 12)
 	end
 

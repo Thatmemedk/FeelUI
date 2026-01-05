@@ -185,7 +185,7 @@ function MinimapButtonBar:Update()
     	Columns = 1 
     end
 
-    self.Frame:Size((ButtonWidth * ButtonsPerRow) + (Spacing * (ButtonsPerRow - 1)) + 8, (ButtonHeight * Columns) + (Spacing * (Columns - 1)) + 8)
+    self.Frame:Size((ButtonWidth * ButtonsPerRow) + (Spacing * (ButtonsPerRow - 1)) + 8, (ButtonHeight * Columns) + (Spacing * (Columns - 1)) + 7)
 
     for i = 1, Total do
         local Button = self.Childs[i]

@@ -31,10 +31,11 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
     local OnlyRaidDebuff = Auras.ShowOnlyRaidDebuff
     local HarmState = OnlyPlayer and "HARMFUL|PLAYER" or OnlyRaidDebuff and "HARMFUL|RAID" or "HARMFUL"
     local HelpState = OnlyPlayer and "HELPFUL|RAID" or "HELPFUL"
-
-    local PreviousButton
+    local AuraMinCount = 2
+    local AuraMaxCount = 99
     local Active = 0
     local Index = 1
+    local PreviousButton
 
     for _, Button in ipairs(Auras.Buttons) do
         Button:Hide()
@@ -63,7 +64,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
         Button:Size(ButtonWidth, ButtonHeight)
         Button:ClearAllPoints()
 
-        if not PreviousButton then
+        if (not PreviousButton) then
             if (Direction == "RIGHT") then
                 Button:Point("TOPLEFT", Auras, "TOPLEFT", 0, 0)
             else
@@ -85,11 +86,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
         end
 
         if (Button.Count) then
-            if (Count) then
-                Button.Count:SetText(C_StringUtil.TruncateWhenZero(Count))
-            else
-                Button.Count:SetText("")
-            end
+            Button.Count:SetText(C_UnitAuras.GetAuraApplicationDisplayCount(Unit, AuraInstanceID, AuraMinCount, AuraMaxCount))
         end
 
         if (Button.Cooldown) then
@@ -106,7 +103,12 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
                         Region:ClearAllPoints()
                         Region:Point("CENTER", Button.Overlay, 0, -7)
                         Region:SetFontTemplate("Default")
-                        Region:SetTextColor(1, 0.82, 0)
+
+                        local Color = C_UnitAuras.GetAuraDurationRemainingPercent(Unit, AuraInstanceID, UI.CooldownColorCurve)
+
+                        if (Color) then 
+                            Region:SetTextColor(Color.r, Color.g, Color.b)
+                        end
                     end
                 end
             else

@@ -83,61 +83,6 @@ UF.SecureFrame:SetAllPoints()
 UF.SecureFrame:SetFrameStrata("LOW")
 RegisterStateDriver(UF.SecureFrame, "visibility", "[petbattle] hide; show")
 
---- UTF8 & NAME ABBREV
-
-local function UTF8Sub(self, i, dots)
-    if not (self) then 
-        return 
-    end
-    
-    local Bytes = self:len()
-
-    if (Bytes <= i) then
-        return self
-    else
-        local Len, Pos = 0, 1
-        
-        while(Pos <= Bytes) do
-            Len = Len + 1
-            local c = self:byte(Pos)
-            if (c > 0 and c <= 127) then
-                Pos = Pos + 1
-            elseif (c >= 192 and c <= 223) then
-                Pos = Pos + 2
-            elseif (c >= 224 and c <= 239) then
-                Pos = Pos + 3
-            elseif (c >= 240 and c <= 247) then
-                Pos = Pos + 4
-            end
-            if (Len == i) then break end
-        end
-
-        if (Len == i and Pos <= Bytes) then
-            return self:sub(1, Pos - 1)..(dots and "..." or "")
-        else
-            return self
-        end
-    end
-end
-
-local function NameAbbrev(Name)
-    local Letters, LastWord = "", strmatch(Name, ".+%s(.+)$")
-    
-    if (LastWord) then
-        for Words in gmatch(Name, ".-%s") do
-            local FirstLetter = strsub(gsub(Words, "^[%s%p]*", ""), 1, 1)
-            
-            if (FirstLetter ~= strlower(FirstLetter)) then
-                Letters = format("%s%s. ", Letters, FirstLetter)
-            end
-        end
-        
-        Name = format("%s%s", Letters, LastWord)
-    end
-    
-    return Name
-end
-
 --- UPDATE HEALTH
 
 function UF:UpdateHealth(Frame)
@@ -367,9 +312,9 @@ function UF:UpdateName(Frame, TypeFrame)
     local Name = UnitName(Unit) or ""
 
     if (TypeFrame == "Raid") then
-        Frame.Name:SetText(UTF8Sub(Name, 8))
+        Frame.Name:SetText(UI:UTF8Sub(Name, 8))
     elseif (TypeFrame == "Party") then
-        Frame.Name:SetText(UTF8Sub(Name, 12))
+        Frame.Name:SetText(UI:UTF8Sub(Name, 12))
     else
         Frame.Name:SetText(Name)
     end
@@ -392,6 +337,24 @@ function UF:UpdateName(Frame, TypeFrame)
 end
 
 --- UPDATE NAME & LEVEL
+
+local function NameAbbrev(Text)
+    local Letters, LastWord = "", strmatch(Text, ".+%s(.+)$")
+    
+    if (LastWord) then
+        for Words in gmatch(Text, ".-%s") do
+            local FirstLetter = strsub(gsub(Words, "^[%s%p]*", ""), 1, 1)
+            
+            if (FirstLetter ~= strlower(FirstLetter)) then
+                Letters = format("%s%s. ", Letters, FirstLetter)
+            end
+        end
+        
+        Text = format("%s%s", Letters, LastWord)
+    end
+    
+    return Text
+end
 
 function UF:UpdateTargetNameLevel(Frame)
     if (not Frame or not Frame.unit or not Frame.NameLevel) then
@@ -437,7 +400,7 @@ function UF:UpdateTargetNameLevel(Frame)
     end
 
     Frame.NameLevel:SetText(format("%s%s|r %s%s|r", NameColor or "", Name, LevelColor or "", LevelText))
-    --Frame.NameLevel:SetText(format("%s%s|r %s%s|r", NameColor or "", UTF8Sub(Name, 14), LevelColor or "", LevelText))
+    --Frame.NameLevel:SetText(format("%s%s|r %s%s|r", NameColor or "", NameAbbrev(Name), LevelColor or "", LevelText))
 end
 
 -- UPDATE PORTRAITS
@@ -672,30 +635,24 @@ function UF:UpdateDebuffHighlight(Frame, Unit)
         return
     end
 
-    local FoundColor = nil
     local Index = 1
 
     while true do
-        local AuraData = GetAuraDataByIndex(Unit, Index, "HARMFUL|RAID")
+        local AuraData = GetAuraDataByIndex(Unit, Index, "HARMFUL")
 
-        if (not AuraData) then
+        if (not AuraData or not AuraData.name) then
             break
         end
 
         local Color = GetAuraDispelTypeColor(Unit, AuraData.auraInstanceID, UI.DispelColorCurve)
 
         if (Color) then
-            FoundColor = Color
-            break
+            Frame.DebuffHighlight.Glow:SetBackdropBorderColor(Color.r * 0.55, Color.g * 0.55, Color.b * 0.55, 0.8)
+        else
+            Frame.DebuffHighlight.Glow:SetBackdropBorderColor(0, 0, 0, 0)
         end
 
         Index = Index + 1
-    end
-
-    if (FoundColor) then
-        Frame.DebuffHighlight.Glow:SetBackdropBorderColor(FoundColor.r * 0.55, FoundColor.g * 0.55, FoundColor.b * 0.55, 0.8)
-    else
-        Frame.DebuffHighlight.Glow:SetBackdropBorderColor(0, 0, 0, 0)
     end
 end
 
