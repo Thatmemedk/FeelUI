@@ -110,7 +110,7 @@ function CDM:SkinIcons(Button, ButtonSize)
 	if (Count) then
 		Count:SetParent(InvisFrame)
     	Count:ClearAllPoints()
-    	Count:Point("TOP", Button, 0, 6)
+    	Count:Point("TOP", Button, 0, 8)
     	Count:SetFontTemplate("Default", 14)
     end
 

@@ -101,28 +101,19 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
 
                     if (Region.GetText) then
                         Region:ClearAllPoints()
-                        Region:Point("CENTER", Button.Overlay, 0, -7)
+                        Region:Point("CENTER", Button.Overlay, 0, -8)
                         Region:SetFontTemplate("Default")
 
-                        local Color = C_UnitAuras.GetAuraDurationRemainingPercent(Unit, AuraInstanceID, UI.CooldownColorCurve)
+                        local CooldownColorCurve = C_CurveUtil.CreateColorCurve()
+                        CooldownColorCurve:SetType(Enum.LuaCurveType.Step)
+                        CooldownColorCurve:AddPoint(0, CreateColor(unpack(DB.Global.CooldownFrame.ExpireColor)))
+                        CooldownColorCurve:AddPoint(9, CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor)))
+                        CooldownColorCurve:AddPoint(29, CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor2)))
+                        CooldownColorCurve:AddPoint(59, CreateColor(unpack(DB.Global.CooldownFrame.NormalColor)))
 
-                        if (Color) then 
-                            Region:SetTextColor(Color.r, Color.g, Color.b)
-                        end
-
-                        --[[
-                        local RemaningCD = C_UnitAuras.GetAuraDurationRemaining(Unit, AuraInstanceID)
-
-                        if (10 > RemaningCD) then
-                            Region:SetVertexColor(unpack(DB.Global.CooldownFrame.ExpireColor))
-                        elseif (30 > RemaningCD) then    
-                            Region:SetVertexColor(unpack(DB.Global.CooldownFrame.SecondsColor))
-                        elseif (60 > RemaningCD) then
-                            Region:SetVertexColor(unpack(DB.Global.CooldownFrame.SecondsColor2))
-                        else 
-                            Region:SetVertexColor(unpack(DB.Global.CooldownFrame.NormalColor))
-                        end
-                        --]]
+                        local AuraDuration = C_UnitAuras.GetAuraDuration(Unit, AuraInstanceID)
+                        local EvaluateDuration = AuraDuration:EvaluateRemainingDuration(CooldownColorCurve)
+                        Region:SetVertexColor(EvaluateDuration:GetRGBA())
                     end
                 end
             else
@@ -209,5 +200,5 @@ function NP:CreateDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = NP:CreateAuraContainer(Frame, 30, 18, 4, "TOPLEFT", -32, 26, "TOPRIGHT", "RIGHT", 7, true, true)
+    Frame.Debuffs = NP:CreateAuraContainer(Frame, 30, 18, 4, "TOPLEFT", -32, 28, "TOPRIGHT", "RIGHT", 7, true, true)
 end

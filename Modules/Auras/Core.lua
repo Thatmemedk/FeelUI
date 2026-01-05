@@ -45,7 +45,7 @@ function Auras:Skin(Frame, ExtraBorder)
 	if (Frame.Count) then
 		Frame.Count:SetParent(Frame.InvisFrame)
 		Frame.Count:ClearAllPoints()
-		Frame.Count:Point("TOPRIGHT", Frame, 0, -2)
+		Frame.Count:Point("TOPRIGHT", Frame, 2, 2)
 		Frame.Count:SetFontTemplate("Default")
 	end
 	
@@ -96,7 +96,7 @@ function Auras:AnchorBuffs(Frame, Index)
 	if (Frame.Count) then
 		Frame.Count:SetParent(Frame.InvisFrame)
 		Frame.Count:ClearAllPoints()
-		Frame.Count:Point("TOPRIGHT", Frame, 0, -2)
+		Frame.Count:Point("TOPRIGHT", Frame, 2, 2)
 		Frame.Count:SetFontTemplate("Default")
 	end
 
@@ -136,7 +136,7 @@ function Auras:AnchorDebuffs(Frame, Index)
 	if (Frame.Count) then
 		Frame.Count:SetParent(Frame.InvisFrame)
 		Frame.Count:ClearAllPoints()
-		Frame.Count:Point("TOPRIGHT", Frame, 0, -2)
+		Frame.Count:Point("TOPRIGHT", Frame, 2, 2)
 		Frame.Count:SetFontTemplate("Default")
 	end
 
