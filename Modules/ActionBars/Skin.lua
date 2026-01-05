@@ -85,13 +85,11 @@ function AB:StyleActionButton(Button, Icon, Name)
     if (Cooldown) then
         Cooldown:ClearAllPoints()
         Cooldown:SetInside()
-
-        local NumRegions = Cooldown:GetNumRegions()
-
-        for i = 1, NumRegions do
+        
+        for i = 1, Cooldown:GetNumRegions() do
             local Region = select(i, Cooldown:GetRegions())
 
-            if (Region.GetText) then
+            if (Region and Region.GetText) then
                 local FontSize = UI:GetCooldownFontScale(Cooldown)
 
                 Region:ClearAllPoints()

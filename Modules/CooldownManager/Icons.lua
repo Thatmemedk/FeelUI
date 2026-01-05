@@ -101,7 +101,6 @@ function CDM:SkinIcons(Button, ButtonSize)
 	end
  
 	if (Charges) then
-		--Charges:SetParent(InvisFrame)
     	Charges:ClearAllPoints()
     	Charges:Point("TOPRIGHT", Button, -2, 6)
     	Charges:SetFontTemplate("Default", 12)

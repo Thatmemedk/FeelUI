@@ -29,12 +29,10 @@ function Cooldown:UpdateCooldown(Start, Duration, Enable, ForceShowDrawEdge, Mod
         self.InvisFrame = InvisFrame
     end
 
-    local NumRegions = self:GetNumRegions()
-
-    for i = 1, NumRegions do
+    for i = 1, self:GetNumRegions() do
         local Region = select(i, self:GetRegions())
 
-        if (Region.GetText) then
+        if (Region and Region.GetText) then
             local FontSize = UI:GetCooldownFontScale(self)
             
             Region:SetParent(self.InvisFrame)
