@@ -132,6 +132,9 @@ function Auras:UpdateAura(Index)
 			self:SetColorTemplate(unpack(DB.Global.General.BorderColor))
 		end
 	end
+
+	self.Unit = Unit
+	self.AuraInstanceID = AuraData.auraInstanceID
 end
 
 function Auras:UpdateTempEnchant(Index)
@@ -175,7 +178,7 @@ function Auras:OnEnter()
 	GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 6, -6)
 
 	if (self:GetAttribute("index")) then
-		_G.GameTooltip:SetUnitAura(self:GetParent():GetAttribute("unit"), self:GetID(), self.Filter)
+		_G.GameTooltip:SetUnitAuraByAuraInstanceID(self.Unit, self.AuraInstanceID)
 	elseif (self:GetAttribute("target-slot")) then
 		_G.GameTooltip:SetInventoryItem("player", self:GetID())
 	end
@@ -198,7 +201,7 @@ function Auras:Skin()
 	Duration:SetFontTemplate("Default")
 
 	local Count = InvisFrame:CreateFontString(nil, "OVERLAY")
-	Count:Point("TOPRIGHT", self, 0, -4)
+	Count:Point("TOPRIGHT", self, 2, 2)
 	Count:SetFontTemplate("Default")
 
 	local Cooldown = CreateFrame("Cooldown", nil, self, "CooldownFrameTemplate")
@@ -213,15 +216,25 @@ function Auras:Skin()
 	TempEnchHighlight:SetTexture(Media.Global.Blank)
 	TempEnchHighlight:SetVertexColor(0, 0, 0, 0)
 
+	-- Style Button
 	self:Size(unpack(DB.Global.Auras.ButtonSize))
-	self:CreateShadow()
-	self:StyleButton()
-	self:SetShadowOverlay()
 
+	if (self:GetParent():GetAttribute("filter") == "HARMFUL") then
+		self:SetTemplate(true)
+	else
+		self:SetTemplate()
+	end
+
+	self:CreateShadow()
+	self:SetShadowOverlay()
+	self:StyleButton()
+
+	-- Set Scripts
 	self:SetScript("OnAttributeChanged", Auras.OnAttributeChanged)
 	self:SetScript("OnEnter", Auras.OnEnter)
 	self:SetScript("OnLeave", Auras.OnLeave)
 
+	-- Cache
 	self.InvisFrame = InvisFrame
 	self.Icon = Icon
 	self.Duration = Duration
@@ -229,12 +242,6 @@ function Auras:Skin()
 	self.Cooldown = Cooldown
 	self.TempEnchHighlight = TempEnchHighlight
 	self.Filter = self:GetParent():GetAttribute("filter")
-
-	if (self.Filter == "HARMFUL") then
-		self:SetTemplate(true)
-	else
-		self:SetTemplate()
-	end
 end
 
 function Auras:UpdateHeader(Header)
@@ -249,7 +256,7 @@ function Auras:UpdateHeader(Header)
 	Header:SetAttribute("xOffset", -UI:Scale(ButtonWidth + DB.Global.Auras.ButtonSpacing))
 	Header:SetAttribute("yOffset", 0)
 	Header:SetAttribute("wrapXOffset", 0)
-	Header:SetAttribute("wrapYOffset", -UI:Scale(42))
+	Header:SetAttribute("wrapYOffset", -UI:Scale(28))
 	Header:SetAttribute("maxWraps", 3)
 	Header:SetAttribute("wrapAfter", DB.Global.Auras.ButtonPerRow)
 	Header:SetAttribute("sortMethod", Auras.SortMethod)
