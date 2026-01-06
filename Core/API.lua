@@ -44,7 +44,6 @@ UI.Noop = function() return end
 
 -- Blizzard Functions
 UI.SmoothBars = Enum.StatusBarInterpolation.ExponentialEaseOut
-UI.SmoothBarsImmediate = Enum.StatusBarInterpolation.Immediate
 UI.DirectionElapsed = Enum.StatusBarTimerDirection.ElapsedTime
 UI.DirectionRemaining = Enum.StatusBarTimerDirection.RemainingTime
 UI.CurvePercent = CurveConstants.ScaleTo100
@@ -94,6 +93,7 @@ function UI:Print(...)
 	print("|CFF00AAFF" .. "FeelUI" .. "|r:", ...)
 end
 
+-- Register Commands
 function UI:RegisterChatCommand(Command, Func)
 	local Name = Command:upper()
 	

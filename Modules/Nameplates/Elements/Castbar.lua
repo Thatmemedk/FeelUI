@@ -79,7 +79,7 @@ function NP:CastStarted(Event, Unit)
     Castbar.SpellID = SpellID
 
     -- Set Values
-    Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBarsImmediate, Castbar.Direction)
+    Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBars, Castbar.Direction)
 
     -- Interrupt Color
     Castbar:GetStatusBarTexture():SetVertexColorFromBoolean(Interrupt, CreateColor(0.67, 0, 0, 0.7), CreateColor(0.45, 0.45, 0.45, 0.7))
@@ -199,7 +199,7 @@ function NP:CastUpdated(Event, Unit)
     Castbar.Empower = (Event == "UNIT_SPELLCAST_EMPOWER_UPDATE")
 
     -- Set Values
-    Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBarsImmediate, Castbar.Direction)
+    Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBars, Castbar.Direction)
 end
 
 function NP:CastNonInterruptable(Event, Unit)

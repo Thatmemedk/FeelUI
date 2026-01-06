@@ -198,5 +198,5 @@ function NP:CreateDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = NP:CreateAuraContainer(Frame, 30, 18, 4, "TOPLEFT", -32, 28, "TOPRIGHT", "RIGHT", 7, true, true)
+    Frame.Debuffs = NP:CreateAuraContainer(Frame, 30, 18, 4, "TOPLEFT", -24, 28, "TOPRIGHT", "RIGHT", 7, true, true)
 end

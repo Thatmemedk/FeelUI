@@ -1,0 +1,17 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Button name="FeelUIAuraTemplate" inherits="SecureActionButtonTemplate, BackdropTemplate" virtual="true">
+		<Scripts>
+			<OnLoad>
+				local UI = unpack(FeelUI)
+				local Auras = UI:CallModule("Auras")
+				Auras.Skin(self)
+			</OnLoad>
+		</Scripts>
+
+		<Attributes>
+			<Attribute name="type" value="cancelaura"/>
+		</Attributes>
+	</Button>
+
+	<Script file="Core.lua"/>
+</Ui>

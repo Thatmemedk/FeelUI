@@ -19,7 +19,8 @@
 	<Script file="ActionBars\Range.lua"/>
 	<Script file="ActionBars\Glow.lua"/>
 	<!-- Auras -->
-	<Script file="Auras\Core.lua"/>
+	<!--<Script file="Auras\Core.lua"/>-->
+	<Include file="Auras\SecureAuraTemplate.xml"/>
 	<!-- Chat -->
 	<Script file="Chat\Core.lua"/>
 	<Script file="Chat\CopyChat.lua"/>
