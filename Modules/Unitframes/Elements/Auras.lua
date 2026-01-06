@@ -101,6 +101,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
                         Region:Point("CENTER", Button.Overlay, 0, -8)
                         Region:SetFontTemplate("Default")
 
+                        --[[
                         local CooldownColorCurve = C_CurveUtil.CreateColorCurve()
                         CooldownColorCurve:SetType(Enum.LuaCurveType.Step)
                         CooldownColorCurve:AddPoint(0, CreateColor(unpack(DB.Global.CooldownFrame.ExpireColor)))
@@ -111,6 +112,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
                         local AuraDuration = C_UnitAuras.GetAuraDuration(Unit, AuraInstanceID)
                         local EvaluateDuration = AuraDuration:EvaluateRemainingDuration(CooldownColorCurve)
                         Region:SetVertexColor(EvaluateDuration:GetRGBA())
+                        --]]
                     end
                 end
             else
@@ -138,7 +140,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff)
     end
 end
 
-function AuraTooltipOnEnter(self)
+function UF:OnEnter()
     if _G.GameTooltip:IsForbidden() or not self:IsVisible() then
         return
     end
@@ -147,12 +149,12 @@ function AuraTooltipOnEnter(self)
     _G.GameTooltip:SetUnitAuraByAuraInstanceID(self.Unit, self.AuraInstanceID)
 end
 
-function AuraTooltipOnLeave()
+function UF:OnLeave()
     if _G.GameTooltip:IsForbidden() then
         return
     end
 
-    _G.GameTooltip:Hide()
+    _G.GameTooltip_Hide()
 end
 
 function UF:CreateAuraButton(Frame, ExtraBorder, HideNumbers)
@@ -162,8 +164,9 @@ function UF:CreateAuraButton(Frame, ExtraBorder, HideNumbers)
     Button:StyleButton()
     Button:SetShadowOverlay()
 
-    Button:SetScript("OnEnter", AuraTooltipOnEnter)
-    Button:SetScript("OnLeave", AuraTooltipOnLeave)
+    -- Set Scripts
+    Button:SetScript("OnEnter", UF.OnEnter)
+    Button:SetScript("OnLeave", UF.OnLeave)
 
     local Overlay = CreateFrame("Frame", nil, Button)
     Overlay:SetFrameLevel(Button:GetFrameLevel() + 10)
@@ -172,20 +175,21 @@ function UF:CreateAuraButton(Frame, ExtraBorder, HideNumbers)
     local Icon = Button:CreateTexture(nil, "ARTWORK")
     Icon:SetInside()
 
+    local Count = Overlay:CreateFontString(nil, "OVERLAY")
+    Count:Point("TOPRIGHT", Button, 2, 2)
+    Count:SetFontTemplate("Default")
+
     local Cooldown = CreateFrame("Cooldown", nil, Button, "CooldownFrameTemplate")
     Cooldown:SetInside()
     Cooldown:SetDrawEdge(false)
     Cooldown:SetDrawBling(false)
     Cooldown:SetReverse(true)
 
-    local Count = Overlay:CreateFontString(nil, "OVERLAY")
-    Count:Point("TOPRIGHT", Button, 2, 2)
-    Count:SetFontTemplate("Default")
-
+    -- Cache
     Button.Overlay = Overlay
     Button.Icon = Icon
-    Button.Cooldown = Cooldown
     Button.Count = Count
+    Button.Cooldown = Cooldown
 
     return Button
 end

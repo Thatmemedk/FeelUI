@@ -1032,10 +1032,7 @@ function UF:Initialize()
         return
     end
 
-    -- HIDE
-    self:HideBlizzardFrames()
-    -- SPAWN UNITFRAMES
+    self:DisableBlizzard()
     self:CreateUF()
-    -- EVENTS
     self:RegisterEvents()
 end

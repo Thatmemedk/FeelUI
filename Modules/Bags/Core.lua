@@ -254,12 +254,10 @@ function B:CreateItemSlot(Frame)
     Button.NewItemAnimation.FadeOut:SetDuration(0.5)
     Button.NewItemAnimation.FadeOut:SetSmoothing("IN_OUT")
 
-    -- Register Buttons
     Button:EnableMouse(true)
-    Button:RegisterForClicks("AnyUp") -- required for secure template
-    Button:RegisterForDrag("LeftButton") -- allows picking up items
+    Button:RegisterForClicks("AnyUp")
+    Button:RegisterForDrag("LeftButton")
 
-    -- Shift-click to chat link
     Button:HookScript("PreClick", function(self, mouseButton)
         if IsShiftKeyDown() and mouseButton == "LeftButton" and self.ItemLink then
             ChatEdit_InsertLink(self.ItemLink)
@@ -267,15 +265,15 @@ function B:CreateItemSlot(Frame)
     end)
 
     Button:HookScript("OnEnter", function(self)
-        if self.ItemLink then
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetBagItem(self.bag, self.slot)
-            GameTooltip:Show()
+        if (self.ItemLink) then
+            _G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            _G.GameTooltip:SetBagItem(self.bag, self.slot)
+            _G.GameTooltip:Show()
         end
     end)
 
     Button:HookScript("OnLeave", function() 
-        GameTooltip:Hide() 
+        _G.GameTooltip_Hide() 
     end)
 
     return Button

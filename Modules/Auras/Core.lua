@@ -20,12 +20,6 @@ Auras.SortDirection = "+"
 Auras.Headers = {}
 Auras.HeadersName = ""
 
-Auras.AttributeInitialConfig = [[
-	local header = self:GetParent()
-	self:SetWidth(header:GetAttribute("config-width"))
-	self:SetHeight(header:GetAttribute("config-height"))
-]]
-
 function Auras:DisableBlizzardAuras()
 	_G.BuffFrame:Kill()
 	_G.BuffFrame.numHideableBuffs = 0
@@ -106,6 +100,7 @@ function Auras:UpdateAura(Index)
 					Region:Point("CENTER", self.InvisFrame, 0, -8)
 					Region:SetFontTemplate("Default")
 
+					--[[
 					local Curve = C_CurveUtil.CreateColorCurve()
 					Curve:SetType(Enum.LuaCurveType.Step)
 					Curve:AddPoint(0,  CreateColor(unpack(DB.Global.CooldownFrame.ExpireColor)))
@@ -116,6 +111,7 @@ function Auras:UpdateAura(Index)
 					local AuraDuration = C_UnitAuras.GetAuraDuration("player", AuraData.auraInstanceID)
 					local EvaluateDuration = AuraDuration:EvaluateRemainingDuration(Curve)
 					Region:SetVertexColor(EvaluateDuration:GetRGBA())
+					--]]
 				end
 			end
 		end
@@ -175,7 +171,7 @@ function Auras:OnAttributeChanged(Attribute, Value)
 end
 
 function Auras:OnEnter()
-	GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 6, -6)
+	_G.GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 6, -6)
 
 	if (self:GetAttribute("index")) then
 		_G.GameTooltip:SetUnitAuraByAuraInstanceID(self.Unit, self.AuraInstanceID)
@@ -216,9 +212,7 @@ function Auras:Skin()
 	TempEnchHighlight:SetTexture(Media.Global.Blank)
 	TempEnchHighlight:SetVertexColor(0, 0, 0, 0)
 
-	-- Style Button
-	self:Size(unpack(DB.Global.Auras.ButtonSize))
-
+	-- Style Buttons
 	if (self:GetParent():GetAttribute("filter") == "HARMFUL") then
 		self:SetTemplate(true)
 	else
@@ -249,8 +243,6 @@ function Auras:UpdateHeader(Header)
 
 	Header:SetAttribute("template", "FeelUIAuraTemplate")
 	Header:SetAttribute("weaponTemplate", Header.Filter == "HELPFUL" and "FeelUIAuraTemplate" or nil)
-	Header:SetAttribute("config-width", UI:Scale(ButtonWidth))
-	Header:SetAttribute("config-height", UI:Scale(ButtonHeight))
 	Header:SetAttribute("minHeight", UI:Scale(ButtonHeight))
 	Header:SetAttribute("minWidth", UI:Scale(DB.Global.Auras.ButtonPerRow * ButtonWidth))
 	Header:SetAttribute("xOffset", -UI:Scale(ButtonWidth + DB.Global.Auras.ButtonSpacing))
@@ -262,17 +254,27 @@ function Auras:UpdateHeader(Header)
 	Header:SetAttribute("sortMethod", Auras.SortMethod)
 	Header:SetAttribute("sortDirection", Auras.SortDirection)
 	Header:SetAttribute("point", "TOPRIGHT")
-	Header:SetAttribute("initialConfigFunction", Auras.AttributeInitialConfig)
 	Header:Show()
 end
 
 function Auras:CreateAuraHeader(Filter)
 	local Name = Filter == "HELPFUL" and "FeelUIPlayerBuffs" or "FeelUIPlayerDebuffs"
+	local ButtonWidth, ButtonHeight = unpack(DB.Global.Auras.ButtonSize)
 
 	local Header = CreateFrame("Frame", Name, _G.UIParent, "SecureAuraHeaderTemplate")
 	Header:SetAttribute("unit", "player")
 	Header:SetAttribute("filter", Filter)
 	Header.Filter = Filter
+
+    Header:SetAttribute("config-width", UI:Scale(ButtonWidth))
+    Header:SetAttribute("config-height", UI:Scale(ButtonHeight))
+    Header:SetAttribute("initialConfigFunction", [[
+        local button = self
+        local width = button:GetParent():GetAttribute("config-width")
+        local height = button:GetParent():GetAttribute("config-height")
+        button:SetWidth(width)
+        button:SetHeight(height)
+    ]])
 
 	RegisterStateDriver(Header, "visibility", "[petbattle] hide; show")
 	RegisterAttributeDriver(Header, "unit", "[vehicleui] vehicle; player")

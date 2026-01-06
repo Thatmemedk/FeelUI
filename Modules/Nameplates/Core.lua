@@ -411,7 +411,7 @@ function NP:Initialize()
         return 
     end
 
-    self:AddHooks()
+    self:DisableBlizzard()
     self:RegisterEvents()
     self:SetCVarOnLogin()
 end

@@ -3,70 +3,6 @@ local UI, DB, Media, Language = select(2, ...):Call()
 -- Call Modules
 local UF = UI:CallModule("UnitFrames")
 
---- HIDE BLIZZARD UF
-
-function UF:SafeHide(Frame, SkipParent)
-    if (not Frame or UF.Frames.Hidden[Frame]) then 
-        return 
-    end
-
-    Frame:UnregisterAllEvents()
-    Frame:Hide()
-
-    if (not SkipParent and UI.HiddenParent and not InCombatLockdown()) then
-        Frame:SetParent(UI.HiddenParent)
-    end
-
-    UF.Frames.Hidden[Frame] = true
-end
-
-function UF:HideBlizzardFrames()
-    UF:SafeHide(_G.PlayerFrame)
-    UF:SafeHide(_G.TargetFrame)
-    UF:SafeHide(_G.FocusFrame)
-    UF:SafeHide(_G.TargetFrameToT)
-    UF:SafeHide(_G.PetFrame)
-
-    if (_G.PlayerCastingBarFrame) then
-        UF:SafeHide(_G.PlayerCastingBarFrame)
-    end
-
-    if (_G.PetCastingBarFrame) then
-        UF:SafeHide(_G.PetCastingBarFrame)
-    end
-
-    if (_G.TargetFrameSpellBar) then
-        UF:SafeHide(_G.TargetFrameSpellBar)
-    end
-
-    if (_G.FocusFrameSpellBar) then
-        UF:SafeHide(_G.FocusFrameSpellBar)
-    end
-
-    for i = 1, 5 do
-        UF:SafeHide(_G["Boss" .. i .. "TargetFrameSpellBar"])
-        UF:SafeHide(_G["Boss"..i.."TargetFrame"])
-    end
-
-    UF:SafeHide(_G.PartyFrame)
-
-    for Frames in PartyFrame.PartyMemberFramePool:EnumerateActive() do
-        UF:SafeHide(Frames)
-    end
-
-    for i = 1, _G.MEMBERS_PER_RAID_GROUP do
-        UF:SafeHide(_G["CompactPartyFrameMember"..i])
-    end
-
-    if (_G.CompactRaidFrameManager) then
-        UF:SafeHide(_G.CompactRaidFrameManager)
-    end
-
-    if (CompactRaidFrameManager_SetSetting) then
-        CompactRaidFrameManager_SetSetting("IsShown", "0")
-    end
-end
-
 -- SPAWN THE UNITFRAMES
 
 function UF:Spawn(Unit, Width, Height, Orientation)
@@ -95,92 +31,18 @@ function UF:Spawn(Unit, Width, Height, Orientation)
     -- STORE IN CACHE
     self.Frames[Unit] = Frame
 
-    -- CREATE ELEMENTS
-    self:CreateOnEnterLeave(Frame)
-    self:CreatePanels(Frame)
-    self:CreateHightlight(Frame)
-    -- HEALTH
-    self:CreateHealth(Frame, Height, Orientation)
-    -- ICONS
-    self:CreateRaidIcon(Frame)
-
     if (Unit == "player") then
-        -- TEXTS
-        self:CreatePlayerTexts(Frame)
-        -- HEALTH PRED
-        self:CreateHealthPrediction(Frame)
-        -- ICONS
-        self:CreateCombatIcon(Frame)
-        self:CreateRestingIcon(Frame)
-        self:CreateResurrectIcon(Frame)
-        self:CreateLeaderIcon(Frame)
-        self:CreateAssistantIcon(Frame)
-        self:CreateSummonIcon(Frame)
-        -- CASTBAR
-        self:CreatePlayerCastbar(Frame)
-        -- PORTRAITS
-        if (DB.Global.UnitFrames.Portraits) then
-            self:CreatePortrait(Frame)
-        end
-        -- ADDITIONAL POWER
-        self:CreateAdditionalPower(Frame)
-        -- DEBUFF HIGHLIGHT
-        --self:CreateDebuffHighlight(Frame)
+        UF:CreatePlayer(Frame, Height, Orientation)
     elseif (Unit == "target") then
-        -- TEXTS
-        self:CreateTargetTexts(Frame)
-        -- ICONS
-        self:CreateSummonIcon(Frame)
-        self:CreatePhaseIcon(Frame)
-        -- CASTBARS
-        self:CreateTargetCastbar(Frame)
-        -- PORTRAITS
-        if (DB.Global.UnitFrames.Portraits) then
-            self:CreatePortrait(Frame)
-        end
-        -- HEALTH PRED
-        self:CreateHealthPrediction(Frame)
-        -- AURAS
-        self:CreateBuffsTarget(Frame)
-        self:CreateDebuffsTarget(Frame)
-        -- THREAT
-        self:CreateThreatHighlight(Frame)
-        -- RANGE
-        self:CreateRange(Frame)
+        UF:CreateTarget(Frame, Height, Orientation)
     elseif (Unit == "targettarget") then
-        -- TEXT
-        self:CreateNameTextCenter(Frame)
-        -- THREAT
-        self:CreateThreatHighlight(Frame)
-        -- RANGE
-        self:CreateRange(Frame)
+        UF:CreateTargetTarget(Frame, Height, Orientation)
     elseif (Unit == "pet") then
-        -- TEXT
-        self:CreateNameTextCenter(Frame)
-        -- THREAT
-        self:CreateThreatHighlight(Frame)
-        -- CASTBAR
-        self:CreatePetCastbar(Frame)
-        -- RANGE
-        self:CreateRange(Frame)
+        UF:CreatePet(Frame, Height, Orientation)
     elseif (Unit == "focus") then
-        -- TEXT
-        self:CreateNameTextCenter(Frame)
-        -- THREAT
-        self:CreateThreatHighlight(Frame)
-        -- CASTBAR
-        self:CreateFocusCastbar(Frame)
-        -- RANGE
-        self:CreateRange(Frame)
+        UF:CreateFocus(Frame, Height, Orientation)
     elseif (Unit:match("^boss%d$")) then
-        -- TEXT
-        self:CreateTargetTexts(Frame)
-        -- THREAT
-        self:CreateThreatHighlight(Frame)
-        -- CASTBAR
-        self:CreateBossCastbar(Frame)
-        -- RANGE
-        self:CreateRange(Frame)
+        UF:CreateBoss(Frame, Height, Orientation)
     end
 
     return Frame

@@ -102,6 +102,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
                         Region:Point("CENTER", Button.Overlay, 0, -8)
                         Region:SetFontTemplate("Default")
 
+                        --[[
                         local CooldownColorCurve = C_CurveUtil.CreateColorCurve()
                         CooldownColorCurve:SetType(Enum.LuaCurveType.Step)
                         CooldownColorCurve:AddPoint(0, CreateColor(unpack(DB.Global.CooldownFrame.ExpireColor)))
@@ -112,6 +113,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
                         local AuraDuration = C_UnitAuras.GetAuraDuration(Unit, AuraInstanceID)
                         local EvaluateDuration = AuraDuration:EvaluateRemainingDuration(CooldownColorCurve)
                         Region:SetVertexColor(EvaluateDuration:GetRGBA())
+                        --]]
                     end
                 end
             else

@@ -19,7 +19,6 @@
 	<Script file="ActionBars\Range.lua"/>
 	<Script file="ActionBars\Glow.lua"/>
 	<!-- Auras -->
-	<!--<Script file="Auras\Core.lua"/>-->
 	<Include file="Auras\SecureAuraTemplate.xml"/>
 	<!-- Chat -->
 	<Script file="Chat\Core.lua"/>
@@ -74,6 +73,7 @@
 	<Script file="Tooltip\Core.lua"/>
 	<!-- NamePlates -->
 	<Script file="Nameplates\Core.lua"/>
+	<Script file="Nameplates\Blizzard.lua"/>
 	<Script file="Nameplates\Spawn.lua"/>
 	<Script file="Nameplates\Elements\Auras.lua"/>
 	<Script file="Nameplates\Elements\Castbar.lua"/>
@@ -85,6 +85,7 @@
 	<Script file="Nameplates\Elements\UnitColors.lua"/>
 	<!-- UnitFrames -->
 	<Script file="UnitFrames\Core.lua"/>
+	<Script file="UnitFrames\Blizzard.lua"/>
 	<Script file="UnitFrames\Filters.lua"/>
 	<Script file="UnitFrames\Groups.lua"/>
 	<Script file="UnitFrames\Spawn.lua"/>
@@ -100,4 +101,12 @@
 	<Script file="UnitFrames\Elements\Range.lua"/>
 	<Script file="UnitFrames\Elements\Texts.lua"/>
 	<Script file="UnitFrames\Elements\Threat.lua"/>
+	<Script file="UnitFrames\Units\Player.lua"/>
+	<Script file="UnitFrames\Units\Target.lua"/>
+	<Script file="UnitFrames\Units\TargetTarget.lua"/>
+	<Script file="UnitFrames\Units\Pet.lua"/>
+	<Script file="UnitFrames\Units\Focus.lua"/>
+	<Script file="UnitFrames\Units\Boss.lua"/>
+	<Script file="UnitFrames\Units\Party.lua"/>
+	<Script file="UnitFrames\Units\Raid.lua"/>
 </Ui>

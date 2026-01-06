@@ -19,39 +19,11 @@ function UF:SetupGroupFrame(Frame, type)
     Frame:SetAttribute("type2", "togglemenu")
     Frame:SetAttribute("toggleForVehicle", true)
 
-    -- PANELS
-    self:CreatePanels(Frame)
-    self:CreateHightlight(Frame)
-    
-    -- HEALTH
     if (type == "party") then
-        self:CreateHealth(Frame)
-        self:CreatePartyTexts(Frame)
-        self:CreatePartyDebuffs(Frame)
-        self:CreatePartyBuffs(Frame)
+        UF:CreateParty(Frame)
     else
-        self:CreateHealth(Frame, 42, "VERTICAL")
-        self:CreateRaidTexts(Frame)
-        self:CreateRaidDebuffs(Frame)
-        self:CreateRaidBuffs(Frame)
+        UF:CreateRaid(Frame)
     end
-
-    -- HEALTH PRED
-    self:CreateHealthPrediction(Frame)
-    -- ICONS
-    self:CreateRaidIcon(Frame)
-    self:CreateResurrectIcon(Frame)
-    self:CreateLeaderIcon(Frame)
-    self:CreateAssistantIcon(Frame)
-    self:CreateSummonIcon(Frame)
-    self:CreatePhaseIcon(Frame)
-    self:CreateReadyCheckIcon(Frame)
-    -- THREAT
-    self:CreateThreatHighlight(Frame)
-    -- DEBUFF HIGHLIGHT
-    --self:CreateDebuffHighlight(Frame)
-    -- RANGE
-    self:CreateRange(Frame)
 
     -- REGISTER UNIT WATCH
     RegisterUnitWatch(Frame)
@@ -67,8 +39,8 @@ function UF:SetupGroupFrame(Frame, type)
         UF:UpdateHealth(self)
         -- HEALTH PRED
         UF:UpdateHealthPred(self)
-        -- NAME
 
+        -- NAME
         if (type == "party") then
             UF:UpdateHealthTextCur(self)
             UF:UpdateHealthTextPer(self)

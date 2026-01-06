@@ -56,10 +56,10 @@ local LEVEL2 = strlower((_G.TOOLTIP_UNIT_LEVEL_RACE or _G.TOOLTIP_UNIT_LEVEL_CLA
 
 -- Locals
 local ClassificationText = {
-	worldboss = "|CFFFF0000" .. BOSS .. "|r ",
-	rareelite = "|CFFFF66CCRare|r |cffFFFF00" .. ELITE .. "|r ",
-	elite = "|CFFFFFF00" .. ELITE .. "|r ",
-	rare = "|CFFFF66CCRare|r ",
+    worldboss = "|CFFFF0000" .. BOSS .. "|r ",
+    rareelite = "|CFFFF66CCRare|r |cffFFFF00" .. ELITE .. "|r ",
+    elite = "|CFFFFFF00" .. ELITE .. "|r ",
+    rare = "|CFFFF66CCRare|r ",
 }
 
 function TT:GetColor(Unit)
@@ -108,7 +108,7 @@ function TT:ApplyStatusBarColor(Tooltip, Unit, ClassFile, Reaction)
     end
 
     GameTooltipStatusBar:SetStatusBarColor(R, G, B)
-   	GameTooltipStatusBar:SetBackdropColorTemplate(R * 0.5, G * 0.5, B * 0.5, 0.7)
+    GameTooltipStatusBar:SetBackdropColorTemplate(R * 0.5, G * 0.5, B * 0.5, 0.7)
 end
 
 function TT:FormatUnitName(Unit)
@@ -138,14 +138,14 @@ function TT:FormatUnitName(Unit)
         StatusText = " |CFF559655" .. CHAT_FLAG_DND .. "|r"
     end
 
-	_G.GameTooltipTextLeft1:SetFormattedText("%s%s%s%s", Color, Name, "|r", StatusText) 
+    _G.GameTooltipTextLeft1:SetFormattedText("%s%s%s%s", Color, Name, "|r", StatusText) 
 end
 
 function TT:FormatGuildInfo(Unit)
     local GuildName, GuildRankName = GetGuildInfo(Unit)
 
     if (not GuildName) then 
-    	return 
+        return 
     end
 
     local SameGuild = IsInGuild() and GetGuildInfo("player") == GuildName
@@ -171,7 +171,7 @@ function TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Ra
         local LowerText = Text:lower()
 
         if (not Text) then 
-        	break 
+            break 
         end
 
         if (Player and ClassName and LowerText:find(ClassName:lower()) and not LowerText:find("alliance") and not LowerText:find("horde")) then
@@ -224,33 +224,36 @@ function TT:OnTooltipSetUnit()
     local ClassificationUnit = UnitClassification(Unit)
     local Reaction = UnitReaction(Unit, "player")
 
-   	TT:FormatUnitName(Unit)
+    TT:FormatUnitName(Unit)
     TT:FormatGuildInfo(Unit)
     TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Race, CreatureType, ClassificationUnit, Level)
     TT:ApplyStatusBarColor(self, Unit, ClassFile, Reaction)
 end
 
 function TT:StyleHealthBar()
-	GameTooltipStatusBar:Height(6)
+    GameTooltipStatusBar:Height(6)
     GameTooltipStatusBar:ClearAllPoints()
     GameTooltipStatusBar:Point("TOPLEFT", GameTooltip, "BOTTOMLEFT", 2, -2)
     GameTooltipStatusBar:Point("TOPRIGHT", GameTooltip, "BOTTOMRIGHT", -2, 2)
-	GameTooltipStatusBar:SetStatusBarTexture(Media.Global.Texture)
-	GameTooltipStatusBar:CreateBackdrop()
-	GameTooltipStatusBar:CreateShadow()
+    GameTooltipStatusBar:SetStatusBarTexture(Media.Global.Texture)
+    GameTooltipStatusBar:CreateBackdrop()
+    GameTooltipStatusBar:CreateShadow()
     GameTooltipStatusBar:SetScript("OnValueChanged", nil)
 end
 
 function TT:SetBackdropStyle(tt)
-	if (not tt or not tt.NineSlice or tt:IsForbidden() or tt.IsSkinned) then 
-		return 
-	end
+    if (not tt or not tt.NineSlice or tt:IsForbidden() or tt.IsSkinned) then 
+        return 
+    end
 
     if (tt.NineSlice) then 
         tt.NineSlice:SetAlpha(0) 
     end
 
-    if not issecretvalue or not issecretvalue(tt:GetWidth()) then
+    local width = tt:GetWidth()
+    local height = tt:GetHeight()
+
+    if (width and height and not issecretvalue(width) and not issecretvalue(height)) then
         local Frame = CreateFrame("Frame", nil, tt)
         Frame:SetFrameLevel(tt:GetFrameLevel() -1)
         Frame:SetInside(tt, 2, 2)
@@ -294,56 +297,56 @@ function TT:StyleTooltips()
 end
 
 function TT:StyleCloseButton()
-	_G.ItemRefTooltip.CloseButton:HandleCloseButton(-6, -6)
+    _G.ItemRefTooltip.CloseButton:HandleCloseButton(-6, -6)
 end
 
-function TT:CreateAnchor()	
-	local Anchor = CreateFrame("Frame", "FeelUI_TooltipAnchor", _G.UIParent)
+function TT:CreateAnchor()  
+    local Anchor = CreateFrame("Frame", "FeelUI_TooltipAnchor", _G.UIParent)
     Anchor:SetFrameStrata("TOOLTIP")
     Anchor:SetFrameLevel(20)
     Anchor:SetClampedToScreen(true)
-	Anchor:Size(200, Panels.ChatPanelRight:GetHeight() - 4)
-	Anchor:Point("BOTTOMRIGHT", Panels.ChatPanelRight, 0, 0)
-	Anchor:SetMovable(true)
+    Anchor:Size(200, Panels.ChatPanelRight:GetHeight() - 4)
+    Anchor:Point("BOTTOMRIGHT", Panels.ChatPanelRight, 0, 0)
+    Anchor:SetMovable(true)
 
-	self.Anchor = Anchor
+    self.Anchor = Anchor
 end
 
 function TT:TooltipAnchorUpdate(tt, Parent)
-	local Anchor = TT.Anchor
+    local Anchor = TT.Anchor
 
-	if (DB.Global.Tooltip.TooltipOnMouseOver) then
-		if (Parent ~= _G.UIParent) then
-			self:SetOwner(Anchor)
-			self:SetAnchorType("ANCHOR_TOPRIGHT", 0, 18)
-		else
-			self:SetOwner(parent, "ANCHOR_CURSOR")
-		end
-	else
-		self:SetOwner(Anchor)
-		self:SetAnchorType("ANCHOR_TOPRIGHT", 0, 18)
-	end
+    if (DB.Global.Tooltip.TooltipOnMouseOver) then
+        if (Parent ~= _G.UIParent) then
+            self:SetOwner(Anchor)
+            self:SetAnchorType("ANCHOR_TOPRIGHT", 0, 18)
+        else
+            self:SetOwner(parent, "ANCHOR_CURSOR")
+        end
+    else
+        self:SetOwner(Anchor)
+        self:SetAnchorType("ANCHOR_TOPRIGHT", 0, 18)
+    end
 end
 
 function TT:SetTooltipAnchor()
-	hooksecurefunc("GameTooltip_SetDefaultAnchor", self.TooltipAnchorUpdate)
+    hooksecurefunc("GameTooltip_SetDefaultAnchor", self.TooltipAnchorUpdate)
 end
-	
+    
 function TT:SetTooltipSetUnitUpdate()
-	if (AddTooltipPostCall) then
-		AddTooltipPostCall(Enum.TooltipDataType.Unit, self.OnTooltipSetUnit)
-	end   
+    if (AddTooltipPostCall) then
+        AddTooltipPostCall(Enum.TooltipDataType.Unit, self.OnTooltipSetUnit)
+    end   
 end
 
 function TT:Initialize()
-	if (not DB.Global.Tooltip.Enable) then
-		return
-	end
+    if (not DB.Global.Tooltip.Enable) then
+        return
+    end
 
-	self:CreateAnchor()
-	self:SetTooltipAnchor()
-	self:StyleHealthBar()
-	self:StyleTooltips()
-	self:StyleCloseButton()
-	self:SetTooltipSetUnitUpdate()
+    self:CreateAnchor()
+    self:SetTooltipAnchor()
+    self:StyleHealthBar()
+    self:StyleTooltips()
+    self:StyleCloseButton()
+    self:SetTooltipSetUnitUpdate()
 end

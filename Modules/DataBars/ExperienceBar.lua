@@ -82,11 +82,13 @@ function ExperienceBar:OnEnter()
 	end
 
 	GameTooltip:Show()
+	
 	UI:UIFrameFadeIn(self, 1, self:GetAlpha(), 1)
 end
 
 function ExperienceBar:OnLeave()
-	GameTooltip:Hide()
+	_G.GameTooltip_Hide()
+
 	UI:UIFrameFadeOut(self, 1, self:GetAlpha(), 0.25)
 end
 

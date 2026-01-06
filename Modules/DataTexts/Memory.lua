@@ -87,7 +87,7 @@ function Memory:OnEnter()
 end
 
 function Memory:OnLeave()
-    GameTooltip:Hide()
+    _G.GameTooltip_Hide()
 end
 
 function Memory:Create()

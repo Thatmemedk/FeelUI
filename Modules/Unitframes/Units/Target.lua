@@ -1,0 +1,22 @@
+local UI, DB, Media, Language = select(2, ...):Call() 
+
+-- Call Modules
+local UF = UI:CallModule("UnitFrames")
+
+function UF:CreateTarget(Frame, Height, Orientation)
+    self:CreateOnEnterLeave(Frame)
+    self:CreatePanels(Frame)
+    self:CreateHightlight(Frame)
+    self:CreateRange(Frame)
+    self:CreateHealth(Frame, Height, Orientation)
+    self:CreateHealthPrediction(Frame)
+    self:CreateBuffsTarget(Frame)
+    self:CreateDebuffsTarget(Frame)
+    self:CreateTargetCastbar(Frame)
+    self:CreatePortrait(Frame)
+    self:CreateTargetTexts(Frame)
+    self:CreateRaidIcon(Frame)
+    self:CreateSummonIcon(Frame)
+    self:CreatePhaseIcon(Frame)
+    self:CreateThreatHighlight(Frame)
+end

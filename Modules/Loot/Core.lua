@@ -54,7 +54,7 @@ function Loot:OnEnter()
 	if LootSlotHasItem(SlotID) then
 		_G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 		_G.GameTooltip:SetLootItem(SlotID)
-		CursorUpdate(self)
+		_G.CursorUpdate(self)
 	end
 end
 
@@ -64,8 +64,8 @@ function Loot:OnLeave()
 		self.Highlight:Hide()
 	end
 
-	_G.GameTooltip:Hide()
-	ResetCursor()
+	_G.GameTooltip_Hide()
+	_G.ResetCursor()
 end
 
 function Loot:OnClick()

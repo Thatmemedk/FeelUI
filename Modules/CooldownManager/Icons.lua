@@ -53,11 +53,11 @@ function CDM:SkinIcons(Button, ButtonSize)
 
 	-- Diable Tooltip
 	Button:HookScript("OnEnter", function()
-		GameTooltip:Hide()
+		_G.GameTooltip_Hide()
 	end)
 
 	Button:HookScript("OnLeave", function()
-		GameTooltip:Hide()
+		_G.GameTooltip_Hide()
 	end)
 
 	local InvisFrame = CreateFrame("Frame", nil, Button)
