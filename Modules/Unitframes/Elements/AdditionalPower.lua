@@ -8,6 +8,10 @@ local select = select
 local unpack = unpack
 
 function UF:CreateAdditionalPower(Frame)
+    if (not DB.Global.UnitFrames.AdditionalPower) then 
+        return
+    end
+    
     local AdditionalPower = CreateFrame("StatusBar", nil, Frame)
     AdditionalPower:SetFrameStrata(Frame:GetFrameStrata())
     AdditionalPower:SetFrameLevel(Frame:GetFrameLevel() + 8)

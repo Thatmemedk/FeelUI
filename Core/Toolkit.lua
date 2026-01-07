@@ -388,7 +388,7 @@ local function CreateShadow(self)
 		return
 	end
 
-	local Shadow = CreateFrame("Frame", nil, self, "BackdropTemplate")
+	local Shadow = CreateFrame("Frame", nil, self, "LibBackdropTemplate")
 
 	if (self.FrameRaised) then
 		Shadow:SetFrameLevel(self.FrameRaised:GetFrameLevel() -1)
@@ -401,7 +401,7 @@ local function CreateShadow(self)
 		Shadow:SetOutside(self, 2, 2)
 	end
 
-	Shadow:SetBackdrop({edgeFile = Media.Global.Shadow, edgeSize = UI:Scale(3)})
+	Shadow:SetBackdrop({ edgeFile = Media.Global.Shadow, edgeSize = UI:Scale(3) })
 	Shadow:SetBackdropColor(0, 0, 0, 0)
 	Shadow:SetBackdropBorderColor(unpack(DB.Global.General.ShadowColor))
 
@@ -413,7 +413,7 @@ local function CreateGlow(self, Scale, EdgeSize, R, G, B, Alpha)
 		return
 	end
 
-	local Glow = CreateFrame("Frame", nil, self, "BackdropTemplate")
+	local Glow = CreateFrame("Frame", nil, self, "LibBackdropTemplate")
 
 	if (self.FrameRaised) then
 		Glow:SetFrameLevel(self.FrameRaised:GetFrameLevel() -1)
@@ -421,7 +421,7 @@ local function CreateGlow(self, Scale, EdgeSize, R, G, B, Alpha)
 	end
 
 	Glow:SetOutside(self, 3, 3)
-	Glow:SetBackdrop({edgeFile = Media.Global.Shadow, edgeSize = UI:Scale(EdgeSize)})
+	Glow:SetBackdrop({ edgeFile = Media.Global.Shadow, edgeSize = UI:Scale(EdgeSize) })
 	Glow:SetBackdropBorderColor(R, G, B, Alpha)
 	Glow:SetScale(Scale)
 

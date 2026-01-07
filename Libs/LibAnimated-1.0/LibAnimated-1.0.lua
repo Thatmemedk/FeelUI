@@ -133,7 +133,7 @@ LibAnimated.Groups = {
     end,
 
     SetScript = function(self, Handler, Func)
-        if LibAnimated.Callbacks[Handler] then
+        if (LibAnimated.Callbacks[Handler]) then
             LibAnimated.Callbacks[Handler][self] = Func
         end
     end,

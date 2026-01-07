@@ -10,7 +10,7 @@ local unpack = unpack
 function NP:CreateRaidIcon(Frame)
     local RaidIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
     RaidIcon:Size(32, 32)
-    RaidIcon:Point("TOP", Frame, 0, -6)
+    RaidIcon:Point("TOP", Frame, 0, 22)
     RaidIcon:SetTexture([[Interface\TargetingFrame\UI-RaidTargetingIcons]])
     RaidIcon:Hide()
     

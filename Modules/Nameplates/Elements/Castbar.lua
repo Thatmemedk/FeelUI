@@ -330,13 +330,17 @@ function NP:CreateCastBar(Frame)
     IconOverlay:SetTemplate()
     IconOverlay:CreateShadow()
     IconOverlay:SetShadowOverlay()
+
+    local InvisFrameCastbar = CreateFrame("Frame", nil, Castbar)
+    InvisFrameCastbar:SetFrameLevel(Castbar:GetFrameLevel() + 10)
+    InvisFrameCastbar:SetInside()
     
-    local CastbarTime = Castbar:CreateFontString(nil, "OVERLAY", nil, 7)    
-    CastbarTime:Point("RIGHT", Castbar, -4, 0)
+    local CastbarTime = InvisFrameCastbar:CreateFontString(nil, "OVERLAY", nil, 7)
+    CastbarTime:Point("RIGHT", Castbar, -2, -6)
     CastbarTime:SetFontTemplate("Default")
 
-    local CastbarText = Castbar:CreateFontString(nil, "OVERLAY", nil, 7)
-    CastbarText:Point("LEFT", Castbar, 4, 0)
+    local CastbarText = InvisFrameCastbar:CreateFontString(nil, "OVERLAY", nil, 7)
+    CastbarText:Point("LEFT", Castbar, 2, -6)
     CastbarText:SetFontTemplate("Default")
     
     Frame.Castbar = Castbar

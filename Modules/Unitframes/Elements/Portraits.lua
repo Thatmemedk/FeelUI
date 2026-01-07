@@ -8,6 +8,10 @@ local select = select
 local unpack = unpack
 
 function UF:CreatePortrait(Frame)
+    if (not DB.Global.UnitFrames.Portraits) then 
+        return
+    end
+        
     local Portrait = CreateFrame("PlayerModel", nil, Frame)
     Portrait:SetFrameStrata(Frame:GetFrameStrata())
     Portrait:SetFrameLevel(Frame:GetFrameLevel() + 1)

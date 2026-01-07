@@ -83,6 +83,8 @@
 	<Script file="Nameplates\Elements\Texts.lua"/>
 	<Script file="Nameplates\Elements\Threat.lua"/>
 	<Script file="Nameplates\Elements\UnitColors.lua"/>
+	<Script file="Nameplates\Units\Friendly.lua"/>
+	<Script file="Nameplates\Units\Enemy.lua"/>
 	<!-- UnitFrames -->
 	<Script file="UnitFrames\Core.lua"/>
 	<Script file="UnitFrames\Blizzard.lua"/>

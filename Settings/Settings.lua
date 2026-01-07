@@ -54,7 +54,7 @@ DB.Global = {
 		ButtonPerRow = 12,
 		ButtonRowSpacing = 12,
 		-- Points Settings
-		AuraPoint = { "TOPRIGHT", _G.UIParent, -188, 5 },
+		AuraPoint = { "TOPRIGHT", _G.UIParent, -182, -6 },
 	},
 
 	AFK = {
@@ -171,11 +171,12 @@ DB.Global = {
 		-- Health / Power
 		HealthBarColor = { 0.1, 0.1, 0.1, 0.7 },
 		ClassColor = false,
+		AdditionalPower = false,
 		-- Castbar
 		CastBarColor = { 0.45, 0.45, 0.45, 0.7 },
 		CastBarInterruptColor = { 0.67, 0, 0, 0.70 },
 		-- Portraits
-		Portraits = true,
+		Portraits = false,
 		-- Points Settings
 		PlayerPoint = { "BOTTOMLEFT", _G.UIParent, 482, 244 },
 		TargetPoint = { "BOTTOMRIGHT", _G.UIParent, -482, 244 },

@@ -522,11 +522,11 @@ function UF:CreateBossCastbar(Frame)
     IconOverlay:SetShadowOverlay()
     
     local CastbarTime = Castbar:CreateFontString(nil, "OVERLAY", nil, 7)    
-    CastbarTime:Point("RIGHT", Castbar, -8, 0)
+    CastbarTime:Point("RIGHT", Castbar, -4, 0)
     CastbarTime:SetFontTemplate("Default")
 
     local CastbarText = Castbar:CreateFontString(nil, "OVERLAY", nil, 7)
-    CastbarText:Point("LEFT", Castbar, 8, 0)
+    CastbarText:Point("LEFT", Castbar, 4, 0)
     CastbarText:SetFontTemplate("Default")
     
     Frame.Castbar = Castbar

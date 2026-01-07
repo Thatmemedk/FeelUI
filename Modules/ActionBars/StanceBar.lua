@@ -19,6 +19,8 @@ function AB:StanceBarUpdateState()
     local Width, Height  = unpack(DB.Global.ActionBars.StanceButtonSize)
     local Spacing = DB.Global.ActionBars.ButtonSpacing
     local Padding = 4
+	local First = _G.StanceButton1
+	local Last = _G["StanceButton"..NumForms]
 
     if (NumForms < 1) then
         Bar.Backdrop:Hide()
@@ -34,10 +36,12 @@ function AB:StanceBarUpdateState()
         return
     end
 
-    Bar.Backdrop:Size((NumForms * Width) + ((NumForms - 1) * Spacing) + (Padding * 2), Height + (Padding * 2))
-    Bar.Backdrop:ClearAllPoints()
-    Bar.Backdrop:Point("LEFT", _G.StanceButton1, "LEFT", -Padding, 0)
-    Bar.Backdrop:Show()
+	Bar.Backdrop:ClearAllPoints()
+	Bar.Backdrop:Point("LEFT", First, "LEFT", -Padding, 0)
+	Bar.Backdrop:Point("RIGHT", Last, "RIGHT", Padding, 0)
+	Bar.Backdrop:Point("TOP", First, "TOP", 0,  Padding)
+	Bar.Backdrop:Point("BOTTOM", First, "BOTTOM", 0, -Padding)
+	Bar.Backdrop:Show()
 
     for i = 1, NUM_STANCE_SLOTS do
         local Button = _G["StanceButton"..i]

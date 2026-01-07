@@ -5,7 +5,7 @@ local NP = UI:CallModule("NamePlates")
 
 -- CREATE NAMEPLATES
 
-function NP:CreateFriendly(Plate, Unit)
+function NP:CreateFriendlyPlates(Plate, Unit)
     if (Plate.FriendlyIsCreated) then
         return
     end
@@ -22,18 +22,14 @@ function NP:CreateFriendly(Plate, Unit)
 
     Frame.Unit = Unit
 
-    -- Elements
-    self:CreatePanels(Frame)
-    self:CreateNameMiddle(Frame)
-    self:CreateRaidIcon(Frame)
-
-    -- Update Elements
-    self:UpdateFriendly(Frame)
+    -- Create Elements
+    self:CreateFriendlyElements(Frame)
+    self:UpdateFriendlyPlates(Frame)
 
     Plate.FriendlyIsCreated = true
 end
 
-function NP:CreateEnemy(Plate, Unit)
+function NP:CreateEnemyPlates(Plate, Unit)
     if (Plate.EnemyIsCreated) then
         return
     end
@@ -50,19 +46,9 @@ function NP:CreateEnemy(Plate, Unit)
 
     Frame.Unit = Unit
 
-    -- Elements
-    self:CreatePanels(Frame)
-    self:CreateHealth(Frame)
-    self:CreateHealthText(Frame)
-    self:CreateName(Frame)
-    self:CreateCastBar(Frame)
-    self:CreateDebuffs(Frame)
-    self:CreateRaidIcon(Frame)
-    self:CreateTargetIndicator(Frame)
-    self:CreateThreatHighlight(Frame)
-
-    -- Update Elements
-    self:UpdateEnemy(Frame)
+    -- Create Elements
+    self:CreateEnemyElements(Frame)
+    self:UpdateEnemyPlates(Frame)
 
     Plate.EnemyIsCreated = true
 end

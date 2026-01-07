@@ -63,7 +63,7 @@ function UF:SetupGroupFrame(Frame, type)
         UF:UpdatePhaseIcon(self)
         UF:UpdateReadyCheckIcon(self)
         -- THREAT
-        UF:UpdateThreatHighlightRaid(self)
+        --UF:UpdateThreatHighlightRaid(self)
         -- DEBUFF HIGHLIGHT
         --UF:UpdateDebuffHighlight(self, self.unit)
         -- RANGE

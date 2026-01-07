@@ -21,27 +21,18 @@ function Cooldown:UpdateCooldown(Start, Duration, Enable, ForceShowDrawEdge, Mod
         return
     end
 
-    if (not self.InvisFrame) then
-        local InvisFrame = CreateFrame("Frame", nil, self)
-        InvisFrame:SetFrameLevel(self:GetFrameLevel() + 10)
-        InvisFrame:SetInside()
-
-        self.InvisFrame = InvisFrame
-    end
-
     for i = 1, self:GetNumRegions() do
         local Region = select(i, self:GetRegions())
 
         if (Region and Region.GetText) then
             local FontSize = UI:GetCooldownFontScale(self)
-            
-            Region:SetParent(self.InvisFrame)
+
             Region:ClearAllPoints()
 
             if (Cooldown:IsActionBarParent(self)) then
-                Region:Point("CENTER", InvisFrame, 0, 0)
+                Region:Point("CENTER", self, 0, 0)
             else
-                Region:Point("CENTER", InvisFrame, 0, -6)
+                Region:Point("CENTER", self, 0, -6)
             end
 
             Region:SetFontTemplate("Default", FontSize)

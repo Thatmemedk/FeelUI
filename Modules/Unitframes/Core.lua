@@ -326,7 +326,9 @@ function UF:UpdateName(Frame, TypeFrame)
             local _, Class = UnitClass(Unit)
             local Color = UI.Colors.Class[Class]
 
-            Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+            if (Color) then
+                Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+            end
         else
             local Reaction = UnitReaction(Unit, "player") or 5
             local Color = UI.Colors.Reaction[Reaction]
@@ -912,7 +914,7 @@ function UF:OnEvent(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
         UF:CastFailed(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
-        UF:CastInterrupted(event, unit)
+        UF:CastNonInterruptable(event, unit)
     end
 
     if (not FramesUF) then
