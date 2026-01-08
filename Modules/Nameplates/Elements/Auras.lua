@@ -8,7 +8,10 @@ local select = select
 local unpack = unpack
 
 -- WoW Globals
-local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
+local GetAuraDataByIndex = _G.C_UnitAuras.GetAuraDataByIndex
+local GetAuraDuration = _G.C_UnitAuras.GetAuraDuration
+local GetAuraApplicationDisplayCount = _G.C_UnitAuras.GetAuraApplicationDisplayCount
+local GetAuraDispelTypeColor = _G.C_UnitAuras.GetAuraDispelTypeColor
 
 function NP:UpdateCooldownTextColor(Cooldown, Elapsed)
     if (not Cooldown:IsShown()) then
@@ -29,7 +32,7 @@ function NP:UpdateCooldownTextColor(Cooldown, Elapsed)
         return
     end
 
-    local Duration = C_UnitAuras.GetAuraDuration(Button.Unit, Button.AuraInstanceID)
+    local Duration = GetAuraDuration(Button.Unit, Button.AuraInstanceID)
 
     if (not Duration) then
         return
@@ -126,7 +129,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
         end
 
         if (Button.Count) then
-            Button.Count:SetText(C_UnitAuras.GetAuraApplicationDisplayCount(Unit, AuraInstanceID, AuraMinCount, AuraMaxCount))
+            Button.Count:SetText(GetAuraApplicationDisplayCount(Unit, AuraInstanceID, AuraMinCount, AuraMaxCount))
         end
 
         if (Button.Cooldown) then
@@ -157,7 +160,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
         end
 
         if (IsDebuff) then
-            local Color = C_UnitAuras.GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
+            local Color = GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
 
             if (Color) then
                 Button:SetColorTemplate(Color.r, Color.g, Color.b)

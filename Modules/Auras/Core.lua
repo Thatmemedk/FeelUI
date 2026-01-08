@@ -10,9 +10,10 @@ local unpack = unpack
 
 -- WoW Globals
 local GetWeaponEnchantInfo = GetWeaponEnchantInfo
-local DebuffTypeColor = DebuffTypeColor
 local GetInventoryItemTexture = GetInventoryItemTexture
-local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
+local GetAuraDataByIndex = _G.C_UnitAuras.GetAuraDataByIndex
+local GetAuraDuration = _G.C_UnitAuras.GetAuraDuration
+local GetAuraApplicationDisplayCount = _G.C_UnitAuras.GetAuraApplicationDisplayCount
 
 -- Locals
 Auras.SortMethod = "TIME"
@@ -86,7 +87,7 @@ function Auras:UpdateCooldownTextColor(Cooldown, Elapsed)
         return
     end
 
-    local Duration = C_UnitAuras.GetAuraDuration(Button.Unit, Button.AuraInstanceID)
+    local Duration = GetAuraDuration(Button.Unit, Button.AuraInstanceID)
 
     if (not Duration) then
         return
@@ -119,7 +120,7 @@ function Auras:UpdateAura(Index)
     local AuraMaxCount = 99
 
 	if (self.Count) then
-        self.Count:SetText(C_UnitAuras.GetAuraApplicationDisplayCount(Unit, AuraData.auraInstanceID, AuraMinCount, AuraMaxCount))
+        self.Count:SetText(GetAuraApplicationDisplayCount(Unit, AuraData.auraInstanceID, AuraMinCount, AuraMaxCount))
    	end
 
    	if (self.Icon) then
