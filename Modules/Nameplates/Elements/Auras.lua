@@ -166,6 +166,13 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
             Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
         end
 
+        -- Cache
+        Button.Unit = Unit
+        Button.AuraInstanceID = AuraInstanceID
+        Button.AuraFilter = IsDebuff and HarmState or HelpState
+        Button.AuraIndex = Index
+
+        -- Cache
         PreviousButton = Button
         Active = Active + 1
     end
