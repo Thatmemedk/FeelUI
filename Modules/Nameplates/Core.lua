@@ -48,13 +48,7 @@ function NP:UpdateHealth(Frame, Unit)
     else
         Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
 
-        local HealthColorCurve = C_CurveUtil.CreateColorCurve()
-        HealthColorCurve:SetType(Enum.LuaCurveType.Cosine)
-        HealthColorCurve:AddPoint(0, CreateColor(0.6, 0, 0, 0.7))
-        HealthColorCurve:AddPoint(0.90, CreateColor(0.6, 0.6, 0, 0.7))
-        HealthColorCurve:AddPoint(1, CreateColor(Color.r, Color.g, Color.b, 0.7))
-
-        local Color = UnitHealthPercent(Unit, true, HealthColorCurve)
+        local Color = UnitHealthPercent(Unit, true, UI.HealthColorCurve)
         Frame.Health:GetStatusBarTexture():SetVertexColor(Color:GetRGB())
     end
 

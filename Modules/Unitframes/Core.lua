@@ -121,13 +121,7 @@ function UF:UpdateHealth(Frame)
         else
             Frame.Health:SetStatusBarColor(unpack(DB.Global.UnitFrames.HealthBarColor))
 
-            local HealthColorCurve = C_CurveUtil.CreateColorCurve()
-            HealthColorCurve:SetType(Enum.LuaCurveType.Cosine)
-            HealthColorCurve:AddPoint(0, CreateColor(0.6, 0, 0, 0.7))
-            HealthColorCurve:AddPoint(0.90, CreateColor(0.6, 0.6, 0, 0.7))
-            HealthColorCurve:AddPoint(1, CreateColor(unpack(DB.Global.UnitFrames.HealthBarColor)))
-
-            local Color = UnitHealthPercent(Unit, true, HealthColorCurve)
+            local Color = UnitHealthPercent(Unit, true, UI.HealthColorCurve)
             Frame.Health:GetStatusBarTexture():SetVertexColor(Color:GetRGB())
         end
 
@@ -558,41 +552,36 @@ function UF:UpdatePhaseIcon(Frame)
     end
 end
 
-function UF:UpdateReadyCheckIcon(Frame, event)
+function UF:UpdateReadyCheckIcon(Frame, Event)
     if (not Frame or not Frame.unit or not Frame.ReadyCheckIcon) then
         return
     end
 
-    if (Frame.Animation.FadeOut and Frame.Animation.FadeOut:IsPlaying()) then
-        Frame.Animation.FadeOut:Stop()
+    local Unit = Frame.unit
+    local Status = GetReadyCheckStatus(Unit)
+
+    if (Status) then
+        if (Status == "ready") then
+            Frame.ReadyCheckIcon:SetTexture(READY_CHECK_READY_TEXTURE)
+        elseif (Status == "notready") then
+            Frame.ReadyCheckIcon:SetTexture(READY_CHECK_NOT_READY_TEXTURE)
+        else
+            Frame.ReadyCheckIcon:SetTexture(READY_CHECK_WAITING_TEXTURE)
+        end
+
+        Frame.ReadyCheckIcon.Status = Status
+        Frame.ReadyCheckIcon:Show()
+    elseif (Event ~= "READY_CHECK_FINISHED") then
+        Frame.ReadyCheckIcon.Status = nil
+        Frame.ReadyCheckIcon:Hide()
     end
 
-    local Unit = Frame.unit
-    local GetReadyCheckStatus = GetReadyCheckStatus(Unit)
-
-    if (GetReadyCheckStatus == "ready") then
-        Frame.ReadyCheckIcon:SetTexture(READY_CHECK_READY_TEXTURE)
-        Frame.ReadyCheckIcon:Show()
-    elseif (GetReadyCheckStatus == "notready") then
-        Frame.ReadyCheckIcon:SetTexture(READY_CHECK_NOT_READY_TEXTURE)
-        Frame.ReadyCheckIcon:Show()
-    elseif (GetReadyCheckStatus == "waiting") then
-        Frame.ReadyCheckIcon:SetTexture(READY_CHECK_WAITING_TEXTURE)
-        Frame.ReadyCheckIcon:Show()
-    else
-        if (event == "READY_CHECK_FINISHED") then
-            if (not Frame.ReadyCheckFadePending) then
-                Frame.ReadyCheckFadePending = true
-
-                C_Timer.After(5, function()
-                    Frame.ReadyCheckFadePending = nil
-
-                    if (Frame.ReadyCheckIcon:IsShown() and Frame.Animation.FadeOut) then
-                        Frame.Animation.FadeOut:Play()
-                    end
-                end)
-            end
+    if (Event == "READY_CHECK_FINISHED") then
+        if (Frame.ReadyCheckIcon.Status == "waiting") then
+            Frame.ReadyCheckIcon:SetTexture(READY_CHECK_NOT_READY_TEXTURE)
         end
+
+        Frame.ReadyCheckIcon.Animation:Play()
     end
 end
 

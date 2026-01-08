@@ -10,6 +10,46 @@ local unpack = unpack
 -- WoW Globals
 local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
 
+function NP:UpdateCooldownTextColor(Cooldown, Elapsed)
+    if (not Cooldown:IsShown()) then
+        return
+    end
+
+    Cooldown.Elapsed = (Cooldown.Elapsed or 0) + Elapsed
+
+    if (Cooldown.Elapsed < 0.1) then
+        return
+    end
+
+    Cooldown.Elapsed = 0
+
+    local Button = Cooldown:GetParent()
+
+    if (not Button or not Button.Unit or not Button.AuraInstanceID) then
+        return
+    end
+
+    local Duration = C_UnitAuras.GetAuraDuration(Button.Unit, Button.AuraInstanceID)
+
+    if (not Duration) then
+        return
+    end
+
+    local EvaluateDuration = Duration:EvaluateRemainingDuration(UI.CooldownColorCurve)
+
+    if (not EvaluateDuration) then
+        return
+    end
+
+    for i = 1, Cooldown:GetNumRegions() do
+        local Region = select(i, Cooldown:GetRegions())
+
+        if (Region and Region.GetText) then
+            Region:SetVertexColor(EvaluateDuration:GetRGBA())
+        end
+    end
+end
+
 function NP:UpdateAuras(Frame, Unit, IsDebuff)
     local Auras = IsDebuff and Frame.Debuffs or Frame.Buffs
 
@@ -101,20 +141,15 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
                         Region:ClearAllPoints()
                         Region:Point("CENTER", Button.Overlay, 0, -8)
                         Region:SetFontTemplate("Default")
-
-                        --[[
-                        local CooldownColorCurve = C_CurveUtil.CreateColorCurve()
-                        CooldownColorCurve:SetType(Enum.LuaCurveType.Step)
-                        CooldownColorCurve:AddPoint(0, CreateColor(unpack(DB.Global.CooldownFrame.ExpireColor)))
-                        CooldownColorCurve:AddPoint(9, CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor)))
-                        CooldownColorCurve:AddPoint(29, CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor2)))
-                        CooldownColorCurve:AddPoint(59, CreateColor(unpack(DB.Global.CooldownFrame.NormalColor)))
-
-                        local AuraDuration = C_UnitAuras.GetAuraDuration(Unit, AuraInstanceID)
-                        local EvaluateDuration = AuraDuration:EvaluateRemainingDuration(CooldownColorCurve)
-                        Region:SetVertexColor(EvaluateDuration:GetRGBA())
-                        --]]
                     end
+                end
+
+                if (not Button.Cooldown.CDIsHooked) then
+                    Button.Cooldown:HookScript("OnUpdate", function(self, Elapsed)
+                        NP:UpdateCooldownTextColor(self, Elapsed)
+                    end)
+
+                    Button.Cooldown.CDIsHooked = true
                 end
             else
                 Button.Cooldown:Hide()

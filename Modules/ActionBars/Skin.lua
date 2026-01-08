@@ -17,6 +17,47 @@ function AB:SafeHide(Frame)
     end
 end
 
+function AB:UpdateCooldownTextColor(Cooldown, Elapsed)
+    if (not Cooldown:IsShown()) then
+        return
+    end
+
+    Cooldown.Elapsed = (Cooldown.Elapsed or 0) + Elapsed
+
+    if (Cooldown.Elapsed < 0.1) then
+        return
+    end
+
+    Cooldown.Elapsed = 0
+
+    local Button = Cooldown:GetParent()
+    local ActionID = Button.action
+
+    if (not ActionID) then
+        return
+    end
+
+    local Duration = C_ActionBar.GetActionCooldownDuration(ActionID)
+
+    if (not Duration) then
+        return
+    end
+
+    local EvaluateDuration = Duration:EvaluateRemainingDuration(UI.CooldownColorCurve)
+
+    if (not EvaluateDuration) then
+        return
+    end
+
+    for i = 1, Cooldown:GetNumRegions() do
+        local Region = select(i, Cooldown:GetRegions())
+
+        if (Region and Region.GetText) then
+            Region:SetVertexColor(EvaluateDuration:GetRGBA())
+        end
+    end
+end
+
 function AB:StyleActionButton(Button, Icon, Name)
     if (not Button or Button.ActionBarButtonsIsSkinned) then 
         return 
@@ -95,8 +136,15 @@ function AB:StyleActionButton(Button, Icon, Name)
                 Region:ClearAllPoints()
                 Region:Point("CENTER", Button, 0, 0)
                 Region:SetFontTemplate("Default", FontSize)
-                Region:SetTextColor(1, 0.82, 0)
             end
+        end
+
+        if (not Cooldown.CDIsHooked) then
+            Cooldown:HookScript("OnUpdate", function(self, Elapsed)
+                AB:UpdateCooldownTextColor(self, Elapsed)
+            end)
+
+            Cooldown.CDIsHooked = true
         end
     end
 

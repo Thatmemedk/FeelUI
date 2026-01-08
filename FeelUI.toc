@@ -16,5 +16,6 @@ Language\Load_Language.xml
 Core\Load_Core.xml
 Media\Load_Media.xml
 Settings\Load_Settings.xml
+Curves\Load_Curves.xml
 Modules\Load_Modules.xml
 Dev\Load_Dev.xml

@@ -1,6 +1,9 @@
 local UI, DB, Media, Language = select(2, ...):Call()
+
+-- Call Modules
 local AB = UI:CallModule("ActionBars")
 
+-- Lib Globals
 local _G = _G
 local unpack = unpack
 
@@ -109,6 +112,17 @@ function AB:CreateBarPet()
     end
 
     self:SkinPetButtons()
+
+    Bar:RegisterEvent("PLAYER_CONTROL_LOST")
+    Bar:RegisterEvent("PLAYER_CONTROL_GAINED")
+    Bar:RegisterEvent("PLAYER_FARSIGHT_FOCUS_CHANGED")
+    Bar:RegisterEvent("UNIT_PET")
+    Bar:RegisterEvent("UNIT_FLAGS")
+    Bar:RegisterEvent("PET_BAR_UPDATE")
+    Bar:RegisterEvent("PET_BAR_UPDATE_COOLDOWN")
+    Bar:SetScript("OnEvent", function(self, event, ...)         
+        AB:UpdatePetBar()
+    end)
 
     RegisterStateDriver(Bar, "visibility", "[@pet,exists,nopossessbar] show; hide")
 end

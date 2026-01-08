@@ -67,6 +67,46 @@ function Auras:OnUpdate(elapsed)
 	end
 end
 
+function Auras:UpdateCooldownTextColor(Cooldown, Elapsed)
+    if (not Cooldown:IsShown()) then
+        return
+    end
+
+    Cooldown.Elapsed = (Cooldown.Elapsed or 0) + Elapsed
+
+    if (Cooldown.Elapsed < 0.1) then
+        return
+    end
+
+    Cooldown.Elapsed = 0
+
+    local Button = Cooldown:GetParent()
+
+    if (not Button or not Button.Unit or not Button.AuraInstanceID) then
+        return
+    end
+
+    local Duration = C_UnitAuras.GetAuraDuration(Button.Unit, Button.AuraInstanceID)
+
+    if (not Duration) then
+        return
+    end
+
+    local EvaluateDuration = Duration:EvaluateRemainingDuration(UI.CooldownColorCurve)
+
+    if (not EvaluateDuration) then
+        return
+    end
+
+    for i = 1, Cooldown:GetNumRegions() do
+        local Region = select(i, Cooldown:GetRegions())
+
+        if (Region and Region.GetText) then
+            Region:SetVertexColor(EvaluateDuration:GetRGBA())
+        end
+    end
+end
+
 function Auras:UpdateAura(Index)
 	local Unit = self:GetParent():GetAttribute("unit")
 	local AuraData = GetAuraDataByIndex(Unit, Index, self.Filter)
@@ -99,21 +139,16 @@ function Auras:UpdateAura(Index)
 					Region:ClearAllPoints()
 					Region:Point("CENTER", self.InvisFrame, 0, -8)
 					Region:SetFontTemplate("Default")
-
-					--[[
-					local Curve = C_CurveUtil.CreateColorCurve()
-					Curve:SetType(Enum.LuaCurveType.Step)
-					Curve:AddPoint(0,  CreateColor(unpack(DB.Global.CooldownFrame.ExpireColor)))
-					Curve:AddPoint(9,  CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor)))
-					Curve:AddPoint(29, CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor2)))
-					Curve:AddPoint(59, CreateColor(unpack(DB.Global.CooldownFrame.NormalColor)))
-
-					local AuraDuration = C_UnitAuras.GetAuraDuration("player", AuraData.auraInstanceID)
-					local EvaluateDuration = AuraDuration:EvaluateRemainingDuration(Curve)
-					Region:SetVertexColor(EvaluateDuration:GetRGBA())
-					--]]
 				end
 			end
+
+		    if (not self.Cooldown.CDIsHooked) then
+	            self.Cooldown:HookScript("OnUpdate", function(self, Elapsed)
+	                Auras:UpdateCooldownTextColor(self, Elapsed)
+	            end)
+
+	            self.Cooldown.CDIsHooked = true
+	        end
 		end
 	else
 		self.Cooldown:Hide()

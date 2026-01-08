@@ -176,7 +176,7 @@ DB.Global = {
 		CastBarColor = { 0.45, 0.45, 0.45, 0.7 },
 		CastBarInterruptColor = { 0.67, 0, 0, 0.70 },
 		-- Portraits
-		Portraits = false,
+		Portraits = true,
 		-- Points Settings
 		PlayerPoint = { "BOTTOMLEFT", _G.UIParent, 482, 244 },
 		TargetPoint = { "BOTTOMRIGHT", _G.UIParent, -482, 244 },
