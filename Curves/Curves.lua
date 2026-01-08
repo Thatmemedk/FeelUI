@@ -26,11 +26,19 @@ end
 
 -- HEALTH CURVE
 
-UI.HealthColorCurve = C_CurveUtil.CreateColorCurve()
-UI.HealthColorCurve:SetType(Enum.LuaCurveType.Cosine)
-UI.HealthColorCurve:AddPoint(0, CreateColor(0.6, 0, 0, 0.7))
-UI.HealthColorCurve:AddPoint(0.90, CreateColor(0.6, 0.6, 0, 0.7))
-UI.HealthColorCurve:AddPoint(1, CreateColor(unpack(DB.Global.UnitFrames.HealthBarColor)))
+UI.UnitFramesHealthColorCurve = C_CurveUtil.CreateColorCurve()
+UI.UnitFramesHealthColorCurve:SetType(Enum.LuaCurveType.Cosine)
+UI.UnitFramesHealthColorCurve:AddPoint(0, CreateColor(0.6, 0, 0, 0.7))
+UI.UnitFramesHealthColorCurve:AddPoint(0.90, CreateColor(0.6, 0.6, 0, 0.7))
+UI.UnitFramesHealthColorCurve:AddPoint(1, CreateColor(unpack(DB.Global.UnitFrames.HealthBarColor)))
+
+-- NAMEPLATES CURVE
+
+UI.NameplatesHealthColorCurve = C_CurveUtil.CreateColorCurve()
+UI.NameplatesHealthColorCurve:SetType(Enum.LuaCurveType.Cosine)
+UI.NameplatesHealthColorCurve:AddPoint(0, CreateColor(0.6, 0, 0, 0.7))
+UI.NameplatesHealthColorCurve:AddPoint(0.90, CreateColor(0.6, 0.6, 0, 0.7))
+UI.NameplatesHealthColorCurve:AddPoint(1, CreateColor(unpack(DB.Global.Nameplates.HealthBarColor)))
 
 -- COOLDOWN CURVE
 

@@ -54,6 +54,7 @@ function UF:SetupGroupFrame(Frame, type)
         -- AURAS
         UF:UpdateAuras(self, self.unit, true)
         UF:UpdateAuras(self, self.unit, false)
+        UF:UpdateAuras(self, self.unit, false, true)
         -- ICONS
         UF:UpdateRaidIcon(self)
         UF:UpdateResurrectionIcon(self)
@@ -63,7 +64,7 @@ function UF:SetupGroupFrame(Frame, type)
         UF:UpdatePhaseIcon(self)
         UF:UpdateReadyCheckIcon(self)
         -- THREAT
-        --UF:UpdateThreatHighlightRaid(self)
+        UF:UpdateThreatHighlightRaid(self)
         -- DEBUFF HIGHLIGHT
         --UF:UpdateDebuffHighlight(self, self.unit)
         -- RANGE

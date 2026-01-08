@@ -53,11 +53,15 @@ function NP:UpdateCooldownTextColor(Cooldown, Elapsed)
     end
 end
 
-function NP:UpdateAuras(Frame, Unit, IsDebuff)
-    local Auras = IsDebuff and Frame.Debuffs or Frame.Buffs
-
-    if (not Auras) then
+function NP:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
+    if (not Frame or not Unit) then
         return
+    end
+
+    local Auras = IsDebuff and Frame.Debuffs or IsExternal and Frame.External or Frame.Buffs
+
+    if (not Auras or not Auras.Filter) then 
+        return 
     end
 
     local ButtonWidth = Auras.Width or 16
@@ -65,9 +69,6 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
     local Spacing = Auras.Spacing or 4
     local Direction = Auras.Direction or "RIGHT"
     local MaxAuras = Auras.NumAuras or 6
-    local OnlyPlayer = Auras.ShowOnlyPlayer
-    local HarmState = OnlyPlayer and "HARMFUL|PLAYER" or "HARMFUL"
-    local HelpState = OnlyPlayer and "HELPFUL|PLAYER" or "HELPFUL"
     local AuraMinCount = 2
     local AuraMaxCount = 99
     local Active = 0
@@ -79,14 +80,14 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
         Button:ClearAllPoints()
     end
 
-    if UnitIsUnit("target", Unit) then
+    if (UnitIsUnit("target", Unit)) then
         UI:UIFrameFadeIn(Auras, NP.FadeInTime, Auras:GetAlpha(), 1)
     else
         UI:UIFrameFadeOut(Auras, NP.FadeInTime, Auras:GetAlpha(), 0.5)
     end
 
     while Active < MaxAuras do
-        local AuraData = GetAuraDataByIndex(Unit, Index, IsDebuff and HarmState or HelpState)
+        local AuraData = GetAuraDataByIndex(Unit, Index, Auras.Filter)
         Index = Index + 1
 
         if (not AuraData or not AuraData.name) then
@@ -107,7 +108,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
         Button:Size(ButtonWidth, ButtonHeight)
         Button:ClearAllPoints()
 
-        if not PreviousButton then
+        if (not PreviousButton) then
             if (Direction == "RIGHT") then
                 Button:Point("TOPLEFT", Auras, "TOPLEFT", 0, 0)
             else
@@ -172,7 +173,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff)
         -- Cache
         Button.Unit = Unit
         Button.AuraInstanceID = AuraInstanceID
-        Button.AuraFilter = IsDebuff and HarmState or HelpState
+        Button.AuraFilter = Auras.Filter
         Button.AuraIndex = Index
 
         -- Cache
@@ -216,19 +217,22 @@ function NP:CreateAuraButton(Frame, ExtraBorder)
     return Button
 end
 
-function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, Point, PointX, PointY, InitialAnchor, Direction, NumAuras, ShowOnlyPlayer, ExtraBorder)
+function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, AnchorPoint, OffsetX, OffsetY, Direction, InitialAnchor, NumAuras, Filter, ExtraBorder)
     local Container = CreateFrame("Frame", nil, Frame)
-    Container:Size(100, 100)
-    Container:Point(Point or "TOPLEFT", Frame, PointX or 0, PointY or 0)
-    Container:SetAlpha(0.5)
     Container.Width = ButtonWidth
     Container.Height = ButtonHeight
-    Container.NumAuras = NumAuras
     Container.Spacing = Spacing
-    Container.InitialAnchor = InitialAnchor
     Container.Direction = Direction
-    Container.ShowOnlyPlayer = ShowOnlyPlayer
+    Container.InitialAnchor = InitialAnchor
+    Container.NumAuras = NumAuras
+    Container.Filter = Filter -- HELPFUL; HARMFUL; HELPFUL|PLAYER; HARMFUL|PLAYER; "HARMFUL|RAID"; "HELPFUL|RAID"; "HELPFUL|EXTERNAL_DEFENSIVE";
     Container.Buttons = {}
+    Container:SetAlpha(0.5)
+
+    local TotalWidth = (ButtonWidth * NumAuras) + (Spacing * (NumAuras - 1))
+
+    Container:Size(TotalWidth, ButtonHeight)
+    Container:Point(AnchorPoint, Frame, AnchorPoint, OffsetX or 0, OffsetY or 0)
 
     for i = 1, NumAuras do
         local Button = NP:CreateAuraButton(Container, ExtraBorder)
@@ -245,5 +249,5 @@ function NP:CreateDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = NP:CreateAuraContainer(Frame, 30, 18, 4, "TOPLEFT", -24, 28, "TOPRIGHT", "RIGHT", 7, true, true)
+    Frame.Debuffs = NP:CreateAuraContainer(Frame, 30, 12, 4, "TOPLEFT", -24, 28, "RIGHT", "LEFT", 7, "HARMFUL|PLAYER", true)
 end

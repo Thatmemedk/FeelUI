@@ -96,10 +96,7 @@ function UF:UpdateHealth(Frame)
     Frame.Health:SetMinMaxValues(0, Max)
     Frame.Health:SetValue(Min, UI.SmoothBars)
 
-    if not (UnitIsConnected(Unit)) then
-        Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
-        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
-    elseif (UnitIsTapDenied(Unit) or UnitIsGhost(Unit)) then
+    if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit)) then
         Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
         Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
     elseif (UnitIsDead(Unit)) then
@@ -107,13 +104,13 @@ function UF:UpdateHealth(Frame)
         Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
     else
         if (DB.Global.UnitFrames.ClassColor) then
-            if (UnitIsPlayer(Unit)) then
+            if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
                 local _, Class = UnitClass(Unit)
                 local Color = UI.Colors.Class[Class]
 
                 Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
             else
-                local Reaction = UnitReaction(Unit, "player") or 5
+                local Reaction = UnitReaction(Unit, "player")
                 local Color = UI.Colors.Reaction[Reaction]
 
                 Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
@@ -121,8 +118,8 @@ function UF:UpdateHealth(Frame)
         else
             Frame.Health:SetStatusBarColor(unpack(DB.Global.UnitFrames.HealthBarColor))
 
-            local Color = UnitHealthPercent(Unit, true, UI.HealthColorCurve)
-            Frame.Health:GetStatusBarTexture():SetVertexColor(Color:GetRGB())
+            local CurveColor = UnitHealthPercent(Unit, true, UI.UnitFramesHealthColorCurve)
+            Frame.Health:GetStatusBarTexture():SetVertexColor(CurveColor:GetRGB())
         end
 
         Frame.Health:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
@@ -137,7 +134,7 @@ function UF:UpdateHealthTextCur(Frame)
     local Unit = Frame.unit
     local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
 
-    if not (UnitIsConnected(Unit)) then
+    if (not UnitIsConnected(Unit)) then
         Frame.HealthTextCur:SetText(PLAYER_OFFLINE)
         Frame.HealthTextCur:SetTextColor(0.35, 0.35, 0.35)
     elseif (UnitIsGhost(Unit)) then
@@ -316,7 +313,7 @@ function UF:UpdateName(Frame, TypeFrame)
     if (DB.Global.UnitFrames.ClassColor) then
         Frame.Name:SetTextColor(1, 1, 1)
     else
-        if (UnitIsPlayer(Unit) or Unit == "pet") then
+        if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
             local _, Class = UnitClass(Unit)
             local Color = UI.Colors.Class[Class]
 
@@ -365,7 +362,7 @@ function UF:UpdateTargetNameLevel(Frame)
     if (DB.Global.UnitFrames.ClassColor) then
         NameColor = format("|cff%02x%02x%02x", 1*255, 1*255, 1*255)
     else
-        if (UnitIsPlayer(Unit)) then
+        if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
             local _, Class = UnitClass(Unit)
             local Color = UI.Colors.Class[Class]
 
@@ -396,7 +393,6 @@ function UF:UpdateTargetNameLevel(Frame)
     end
 
     Frame.NameLevel:SetText(format("%s%s|r %s%s|r", NameColor or "", Name, LevelColor or "", LevelText))
-    --Frame.NameLevel:SetText(format("%s%s|r %s%s|r", NameColor or "", NameAbbrev(Name), LevelColor or "", LevelText))
 end
 
 -- UPDATE PORTRAITS

@@ -34,27 +34,27 @@ function NP:UpdateHealth(Frame, Unit)
     end
 
     local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
-    local Reaction = UnitReaction(Unit, "player") or 5
+    local Reaction = UnitReaction(Unit, "player")
     local Color = UI.Colors.Reaction[Reaction]
+
     Frame.Health:SetMinMaxValues(0, Max)
     Frame.Health:SetValue(Min, UI.SmoothBars)
 
-    if not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit) then
+    if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit)) then
         Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
         Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
-    elseif UnitIsDead(Unit) then
+    elseif (UnitIsDead(Unit)) then
         Frame.Health:SetStatusBarColor(0.25, 0, 0)
         Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
     else
-        Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
+        Frame.Health:SetStatusBarColor(unpack(DB.Global.Nameplates.HealthBarColor))
+        Frame.Health:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
 
-        local Color = UnitHealthPercent(Unit, true, UI.HealthColorCurve)
-        Frame.Health:GetStatusBarTexture():SetVertexColor(Color:GetRGB())
+        local CurveColor = UnitHealthPercent(Unit, true, UI.NameplatesHealthColorCurve)
+        Frame.Health:GetStatusBarTexture():SetVertexColor(CurveColor:GetRGB())
     end
 
-    Frame.Health:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
-
-    if UnitIsUnit("target", Unit) then
+    if (UnitIsUnit("target", Unit)) then
         UI:UIFrameFadeOut(Frame.Health, NP.FadeInTime, Frame.Health:GetAlpha(), 1)
     else
         UI:UIFrameFadeOut(Frame.Health, NP.FadeInTime, Frame.Health:GetAlpha(), 0.5)
@@ -69,7 +69,7 @@ function NP:UpdateHealthText(Frame, Unit)
     local Percent = UnitHealthPercent(Unit, false, UI.CurvePercent)
     Frame.HealthText:SetFormattedText("%d%%", Percent or 0)
 
-    if UnitIsUnit("target", Unit) then
+    if (UnitIsUnit("target", Unit)) then
         UI:UIFrameFadeOut(Frame.HealthText, NP.FadeInTime, Frame.HealthText:GetAlpha(), 1)
     else
         UI:UIFrameFadeOut(Frame.HealthText, NP.FadeInTime, Frame.HealthText:GetAlpha(), 0.5)
@@ -86,19 +86,19 @@ function NP:UpdateName(Frame, Unit)
     local Name = UnitName(Unit) or ""
     Frame.Name:SetText(Name)
 
-    if UnitIsPlayer(Unit) then
+    if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
         local _, Class = UnitClass(Unit)
         local Color = UI.Colors.Class[Class]
 
         Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
     else
-        local Reaction = UnitReaction(Unit, "player") or 5
+        local Reaction = UnitReaction(Unit, "player")
         local Color = UI.Colors.Reaction[Reaction]
 
         Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
     end
 
-    if UnitIsUnit("target", Unit) then
+    if (UnitIsUnit("target", Unit)) then
         UI:UIFrameFadeOut(Frame.Name, NP.FadeInTime, Frame.Name:GetAlpha(), 1)
     else
         UI:UIFrameFadeOut(Frame.Name, NP.FadeInTime, Frame.Name:GetAlpha(), 0.5)
@@ -142,7 +142,7 @@ end
 -- HIGHLIGHT
 
 function NP:HighlightOnNameplateTarget(Frame, Unit)
-    if UnitIsUnit("target", Unit) then
+    if (UnitIsUnit("target", Unit)) then
         Frame.TargetIndicator.Left:Show()
         Frame.TargetIndicator.Right:Show()
     else
