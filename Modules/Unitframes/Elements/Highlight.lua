@@ -31,27 +31,26 @@ function UF:CreatePanels(Frame)
     Frame.InvisFrameHigher = InvisFrameHigher
 end
 
-function UF:HighlightOnMouse()
-    local GMF = UI:GetMouseFocus()
-
-    if (GMF == self and UnitExists(self.unit)) then
-        self.Highlight:Show()
-        self.Highlight:SetStatusBarColor(1, 1, 1, 0.05)
-    else
-        self.Highlight:Hide()
-        self.Highlight:SetStatusBarColor(0, 0, 0, 0)
-    end
-end
-
 function UF:CreateHightlight(Frame)
     local Highlight = CreateFrame("StatusBar", nil, Frame)
     Highlight:SetFrameLevel(Frame:GetFrameLevel() + 10)
     Highlight:SetInside()
     Highlight:SetStatusBarTexture(Media.Global.Texture)
+    Highlight:SetStatusBarColor(1, 1, 1, 0.05)
     Highlight:Hide()
     
     Frame:HookScript("OnEnter", self.HighlightOnMouse)
     Frame:HookScript("OnLeave", self.HighlightOnMouse)
     
     Frame.Highlight = Highlight
+end
+
+function UF:HighlightOnMouse()
+    local GMF = UI:GetMouseFocus()
+
+    if (GMF == self and UnitExists(self.unit)) then
+        self.Highlight:Show()
+    else
+        self.Highlight:Hide()
+    end
 end

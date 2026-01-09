@@ -21,6 +21,7 @@ local UnitThreatSituation = UnitThreatSituation
 -- Locals
 NP.Hooked = {}
 NP.ForcedCasters = {}
+NP.Range = {}
 
 -- Locals
 NP.FadeInTime = 0.5
@@ -50,14 +51,8 @@ function NP:UpdateHealth(Frame, Unit)
         Frame.Health:SetStatusBarColor(unpack(DB.Global.Nameplates.HealthBarColor))
         Frame.Health:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
 
-        local CurveColor = UnitHealthPercent(Unit, true, UI.NameplatesHealthColorCurve)
-        Frame.Health:GetStatusBarTexture():SetVertexColor(CurveColor:GetRGB())
-    end
-
-    if (UnitIsUnit("target", Unit)) then
-        UI:UIFrameFadeOut(Frame.Health, NP.FadeInTime, Frame.Health:GetAlpha(), 1)
-    else
-        UI:UIFrameFadeOut(Frame.Health, NP.FadeInTime, Frame.Health:GetAlpha(), 0.5)
+        --local CurveColor = UnitHealthPercent(Unit, true, UI.NameplatesHealthColorCurve)
+        --Frame.Health:GetStatusBarTexture():SetVertexColor(CurveColor:GetRGB())
     end
 end
 
@@ -68,12 +63,6 @@ function NP:UpdateHealthText(Frame, Unit)
 
     local Percent = UnitHealthPercent(Unit, false, UI.CurvePercent)
     Frame.HealthText:SetFormattedText("%d%%", Percent or 0)
-
-    if (UnitIsUnit("target", Unit)) then
-        UI:UIFrameFadeOut(Frame.HealthText, NP.FadeInTime, Frame.HealthText:GetAlpha(), 1)
-    else
-        UI:UIFrameFadeOut(Frame.HealthText, NP.FadeInTime, Frame.HealthText:GetAlpha(), 0.5)
-    end
 end
 
 -- NAME UPDATE
@@ -96,12 +85,6 @@ function NP:UpdateName(Frame, Unit)
         local Color = UI.Colors.Reaction[Reaction]
 
         Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
-    end
-
-    if (UnitIsUnit("target", Unit)) then
-        UI:UIFrameFadeOut(Frame.Name, NP.FadeInTime, Frame.Name:GetAlpha(), 1)
-    else
-        UI:UIFrameFadeOut(Frame.Name, NP.FadeInTime, Frame.Name:GetAlpha(), 0.5)
     end
 end
 
@@ -141,13 +124,19 @@ end
 
 -- HIGHLIGHT
 
-function NP:HighlightOnNameplateTarget(Frame, Unit)
+function NP:UpdateTargetIndicator(Frame, Unit)
     if (UnitIsUnit("target", Unit)) then
-        Frame.TargetIndicator.Left:Show()
-        Frame.TargetIndicator.Right:Show()
+        Frame.TargetIndicator:Show()
     else
-        Frame.TargetIndicator.Left:Hide()
-        Frame.TargetIndicator.Right:Hide()
+        Frame.TargetIndicator:Hide()
+    end
+end
+
+function NP:UpdateHighlight(Frame, Unit)
+    if (UnitIsUnit("target", Unit)) then
+        Frame.Highlight:Show()
+    else
+        Frame.Highlight:Hide()
     end
 end
 
@@ -176,8 +165,10 @@ function NP:UpdateEnemyPlates(Frame)
     if (Frame.Name) then self:UpdateName(Frame, Frame.Unit) end
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame, Frame.Unit) end
+    -- TARGET INDICATOR
+    if (Frame.TargetIndicator) then self:UpdateTargetIndicator(Frame, Frame.Unit) end
     -- HIGHLIGHT
-    if (Frame.TargetIndicator) then self:HighlightOnNameplateTarget(Frame, Frame.Unit) end
+    if (Frame.Highlight) then self:UpdateHighlight(Frame, Frame.Unit) end
     -- THREAT
     if (Frame.Threat) then self:UpdateThreatHighlight(Frame, Frame.Unit) end
     -- AURAS
@@ -324,18 +315,18 @@ end
 -- SET CVARS
 
 function NP:SetCVarOnLogin()
-    SetCVar("nameplateSelectedScaleEnabled", 1)
-    SetCVar("nameplateSelectedScale", 1)
-    SetCVar("nameplateSelectedScaleFactor", 1)
-    SetCVar("nameplateGlobalScale", 1)
-    SetCVar("nameplateMinScale", 1)
-    SetCVar("nameplateShowSelf", 0)
-    SetCVar("nameplateMotion", 0)
-    SetCVar("nameplateShowAll", 1)
-    SetCVar("nameplateShowFriends", 0)
-    SetCVar("nameplateShowEnemies", 1)
-    SetCVar("nameplateShowEnemyMinion", 1)
-    SetCVar("nameplateShowEnemyMinus", 1)
+    C_CVar.SetCVar("nameplateSelectedScaleEnabled", 1)
+    C_CVar.SetCVar("nameplateSelectedScale", 1)
+    C_CVar.SetCVar("nameplateSelectedScaleFactor", 1)
+    C_CVar.SetCVar("nameplateGlobalScale", 1)
+    C_CVar.SetCVar("nameplateMinScale", 1)
+    C_CVar.SetCVar("nameplateShowSelf", 0)
+    C_CVar.SetCVar("nameplateMotion", 0)
+    C_CVar.SetCVar("nameplateShowAll", 1)
+    C_CVar.SetCVar("nameplateShowFriends", 0)
+    C_CVar.SetCVar("nameplateShowEnemies", 1)
+    C_CVar.SetCVar("nameplateShowEnemyMinion", 1)
+    C_CVar.SetCVar("nameplateShowEnemyMinus", 1)
 end
 
 -- REGISTER EVENTS

@@ -18,7 +18,7 @@ local UnitClass = UnitClass
 local UnitEffectiveLevel = UnitEffectiveLevel
 
 function NP:GetUnitColor(Unit, IsCaster)
-    if not UnitExists(Unit) then
+    if (not UnitExists(Unit)) then
         return
     end
 
@@ -37,15 +37,15 @@ function NP:GetUnitColor(Unit, IsCaster)
         return UI.Colors.Classification.CASTER
     end
 
-    if UnitIsBossMob(Unit) then
+    if (UnitIsBossMob(Unit)) then
         return UI.Colors.Classification.BOSS
     end
 
-    if UnitIsLieutenant(Unit) then
+    if (UnitIsLieutenant(Unit)) then
         return UI.Colors.Classification.RARE
     end
 
-    if not UnitAffectingCombat(Unit) and UnitReaction(Unit, "player") == 4 then
+    if (not UnitAffectingCombat(Unit) and UnitReaction(Unit, "player") == 4) then
         return UI.Colors.Reaction[Reaction]
     end
 

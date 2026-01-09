@@ -29,20 +29,11 @@ function SoulFragmentsBar:CreateBar()
     Text:Point("CENTER", Bar, 0, 6)
     Text:SetFontTemplate("Default", 16)
 
-    DemonHunterSoulFragmentsBar:Show()
-    DemonHunterSoulFragmentsBar:SetParent(_G.UIParent)
-    DemonHunterSoulFragmentsBar:ClearAllPoints()
-    DemonHunterSoulFragmentsBar:Point(unpack(DB.Global.DataBars.SoulFragmentsBarPoint))
-    DemonHunterSoulFragmentsBar:SetAlpha(0)
-
     self.Bar = Bar
     self.Text = Text
 end
 
 function SoulFragmentsBar:Update()
-    local Min, Max = DemonHunterSoulFragmentsBar:GetMinMaxValues()
-    local Current = DemonHunterSoulFragmentsBar:GetValue() 
-
     self.Bar:SetMinMaxValues(0, Max)
     self.Bar:SetValue(Current, UI.SmoothBars)
     self.Text:SetText(Current)
@@ -59,16 +50,17 @@ function SoulFragmentsBar:UpdateSpec()
 end
 
 function SoulFragmentsBar:OnEvent(event, ...)
+    if (event == "UNIT_AURA" and unit ~= "player") then 
+        return 
+    end
+    
     self:Update()
     self:UpdateSpec()
 end
 
 function SoulFragmentsBar:RegisterEvents()
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:RegisterEvent("UNIT_POWER_FREQUENT")
-    self:RegisterEvent("UNIT_MAXPOWER")
-    self:RegisterEvent("UNIT_POWER_UPDATE")
-    self:RegisterEvent("UNIT_DISPLAYPOWER")
+    self:RegisterEvent("UNIT_AURA")
     self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
     self:RegisterEvent("PLAYER_TALENT_UPDATE")
     self:RegisterEvent("SPELLS_CHANGED")

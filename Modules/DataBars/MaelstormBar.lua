@@ -4,9 +4,6 @@ local UI, DB, Media, Language = select(2, ...):Call()
 local MaelstromBar = UI:RegisterModule("MaelstromBar")
 
 -- WoW Globals
-local CreateFrame = CreateFrame
-local UnitClass = UnitClass
-local GetSpecialization = GetSpecialization
 local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
 
 -- Locals
@@ -14,22 +11,14 @@ local Class = select(2, UnitClass("player"))
 
 -- Colors
 local R, G, B = unpack(UI.GetClassColors)
-
--- Colors
 local Mult = 0.5
 
 function MaelstromBar:CreateBar()
     local Bar = CreateFrame("Frame", nil, _G.UIParent)
     Bar:SetFrameStrata("LOW")
-    Bar:Size(222, 12)
+    Bar:Size(242, 12)
     Bar:Point(unpack(DB.Global.DataBars.MaelstromBarPoint))
     Bar:Hide()
-
-    local Backdrop = CreateFrame("Frame", nil, Bar)
-    Backdrop:Size(222, 12)
-    Backdrop:SetFrameLevel(Bar:GetFrameLevel() - 1)
-    Backdrop:Point("CENTER", Bar, 0, 0)
-    Backdrop:Hide()
 
     local InvisFrame = CreateFrame("Frame", nil, Bar)
     InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
@@ -40,38 +29,39 @@ function MaelstromBar:CreateBar()
     Text:SetFontTemplate("Default", 22)
 
     self.Bar = Bar
-    self.Backdrop = Backdrop
     self.Text = Text
-    self.Bars = {}
-    self.Backdrops = {}
 end
 
 function MaelstromBar:Update()
-    if not self.Bar or not self.Bar:IsShown() then 
-        return 
-    end
-
     local Maelstrom = GetPlayerAuraBySpellID(344179)
     local Stacks = Maelstrom and Maelstrom.applications or 0
-    local Max = 10
-    local Spacing = 2
-    local BarWidth = (222 - (Max - 1) * Spacing) / Max
 
-    self.Text:SetText(Stacks == 0 and "" or Stacks)
+    if (not self.Segment) then 
+        self.Segment = {} 
+    end 
 
-    for i = 1, Max do
-        local Bar = self.Bars[i]
+    if (not self.Backdrops) then 
+        self.Backdrops = {} 
+    end
+
+    local BarCount = 10
+    local BarWidth = 242
+    local SegmentSpacing = 2
+    local TotalSpacing = (BarCount - 1) * SegmentSpacing
+
+    for i = 1, BarCount do
+        local Segment = self.Segment[i]
         local Backdrop = self.Backdrops[i]
 
-        if (not Bar) then
-            Bar = CreateFrame("StatusBar", nil, self.Bar)
-            Bar:SetStatusBarTexture(Media.Global.Texture)
+        if (not Segment) then
+            Segment = CreateFrame("StatusBar", nil, self.Bar)
+            Segment:SetStatusBarTexture(Media.Global.Texture)
 
-            self.Bars[i] = Bar
+            self.Segment[i] = Segment
         end
 
         if (not Backdrop) then
-            Backdrop = CreateFrame("StatusBar", nil, self.Backdrop)
+            Backdrop = CreateFrame("StatusBar", nil, self.Bar)
             Backdrop:SetStatusBarTexture(Media.Global.Texture)
             Backdrop:CreateBackdrop()
             Backdrop:CreateShadow()
@@ -79,28 +69,39 @@ function MaelstromBar:Update()
             self.Backdrops[i] = Backdrop
         end
 
-        Bar:Size(BarWidth, 12)
-        Backdrop:Size(BarWidth, 12)
+        local SegmentWidth = math.floor((BarWidth - TotalSpacing) * i / BarCount) - math.floor((BarWidth - TotalSpacing) * (i - 1) / BarCount)
+
+        Segment:Size(SegmentWidth, 8)
+        Backdrop:Size(SegmentWidth, 8)
+
+        Segment:ClearAllPoints()
+        Backdrop:ClearAllPoints()
 
         if (i == 1) then
-            Bar:Point("LEFT", self.Bar, "LEFT", 0, 0)
-            Backdrop:Point("LEFT", self.Backdrop, "LEFT", 0, 0)
+            Segment:Point("LEFT", self.Bar, "LEFT", 0, 0)
+            Backdrop:Point("LEFT", self.Bar, "LEFT", 0, 0)
+        elseif (i == BarCount) then
+            Segment:Point("RIGHT", self.Bar, "RIGHT", 0, 0)
+            Segment:Point("LEFT", self.Segment[i - 1], "RIGHT", SegmentSpacing, 0)
+
+            Backdrop:Point("RIGHT", self.Bar, "RIGHT", 0, 0)
+            Backdrop:Point("LEFT", self.Backdrops[i - 1], "RIGHT", SegmentSpacing, 0)
         else
-            Bar:Point("LEFT", self.Bars[i-1], "RIGHT", Spacing, 0)
-            Backdrop:Point("LEFT", self.Backdrops[i-1], "RIGHT", Spacing, 0)
+            Segment:Point("LEFT", self.Segment[i - 1], "RIGHT", SegmentSpacing, 0)
+            Backdrop:Point("LEFT", self.Backdrops[i - 1], "RIGHT", SegmentSpacing, 0)
         end
 
-        Bar:SetStatusBarColor(R, G, B)
+        Segment:SetStatusBarColor(R, G, B)
         Backdrop:SetStatusBarColor(R * Mult, G * Mult, B * Mult, 0.5)
 
         if (i <= Stacks) then 
-            UI:UIFrameFadeIn(Bar, 0.25, Bar:GetAlpha(), 1) 
+            UI:UIFrameFadeIn(Segment, 0.25, Segment:GetAlpha(), 1) 
         else 
-            UI:UIFrameFadeOut(Bar, 0.25, Bar:GetAlpha(), 0) 
+            UI:UIFrameFadeOut(Segment, 0.25, Segment:GetAlpha(), 0) 
         end
     end
 
-    self.Bar.Max = Max
+    self.Text:SetText(Stacks == 0 and "" or Stacks)
 end
 
 function MaelstromBar:UpdateSpec()
@@ -108,10 +109,8 @@ function MaelstromBar:UpdateSpec()
 
     if (Class == "SHAMAN" and Spec == 2) then
         self.Bar:Show()
-        self.Backdrop:Show()
     else
         self.Bar:Hide()
-        self.Backdrop:Hide()
     end
 end
 
@@ -121,19 +120,15 @@ function MaelstromBar:OnEvent(event, unit)
     end
 
     self:Update()
-
-    if (event == "PLAYER_SPECIALIZATION_CHANGED" or event == "SPELLS_CHANGED" or event == "PLAYER_TALENT_UPDATE") then
-        self:UpdateSpec()
-    end
+    self:UpdateSpec()
 end
 
 function MaelstromBar:RegisterEvents()
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("UNIT_AURA")
-    self:RegisterEvent("SPELL_UPDATE_COOLDOWN")
-    self:RegisterEvent("SPELLS_CHANGED")
     self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
     self:RegisterEvent("PLAYER_TALENT_UPDATE")
+    self:RegisterEvent("SPELLS_CHANGED")
     self:SetScript("OnEvent", self.OnEvent)
 end
 

@@ -80,12 +80,6 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
         Button:ClearAllPoints()
     end
 
-    if (UnitIsUnit("target", Unit)) then
-        UI:UIFrameFadeIn(Auras, NP.FadeInTime, Auras:GetAlpha(), 1)
-    else
-        UI:UIFrameFadeOut(Auras, NP.FadeInTime, Auras:GetAlpha(), 0.5)
-    end
-
     while Active < MaxAuras do
         local AuraData = GetAuraDataByIndex(Unit, Index, Auras.Filter)
         Index = Index + 1
@@ -227,8 +221,7 @@ function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, Ancho
     Container.NumAuras = NumAuras
     Container.Filter = Filter -- HELPFUL; HARMFUL; HELPFUL|PLAYER; HARMFUL|PLAYER; "HARMFUL|RAID"; "HELPFUL|RAID"; "HELPFUL|EXTERNAL_DEFENSIVE";
     Container.Buttons = {}
-    Container:SetAlpha(0.5)
-
+    
     local TotalWidth = (ButtonWidth * NumAuras) + (Spacing * (NumAuras - 1))
 
     Container:Size(TotalWidth, ButtonHeight)
@@ -249,5 +242,5 @@ function NP:CreateDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = NP:CreateAuraContainer(Frame, 30, 12, 4, "TOPLEFT", -24, 28, "RIGHT", "LEFT", 7, "HARMFUL|PLAYER", true)
+    Frame.Debuffs = NP:CreateAuraContainer(Frame, 28, 12, 4, "TOPRIGHT", 0, 30, "RIGHT", "RIGHT", 6, "HARMFUL|PLAYER", true)
 end

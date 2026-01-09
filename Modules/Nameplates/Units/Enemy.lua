@@ -5,6 +5,7 @@ local NP = UI:CallModule("NamePlates")
 
 function NP:CreateEnemyElements(Frame)
     self:CreatePanels(Frame)
+    self:CreateHighlight(Frame)
     self:CreateHealth(Frame)
     self:CreateHealthText(Frame)
     self:CreateName(Frame)

@@ -69,7 +69,7 @@ function TT:GetColor(Unit)
 
     local Color
 
-    if UnitIsPlayer(Unit) and not UnitHasVehicleUI(Unit) then
+    if (UnitIsPlayer(Unit) and not UnitHasVehicleUI(Unit)) then
         local Class = select(2, UnitClass(Unit))
         Color = UI.Colors.Class[Class]
     else
@@ -84,22 +84,18 @@ function TT:GetColor(Unit)
     return UI:RGBToHex(Color.r, Color.g, Color.b), Color.r, Color.g, Color.b
 end
 
-function TT:ApplyStatusBarColor(Tooltip, Unit, ClassFile, Reaction)
-    if (not Tooltip or Tooltip:IsForbidden() or not Unit) then
+function TT:ApplyStatusBarColor(Unit, ClassFile, Reaction)
+    if (not GameTooltipStatusBar and Unit) then
         return
     end
 
     local R, G, B
 
-    if not (GameTooltipStatusBar) then
-        return
-    end
-
-    if not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit) then
+    if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit)) then
         R, G, B = 0.5, 0.5, 0.5
-    elseif UnitIsDead(Unit) then
+    elseif (UnitIsDead(Unit)) then
         R, G, B = 0.5, 0, 0
-    elseif UnitIsPlayer(Unit) then
+    elseif (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
         local Color = UI.Colors.Class[ClassFile]
         R, G, B = Color.r, Color.g, Color.b
     else
@@ -132,9 +128,9 @@ function TT:FormatUnitName(Unit)
         end
     end
 
-    if UnitIsAFK(Unit) then
+    if (UnitIsAFK(Unit)) then
         StatusText = " |CFF559655" .. CHAT_FLAG_AFK .. "|r"
-    elseif UnitIsDND(Unit) then
+    elseif (UnitIsDND(Unit)) then
         StatusText = " |CFF559655" .. CHAT_FLAG_DND .. "|r"
     end
 
@@ -227,7 +223,7 @@ function TT:OnTooltipSetUnit()
     TT:FormatUnitName(Unit)
     TT:FormatGuildInfo(Unit)
     TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Race, CreatureType, ClassificationUnit, Level)
-    TT:ApplyStatusBarColor(self, Unit, ClassFile, Reaction)
+    TT:ApplyStatusBarColor(Unit, ClassFile, Reaction)
 end
 
 function TT:StyleHealthBar()

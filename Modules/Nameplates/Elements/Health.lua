@@ -9,12 +9,10 @@ local unpack = unpack
 
 function NP:CreateHealth(Frame)
     local Health = CreateFrame("StatusBar", nil, Frame)
-    Health:Size(192, 16)
-    Health:Point("CENTER", Frame, 0, -4)
+    Health:SetInside()
     Health:SetStatusBarTexture(Media.Global.Texture)
     Health:CreateBackdrop()
     Health:CreateShadow()
-    Health:SetAlpha(0.5)
 
     Frame.Health = Health
 end
