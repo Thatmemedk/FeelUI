@@ -21,7 +21,7 @@ end
 
 function UF:CreateHealthPrediction(Frame)
     local HealthPrediction = {}
-    local OverFlowAmount = 1.2
+    HealthPrediction.OverFlowAmount = 1.2
 
     HealthPrediction.PlayerHeals = CreateFrame("StatusBar", nil, Frame.Health)
     HealthPrediction.PlayerHeals:SetStatusBarTexture(Media.Global.Texture)
@@ -40,19 +40,22 @@ function UF:CreateHealthPrediction(Frame)
     HealthPrediction.HealAbsorbs:SetStatusBarColor(1, 0, 0, 0.25)
 
     HealthPrediction.OverHeals = Frame.Health:CreateTexture(nil, "OVERLAY", nil, 7)
+    HealthPrediction.OverHeals:SetBlendMode("BLEND")
     HealthPrediction.OverHeals:Width(2)
-    HealthPrediction.OverHeals:SetTexture(Media.Global.Texture)
-    HealthPrediction.OverHeals:SetVertexColor(0, 1, 0, 0.25)
+    HealthPrediction.OverHeals:SetTexture(Media.Global.Blank)
+    HealthPrediction.OverHeals:SetColorTexture(0, 1, 0, 0.5)
 
     HealthPrediction.OverAbsorbs = Frame.Health:CreateTexture(nil, "OVERLAY", nil, 7)
+    HealthPrediction.OverAbsorbs:SetBlendMode("BLEND")
     HealthPrediction.OverAbsorbs:Width(2)
-    HealthPrediction.OverAbsorbs:SetTexture(Media.Global.Texture)
-    HealthPrediction.OverAbsorbs:SetVertexColor(1, 1, 0, 0.25)
+    HealthPrediction.OverAbsorbs:SetTexture(Media.Global.Blank)
+    HealthPrediction.OverAbsorbs:SetColorTexture(1, 1, 0, 0.5)
 
     HealthPrediction.OverHealsAbsorbs = Frame.Health:CreateTexture(nil, "OVERLAY", nil, 7)
+    HealthPrediction.OverHealsAbsorbs:SetBlendMode("BLEND")
     HealthPrediction.OverHealsAbsorbs:Width(2)
-    HealthPrediction.OverHealsAbsorbs:SetTexture(Media.Global.Texture)
-    HealthPrediction.OverHealsAbsorbs:SetVertexColor(1, 0, 0, 0.25)
+    HealthPrediction.OverHealsAbsorbs:SetTexture(Media.Global.Blank)
+    HealthPrediction.OverHealsAbsorbs:SetColorTexture(1, 0, 0, 0.5)
 
     if (not HealthPrediction.Calculator) then
         HealthPrediction.Calculator = CreateUnitHealPredictionCalculator()
@@ -63,7 +66,7 @@ function UF:CreateHealthPrediction(Frame)
         -- Enum.UnitIncomingHealClampMode.MissingHealth
         -- Enum.UnitIncomingHealClampMode.MaximumHealth
 
-        HealthPrediction.Calculator:SetIncomingHealOverflowPercent(OverFlowAmount)
+        HealthPrediction.Calculator:SetIncomingHealOverflowPercent(HealthPrediction.OverFlowAmount)
 
         -- Damage absorbs → AllAbsorbs
         HealthPrediction.Calculator:SetDamageAbsorbClampMode(Enum.UnitDamageAbsorbClampMode.MaximumHealth)
@@ -72,7 +75,7 @@ function UF:CreateHealthPrediction(Frame)
         -- Enum.UnitDamageAbsorbClampMode.MaximumHealth
 
         -- Heal absorbs → HealAbsorbs
-        HealthPrediction.Calculator:SetHealAbsorbClampMode(Enum.UnitHealAbsorbClampMode.CurrentHealth)
+        HealthPrediction.Calculator:SetHealAbsorbClampMode(Enum.UnitHealAbsorbClampMode.MaximumHealth)
         -- Enum.UnitHealAbsorbClampMode.CurrentHealth
         -- Enum.UnitHealAbsorbClampMode.MaximumHealth
 

@@ -176,6 +176,37 @@ function UF:UpdateHealthPred(Frame)
     local OverAbsorbsBar = Frame.HealthPrediction.OverAbsorbs
     local OverHealsAbsorbsBar = Frame.HealthPrediction.OverHealsAbsorbs
 
+    --[[
+    if (not Calculator) then
+        Calculator = CreateUnitHealPredictionCalculator()
+        Calculator = Calculator
+
+        -- Incoming heals → AllHeals / PlayerHeals / OtherHeals
+        Calculator:SetIncomingHealClampMode(Enum.UnitIncomingHealClampMode.MaximumHealth)
+        -- Enum.UnitIncomingHealClampMode.MissingHealth
+        -- Enum.UnitIncomingHealClampMode.MaximumHealth
+
+        Calculator:SetIncomingHealOverflowPercent(Frame.HealthPrediction.OverFlowAmount)
+
+        -- Damage absorbs → AllAbsorbs
+        Calculator:SetDamageAbsorbClampMode(Enum.UnitDamageAbsorbClampMode.MaximumHealth)
+        -- Enum.UnitDamageAbsorbClampMode.MissingHealth
+        -- Enum.UnitDamageAbsorbClampMode.MissingHealthWithoutIncomingHeals
+        -- Enum.UnitDamageAbsorbClampMode.MaximumHealth
+
+        -- Heal absorbs → HealAbsorbs
+        Calculator:SetHealAbsorbClampMode(Enum.UnitHealAbsorbClampMode.MaximumHealth)
+        -- Enum.UnitHealAbsorbClampMode.CurrentHealth
+        -- Enum.UnitHealAbsorbClampMode.MaximumHealth
+
+        Calculator:SetHealAbsorbMode(Enum.UnitHealAbsorbMode.Total)
+        -- Enum.UnitHealAbsorbMode.ReducedByIncomingHeals
+        -- Enum.UnitHealAbsorbMode.Total
+    else
+        Calculator:Reset()
+    end
+    --]]
+
     UnitGetDetailedHealPrediction(Unit, "player", Calculator)
 
     -- Calculate Predictions
@@ -222,63 +253,41 @@ function UF:UpdateHealthPred(Frame)
         OtherHealsBar:Size(BarWidth, BarHeight)
         AllAbsorbsBar:Size(BarWidth, BarHeight)
         HealAbsorbsBar:Size(BarWidth, BarHeight)
-        PlayerHealsBar:ClearAllPoints()
-        OtherHealsBar:ClearAllPoints()
-        AllAbsorbsBar:ClearAllPoints()
-        HealAbsorbsBar:ClearAllPoints()
 
         -- Player Heals
-        PlayerHealsBar:Point("TOPLEFT", PrevTexture, "TOPRIGHT", 0, 0)
-        PlayerHealsBar:Point("BOTTOMLEFT", PrevTexture, "BOTTOMRIGHT", 0, 0)
+        PlayerHealsBar:SetOutsideRight(PrevTexture, 0, 0)
         -- Other Heals
-        OtherHealsBar:Point("TOPLEFT", PlayerHealsBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
-        OtherHealsBar:Point("BOTTOMLEFT", PlayerHealsBar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
+        OtherHealsBar:SetOutsideRight(PlayerHealsBar:GetStatusBarTexture(), 0, 0)
         -- All Absorbs
-        AllAbsorbsBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
-        AllAbsorbsBar:Point("BOTTOMRIGHT", PrevTexture, "BOTTOMRIGHT", 0, 0)
+        AllAbsorbsBar:SetInsideRight(PrevTexture, 0, 0)
         -- Heal Absorbs
-        HealAbsorbsBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
-        HealAbsorbsBar:Point("BOTTOMRIGHT", PrevTexture, "BOTTOMRIGHT", 0, 0)
+        HealAbsorbsBar:SetInsideRight(PrevTexture, 0, 0)
         -- OverHeals
-        OverHealsBar:Point("TOPLEFT", OtherHealsBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
-        OverHealsBar:Point("BOTTOMLEFT", OtherHealsBar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
+        OverHealsBar:SetOutsideRight(OtherHealsBar:GetStatusBarTexture(), -1, 0)
         -- OverAbsorbs
-        OverAbsorbsBar:Point("TOPLEFT", AllAbsorbsBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
-        OverAbsorbsBar:Point("BOTTOMLEFT", AllAbsorbsBar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
+        OverAbsorbsBar:SetOutsideRight(AllAbsorbsBar:GetStatusBarTexture(), 0, 0)
         -- OverHealsAbsorbs
-        OverHealsAbsorbsBar:Point("TOPRIGHT", HealAbsorbsBar:GetStatusBarTexture(), "TOPLEFT", 0, 0)
-        OverHealsAbsorbsBar:Point("BOTTOMRIGHT", HealAbsorbsBar:GetStatusBarTexture(), "BOTTOMLEFT", 0, 0)
+        OverHealsAbsorbsBar:SetOutsideRight(HealAbsorbsBar:GetStatusBarTexture(), 0, 0)
     else
         PlayerHealsBar:Size(BarHeight, BarWidth)
         OtherHealsBar:Size(BarHeight, BarWidth)
         AllAbsorbsBar:Size(BarHeight, BarWidth)
         HealAbsorbsBar:Size(BarHeight, BarWidth)
-        PlayerHealsBar:ClearAllPoints()
-        OtherHealsBar:ClearAllPoints()
-        AllAbsorbsBar:ClearAllPoints()
-        HealAbsorbsBar:ClearAllPoints()
 
         -- Player Heals
-        PlayerHealsBar:Point("BOTTOMLEFT", PrevTexture, "TOPLEFT", 0, 0)
-        PlayerHealsBar:Point("BOTTOMRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
+        PlayerHealsBar:SetOutsideTop(PrevTexture, 0, 0)
         -- Other Heals
-        OtherHealsBar:Point("BOTTOMLEFT", PlayerHealsBar:GetStatusBarTexture(), "TOPLEFT", 0, 0)
-        OtherHealsBar:Point("BOTTOMRIGHT", PlayerHealsBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+        OtherHealsBar:SetOutsideTop(PlayerHealsBar:GetStatusBarTexture(), 0, 0)
         -- All Absorbs
-        AllAbsorbsBar:Point("TOPLEFT", PrevTexture, "TOPLEFT", 0, 0)
-        AllAbsorbsBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
+        AllAbsorbsBar:SetInsideTop(PrevTexture, 0, 0)
         -- Heal Absorbs
-        HealAbsorbsBar:Point("TOPLEFT", PrevTexture, "TOPLEFT", 0, 0)
-        HealAbsorbsBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
+        HealAbsorbsBar:SetInsideTop(PrevTexture, 0, 0)
         -- OverHeals
-        OverHealsBar:Point("BOTTOMLEFT", OtherHealsBar:GetStatusBarTexture(), "TOPLEFT", 0, 0)
-        OverHealsBar:Point("BOTTOMRIGHT", OtherHealsBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+        OverHealsBar:SetOutsideTop(OtherHealsBar:GetStatusBarTexture(), 0, 0)
         -- OverAbsorbs
-        OverAbsorbsBar:Point("BOTTOMLEFT", AllAbsorbsBar:GetStatusBarTexture(), "TOPLEFT", 0, 0)
-        OverAbsorbsBar:Point("BOTTOMRIGHT", AllAbsorbsBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+        OverAbsorbsBar:SetOutsideTop(AllAbsorbsBar:GetStatusBarTexture(), 0, 0)
         -- OverHealsAbsorbs
-        OverHealsAbsorbsBar:Point("TOPLEFT", HealAbsorbsBar:GetStatusBarTexture(), "BOTTOMLEFT", 0, 0)
-        OverHealsAbsorbsBar:Point("TOPRIGHT", HealAbsorbsBar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
+        OverHealsAbsorbsBar:SetOutsideTop(HealAbsorbsBar:GetStatusBarTexture(), 0, 0)
     end
 end
 
