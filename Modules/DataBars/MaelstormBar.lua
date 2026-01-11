@@ -15,7 +15,6 @@ local Mult = 0.5
 
 function MaelstromBar:CreateBar()
     local Bar = CreateFrame("Frame", nil, _G.UIParent)
-    Bar:SetFrameStrata("LOW")
     Bar:Size(242, 12)
     Bar:Point(unpack(DB.Global.DataBars.MaelstromBarPoint))
     Bar:Hide()
@@ -28,6 +27,7 @@ function MaelstromBar:CreateBar()
     Text:Point("CENTER", Bar, 0, 8)
     Text:SetFontTemplate("Default", 22)
 
+    -- Cache
     self.Bar = Bar
     self.Text = Text
 end
@@ -115,17 +115,13 @@ function MaelstromBar:UpdateSpec()
 end
 
 function MaelstromBar:OnEvent(event, unit)
-    if (event == "UNIT_AURA" and unit ~= "player") then 
-        return 
-    end
-
     self:Update()
     self:UpdateSpec()
 end
 
 function MaelstromBar:RegisterEvents()
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:RegisterEvent("UNIT_AURA")
+    self:RegisterEvent("UNIT_AURA", "player")
     self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
     self:RegisterEvent("PLAYER_TALENT_UPDATE")
     self:RegisterEvent("SPELLS_CHANGED")
@@ -137,6 +133,6 @@ function MaelstromBar:Initialize()
         return
     end
 
-    --self:CreateBar()
-    --self:RegisterEvents()
+    self:CreateBar()
+    self:RegisterEvents()
 end

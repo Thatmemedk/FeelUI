@@ -36,6 +36,7 @@ function PowerBar:CreateBar()
 	local Text = InvisFrame:CreateFontString(nil, "OVERLAY")
 	Text:SetFontTemplate("Default", 16)
 	
+	-- Cache
 	self.Bar = Bar
 	self.Text = Text
 end
@@ -46,6 +47,7 @@ function PowerBar:Update()
 	local Percent = UnitPowerPercent("player", PowerType, false, UI.CurvePercent)
 	local PowerColor = UI.Colors.Power[PowerToken]
 
+	-- Set Values
 	self.Bar:SetMinMaxValues(0, Max)
 	self.Bar:SetValue(Min, UI.SmoothBars)
 
@@ -78,22 +80,16 @@ function PowerBar:UpdateSpec()
 end
 
 function PowerBar:OnEvent(event, unit)
-    if (event == "PLAYER_ENTERING_WORLD") then
-    	self:Update()
-        self:UpdateSpec()
-    elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_MAXPOWER" or event == "UNIT_POWER_UPDATE") then
-        self:Update()
-    elseif (event == "PLAYER_SPECIALIZATION_CHANGED" or event == "PLAYER_TALENT_UPDATE" or event == "SPELLS_CHANGED") then
-        self:UpdateSpec()
-    end
+   	self:Update()
+    self:UpdateSpec()
 end
 
 function PowerBar:RegisterEvents()
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
-	self:RegisterEvent("UNIT_POWER_FREQUENT")
-	self:RegisterEvent("UNIT_MAXPOWER")
-	self:RegisterEvent("UNIT_POWER_UPDATE")
-	self:RegisterEvent("UNIT_DISPLAYPOWER")
+	self:RegisterEvent("UNIT_POWER_FREQUENT", "player")
+	self:RegisterEvent("UNIT_MAXPOWER", "player")
+	self:RegisterEvent("UNIT_POWER_UPDATE", "player")
+	self:RegisterEvent("UNIT_DISPLAYPOWER", "player")
 	self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
     self:RegisterEvent("PLAYER_TALENT_UPDATE")
     self:RegisterEvent("SPELLS_CHANGED")

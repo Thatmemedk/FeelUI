@@ -183,30 +183,28 @@ function NP:CreateAuraButton(Frame, ExtraBorder)
     Button:StyleButton()
     Button:SetShadowOverlay()
 
-    -- OVERLAY
     local Overlay = CreateFrame("Frame", nil, Button)
     Overlay:SetFrameLevel(Button:GetFrameLevel() + 10)
     Overlay:SetInside()
 
-    -- ICON
     local Icon = Button:CreateTexture(nil, "ARTWORK")
     Icon:SetInside()
-    
-    -- COOLDOWNS
-    local Cooldown = CreateFrame("Cooldown", nil, Button, "CooldownFrameTemplate")
-    Cooldown:SetInside()
-    Cooldown:SetDrawEdge(false)
-    Cooldown:SetReverse(true)
 
-    -- COUNT
     local Count = Overlay:CreateFontString(nil, "OVERLAY")
     Count:Point("TOPRIGHT", Button, 2, 2)
     Count:SetFontTemplate("Default")
 
+    local Cooldown = CreateFrame("Cooldown", nil, Button, "CooldownFrameTemplate")
+    Cooldown:SetInside()
+    Cooldown:SetDrawEdge(false)
+    Cooldown:SetDrawBling(false)
+    Cooldown:SetReverse(true)
+
+    -- Cache
     Button.Overlay = Overlay
     Button.Icon = Icon
-    Button.Cooldown = Cooldown
     Button.Count = Count
+    Button.Cooldown = Cooldown
 
     return Button
 end

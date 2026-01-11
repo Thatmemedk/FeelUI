@@ -28,6 +28,7 @@ function RuneBar:CreateBar()
     Bar:Size(242, 8)
     Bar:Point(unpack(DB.Global.DataBars.RuneBarPoint))
 
+    -- Cache
     self.Bar = Bar
 end
 

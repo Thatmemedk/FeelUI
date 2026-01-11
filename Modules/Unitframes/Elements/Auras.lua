@@ -47,7 +47,7 @@ function UF:UpdateCooldownTextColor(Cooldown, Elapsed)
     for i = 1, Cooldown:GetNumRegions() do
         local Region = select(i, Cooldown:GetRegions())
 
-        if (Region and Region.GetText) then
+        if (Region and Region.GetText and Region.SetText) then
             Region:SetVertexColor(EvaluateDuration:GetRGBA())
         end
     end

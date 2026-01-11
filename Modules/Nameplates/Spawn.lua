@@ -13,7 +13,7 @@ function NP:CreateFriendlyPlates(Plate, Unit)
     local Frame = Plate.FeelUINameplatesFriendly
 
     if (not Frame) then
-        Frame = CreateFrame("Frame", "FeelUI_NameplatesFriendly", Plate)
+        Frame = CreateFrame("Button", "FeelUI_NameplatesFriendly", Plate, "PingableUnitFrameTemplate")
         Frame:Size(unpack(DB.Global.Nameplates.Size))
         Frame:Point("CENTER", Plate, 0, 0)
 
@@ -37,7 +37,7 @@ function NP:CreateEnemyPlates(Plate, Unit)
     local Frame = Plate.FeelUINameplatesEnemy
 
     if (not Frame) then
-        Frame = CreateFrame("Frame", "FeelUI_NameplatesEnemy", Plate)
+        Frame = CreateFrame("Button", "FeelUI_NameplatesEnemy", Plate, "PingableUnitFrameTemplate")
         Frame:Size(unpack(DB.Global.Nameplates.Size))
         Frame:Point("CENTER", Plate, 0, 0)
 

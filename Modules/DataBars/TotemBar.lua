@@ -73,12 +73,10 @@ function TotemBar:OnEvent(event)
             if (Duration and Start) then
                 Button.Cooldown:SetCooldown(Start, Duration)
 
-                local NumRegions = Button.Cooldown:GetNumRegions()
-
-                for i = 1, NumRegions do
+                for i = 1, Button.Cooldown:GetNumRegions() do
                     local Region = select(i, Button.Cooldown:GetRegions())
 
-                    if (Region.GetText) then
+                    if (Region and Region.GetText) then
                         local FontSize = UI:GetCooldownFontScale(Button.Cooldown)
 
                         Region:ClearAllPoints()

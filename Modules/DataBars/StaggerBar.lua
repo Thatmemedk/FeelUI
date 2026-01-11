@@ -39,6 +39,7 @@ function StaggerBar:CreateBar()
 	TextPer:Point("RIGHT", Bar, -6, 6)
 	TextPer:SetFontTemplate("Default", 16)
 	
+	-- Cache
 	self.Bar = Bar
 	self.Text = Text
 	self.TextPer = TextPer
@@ -48,6 +49,7 @@ function StaggerBar:Update()
 	local Min, Max = UnitStagger("player"), UnitHealthMax("player")
 	local Percent = Min/Max
 
+	-- Set Values
 	self.Bar:SetMinMaxValues(0, Max)
 	self.Bar:SetValue(Min, UI.SmoothBars)
 
@@ -59,6 +61,7 @@ function StaggerBar:Update()
 		self.Bar:SetStatusBarColor(0.52, 1, 0.52)
 	end
 
+	-- Set Text
 	self.Text:SetText(Min)
 	self.TextPer:SetText(floor(Min/Max*1000)/10 .. "%")
 end
@@ -74,20 +77,18 @@ function StaggerBar:UpdateSpec(event)
 end
 
 function StaggerBar:OnEvent(event)
-	if (event == "PLAYER_ENTERING_WORLD" or event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_MAXPOWER") then
-		self:Update()
-	end
-	
+	self:Update()
 	self:UpdateSpec()
 end
 
 function StaggerBar:RegisterEvents()
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
-	self:RegisterEvent("UNIT_POWER_FREQUENT")
-	self:RegisterEvent("UNIT_MAXPOWER")
-	self:RegisterEvent("UNIT_DISPLAYPOWER")
+	self:RegisterEvent("UNIT_POWER_FREQUENT", "player")
+	self:RegisterEvent("UNIT_MAXPOWER", "player")
+	self:RegisterEvent("UNIT_DISPLAYPOWER", "player")
 	self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 	self:RegisterEvent("PLAYER_TALENT_UPDATE")
+	self:RegisterEvent("SPELLS_CHANGED")
 	self:SetScript("OnEvent", self.OnEvent)
 end
 

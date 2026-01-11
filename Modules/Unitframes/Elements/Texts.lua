@@ -44,7 +44,13 @@ function UF:CreateTargetTexts(Frame)
     PowerText:SetFontTemplate("Default")
     
     local NameLevel = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
+    NameLevel:Width(155)
     NameLevel:Point("RIGHT", Frame, -4, 20)
+    NameLevel:SetJustifyH("RIGHT")
+    NameLevel:SetJustifyV("MIDDLE")
+    NameLevel:SetWordWrap(false)
+    NameLevel:SetNonSpaceWrap(false)
+    NameLevel:SetMaxLines(1)
     NameLevel:SetFontTemplate("Default", 14)
 
     Frame.HealthTextCur = HealthTextCur
@@ -86,8 +92,14 @@ end
 
 function UF:CreateNameTextCenter(Frame)
     local Name = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
+    Name:Width(110)
     Name:Point("CENTER", Frame, 0, 0)
     Name:SetFontTemplate("Default", 12)
+    Name:SetJustifyH("CENTER")
+    Name:SetJustifyV("MIDDLE")
+    Name:SetWordWrap(false)
+    Name:SetNonSpaceWrap(false)
+    Name:SetMaxLines(1)
 
     Frame.Name = Name
 end

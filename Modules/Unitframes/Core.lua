@@ -167,71 +167,118 @@ function UF:UpdateHealthPred(Frame)
     end
 
     local Unit = Frame.unit
+    local Calculator = Frame.HealthPrediction.Calculator
+    local PlayerHealsBar = Frame.HealthPrediction.PlayerHeals
+    local OtherHealsBar = Frame.HealthPrediction.OtherHeals
+    local AllAbsorbsBar = Frame.HealthPrediction.AllAbsorbs
+    local HealAbsorbsBar = Frame.HealthPrediction.HealAbsorbs
+    local OverHealsBar = Frame.HealthPrediction.OverHeals
+    local OverAbsorbsBar = Frame.HealthPrediction.OverAbsorbs
+    local OverHealsAbsorbsBar = Frame.HealthPrediction.OverHealsAbsorbs
+
+    UnitGetDetailedHealPrediction(Unit, "player", Calculator)
+
+    -- Calculate Predictions
+    local AllHeals, PlayerHeals, OtherHeals, HealingClamped = Calculator:GetIncomingHeals()
+    local AbsorbsAmount, AbsorbsClamped = Calculator:GetDamageAbsorbs()
+    local HealAbsorbAmount, HealAbsorbClamped = Calculator:GetHealAbsorbs()
     local Max = UnitHealthMax(Unit)
-    local Current = UnitHealth(Unit)
-    local MyIncomingHeal = UnitGetIncomingHeals(Unit, "player") or 0
-    local AllIncomingHeal = UnitGetIncomingHeals(Unit) or 0
-    local Absorb = UnitGetTotalAbsorbs(Unit) or 0
-    local HealAbsorb = UnitGetTotalHealAbsorbs(Unit) or 0
+
     local Orientation = Frame.Health:GetOrientation()
     local PrevTexture = Frame.Health:GetStatusBarTexture()
-    local Width, Height = Frame.Health:GetWidth(), Frame.Health:GetHeight()
-    local BarWidth, BarHeight = Width, Height
+    local BarWidth, BarHeight = Frame.Health:GetSize()
 
-    if (Orientation ~= "HORIZONTAL") then
-        BarWidth, BarHeight = Height, Width
-    end
+    PlayerHealsBar:SetOrientation(Orientation)
+    PlayerHealsBar:SetMinMaxValues(0, Max)
+    PlayerHealsBar:SetValue(PlayerHeals, UI.SmoothBars)
 
-    local FirstBar = Frame.HealthPrediction.MyHeals
-    local SecondBar = Frame.HealthPrediction.OtherHeals
-    local ThirdBar = Frame.HealthPrediction.Absorbs
-    local FourthBar = Frame.HealthPrediction.HealAbsorbs
+    OtherHealsBar:SetOrientation(Orientation)
+    OtherHealsBar:SetMinMaxValues(0, Max)
+    OtherHealsBar:SetValue(OtherHeals, UI.SmoothBars)
 
-    -- Update bars
-    FirstBar:Size(BarWidth, BarHeight)
-    FirstBar:SetOrientation(Orientation)
-    FirstBar:SetMinMaxValues(0, Max)
-    FirstBar:SetValue(MyIncomingHeal, UI.SmoothBars)
-    FirstBar:Show()
+    AllAbsorbsBar:SetOrientation(Orientation)
+    AllAbsorbsBar:SetReverseFill(true)
+    AllAbsorbsBar:SetMinMaxValues(0, Max)
+    AllAbsorbsBar:SetValue(AbsorbsAmount, UI.SmoothBars)
 
-    SecondBar:Size(BarWidth, BarHeight)
-    SecondBar:SetOrientation(Orientation)
-    SecondBar:SetMinMaxValues(0, Max)
-    SecondBar:SetValue(AllIncomingHeal, UI.SmoothBars)
-    SecondBar:Show()
+    HealAbsorbsBar:SetOrientation(Orientation)
+    HealAbsorbsBar:SetReverseFill(true)
+    HealAbsorbsBar:SetMinMaxValues(0, Max)
+    HealAbsorbsBar:SetValue(HealAbsorbAmount, UI.SmoothBars)
 
-    ThirdBar:Size(BarWidth, BarHeight)
-    ThirdBar:SetOrientation(Orientation)
-    ThirdBar:SetReverseFill(true)
-    ThirdBar:SetMinMaxValues(0, Max)
-    ThirdBar:SetValue(Absorb, UI.SmoothBars)
-    ThirdBar:Show()
+    -- Healing Prediction
+    PlayerHealsBar:SetAlphaFromBoolean(PlayerHeals, 1, 0)
+    OtherHealsBar:SetAlphaFromBoolean(OtherHeals, 1, 0)
+    AllAbsorbsBar:SetAlphaFromBoolean(AbsorbsAmount, 1, 0)
+    HealAbsorbsBar:SetAlphaFromBoolean(HealAbsorbAmount, 1, 0)
 
-    FourthBar:Size(BarWidth, BarHeight)
-    FourthBar:SetOrientation(Orientation)
-    FourthBar:SetReverseFill(true)
-    FourthBar:SetMinMaxValues(0, Max)
-    FourthBar:SetValue(HealAbsorb, UI.SmoothBars)
-    FourthBar:Show()
+    -- Over Healing/Absorbs
+    OverHealsBar:SetAlphaFromBoolean(HealingClamped, 1, 0)
+    OverAbsorbsBar:SetAlphaFromBoolean(AbsorbsClamped, 1, 0)
+    OverHealsAbsorbsBar:SetAlphaFromBoolean(HealAbsorbClamped, 1, 0)
 
     if (Orientation == "HORIZONTAL") then
-        FirstBar:Point("TOPLEFT", PrevTexture, "TOPRIGHT", 0, 0)
-        FirstBar:Point("BOTTOMLEFT", PrevTexture, "BOTTOMRIGHT", 0, 0)
-        SecondBar:Point("TOPLEFT", FirstBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
-        SecondBar:Point("BOTTOMLEFT", FirstBar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
-        ThirdBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
-        ThirdBar:Point("BOTTOMRIGHT", PrevTexture, "BOTTOMRIGHT", 0, 0)
-        FourthBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
-        FourthBar:Point("BOTTOMRIGHT", PrevTexture, "BOTTOMRIGHT", 0, 0)
+        PlayerHealsBar:Size(BarWidth, BarHeight)
+        OtherHealsBar:Size(BarWidth, BarHeight)
+        AllAbsorbsBar:Size(BarWidth, BarHeight)
+        HealAbsorbsBar:Size(BarWidth, BarHeight)
+        PlayerHealsBar:ClearAllPoints()
+        OtherHealsBar:ClearAllPoints()
+        AllAbsorbsBar:ClearAllPoints()
+        HealAbsorbsBar:ClearAllPoints()
+
+        -- Player Heals
+        PlayerHealsBar:Point("TOPLEFT", PrevTexture, "TOPRIGHT", 0, 0)
+        PlayerHealsBar:Point("BOTTOMLEFT", PrevTexture, "BOTTOMRIGHT", 0, 0)
+        -- Other Heals
+        OtherHealsBar:Point("TOPLEFT", PlayerHealsBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+        OtherHealsBar:Point("BOTTOMLEFT", PlayerHealsBar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
+        -- All Absorbs
+        AllAbsorbsBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
+        AllAbsorbsBar:Point("BOTTOMRIGHT", PrevTexture, "BOTTOMRIGHT", 0, 0)
+        -- Heal Absorbs
+        HealAbsorbsBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
+        HealAbsorbsBar:Point("BOTTOMRIGHT", PrevTexture, "BOTTOMRIGHT", 0, 0)
+        -- OverHeals
+        OverHealsBar:Point("TOPLEFT", OtherHealsBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+        OverHealsBar:Point("BOTTOMLEFT", OtherHealsBar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
+        -- OverAbsorbs
+        OverAbsorbsBar:Point("TOPLEFT", AllAbsorbsBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+        OverAbsorbsBar:Point("BOTTOMLEFT", AllAbsorbsBar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
+        -- OverHealsAbsorbs
+        OverHealsAbsorbsBar:Point("TOPRIGHT", HealAbsorbsBar:GetStatusBarTexture(), "TOPLEFT", 0, 0)
+        OverHealsAbsorbsBar:Point("BOTTOMRIGHT", HealAbsorbsBar:GetStatusBarTexture(), "BOTTOMLEFT", 0, 0)
     else
-        FirstBar:Point("BOTTOMLEFT", PrevTexture, "TOPLEFT", 0, 0)
-        FirstBar:Point("BOTTOMRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
-        SecondBar:Point("BOTTOMLEFT", FirstBar:GetStatusBarTexture(), "TOPLEFT", 0, 0)
-        SecondBar:Point("BOTTOMRIGHT", FirstBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
-        ThirdBar:Point("TOPLEFT", PrevTexture, "TOPLEFT", 0, 0)
-        ThirdBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
-        FourthBar:Point("TOPLEFT", PrevTexture, "TOPLEFT", 0, 0)
-        FourthBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
+        PlayerHealsBar:Size(BarHeight, BarWidth)
+        OtherHealsBar:Size(BarHeight, BarWidth)
+        AllAbsorbsBar:Size(BarHeight, BarWidth)
+        HealAbsorbsBar:Size(BarHeight, BarWidth)
+        PlayerHealsBar:ClearAllPoints()
+        OtherHealsBar:ClearAllPoints()
+        AllAbsorbsBar:ClearAllPoints()
+        HealAbsorbsBar:ClearAllPoints()
+
+        -- Player Heals
+        PlayerHealsBar:Point("BOTTOMLEFT", PrevTexture, "TOPLEFT", 0, 0)
+        PlayerHealsBar:Point("BOTTOMRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
+        -- Other Heals
+        OtherHealsBar:Point("BOTTOMLEFT", PlayerHealsBar:GetStatusBarTexture(), "TOPLEFT", 0, 0)
+        OtherHealsBar:Point("BOTTOMRIGHT", PlayerHealsBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+        -- All Absorbs
+        AllAbsorbsBar:Point("TOPLEFT", PrevTexture, "TOPLEFT", 0, 0)
+        AllAbsorbsBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
+        -- Heal Absorbs
+        HealAbsorbsBar:Point("TOPLEFT", PrevTexture, "TOPLEFT", 0, 0)
+        HealAbsorbsBar:Point("TOPRIGHT", PrevTexture, "TOPRIGHT", 0, 0)
+        -- OverHeals
+        OverHealsBar:Point("BOTTOMLEFT", OtherHealsBar:GetStatusBarTexture(), "TOPLEFT", 0, 0)
+        OverHealsBar:Point("BOTTOMRIGHT", OtherHealsBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+        -- OverAbsorbs
+        OverAbsorbsBar:Point("BOTTOMLEFT", AllAbsorbsBar:GetStatusBarTexture(), "TOPLEFT", 0, 0)
+        OverAbsorbsBar:Point("BOTTOMRIGHT", AllAbsorbsBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+        -- OverHealsAbsorbs
+        OverHealsAbsorbsBar:Point("TOPLEFT", HealAbsorbsBar:GetStatusBarTexture(), "BOTTOMLEFT", 0, 0)
+        OverHealsAbsorbsBar:Point("TOPRIGHT", HealAbsorbsBar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
     end
 end
 

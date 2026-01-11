@@ -17,7 +17,13 @@ end
 
 function NP:CreateName(Frame)
     local Name = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
+    Name:Width(125)
     Name:Point("RIGHT", Frame.Health, -4, 10)
+    Name:SetJustifyH("RIGHT")
+    Name:SetJustifyV("MIDDLE")
+    Name:SetWordWrap(false)
+    Name:SetNonSpaceWrap(false)
+    Name:SetMaxLines(1)
     Name:SetFontTemplate("Default", 14)
 
     Frame.Name = Name

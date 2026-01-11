@@ -4,16 +4,16 @@ local UI, DB, Media, Language = select(2, ...):Call()
 local SoulFragmentsBar = UI:RegisterModule("SoulFragmentsBar")
 
 -- WoW Globals
-local UnitClass = UnitClass
 local GetSpecialization = GetSpecialization
-local DemonHunterSoulFragmentsBar = _G.DemonHunterSoulFragmentsBar
+local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
+local GetSpellMaxCumulativeAuraApplications = C_Spell.GetSpellMaxCumulativeAuraApplications
 
 -- Locals
 local Class = select(2, UnitClass("player"))
 
 function SoulFragmentsBar:CreateBar()
     local Bar = CreateFrame("StatusBar", nil, _G.UIParent)
-    Bar:Size(222, 8)
+    Bar:Size(242, 8)
     Bar:Point(unpack(DB.Global.DataBars.SoulFragmentsBarPoint))
     Bar:SetStatusBarTexture(Media.Global.Texture)
     Bar:SetStatusBarColor(0.55, 0.25, 1 * 2)
@@ -29,14 +29,36 @@ function SoulFragmentsBar:CreateBar()
     Text:Point("CENTER", Bar, 0, 6)
     Text:SetFontTemplate("Default", 16)
 
+    -- Cache
     self.Bar = Bar
     self.Text = Text
+    self.InVoidMeta = false
 end
 
 function SoulFragmentsBar:Update()
+    local InVoidMeta = GetPlayerAuraBySpellID(1217607) ~= nil
+    local Min, Max = 0, 0
+
+    if (InVoidMeta ~= self.InVoidMeta) then
+        self.InVoidMeta = InVoidMeta
+    end
+
+    if (self.InVoidMeta) then
+        local CollapsingStar = GetPlayerAuraBySpellID(1225789)
+        Min = CollapsingStar and CollapsingStar.applications or 0
+        Max = GetCollapsingStarCost()
+    else
+        local VoidMeta = GetPlayerAuraBySpellID(1225789)
+        Min = VoidMeta and VoidMeta.applications or 0
+        Max = GetSpellMaxCumulativeAuraApplications(1225789)
+    end
+
+    -- Set Values
     self.Bar:SetMinMaxValues(0, Max)
-    self.Bar:SetValue(Current, UI.SmoothBars)
-    self.Text:SetText(Current)
+    self.Bar:SetValue(Min, UI.SmoothBars)
+
+    -- Set Text
+    self.Text:SetText(Min)
 end
 
 function SoulFragmentsBar:UpdateSpec()
@@ -50,17 +72,14 @@ function SoulFragmentsBar:UpdateSpec()
 end
 
 function SoulFragmentsBar:OnEvent(event, ...)
-    if (event == "UNIT_AURA" and unit ~= "player") then 
-        return 
-    end
-    
     self:Update()
     self:UpdateSpec()
 end
 
 function SoulFragmentsBar:RegisterEvents()
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:RegisterEvent("UNIT_AURA")
+    self:RegisterEvent("UNIT_AURA", "player")
+    self:RegisterEvent("UNIT_SPELLCAST_START", "player")
     self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
     self:RegisterEvent("PLAYER_TALENT_UPDATE")
     self:RegisterEvent("SPELLS_CHANGED")
@@ -72,6 +91,6 @@ function SoulFragmentsBar:Initialize()
         return
     end
 
-    --self:CreateBar()
-    --self:RegisterEvents()
+    self:CreateBar()
+    self:RegisterEvents()
 end

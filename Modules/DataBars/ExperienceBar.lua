@@ -51,6 +51,7 @@ function ExperienceBar:CreateBar()
 	Text:Point("CENTER", Bar, 0, 6)
 	Text:SetFontTemplate("Default", 16)
 
+	-- Cache
 	self.Bar = Bar
 	self.BarRested = BarRested
 	self.Text = Text
@@ -97,6 +98,7 @@ function ExperienceBar:OnEvent(event)
 	local Rested = GetXPExhaustion()
 	local IsRested = GetRestState()
 
+	-- Set Values
 	self.Bar:SetMinMaxValues(0, Max)
 	self.Bar:SetValue(Min, UI.SmoothBars)
 
@@ -119,8 +121,8 @@ function ExperienceBar:RegisterEvents()
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:RegisterEvent("PLAYER_XP_UPDATE")
 	self:RegisterEvent("PLAYER_LEVEL_UP")
-	self:RegisterEvent("UPDATE_EXHAUSTION")
 	self:RegisterEvent("PLAYER_UPDATE_RESTING")
+	self:RegisterEvent("UPDATE_EXHAUSTION")
 	self:RegisterEvent("ENABLE_XP_GAIN")
 	self:RegisterEvent("DISABLE_XP_GAIN")
 	self:SetScript("OnEvent", self.OnEvent)

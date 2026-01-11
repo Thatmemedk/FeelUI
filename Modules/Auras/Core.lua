@@ -191,10 +191,10 @@ function Auras:UpdateTempEnchant(Index)
 			UI:KeepAspectRatio(self, self.Icon)
 		end
 
-		self.TempEnchHighlight:SetVertexColor(0.64, 0.19, 0.79, 0.5)
+		self.TempEnchHighlight:Show()
 	else
 		self:SetAlpha(0)
-		self.TempEnchHighlight:SetVertexColor(0, 0, 0, 0)
+		self.TempEnchHighlight:Hide()
 	end
 end
 
@@ -239,14 +239,14 @@ function Auras:Skin()
 	local Cooldown = CreateFrame("Cooldown", nil, self, "CooldownFrameTemplate")
 	Cooldown:SetInside()
 	Cooldown:SetDrawEdge(false)
-	Cooldown:SetReverse(true)
 	Cooldown:SetSwipeColor(0, 0, 0, 0)
 
 	local TempEnchHighlight = self:CreateTexture(nil, "OVERLAY")
 	TempEnchHighlight:SetBlendMode("ADD")
 	TempEnchHighlight:SetInside(self, 1, 1)
 	TempEnchHighlight:SetTexture(Media.Global.Blank)
-	TempEnchHighlight:SetVertexColor(0, 0, 0, 0)
+	TempEnchHighlight:SetVertexColor(0.64, 0.19, 0.79, 0.5)
+	TempEnchHighlight:Hide()
 
 	-- Style Buttons
 	if (self:GetParent():GetAttribute("filter") == "HARMFUL") then
