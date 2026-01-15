@@ -9,29 +9,30 @@ local select = select
 local unpack = unpack
 local pairs = pairs
 
-function ChatBubbles:SkinBubbles(Bubbles)
-	local Frame = Bubbles:GetChildren()
+-- WoW Globals
+local C_ChatBubbles_GetAllChatBubbles = C_ChatBubbles.GetAllChatBubbles
 
-	if (Frame and not Frame:IsForbidden()) then
-		local Scale = _G.UIParent:GetScale()
-		Frame:SetScale(Scale)
-		Frame:CreateBackdrop()
-		Frame:CreateShadow()
-
-		Frame.Center:Hide()
-		Frame.TopEdge:Hide()
-		Frame.BottomEdge:Hide()
-		Frame.LeftEdge:Hide()
-		Frame.RightEdge:Hide()
-		Frame.TopLeftCorner:Hide()
-		Frame.TopRightCorner:Hide()
-		Frame.BottomLeftCorner:Hide()
-		Frame.BottomRightCorner:Hide()
-		Frame.Tail:Hide()
-		
-		Frame.String:SetFontTemplate("Default", 14)
+function ChatBubbles:SkinBubbles(Frame)
+	if (self.IsSkinned) then
+		return
 	end
-	
+
+	local Scale = _G.UIParent:GetScale()
+	Frame:SetScale(Scale)
+	Frame:CreateBackdrop()
+	Frame:CreateShadow()
+
+	Frame.Center:Hide()
+	Frame.TopEdge:Hide()
+	Frame.BottomEdge:Hide()
+	Frame.LeftEdge:Hide()
+	Frame.RightEdge:Hide()
+	Frame.TopLeftCorner:Hide()
+	Frame.TopRightCorner:Hide()
+	Frame.BottomLeftCorner:Hide()
+	Frame.BottomRightCorner:Hide()
+	Frame.Tail:Hide()
+
 	self.IsSkinned = true
 end
 
@@ -42,10 +43,10 @@ function ChatBubbles:OnUpdate(Elapsed)
 		return
 	end
 
-	local C_ChatBubbles_GetAllChatBubbles = _G.C_ChatBubbles and _G.C_ChatBubbles.GetAllChatBubbles
+	for _, Frame in pairs(C_ChatBubbles_GetAllChatBubbles()) do
+		local Bubbles = Frame:GetChildren()
 
-	for _, Bubbles in pairs(C_ChatBubbles_GetAllChatBubbles()) do
-		if (not self.IsSkinned) then
+		if (Bubbles and not Bubbles:IsForbidden()) then
 			self:SkinBubbles(Bubbles)
 		end
 	end

@@ -161,6 +161,7 @@ DB.Global = {
 		-- Colors
 		HealthBarColor = { 0.5, 0.4, 1, 0.7 },
 		UnitColors = false,
+		ReactionColor = true,
 		-- Target Indicator Color
 		TargetIndicatorColor = { 0.30, 0.70, 1 },
 	},

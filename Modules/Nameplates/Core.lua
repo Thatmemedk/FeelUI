@@ -17,8 +17,9 @@ local UnitIsPlayer = UnitIsPlayer
 local UnitClass = UnitClass
 local GetRaidTargetIndex = GetRaidTargetIndex
 local UnitThreatSituation = UnitThreatSituation
+local SetCVar = C_CVar.SetCVar
 
--- Locals
+-- Tables
 NP.Hooked = {}
 NP.ForcedCasters = {}
 NP.Range = {}
@@ -48,11 +49,25 @@ function NP:UpdateHealth(Frame, Unit)
         Frame.Health:SetStatusBarColor(0.25, 0, 0)
         Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
     else
-        Frame.Health:SetStatusBarColor(unpack(DB.Global.Nameplates.HealthBarColor))
-        Frame.Health:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
+        if (DB.Global.Nameplates.ReactionColor) then
+            Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.70)
+            
+            local HealthColorCurve = C_CurveUtil.CreateColorCurve()
+            HealthColorCurve:SetType(Enum.LuaCurveType.Cosine)
+            HealthColorCurve:AddPoint(0, CreateColor(0.6, 0, 0, 0.7))
+            HealthColorCurve:AddPoint(0.90, CreateColor(0.6, 0.6, 0, 0.7))
+            HealthColorCurve:AddPoint(1, CreateColor(Color.r, Color.g, Color.b, 0.70))
 
-        --local CurveColor = UnitHealthPercent(Unit, true, UI.NameplatesHealthColorCurve)
-        --Frame.Health:GetStatusBarTexture():SetVertexColor(CurveColor:GetRGB())
+            local CurveColor = UnitHealthPercent(Unit, true, HealthColorCurve)
+            Frame.Health:GetStatusBarTexture():SetVertexColor(CurveColor:GetRGB())
+        else
+            Frame.Health:SetStatusBarColor(unpack(DB.Global.Nameplates.HealthBarColor))
+
+            local CurveColor = UnitHealthPercent(Unit, true, UI.NameplatesHealthColorCurve)
+            Frame.Health:GetStatusBarTexture():SetVertexColor(CurveColor:GetRGB())
+        end
+
+        Frame.Health:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
     end
 end
 
@@ -315,18 +330,20 @@ end
 -- SET CVARS
 
 function NP:SetCVarOnLogin()
-    C_CVar.SetCVar("nameplateSelectedScaleEnabled", 1)
-    C_CVar.SetCVar("nameplateSelectedScale", 1)
-    C_CVar.SetCVar("nameplateSelectedScaleFactor", 1)
-    C_CVar.SetCVar("nameplateGlobalScale", 1)
-    C_CVar.SetCVar("nameplateMinScale", 1)
-    C_CVar.SetCVar("nameplateShowSelf", 0)
-    C_CVar.SetCVar("nameplateMotion", 0)
-    C_CVar.SetCVar("nameplateShowAll", 1)
-    C_CVar.SetCVar("nameplateShowFriends", 0)
-    C_CVar.SetCVar("nameplateShowEnemies", 1)
-    C_CVar.SetCVar("nameplateShowEnemyMinion", 1)
-    C_CVar.SetCVar("nameplateShowEnemyMinus", 1)
+    SetCVar("nameplateSelectedScaleEnabled", 1)
+    SetCVar("nameplateSelectedScale", 1)
+    SetCVar("nameplateSelectedScaleFactor", 1)
+    SetCVar("nameplateGlobalScale", 1)
+    SetCVar("nameplateMinScale", 1)
+    SetCVar("nameplateShowSelf", 0)
+    SetCVar("nameplateMotion", 0)
+    SetCVar("nameplateShowAll", 1)
+    SetCVar("nameplateShowFriends", 0)
+    SetCVar("nameplateShowEnemies", 1)
+    SetCVar("nameplateShowEnemyMinion", 1)
+    SetCVar("nameplateShowEnemyMinus", 1)
+    SetCVar("nameplateUseClassColorForFriendlyPlayerUnitNames", 1)
+    SetCVar("nameplateShowOnlyNameForFriendlyPlayerUnits", 1)
 end
 
 -- REGISTER EVENTS

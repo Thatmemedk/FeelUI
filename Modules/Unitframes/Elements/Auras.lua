@@ -285,7 +285,7 @@ function UF:CreatePartyBuffs(Frame)
         return
     end
 
-    Frame.Buffs = UF:CreateAuraContainer(Frame, 32, 12, 3, "TOPLEFT", -248, -12, "TOPLEFT", "LEFT", 7, "HELPFUL|RAID", false)
+    Frame.Buffs = UF:CreateAuraContainer(Frame, 32, 12, 3, "TOPLEFT", -248, -12, "TOPLEFT", "LEFT", 7, "HELPFUL|PLAYER|RAID", false)
 end
 
 function UF:CreatePartyExternal(Frame)
@@ -309,7 +309,7 @@ function UF:CreateRaidBuffs(Frame)
         return
     end
 
-    Frame.Buffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 18, 12, 3, "TOPLEFT", 0, 0, "RIGHT", "RIGHT", 4, "HELPFUL|RAID", false)
+    Frame.Buffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 18, 12, 3, "TOPLEFT", 0, 0, "RIGHT", "RIGHT", 4, "HELPFUL|PLAYER|RAID", false)
 
     for i = 1, #Frame.Buffs.Buttons do
         local Button = Frame.Buffs.Buttons[i]

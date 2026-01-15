@@ -27,6 +27,7 @@ local sub = string.sub
 -- WoW Globals
 local GetMouseFocus = GetMouseFocus
 local GetMouseFoci = GetMouseFoci
+local GameMenuFrame = _G.GameMenuFrame
 
 -- HiddenParent
 UI.HiddenParent = CreateFrame("Frame", nil, _G.UIParent)
@@ -38,7 +39,7 @@ UI.Texts = {}
 UI.Commands = {}
 
 -- Functions
-UI.ClearTexture = UI.Retail and 0 or ""
+UI.ClearTexture = 0
 UI.TexCoords = { 0.08, 0.92, 0.08, 0.92 }
 UI.Noop = function() return end
 
@@ -272,8 +273,91 @@ do
 	LSM.RegisterCallback(UI, "LibSharedMedia_Registered", LSMCallback)
 end
 
+-- FeelUI GameMenu
+function FeelUI:CreateGameMenu()
+	if (self.FeelUIGameMenuIsCreated) then
+		return
+	end
+
+	-- FRAME
+	local Frame = CreateFrame("Frame", nil, _G.UIParent)
+	Frame:SetFrameStrata("HIGH")
+    Frame:SetFrameLevel(GameMenuFrame:GetFrameLevel() - 1)
+	Frame:SetAllPoints()
+	Frame:SetAlpha(0)
+	Frame:Hide()
+
+	Frame.InvisFrame = CreateFrame("Frame", nil, Frame)
+	Frame.InvisFrame:SetFrameLevel(Frame:GetFrameLevel() + 10)
+	Frame.InvisFrame:SetInside()
+
+	-- CREATE ANIMATIONS
+	Frame.Fade = UI:CreateAnimationGroup(Frame)
+
+	Frame.FadeIn = UI:CreateAnimation(Frame.Fade, "Fade")
+	Frame.FadeIn:SetDuration(1)
+	Frame.FadeIn:SetChange(1)
+	Frame.FadeIn:SetEasing("In-SineEase")
+
+	Frame.FadeOut = UI:CreateAnimation(Frame.Fade, "Fade")
+	Frame.FadeOut:SetDuration(1)
+	Frame.FadeOut:SetChange(0)
+	Frame.FadeOut:SetEasing("Out-SineEase")
+	Frame.FadeOut:SetScript("OnFinished", function(self)
+		self:GetParent():Hide()
+	end)
+		
+	-- BACKGROUND
+	Frame.Background = CreateFrame("Frame", nil, Frame)
+	Frame.Background:SetInside()
+	Frame.Background:CreateBackdrop()
+	Frame.Background:CreateShadow()
+	Frame.Background:SetBackdropColorTemplate(0, 0, 0, 0.5)
+
+	-- FEELUI LOGO
+	Frame.Logo = Frame.InvisFrame:CreateTexture(nil, "OVERLAY")
+	Frame.Logo:Size(228, 228)
+	Frame.Logo:Point("TOP", GameMenuFrame, 0, 182)
+	Frame.Logo:SetTexture(Media.Global.Logo)
+
+	-- TEXT
+    Frame.FeedbackText = Frame.InvisFrame:CreateFontString(nil, "OVERLAY")
+    Frame.FeedbackText:Point("TOP", GameMenuFrame, 0, 32)
+    Frame.FeedbackText:SetFontTemplate("Default", 16, 2, 2)
+    Frame.FeedbackText:SetText("Need help or info? Join the |cff00aaffFeelUI|r Discord!")
+
+	Frame.DiscordLogo = Frame.InvisFrame:CreateTexture(nil, "OVERLAY")
+	Frame.DiscordLogo:Size(28, 28)
+    Frame.DiscordLogo:Point("LEFT", Frame.FeedbackText, 44, -32)
+    Frame.DiscordLogo:SetTexture(Media.Global.LogoDiscord)
+
+    Frame.DiscordText = Frame.InvisFrame:CreateFontString(nil, "OVERLAY")
+    Frame.DiscordText:Point("LEFT", Frame.DiscordLogo, 34, 0)
+    Frame.DiscordText:SetFontTemplate("Default", 12, 2, 2)
+    Frame.DiscordText:SetText("discord.gg/Q2mkRme3Yv")
+
+    -- HOOKS
+	GameMenuFrame:HookScript("OnShow", function()
+		if Frame:IsShown() then
+			Frame.FadeOut:Play()
+		else
+			Frame:Show()
+			Frame.FadeIn:Play()
+		end
+	end)
+	
+	GameMenuFrame:HookScript("OnHide", function()
+		if Frame:IsShown() then
+			Frame.FadeOut:Play()
+		end
+	end)
+	
+	self.FeelUIGameMenuIsCreated = true
+end
+
 -- Initialize The Core
 function FeelUI:Initialize()
 	self:UpdateMedia()
 	self:LoadCommands()
+	self:CreateGameMenu()
 end

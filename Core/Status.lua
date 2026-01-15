@@ -9,11 +9,11 @@ local select = select
 local unpack = unpack
 
 -- WoW Globals
-local C_AddOns_GetAddOnEnableState = C_AddOns.GetAddOnEnableState
+local GetAddOnEnableState = C_AddOns.GetAddOnEnableState
 local GetAddOnInfo = C_AddOns.GetAddOnInfo
 local GetNumAddOns = C_AddOns.GetNumAddOns
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-local GetCVar = GetCVar
+local GetCVarBool = C_CVar.GetCVarBool
 local GetLocale = GetLocale
 local GetNumAddOns = GetNumAddOns
 local GetRealZoneText = GetRealZoneText
@@ -171,7 +171,7 @@ function Status:GetNumLoadedAddOns()
 end
 
 function Status:IsAddOnEnabled(AddOn)
-	return C_AddOns_GetAddOnEnableState(UI.MyName, AddOn) == 2
+	return GetAddOnEnableState(UI.MyName, AddOn) == 2
 end
 
 function Status:CreateCategories(Parent, Name, FontSize, ShadowOffsetX, ShadowOffsetY, InsertText, R, G, B, A, Anchor, OffsetX, OffsetY)

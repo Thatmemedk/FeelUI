@@ -21,27 +21,26 @@ function GameMenu:Skin()
 
 	GameMenuFrame:ClearAllPoints()
 	GameMenuFrame:Point("CENTER", _G.UIParent, 0, 52)
-	GameMenuFrame.Border:StripTexture()
-	GameMenuFrame.NewOptionsFrame.Label:Hide()
-	GameMenuFrame.NewOptionsFrame.BGLabel:Hide()
-	GameMenuFrame.NewOptionsFrame.Glow:Hide()
+
+	if (GameMenuFrame.Header) then
+		GameMenuFrame.Header:SetAlpha(0)
+	end
+
+	if (GameMenuFrame.Border) then
+		GameMenuFrame.Border:StripTexture()
+	end
+
+	if (GameMenuFrame.NewOptionsFrame) then
+		GameMenuFrame.NewOptionsFrame.Label:Hide()
+		GameMenuFrame.NewOptionsFrame.BGLabel:Hide()
+		GameMenuFrame.NewOptionsFrame.Glow:Hide()
+	end
 
 	local GameMenuFrameNew = CreateFrame("Frame", nil, GameMenuFrame)
 	GameMenuFrameNew:Size(162, 296)
 	GameMenuFrameNew:Point("CENTER", GameMenuFrame, 0, -6)
 	GameMenuFrameNew:CreateBackdrop()
 	GameMenuFrameNew:CreateShadow()
-
-	local InvisFrame = CreateFrame("Frame", nil, GameMenuFrame)
-	InvisFrame:SetFrameLevel(GameMenuFrame:GetFrameLevel() + 10)
-	InvisFrame:SetInside()
-	
-	GameMenuFrame.Header:StripTexture()
-	GameMenuFrame.Header:ClearAllPoints()
-	GameMenuFrame.Header:SetParent(InvisFrame)
-	GameMenuFrame.Header:Point("TOP", InvisFrame, 0, -14)
-	GameMenuFrame.Header.Text:SetFontTemplate("Default", 18, 2, 2)
-	GameMenuFrame.Header.Text:SetTextColor(R, G, B)
 
 	hooksecurefunc(_G.GameMenuFrame, "InitButtons", function(self)
 		if not (self.buttonPool) then 

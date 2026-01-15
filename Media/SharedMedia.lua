@@ -27,6 +27,7 @@ Media.Global = {
 	ExitVehicle = M..[[Textures\ExitVehicle.tga]],
 	-- Logo
 	Logo = M..[[Logo\Logo.blp]],
+	LogoDiscord = M..[[Logo\LogoDiscord.tga]],
 }
 
 -- FONTS --

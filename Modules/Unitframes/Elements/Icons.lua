@@ -53,8 +53,6 @@ function UF:CreateLeaderIcon(Frame)
     local LeaderIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
     LeaderIcon:Size(11, 11)
     LeaderIcon:Point("TOPLEFT", Frame.Health, -4, 0)
-    LeaderIcon:SetTexture([[Interface\GroupFrame\UI-Group-LeaderIcon]])
-    LeaderIcon:SetTexCoord(0, 1, 0, 1)
     LeaderIcon:Hide()
     
     Frame.LeaderIcon = LeaderIcon

@@ -6,11 +6,11 @@ local select = select
 local unpack = unpack
 
 local function SetFont(self, FontSize, FontStyle, ShadowOffsetX, ShadowOffsetY, R, G, B)
-	if not (self) then 
+	if (not self) then 
 		return 
 	end
 
-	if not (FontStyle) then
+	if (not FontStyle) then
 		FontStyle = ""
 	end
 
@@ -37,7 +37,7 @@ function UI:UpdateBlizzardFonts()
 	_G.DAMAGE_TEXT_FONT = Media.Global.CombatFont
 
 	-- Chat Bubble
-	SetFont(_G.ChatBubbleFont,                     12, "THINOUTLINE", 1, 1)
+	SetFont(_G.ChatBubbleFont,                     14, "THINOUTLINE", 1, 1)
 	-- Game System Alerts Fonts	
 	SetFont(_G.ZoneTextFont,                       38, "THINOUTLINE", 2, 2)
 	SetFont(_G.SubZoneTextFont,                    28, "THINOUTLINE", 2, 2)
@@ -119,18 +119,10 @@ function UI:UpdateBlizzardFonts()
 	SetFont(_G.CharacterStatsPane.EnhancementsCategory.Title, 16, "THINOUTLINE", 1, 1)
 	-- Banner Texts
 	SetFont(_G.LevelUpDisplaySideLevel,                 		 32, "THINOUTLINE", 1, 1)
-	--SetFont(_G.LevelUpDisplaySide.reachedText,          		 14, "THINOUTLINE", 1, 1)
 	SetFont(_G.LevelUpDisplayLevelFrameLevel,           		 32, "THINOUTLINE", 1, 1)
-	--SetFont(_G.LevelUpDisplayLevelFrame.reachedText,    		 14, "THINOUTLINE", 1, 1)
 	SetFont(_G.LevelUpDisplayName,                      	     32, "THINOUTLINE", 1, 1)
-	--SetFont(_G.LevelUpDisplayScenarioFrame.description, 		 14, "THINOUTLINE", 1, 1)
-	--SetFont(_G.LevelUpDisplayScenarioFrame.level,       	     32, "THINOUTLINE", 1, 1)	
-	--SetFont(_G.LevelUpDisplay.challengeModeFrame.LevelCompleted, 32, "THINOUTLINE", 1, 1)
-	--SetFont(_G.LevelUpDisplay.challengeModeFrame.RecordTime, 	 14, "THINOUTLINE", 1, 1)
 	SetFont(_G.BossBanner.Title,    				    		 32, "THINOUTLINE", 1, 1)
 	SetFont(_G.BossBanner.SubTitle,    				    		 14, "THINOUTLINE", 1, 1)
-	--SetFont(_G.ObjectiveTrackerBonusBannerFrame.Title,  		 24, "THINOUTLINE", 1, 1)
-	--SetFont(_G.ObjectiveTrackerBonusBannerFrame.BonusLabel, 	 14, "THINOUTLINE", 1, 1)
 	-- LFG
 	SetFont(_G.LFGListFrame.CategorySelection.Label,	                    16, "THINOUTLINE", 1, 1)
 	SetFont(_G.RaidFinderQueueFrameScrollFrameChildFrameTitle,    		    16, "THINOUTLINE", 1, 1)
@@ -142,10 +134,7 @@ function UI:UpdateBlizzardFonts()
 	SetFont(_G.LFDQueueFrameRandomScrollFrameChildFrameDescription,         12, "THINOUTLINE", 1, 1)
 	SetFont(_G.LFDQueueFrameRandomScrollFrameChildFrameRewardsLabel,        16, "THINOUTLINE", 1, 1)
 	SetFont(_G.LFDQueueFrameRandomScrollFrameChildFrameRewardsDescription,  12, "THINOUTLINE", 1, 1)
-
 	-- Objective Tracker
-	--SetFont(_G.ObjectiveFont,                  12, "THINOUTLINE", 1, 1)
 	SetFont(_G.ObjectiveTrackerLineFont,       12, "THINOUTLINE", 1, 1)
 	SetFont(_G.ObjectiveTrackerHeaderFont,     16, "THINOUTLINE", 1, 1)
-	--]]
 end

@@ -20,25 +20,25 @@ local Realm = UI.MyRealm
 
 -- DB
 function UI:LoadDB()
-	if not (FeelDB) then
+	if (not FeelDB) then
 		FeelDB = {}
 	end
 
-	if not (FeelDB[Realm]) then
+	if (not FeelDB[Realm]) then
 		FeelDB[Realm] = {}
 	end
 
-	if not (FeelDB[Realm][Name]) then
+	if (not FeelDB[Realm][Name]) then
 		FeelDB[Realm][Name] = {}
 	end
 	
-	if not (FeelDB[Realm][Name].Install) then
+	if (not FeelDB[Realm][Name].Install) then
 		FeelDB[Realm][Name].Install = {}
 	end
 end
 
 function UI:ResetDB()
-	if not (FeelDB) then
+	if (not FeelDB) then
 		return
 	end
 
@@ -168,7 +168,7 @@ function UI:ImportStorageDB(String)
 			SameClass = true
 		end
 
-		if not (SameVersion and SameLocale and SameClass) then
+		if (not SameVersion and SameLocale and SameClass) then
 			ImportString = ImportString .. "\nMay not import completely."
 		end
 

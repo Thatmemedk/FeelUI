@@ -4,12 +4,11 @@ local select = select
 local unpack = unpack
 
 -- WoW Globals
-local CreateFrame = CreateFrame
 local GetAddOnMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
 local GetPhysicalScreenSize = GetPhysicalScreenSize
 local Windowed = Display_DisplayModeDropDown and Display_DisplayModeDropDown:windowedmode()
 local Fullscreen = Display_DisplayModeDropDown and Display_DisplayModeDropDown:fullscreenmode()
-local GetCVar = GetCVar
+local GetCVar = C_CVar.GetCVar
 local GetBuildInfo = GetBuildInfo
 local UnitName = UnitName
 local UnitClass = UnitClass
@@ -18,7 +17,6 @@ local UnitLevel = UnitLevel
 local GetRealmName = GetRealmName
 local UnitFactionGroup = UnitFactionGroup
 local GetLocale = GetLocale
-local WOW_PROJECT_ID = _G.WOW_PROJECT_ID
 
 -- Build The Engine
 local AddOnName, Engine = ...
@@ -36,13 +34,6 @@ Engine[1].ScreenWidth, Engine[1].ScreenHeight = GetPhysicalScreenSize()
 Engine[1].ScreenResolution = Resolution or (Windowed and GetCVar("gxWindowedResolution")) or GetCVar("gxFullscreenResolution")
 -- WoW Patches
 Engine[1].WoWPatch, Engine[1].WoWBuild, Engine[1].WoWPatchReleaseDate, Engine[1].TocVersion = GetBuildInfo()
--- WoW Clients	
-Engine[1].Retail = WOW_PROJECT_ID == _G.WOW_PROJECT_MAINLINE
-Engine[1].Classic = WOW_PROJECT_ID == _G.WOW_PROJECT_CLASSIC
-Engine[1].TBC = WOW_PROJECT_ID == _G.WOW_PROJECT_BURNING_CRUSADE_CLASSIC
-Engine[1].Wrath = WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC
-Engine[1].Cata = WOW_PROJECT_ID == _G.WOW_PROJECT_CATACLYSM_CLASSIC
-Engine[1].Mists = WOW_PROJECT_ID == _G.WOW_PROJECT_CATACLYSM_CLASSIC
 -- Player
 Engine[1].MyName = UnitName("player")
 Engine[1].MyClass = select(2, UnitClass("player"))

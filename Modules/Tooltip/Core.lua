@@ -95,7 +95,7 @@ function TT:ApplyStatusBarColor(Unit, ClassFile, Reaction)
         R, G, B = 0.5, 0.5, 0.5
     elseif (UnitIsDead(Unit)) then
         R, G, B = 0.5, 0, 0
-    elseif (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
+    elseif (UnitIsPlayer(Unit)) then
         local Color = UI.Colors.Class[ClassFile]
         R, G, B = Color.r, Color.g, Color.b
     else
@@ -105,6 +105,15 @@ function TT:ApplyStatusBarColor(Unit, ClassFile, Reaction)
 
     GameTooltipStatusBar:SetStatusBarColor(R, G, B)
     GameTooltipStatusBar:SetBackdropColorTemplate(R * 0.5, G * 0.5, B * 0.5, 0.7)
+end
+
+function TT:ApplyDefaultStatusBarColor()
+    if (not GameTooltipStatusBar) then
+        return
+    end
+
+    GameTooltipStatusBar:SetStatusBarColor(0.80, 0.30, 0.22)
+    GameTooltipStatusBar:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
 end
 
 function TT:FormatUnitName(Unit)
@@ -208,6 +217,7 @@ function TT:OnTooltipSetUnit()
     end
 
     if (not Unit or issecretvalue(Unit) or not UnitExists(Unit)) then
+        TT:ApplyDefaultStatusBarColor()
         return
     end
 
@@ -215,7 +225,7 @@ function TT:OnTooltipSetUnit()
     local Player = UnitIsPlayer(Unit)
     local ClassName, ClassFile = UnitClass(Unit)
     local Race = UnitRace(Unit)
-    local Level = (UI.Retail and UnitEffectiveLevel or UnitLevel)(Unit)
+    local Level = UnitLevel(Unit)
     local CreatureType = UnitCreatureType(Unit)
     local ClassificationUnit = UnitClassification(Unit)
     local Reaction = UnitReaction(Unit, "player")

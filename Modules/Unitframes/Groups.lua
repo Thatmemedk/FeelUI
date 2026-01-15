@@ -19,6 +19,10 @@ function UF:SetupGroupFrame(Frame, type)
     Frame:SetAttribute("type2", "togglemenu")
     Frame:SetAttribute("toggleForVehicle", true)
 
+    -- TYPE
+    Frame.IsParty = (type == "party")
+    Frame.IsRaid  = (type == "raid")
+
     if (type == "party") then
         UF:CreateParty(Frame)
     else
@@ -35,40 +39,7 @@ function UF:SetupGroupFrame(Frame, type)
 
         self.unit = value
 
-        -- HEALTH
-        UF:UpdateHealth(self)
-        -- HEALTH PRED
-        UF:UpdateHealthPred(self)
-
-        -- NAME
-        if (type == "party") then
-            UF:UpdateHealthTextCur(self)
-            UF:UpdateHealthTextPer(self)
-            UF:UpdatePower(self)
-
-            UF:UpdateName(self, "Party")
-        else
-            UF:UpdateName(self, "Raid")
-        end
-
-        -- AURAS
-        UF:UpdateAuras(self, self.unit, true)
-        UF:UpdateAuras(self, self.unit, false)
-        UF:UpdateAuras(self, self.unit, false, true)
-        -- ICONS
-        UF:UpdateRaidIcon(self)
-        UF:UpdateResurrectionIcon(self)
-        UF:UpdateLeaderIcon(self)
-        UF:UpdateAssistantIcon(self)
-        UF:UpdateSummonIcon(self)
-        UF:UpdatePhaseIcon(self)
-        UF:UpdateReadyCheckIcon(self)
-        -- THREAT
-        UF:UpdateThreatHighlightRaid(self)
-        -- DEBUFF HIGHLIGHT
-        --UF:UpdateDebuffHighlight(self, self.unit)
-        -- RANGE
-        UF:UpdateRange(self, self.unit)
+        UF:UpdateGroupFrame(self, self.unit)
     end)
 
     Frame.UnitIsCreated = true
@@ -132,6 +103,10 @@ function UF:SpawnGroupHeader(type)
 
         if (event == "PLAYER_REGEN_ENABLED") then
             self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+        end
+
+        if (event == "GROUP_ROSTER_UPDATE") then
+            UF:FullRefreshGroup()
         end
 
         local Index = 1

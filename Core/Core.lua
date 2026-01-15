@@ -10,15 +10,14 @@ local min, max = math.min, math.max
 local floor = math.floor
 
 -- WoW Globals
-local C_AddOns_GetAddOnEnableState = C_AddOns.GetAddOnEnableState
+local GetAddOnEnableState = C_AddOns.GetAddOnEnableState
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-
--- WoW Globals
 local GetPhysicalScreenSize = GetPhysicalScreenSize
 local Resolution = select(1, GetPhysicalScreenSize()).."x"..select(2, GetPhysicalScreenSize())
 local PixelPerfectScale = 768 / match(Resolution, "%d+x(%d+)")
+local SetCVar = C_CVar.SetCVar
 
--- Locals
+-- Tables
 UI.Modules = {}
 
 -- LIBS
@@ -27,7 +26,7 @@ do
 	UI.LibsMinor = {}
 	
 	function UI:AddLib(Name, Major, Minor)
-		if not (Name) then 
+		if (not Name) then 
 			return 
 		end
 
@@ -95,10 +94,10 @@ function UI:PLAYER_LOGIN(event)
 		SetCVar("uiScale", Scale)
 	end
 
-	if (C_AddOns_GetAddOnEnableState(UI.MyName, "ElvUI") == 2) then
+	if (GetAddOnEnableState(UI.MyName, "ElvUI") == 2) then
 		UI:Print(Language.ElvUI.Print)
 		StaticPopup_Show("ELVUI_INCOMPATIBLE")
-	elseif (C_AddOns_GetAddOnEnableState(UI.MyName, "Tukui") == 2) then
+	elseif (GetAddOnEnableState(UI.MyName, "Tukui") == 2) then
 		UI:Print(Language.Tukui.Print)
 		StaticPopup_Show("TUKUI_INCOMPATIBLE")
 	elseif not (IsAddOnLoaded("Tukui") or IsAddOnLoaded("ElvUI") or IsAddOnLoaded("FeelUI_PowerSuite")) then
@@ -115,7 +114,7 @@ end
 
 -- ON EVENT
 function UI:OnEvent(event, ...)
-	if self[event] then
+	if (self[event]) then
 		self[event](self, event, ...)
 	end
 end

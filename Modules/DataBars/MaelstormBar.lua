@@ -101,7 +101,7 @@ function MaelstromBar:Update()
         end
     end
 
-    self.Text:SetText(Stacks == 0 and "" or Stacks)
+    --self.Text:SetText(Stacks == 0 and "" or Stacks)
 end
 
 function MaelstromBar:UpdateSpec()
