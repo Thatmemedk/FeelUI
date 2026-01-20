@@ -44,13 +44,13 @@ function NP:CreateTargetIndicator(Frame)
     local Left = Indicator:CreateTexture(nil, "OVERLAY")
     Left:Size(14, 14)
     Left:Point("LEFT", Indicator, -16, 0)
-    Left:SetTexture(Media.Global.PowerArrowRight)
+    Left:SetTexture(Media.Global.ArrowRight)
     Left:SetVertexColor(unpack(DB.Global.Nameplates.TargetIndicatorColor))
 
     local Right = Indicator:CreateTexture(nil, "OVERLAY")
     Right:Size(14, 14)
     Right:Point("RIGHT", Indicator, 16, 0)
-    Right:SetTexture(Media.Global.PowerArrowLeft)
+    Right:SetTexture(Media.Global.ArrowLeft)
     Right:SetVertexColor(unpack(DB.Global.Nameplates.TargetIndicatorColor))
 
     Frame.TargetIndicator = Indicator

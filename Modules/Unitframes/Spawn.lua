@@ -60,15 +60,15 @@ function UF:CreateUF()
     Target:Point(unpack(DB.Global.UnitFrames.TargetPoint))
 
     -- TARGET OF TARGET
-    local TargetTarget = UF:Spawn("targettarget", 114, 28)
+    local TargetTarget = UF:Spawn("targettarget", 92, 12)
     TargetTarget:Point("BOTTOMRIGHT", Target, 0, -58)
 
     -- FOCUS
-    local Focus = UF:Spawn("focus", 114, 28)
+    local Focus = UF:Spawn("focus", 92, 12)
     Focus:Point("BOTTOMRIGHT", TargetTarget, 0, -42)
 
     -- PET
-    local Pet = UF:Spawn("pet", 114, 28)
+    local Pet = UF:Spawn("pet", 92, 12)
     Pet:Point("BOTTOMLEFT", Player, 0, -58)
 
     -- BOSS FRAMES
@@ -98,7 +98,7 @@ function UF:CreateUF()
         self.Frames.Raid = Raid
     end
 
-    -- CACHE REFERENCES
+    -- CACHE
     self.Frames.Player = Player
     self.Frames.Target = Target
     self.Frames.TargetTarget = TargetTarget

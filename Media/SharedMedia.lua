@@ -20,10 +20,8 @@ Media.Global = {
 	-- Icons/Misc
 	ChatCopy = M..[[Textures\ChatCopy.blp]],
 	CloseTexture = M..[[Textures\Close.tga]],
-	PowerArrowUp = M..[[Textures\ArrowAbove.tga]],
-	PowerArrowDown = M..[[Textures\ArrowBelow.tga]],
-	PowerArrowLeft = M..[[Textures\ArrowLeft.tga]],
-	PowerArrowRight = M..[[Textures\ArrowRight.tga]],
+	ArrowLeft = M..[[Textures\ArrowLeft.tga]],
+	ArrowRight = M..[[Textures\ArrowRight.tga]],
 	ExitVehicle = M..[[Textures\ExitVehicle.tga]],
 	-- Logo
 	Logo = M..[[Logo\Logo.blp]],

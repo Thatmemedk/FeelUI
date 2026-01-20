@@ -32,26 +32,12 @@ function SoulFragmentsBar:CreateBar()
     -- Cache
     self.Bar = Bar
     self.Text = Text
-    self.InVoidMeta = false
 end
 
 function SoulFragmentsBar:Update()
-    local InVoidMeta = GetPlayerAuraBySpellID(1217607) ~= nil
-    local Min, Max = 0, 0
-
-    if (InVoidMeta ~= self.InVoidMeta) then
-        self.InVoidMeta = InVoidMeta
-    end
-
-    if (self.InVoidMeta) then
-        local CollapsingStar = GetPlayerAuraBySpellID(1225789)
-        Min = CollapsingStar and CollapsingStar.applications or 0
-        Max = GetCollapsingStarCost()
-    else
-        local VoidMeta = GetPlayerAuraBySpellID(1225789)
-        Min = VoidMeta and VoidMeta.applications or 0
-        Max = GetSpellMaxCumulativeAuraApplications(1225789)
-    end
+    local Aura = GetPlayerAuraBySpellID(1225789) or GetPlayerAuraBySpellID(1227702)
+    local Min = Aura and Aura.applications or 0
+    local Max = 50
 
     -- Set Values
     self.Bar:SetMinMaxValues(0, Max)

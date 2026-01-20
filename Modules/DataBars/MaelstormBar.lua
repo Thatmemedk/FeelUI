@@ -33,8 +33,8 @@ function MaelstromBar:CreateBar()
 end
 
 function MaelstromBar:Update()
-    local Maelstrom = GetPlayerAuraBySpellID(344179)
-    local Stacks = Maelstrom and Maelstrom.applications or 0
+    local Aura = GetPlayerAuraBySpellID(344179)
+    local Stacks = Aura and Aura.applications or 0
 
     if (not self.Segment) then 
         self.Segment = {} 

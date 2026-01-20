@@ -17,14 +17,25 @@ function UF:CreateCombatIcon(Frame)
 
     Frame.CombatIcon = CombatIcon
 end
-        
+    
 function UF:CreateRestingIcon(Frame)
     local RestingIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
-    RestingIcon:Size(24, 24)
-    RestingIcon:Point("TOP", Frame, 0, 18)
-    RestingIcon:SetTexture([[Interface\CharacterFrame\UI-StateIcon]])
-    RestingIcon:SetTexCoord(0, 0.5, 0, 0.421875)
+    RestingIcon:Size(30, 30)
+    RestingIcon:Point("TOP", Frame, 12, 22)
+    RestingIcon:SetAtlas("UI-HUD-UnitFrame-Player-Rest-Flipbook")
     RestingIcon:SetAlpha(0)
+
+    RestingIcon.Animation = RestingIcon:CreateAnimationGroup()
+    RestingIcon.Animation:SetLooping("REPEAT")
+    RestingIcon.Animation:SetToFinalAlpha(true)
+
+    RestingIcon.AnimationFrame = RestingIcon.Animation:CreateAnimation("FlipBook")
+    RestingIcon.AnimationFrame:SetTarget(RestingIcon)
+    RestingIcon.AnimationFrame:SetDuration(2)
+    RestingIcon.AnimationFrame:SetFlipBookRows(7)
+    RestingIcon.AnimationFrame:SetFlipBookColumns(6)
+    RestingIcon.AnimationFrame:SetFlipBookFrames(42)
+    RestingIcon.AnimationFrame:SetSmoothing("NONE")
 
     Frame.RestingIcon = RestingIcon
 end
@@ -74,19 +85,18 @@ function UF:CreateReadyCheckIcon(Frame)
     ReadyCheckIcon:Point("CENTER", Frame.Health, 0, 0)
     ReadyCheckIcon:Hide()
 
-    local Animation = ReadyCheckIcon:CreateAnimationGroup()
+    ReadyCheckIcon.Animation = ReadyCheckIcon:CreateAnimationGroup()
 
-    local Fade = Animation:CreateAnimation("Alpha")
-    Fade:SetFromAlpha(1)
-    Fade:SetToAlpha(0)
-    Fade:SetDuration(1.5)
-    Fade:SetStartDelay(10)
+    ReadyCheckIcon.AnimationFrame = ReadyCheckIcon.Animation:CreateAnimation("Alpha")
+    ReadyCheckIcon.AnimationFrame:SetFromAlpha(1)
+    ReadyCheckIcon.AnimationFrame:SetToAlpha(0)
+    ReadyCheckIcon.AnimationFrame:SetDuration(2)
+    ReadyCheckIcon.AnimationFrame:SetStartDelay(10)
 
-    Animation:SetScript("OnFinished", function()
+    ReadyCheckIcon.Animation:SetScript("OnFinished", function()
         ReadyCheckIcon:Hide()
     end)
 
-    Frame.Animation = Animation
     Frame.ReadyCheckIcon = ReadyCheckIcon
 end
 

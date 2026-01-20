@@ -93,7 +93,7 @@ end
 function UF:CreateNameTextCenter(Frame)
     local Name = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
     Name:Width(110)
-    Name:Point("CENTER", Frame, 0, 0)
+    Name:Point("CENTER", Frame, 0, 6)
     Name:SetFontTemplate("Default", 12)
     Name:SetJustifyH("CENTER")
     Name:SetJustifyV("MIDDLE")

@@ -448,9 +448,15 @@ function UF:UpdateRestingIcon(Frame)
     local IsResting = IsResting()
 
     if (IsResting) then
-        UI:UIFrameFadeIn(Frame.RestingIcon, 2, Frame.RestingIcon:GetAlpha(), 1)
+        if (not Frame.RestingIcon.Animation:IsPlaying()) then
+            UI:UIFrameFadeIn(Frame.RestingIcon, 2, Frame.RestingIcon:GetAlpha(), 1)
+            Frame.RestingIcon.Animation:Play()
+        end
     else
-        UI:UIFrameFadeOut(Frame.RestingIcon, 2, Frame.RestingIcon:GetAlpha(), 0)
+        if (Frame.RestingIcon.Animation:IsPlaying()) then
+            UI:UIFrameFadeOut(Frame.RestingIcon, 2, Frame.RestingIcon:GetAlpha(), 0)
+            Frame.RestingIcon.Animation:Stop()
+        end
     end
 end
 
