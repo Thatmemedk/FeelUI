@@ -18,13 +18,13 @@ function UF:UpdateCooldownTextColor(Cooldown, Elapsed)
         return
     end
 
-    Cooldown.Elapsed = (Cooldown.Elapsed or 0) + Elapsed
+    self.Elapsed = (self.Elapsed or 0) + Elapsed
 
-    if (Cooldown.Elapsed < 0.1) then
+    if (self.Elapsed < 0.1) then
         return
     end
 
-    Cooldown.Elapsed = 0
+    self.Elapsed = 0
 
     local Button = Cooldown:GetParent()
 
