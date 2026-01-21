@@ -280,7 +280,7 @@ function FeelUI:CreateGameMenu()
 	end
 
 	-- FRAME
-	local Frame = CreateFrame("Frame", nil, _G.UIParent)
+	local Frame = CreateFrame("Frame", "FeelUI_MenuFrame", _G.UIParent)
 	Frame:SetFrameStrata("HIGH")
     Frame:SetFrameLevel(GameMenuFrame:GetFrameLevel() - 1)
 	Frame:SetAllPoints()
