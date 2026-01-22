@@ -9,49 +9,8 @@ local unpack = unpack
 
 -- WoW Globals
 local GetAuraDataByIndex = _G.C_UnitAuras.GetAuraDataByIndex
-local GetAuraDuration = _G.C_UnitAuras.GetAuraDuration
 local GetAuraApplicationDisplayCount = _G.C_UnitAuras.GetAuraApplicationDisplayCount
 local GetAuraDispelTypeColor = _G.C_UnitAuras.GetAuraDispelTypeColor
-
-function NP:UpdateCooldownTextColor(Cooldown, Elapsed)
-    if (not Cooldown:IsShown()) then
-        return
-    end
-
-    Cooldown.Elapsed = (Cooldown.Elapsed or 0) + Elapsed
-
-    if (Cooldown.Elapsed < 0.1) then
-        return
-    end
-
-    Cooldown.Elapsed = 0
-
-    local Button = Cooldown:GetParent()
-
-    if (not Button or not Button.Unit or not Button.AuraInstanceID) then
-        return
-    end
-
-    local Duration = GetAuraDuration(Button.Unit, Button.AuraInstanceID)
-
-    if (not Duration) then
-        return
-    end
-
-    local EvaluateDuration = Duration:EvaluateRemainingDuration(UI.CooldownColorCurve)
-
-    if (not EvaluateDuration) then
-        return
-    end
-
-    for i = 1, Cooldown:GetNumRegions() do
-        local Region = select(i, Cooldown:GetRegions())
-
-        if (Region and Region.GetText) then
-            Region:SetVertexColor(EvaluateDuration:GetRGBA())
-        end
-    end
-end
 
 function NP:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
     if (not Frame or not Unit) then
@@ -142,13 +101,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
                     end
                 end
 
-                if (not Button.Cooldown.CDIsHooked) then
-                    Button.Cooldown:HookScript("OnUpdate", function(self, Elapsed)
-                        NP:UpdateCooldownTextColor(self, Elapsed)
-                    end)
-
-                    Button.Cooldown.CDIsHooked = true
-                end
+                UI:RegisterCooldown(Button.Cooldown, true)
             else
                 Button.Cooldown:Hide()
             end

@@ -16,7 +16,7 @@ function Cooldown:IsActionBarParent(CD)
     return Name:match("ActionButton") or Name:match("MultiBar")
 end
 
-function Cooldown:UpdateCooldown(Start, Duration, Enable, ForceShowDrawEdge, ModRate)
+function Cooldown:UpdateCooldownFrameSet(Start, Duration, Enable, ForceShowDrawEdge, ModRate)
     if (not DB.Global.CooldownFrame.Enable or self.CDTextModified) then
         return
     end
@@ -44,5 +44,5 @@ function Cooldown:UpdateCooldown(Start, Duration, Enable, ForceShowDrawEdge, Mod
 end
 
 function Cooldown:Initialize()
-	hooksecurefunc("CooldownFrame_Set", self.UpdateCooldown)
+	hooksecurefunc("CooldownFrame_Set", self.UpdateCooldownFrameSet)
 end

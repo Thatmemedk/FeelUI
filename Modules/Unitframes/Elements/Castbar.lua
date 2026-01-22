@@ -398,7 +398,7 @@ end
 function UF:CreateTargetCastbar(Frame)
     local Castbar = CreateFrame("StatusBar", nil, Frame)
     Castbar:Size(228, 20) 
-    Castbar:Point("BOTTOM", Frame, 0, -22)
+    Castbar:Point("BOTTOM", Frame, 0, -24)
     Castbar:SetStatusBarTexture(Media.Global.Texture)
     Castbar:CreateBackdrop()
     Castbar:CreateShadow()

@@ -154,13 +154,24 @@ end
 
 -- Load Commands
 function FeelUI:LoadCommands()
+	-- Reload UI
 	UI:AddCommand("RELOADUI", {"/rl"}, _G.ReloadUI)
+
+	-- Dev Console
 	UI:AddCommand("DEVCON", "/devcon", function()
 		if (_G.DeveloperConsole) then
 			_G.DeveloperConsole:Toggle()
 		end
 	end)
 
+	-- CDM Settings
+	UI:AddCommand("CDMUI", {"/cdm"}, function()
+		if (_G.CooldownViewerSettings) then
+			_G.CooldownViewerSettings:ShowUIPanel()
+		end
+	end)
+
+	-- FeelUI Commands
 	UI:RegisterChatCommand("feelui", "Options")
 	UI:RegisterChatCommand("fhelp", "Help")
 	UI:RegisterChatCommand("fstatus", "Status")
@@ -190,36 +201,6 @@ function UI:KeepAspectRatio(Button, Icon)
 	end
 
 	Icon:SetTexCoord(BaseLeft, BaseRight, BaseTop, BaseBottom)
-end
-
--- CD Font Scaling
-function UI:GetCooldownFontScale(CD)
-    if (not CD) then 
-    	return
-    end
-
-    local Width = CD:GetWidth() or 36
-    local Height = CD:GetHeight() or 36
-    local BaseSize = min(Width, Height)
-    local Scale = BaseSize / 36
-
-    if (Scale < 0.7) then
-        Scale = 0.7
-    elseif (Scale > 1.6) then
-        Scale = 1.6
-    end
-
-    if (Scale < 1) then
-        Scale = 0.8 + (Scale * 0.2)
-    end
-
-    local FontSize = floor(Scale * 15 + 0.6)
-
-    if (FontSize < 10) then
-        FontSize = 10
-    end
-
-    return FontSize
 end
 
 -- Pulse Function

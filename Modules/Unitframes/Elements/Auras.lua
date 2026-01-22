@@ -9,49 +9,8 @@ local unpack = unpack
 
 -- WoW Globals
 local GetAuraDataByIndex = _G.C_UnitAuras.GetAuraDataByIndex
-local GetAuraDuration = _G.C_UnitAuras.GetAuraDuration
 local GetAuraApplicationDisplayCount = _G.C_UnitAuras.GetAuraApplicationDisplayCount
 local GetAuraDispelTypeColor = _G.C_UnitAuras.GetAuraDispelTypeColor
-
-function UF:UpdateCooldownTextColor(Cooldown, Elapsed)
-    if (not Cooldown:IsShown()) then
-        return
-    end
-
-    self.Elapsed = (self.Elapsed or 0) + Elapsed
-
-    if (self.Elapsed < 0.1) then
-        return
-    end
-
-    self.Elapsed = 0
-
-    local Button = Cooldown:GetParent()
-
-    if (not Button or not Button.Unit or not Button.AuraInstanceID) then
-        return
-    end
-
-    local Duration = GetAuraDuration(Button.Unit, Button.AuraInstanceID)
-
-    if (not Duration) then
-        return
-    end
-
-    local EvaluateDuration = Duration:EvaluateRemainingDuration(UI.CooldownColorCurve)
-
-    if (not EvaluateDuration) then
-        return
-    end
-
-    for i = 1, Cooldown:GetNumRegions() do
-        local Region = select(i, Cooldown:GetRegions())
-
-        if (Region and Region.GetText and Region.SetText) then
-            Region:SetVertexColor(EvaluateDuration:GetRGBA())
-        end
-    end
-end
 
 function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
     if (not Frame or not Frame.unit) then
@@ -93,6 +52,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
         local Duration = AuraData.duration
         local ExpirationTime = AuraData.expirationTime
         local AuraInstanceID = AuraData.auraInstanceID
+        local AuraIsStealable = AuraData.isStealable
         local Button = Auras.Buttons[Active + 1]
 
         if (not Button) then
@@ -142,13 +102,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
                     end
                 end
 
-                if (not Button.Cooldown.CDIsHooked) then
-                    Button.Cooldown:HookScript("OnUpdate", function(self, Elapsed)
-                        UF:UpdateCooldownTextColor(self, Elapsed)
-                    end)
-
-                    Button.Cooldown.CDIsHooked = true
-                end
+                UI:RegisterCooldown(Button.Cooldown, true)
             else
                 Button.Cooldown:Hide()
             end
@@ -162,6 +116,14 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
             end
         else
             Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
+        end
+
+        if (Button.Highlight) then
+            if (not UnitCanCooperate("player", Unit)) then
+                Button.Highlight:SetAlphaFromBoolean(AuraIsStealable, 1, 0)
+            else
+                Button.Highlight:SetAlpha(0)
+            end
         end
 
         -- Cache
@@ -215,6 +177,11 @@ function UF:CreateAuraButton(Frame, ExtraBorder, HideNumbers)
     Count:Point("TOPRIGHT", Button, 2, 2)
     Count:SetFontTemplate("Default")
 
+    local Highlight = CreateFrame("Frame", nil, Button)
+    Highlight:SetFrameLevel(Button:GetFrameLevel() -1)
+    Highlight:SetInside(Button, 4, 4)
+    Highlight:CreateGlow(3, 3, 1, 0, 1, 1)
+
     local Cooldown = CreateFrame("Cooldown", nil, Button, "CooldownFrameTemplate")
     Cooldown:SetInside()
     Cooldown:SetDrawEdge(false)
@@ -225,6 +192,7 @@ function UF:CreateAuraButton(Frame, ExtraBorder, HideNumbers)
     Button.Overlay = Overlay
     Button.Icon = Icon
     Button.Count = Count
+    Button.Highlight = Highlight
     Button.Cooldown = Cooldown
 
     return Button

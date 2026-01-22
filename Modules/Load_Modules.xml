@@ -27,6 +27,7 @@
 	<Script file="Chat\CombatLog.lua"/>
 	<!-- CooldownFrame -->
 	<Script file="CooldownFrame\Core.lua"/>
+	<Script file="CooldownFrame\Utils.lua"/>
 	<!-- CooldownManager -->
 	<Script file="CooldownManager\Core.lua"/>
 	<Script file="CooldownManager\Icons.lua"/>

@@ -12,7 +12,6 @@ local unpack = unpack
 local GetWeaponEnchantInfo = GetWeaponEnchantInfo
 local GetInventoryItemTexture = GetInventoryItemTexture
 local GetAuraDataByIndex = _G.C_UnitAuras.GetAuraDataByIndex
-local GetAuraDuration = _G.C_UnitAuras.GetAuraDuration
 local GetAuraApplicationDisplayCount = _G.C_UnitAuras.GetAuraApplicationDisplayCount
 
 -- Locals
@@ -68,46 +67,6 @@ function Auras:OnUpdate(elapsed)
 	end
 end
 
-function Auras:UpdateCooldownTextColor(Cooldown, Elapsed)
-    if (not Cooldown:IsShown()) then
-        return
-    end
-
-    self.Elapsed = (self.Elapsed or 0) + Elapsed
-
-    if (self.Elapsed < 0.1) then
-        return
-    end
-
-    self.Elapsed = 0
-
-    local Button = Cooldown:GetParent()
-
-    if (not Button or not Button.Unit or not Button.AuraInstanceID) then
-        return
-    end
-
-    local Duration = GetAuraDuration(Button.Unit, Button.AuraInstanceID)
-
-    if (not Duration) then
-        return
-    end
-
-    local EvaluateDuration = Duration:EvaluateRemainingDuration(UI.CooldownColorCurve)
-
-    if (not EvaluateDuration) then
-        return
-    end
-
-    for i = 1, Cooldown:GetNumRegions() do
-        local Region = select(i, Cooldown:GetRegions())
-
-        if (Region and Region.GetText) then
-            Region:SetVertexColor(EvaluateDuration:GetRGBA())
-        end
-    end
-end
-
 function Auras:UpdateAura(Index)
 	local Unit = self:GetParent():GetAttribute("unit")
 	local AuraData = GetAuraDataByIndex(Unit, Index, self.Filter)
@@ -143,13 +102,7 @@ function Auras:UpdateAura(Index)
 				end
 			end
 
-		    if (not self.Cooldown.CDIsHooked) then
-	            self.Cooldown:HookScript("OnUpdate", function(self, Elapsed)
-	                Auras:UpdateCooldownTextColor(self, Elapsed)
-	            end)
-
-	            self.Cooldown.CDIsHooked = true
-	        end
+			UI:RegisterCooldown(self.Cooldown, true)
 		end
 	else
 		self.Cooldown:Hide()
