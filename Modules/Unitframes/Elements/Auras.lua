@@ -92,17 +92,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
                 Button.Cooldown:SetCooldown(Duration, ExpirationTime)
                 Button.Cooldown:SetCooldownFromExpirationTime(ExpirationTime, Duration)
 
-                for i = 1, Button.Cooldown:GetNumRegions() do
-                    local Region = select(i, Button.Cooldown:GetRegions())
-
-                    if (Region and Region.GetText) then
-                        Region:ClearAllPoints()
-                        Region:Point("CENTER", Button.Overlay, 0, -8)
-                        Region:SetFontTemplate("Default")
-                    end
-                end
-
-                UI:RegisterCooldown(Button.Cooldown, true)
+                UI:RegisterCooldown(Button.Cooldown, Button.Overlay, 0, -8, false, true, false)
             else
                 Button.Cooldown:Hide()
             end

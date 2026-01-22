@@ -85,20 +85,8 @@ function AB:StyleActionButton(Button, Icon, Name)
     if (Cooldown) then
         Cooldown:ClearAllPoints()
         Cooldown:SetInside()
-        
-        for i = 1, Cooldown:GetNumRegions() do
-            local Region = select(i, Cooldown:GetRegions())
 
-            if (Region and Region.GetText) then
-                local FontSize = UI:GetCooldownFontScale(Cooldown)
-
-                Region:ClearAllPoints()
-                Region:Point("CENTER", Button, 0, 0)
-                Region:SetFontTemplate("Default", FontSize)
-            end
-        end
-
-        UI:RegisterCooldown(Cooldown, false, true)
+        UI:RegisterCooldown(Cooldown, Button, 0, 0, true, false, true)
     end
 
     if (LossControlCD) then

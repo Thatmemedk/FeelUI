@@ -92,17 +92,7 @@ function Auras:UpdateAura(Index)
 			self.Cooldown:SetCooldown(AuraData.duration, AuraData.expirationTime) 
 			self.Cooldown:SetCooldownFromExpirationTime(AuraData.expirationTime, AuraData.duration)
 
-			for i = 1, self.Cooldown:GetNumRegions() do
-				local Region = select(i, self.Cooldown:GetRegions())
-
-				if (Region and Region.GetText) then
-					Region:ClearAllPoints()
-					Region:Point("CENTER", self.InvisFrame, 0, -8)
-					Region:SetFontTemplate("Default")
-				end
-			end
-
-			UI:RegisterCooldown(self.Cooldown, true)
+			UI:RegisterCooldown(self.Cooldown, self.InvisFrame, 0, -8, false, true, false)
 		end
 	else
 		self.Cooldown:Hide()

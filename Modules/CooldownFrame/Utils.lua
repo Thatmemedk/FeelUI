@@ -92,9 +92,26 @@ function UI:UpdateCooldownTextColor(CD, Elapsed, IsAura)
     end
 end
 
-function UI:RegisterCooldown(CD, Aura, ActionBar)
+function UI:RegisterCooldown(CD, Parent, OffsetX, OffsetY, DynamicFontSize, Aura, ActionBar)
     if (CD.IsRegisteredCooldown) then
         return
+    end
+
+    for i = 1, CD:GetNumRegions() do
+        local Region = select(i, CD:GetRegions())
+
+        if (Region and Region.GetText) then
+            Region:ClearAllPoints()
+            Region:Point("CENTER", Parent, OffsetX or 0, OffsetY or 0)
+
+            if (DynamicFontSize) then
+                local FontSize = UI:GetCooldownFontScale(CD)
+
+                Region:SetFontTemplate("Default", FontSize)
+            else
+                Region:SetFontTemplate("Default")
+            end
+        end
     end
 
     CD:HookScript("OnUpdate", function(self, Elapsed)
