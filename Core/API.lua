@@ -164,11 +164,14 @@ function FeelUI:LoadCommands()
 		end
 	end)
 
-	-- CDM Settings
-	UI:AddCommand("CDMUI", {"/cdm"}, function()
-		if (_G.CooldownViewerSettings) then
-			_G.CooldownViewerSettings:ShowUIPanel()
+	-- Cooldown Manager
+	UI:AddCommand("CDMUI", "/cdm", function()
+		if InCombatLockdown() or not _G.CooldownViewerSettings then
+			UI:Print("You can't access |CFF00AAFFCooldown Manager|r while in combat.")
+			return
 		end
+
+		_G.CooldownViewerSettings:ShowUIPanel()
 	end)
 
 	-- FeelUI Commands

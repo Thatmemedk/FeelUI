@@ -18,7 +18,7 @@ function AB:SafeHide(Frame)
 end
 
 function AB:StyleActionButton(Button, Icon, Name)
-    if (not Button or Button.ActionBarButtonsIsSkinned) then 
+    if (not Button or Button.IsSkinned) then 
         return 
     end
 
@@ -86,7 +86,7 @@ function AB:StyleActionButton(Button, Icon, Name)
         Cooldown:ClearAllPoints()
         Cooldown:SetInside()
 
-        UI:RegisterCooldown(Cooldown, Button, 0, 0, true, false, true)
+        UI:RegisterCooldown(Cooldown, Button, 0, 0, true, false)
     end
 
     if (LossControlCD) then
@@ -117,7 +117,7 @@ function AB:StyleActionButton(Button, Icon, Name)
     Button:StyleButton()
     Button:SetShadowOverlay()
 
-    Button.ActionBarButtonsIsSkinned = true
+    Button.IsSkinned = true
 end
 
 function AB:SkinButton()

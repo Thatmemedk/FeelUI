@@ -17,7 +17,7 @@ function Cooldown:IsActionBarParent(CD)
 end
 
 function Cooldown:UpdateCooldownFrameSet(Start, Duration, Enable, ForceShowDrawEdge, ModRate)
-    if (not DB.Global.CooldownFrame.Enable or self.CDTextModified) then
+    if (not DB.Global.CooldownFrame.Enable or self.CDTextIsModified) then
         return
     end
 
@@ -40,7 +40,7 @@ function Cooldown:UpdateCooldownFrameSet(Start, Duration, Enable, ForceShowDrawE
         end
     end
 
-    self.CDTextModified = true
+    self.CDTextIsModified = true
 end
 
 function Cooldown:Initialize()

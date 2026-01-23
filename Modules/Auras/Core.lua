@@ -92,7 +92,7 @@ function Auras:UpdateAura(Index)
 			self.Cooldown:SetCooldown(AuraData.duration, AuraData.expirationTime) 
 			self.Cooldown:SetCooldownFromExpirationTime(AuraData.expirationTime, AuraData.duration)
 
-			UI:RegisterCooldown(self.Cooldown, self.InvisFrame, 0, -8, false, true, false)
+			UI:RegisterCooldown(self.Cooldown, self.InvisFrame, 0, -8, false, true)
 		end
 	else
 		self.Cooldown:Hide()
@@ -241,6 +241,8 @@ function Auras:CreateAuraHeader(Filter)
 	local ButtonWidth, ButtonHeight = unpack(DB.Global.Auras.ButtonSize)
 
 	local Header = CreateFrame("Frame", Name, _G.UIParent, "SecureAuraHeaderTemplate")
+	Header:UnregisterEvent("UNIT_AURA")
+	Header:RegisterUnitEvent("UNIT_AURA", "player", "vehicle")
 	Header:SetAttribute("unit", "player")
 	Header:SetAttribute("filter", Filter)
 	Header.Filter = Filter

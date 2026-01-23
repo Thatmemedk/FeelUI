@@ -92,7 +92,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
                 Button.Cooldown:SetCooldown(Duration, ExpirationTime)
                 Button.Cooldown:SetCooldownFromExpirationTime(ExpirationTime, Duration)
 
-                UI:RegisterCooldown(Button.Cooldown, Button.Overlay, 0, -8, false, true, false)
+                UI:RegisterCooldown(Button.Cooldown, Button.Overlay, 0, -8, false, true)
             else
                 Button.Cooldown:Hide()
             end

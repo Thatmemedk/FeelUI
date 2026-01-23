@@ -38,6 +38,22 @@ function UI:GetCooldownFontScale(CD)
     return FontSize
 end
 
+function UI:GetCooldownDuration(Button, IsAura)
+    if (IsAura) then
+        local Unit, AuraInstanceID = Button.Unit, Button.AuraInstanceID
+
+        if (Unit and AuraInstanceID) then
+            return GetAuraDuration(Unit, AuraInstanceID)
+        end
+    else
+        local ActionID = Button.action
+
+        if (ActionID and not issecretvalue(ActionID)) then
+            return GetActionCooldownDuration(ActionID)
+        end
+    end
+end
+
 function UI:UpdateCooldownTextColor(CD, Elapsed, IsAura)
     if (not CD) then
         return
@@ -52,47 +68,33 @@ function UI:UpdateCooldownTextColor(CD, Elapsed, IsAura)
     self.Elapsed = 0
 
     local Button = CD:GetParent()
-    local Duration
 
-    if (IsAura) then
-        local AuraInstanceID = Button.AuraInstanceID
-        local Unit = Button.Unit
-
-        if (not Button or not Unit or not AuraInstanceID) then
-            return
-        end
-
-        Duration = GetAuraDuration(Unit, AuraInstanceID)
-    else
-        local ActionID = Button.action
-
-        if (not Button or not ActionID or issecretvalue(ActionID)) then
-            return
-        end
-
-        Duration = GetActionCooldownDuration(ActionID)
+    if (not Button) then 
+        return 
     end
 
-    if (not Duration) then
-        return
+    local Duration = UI:GetCooldownDuration(Button, IsAura)
+
+    if (not Duration) then 
+        return 
     end
 
-    local EvaluateDuration = Duration:EvaluateRemainingDuration(UI.CooldownColorCurve)
-
-    if (not EvaluateDuration) then
-        return
+    local Evaluated = Duration:EvaluateRemainingDuration(UI.CooldownColorCurve)
+    
+    if (not Evaluated) then 
+        return 
     end
 
     for i = 1, CD:GetNumRegions() do
         local Region = select(i, CD:GetRegions())
 
         if (Region and Region.GetText) then
-            Region:SetVertexColor(EvaluateDuration:GetRGBA())
+            Region:SetVertexColor(Evaluated:GetRGBA())
         end
     end
 end
 
-function UI:RegisterCooldown(CD, Parent, OffsetX, OffsetY, DynamicFontSize, Aura, ActionBar)
+function UI:RegisterCooldown(CD, Parent, OffsetX, OffsetY, DynamicFontSize, IsAura)
     if (CD.IsRegisteredCooldown) then
         return
     end
@@ -101,25 +103,16 @@ function UI:RegisterCooldown(CD, Parent, OffsetX, OffsetY, DynamicFontSize, Aura
         local Region = select(i, CD:GetRegions())
 
         if (Region and Region.GetText) then
+            local FontSize = DynamicFontSize and UI:GetCooldownFontScale(CD)
+
             Region:ClearAllPoints()
             Region:Point("CENTER", Parent, OffsetX or 0, OffsetY or 0)
-
-            if (DynamicFontSize) then
-                local FontSize = UI:GetCooldownFontScale(CD)
-
-                Region:SetFontTemplate("Default", FontSize)
-            else
-                Region:SetFontTemplate("Default")
-            end
+            Region:SetFontTemplate("Default", FontSize or 12)
         end
     end
 
     CD:HookScript("OnUpdate", function(self, Elapsed)
-        if (Aura) then
-            UI:UpdateCooldownTextColor(self, Elapsed, true)
-        elseif (ActionBar) then
-            UI:UpdateCooldownTextColor(self, Elapsed, false)
-        end
+        UI:UpdateCooldownTextColor(self, Elapsed, IsAura)
     end)
 
     CD.IsRegisteredCooldown = true

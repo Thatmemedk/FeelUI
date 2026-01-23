@@ -52,6 +52,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
         local Duration = AuraData.duration
         local ExpirationTime = AuraData.expirationTime
         local AuraInstanceID = AuraData.auraInstanceID
+        local AuraIsStealable = AuraData.isStealable
         local Button = Auras.Buttons[Active + 1]
 
         if (not Button) then
@@ -91,7 +92,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
                 Button.Cooldown:SetCooldown(Duration, ExpirationTime)
                 Button.Cooldown:SetCooldownFromExpirationTime(ExpirationTime, Duration)
 
-                UI:RegisterCooldown(Button.Cooldown, Button.Overlay, 0, -8, false, true, false)
+                UI:RegisterCooldown(Button.Cooldown, Button.Overlay, 0, -8, false, true)
             else
                 Button.Cooldown:Hide()
             end
@@ -105,6 +106,14 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
             end
         else
             Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
+        end
+
+        if (Button.Highlight) then
+            if (not UnitCanCooperate("player", Unit)) then
+                Button.Highlight:SetAlphaFromBoolean(AuraIsStealable, 1, 0)
+            else
+                Button.Highlight:SetAlpha(0)
+            end
         end
 
         -- Cache
@@ -137,6 +146,11 @@ function NP:CreateAuraButton(Frame, ExtraBorder)
     Count:Point("TOPRIGHT", Button, 2, 2)
     Count:SetFontTemplate("Default")
 
+    local Highlight = CreateFrame("Frame", nil, Button)
+    Highlight:SetFrameLevel(Button:GetFrameLevel() -1)
+    Highlight:SetInside(Button, 4, 4)
+    Highlight:CreateGlow(3, 3, 1, 0, 1, 1)
+
     local Cooldown = CreateFrame("Cooldown", nil, Button, "CooldownFrameTemplate")
     Cooldown:SetInside()
     Cooldown:SetDrawEdge(false)
@@ -147,6 +161,7 @@ function NP:CreateAuraButton(Frame, ExtraBorder)
     Button.Overlay = Overlay
     Button.Icon = Icon
     Button.Count = Count
+    Button.Highlight = Highlight
     Button.Cooldown = Cooldown
 
     return Button

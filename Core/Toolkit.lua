@@ -646,7 +646,7 @@ local function DisableBackdrops(self)
     end
 end
 
-local function HandleButton(self, Strip, Pulse)
+local function HandleButton(self, Strip)
 	if (self.HandleButtonIsSkinned) then
 		return 
 	end

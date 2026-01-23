@@ -256,10 +256,10 @@ function TT:SetBackdropStyle(tt)
         tt.NineSlice:SetAlpha(0) 
     end
 
-    local width = tt:GetWidth()
-    local height = tt:GetHeight()
+    local Width = tt:GetWidth()
+    local Height = tt:GetHeight()
 
-    if (width and height and not issecretvalue(width) and not issecretvalue(height)) then
+    if (Width and Height and not issecretvalue(Width) and not issecretvalue(Height)) then
         local Frame = CreateFrame("Frame", nil, tt)
         Frame:SetFrameLevel(tt:GetFrameLevel() -1)
         Frame:SetInside(tt, 2, 2)
@@ -312,7 +312,7 @@ function TT:CreateAnchor()
     Anchor:SetFrameLevel(20)
     Anchor:SetClampedToScreen(true)
     Anchor:Size(200, Panels.ChatPanelRight:GetHeight() - 4)
-    Anchor:Point("BOTTOMRIGHT", Panels.ChatPanelRight, 0, 0)
+    Anchor:Point("BOTTOMRIGHT", Panels.ChatPanelRight, 0, 42)
     Anchor:SetMovable(true)
 
     self.Anchor = Anchor
