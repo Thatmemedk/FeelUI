@@ -14,7 +14,7 @@ function Time:Create()
 
 	local Text = Frame:CreateFontString(nil, "OVERLAY")
 	Text:Point("CENTER", Frame, 0, 0)
-	Text:SetFontTemplate("Default", 14) 
+	Text:SetFontTemplate("Default", 16, 2, 2) 
 	Text:SetTextColor(unpack(DB.Global.DataTexts.TextColor))
 
 	self.Frame = Frame

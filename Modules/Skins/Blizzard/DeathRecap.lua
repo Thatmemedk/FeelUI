@@ -62,11 +62,9 @@ function DeathRecap:Initialize()
 		return
 	end
 	
-	--[[
-	if not IsAddOnLoaded("Blizzard_DeathRecap") then
+	if (not IsAddOnLoaded("Blizzard_DeathRecap")) then
 		LoadAddOn("Blizzard_DeathRecap")
 	end
 	
 	self:Skin()
-	--]]
 end

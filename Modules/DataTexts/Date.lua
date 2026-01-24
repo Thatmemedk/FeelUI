@@ -15,7 +15,7 @@ function Date:OnClick()
 		return 
 	end
 
-	if not IsAddOnLoaded("Blizzard_Calendar") then
+	if (not IsAddOnLoaded("Blizzard_Calendar")) then
 		LoadAddOn("Blizzard_Calendar")
 	end
 
@@ -36,7 +36,7 @@ function Date:Create()
 
 	local Text = Frame:CreateFontString(nil, "OVERLAY")
 	Text:Point("CENTER", Frame, 0, 0)
-	Text:SetFontTemplate("Default")
+	Text:SetFontTemplate("Default", 12, 2, 2)
 	Text:SetTextColor(unpack(DB.Global.DataTexts.TextColor))
 
 	self.Frame = Frame

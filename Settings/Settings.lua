@@ -80,13 +80,19 @@ DB.Global = {
 
 	CooldownManager = {
 		Enable = true,
+		-- Size Settings
 		BuffViewerButtonSize = { 36, 12 },
 		EssentialViewerButtonSize = { 32, 12 },
 		UtilityViewerButtonSize = { 32, 12 },
 		ButtonSpacing = 2,
+		-- Points Settings
 		BuffViewerPoint = { "CENTER", _G.UIParent, 0, -162 },
 		EssentialViewerPoint = { "CENTER", _G.UIParent, 0, -188 },
 		UtilityViewerPoint = { "CENTER", _G.UIParent, 0, -248 },
+	},
+
+	ScrollingCombatText = {
+		Enable = true,
 	},
 
 	DataBars = {

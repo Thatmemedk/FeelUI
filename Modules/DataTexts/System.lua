@@ -30,11 +30,11 @@ local GradientColorPaletDown = {
 function System:Create()
     local Frame = CreateFrame("Frame", nil, _G.UIParent)
     Frame:Size(160, 50)
-    Frame:Point("LEFT", Panels.DataTextHolder, 0, -3)
+    Frame:Point("LEFT", Panels.DataTextHolder, 0, -2)
 
     local Text = Frame:CreateFontString(nil, "OVERLAY")
-    Text:Point("CENTER", Frame, 0, 0)
-    Text:SetFontTemplate("Default")
+    Text:Point("CENTER", Frame, -32, 0)
+    Text:SetFontTemplate("Default", 12)
     Text:SetTextColor(unpack(DB.Global.DataTexts.TextColor))
 
     self.Frame = Frame

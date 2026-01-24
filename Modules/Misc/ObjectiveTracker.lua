@@ -147,7 +147,7 @@ function ObjectiveTracker:CreateToggleButtons()
     ToggleButton.Texture:Size(14, 14)
     ToggleButton.Texture:Point("CENTER", ToggleButton, -2, 0)
     ToggleButton.Texture:SetVertexColor(R, G, B)
-    ToggleButton.Texture:SetTexture(Media.Global.PowerArrowRight)
+    ToggleButton.Texture:SetTexture(Media.Global.ArrowRight)
 
     ToggleButton:HookScript("OnEnter", function(self)
         UI:UIFrameFadeIn(self, 1, self:GetAlpha(), 1)

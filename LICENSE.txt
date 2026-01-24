@@ -1,5 +1,5 @@
 All Rights Reserved (ARR)
-Copyright © 2021–2026    FeelUI
+Copyright © 2021–2026 FeelUI
 
 Permission to use, copy, modify, or distribute this software is NOT granted without explicit written permission from the copyright holder, except as explicitly stated below.
 
@@ -19,8 +19,6 @@ Third-Party Libraries (License Exclusion):
 This license does NOT apply to the following bundled third-party libraries, which are distributed under their own respective licenses:
 
 * Ace3
-* LibDBIcon-1.0
-* LibDataBroker-1.1
 * LibSharedMedia-3.0
 
 Use, modification, and redistribution of these libraries are governed solely by their original licenses and copyright holders.

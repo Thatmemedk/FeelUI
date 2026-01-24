@@ -65,11 +65,11 @@ end
 function Durability:Create()
 	local Frame = CreateFrame("Frame", nil, _G.UIParent)
 	Frame:Size(160, 50)
-	Frame:Point("RIGHT", Panels.DataTextHolder, 0, -3)
+	Frame:Point("RIGHT", Panels.DataTextHolder, 32, -2)
 
 	local Text = Frame:CreateFontString(nil, "OVERLAY")
 	Text:Point("CENTER", Frame, 0, 0)
-	Text:SetFontTemplate("Default")
+	Text:SetFontTemplate("Default", 12)
 	Text:SetTextColor(unpack(DB.Global.DataTexts.TextColor))
 
 	self.Frame = Frame

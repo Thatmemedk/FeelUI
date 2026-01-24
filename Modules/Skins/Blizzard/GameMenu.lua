@@ -43,7 +43,7 @@ function GameMenu:Skin()
 	GameMenuFrameNew:CreateShadow()
 
 	hooksecurefunc(_G.GameMenuFrame, "InitButtons", function(self)
-		if not (self.buttonPool) then 
+		if (not self.buttonPool) then 
 			return 
 		end
 

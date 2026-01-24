@@ -55,5 +55,9 @@ function ChatBubbles:OnUpdate(Elapsed)
 end
 
 function ChatBubbles:Initialize()
+	if (not DB.Global.Theme.Enable) then 
+		return
+	end
+	
 	self:SetScript("OnUpdate", self.OnUpdate)
 end

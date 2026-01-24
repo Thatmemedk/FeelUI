@@ -27,7 +27,7 @@ function AB:ToggleButtonOnClick()
 
 		self:Point("LEFT", _G.UIParent, 6, 0)
 		self.Texture:Point("CENTER", self, -2, 0)
-		self.Texture:SetTexture(Media.Global.PowerArrowRight)
+		self.Texture:SetTexture(Media.Global.ArrowRight)
 
 		if (DB.Global.UnitFrames.RaidFrames) then
 			if (FeelUI_Raid) then

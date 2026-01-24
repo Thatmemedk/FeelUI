@@ -93,7 +93,7 @@ end
 function Memory:Create()
     local Frame = CreateFrame("Frame", nil, _G.UIParent)
     Frame:Size(160, 50)
-    Frame:Point("CENTER", Panels.DataTextHolder, 0, -3)
+    Frame:Point("CENTER", Panels.DataTextHolder, 0, -2)
     Frame:SetScript("OnEnter", self.OnEnter)
     Frame:SetScript("OnLeave", self.OnLeave)
 

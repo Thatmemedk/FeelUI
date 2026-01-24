@@ -56,6 +56,7 @@
 	<Script file="Maps\MinimapButtonsBar.lua"/>
 	<!-- Misc -->
 	<Script file="Misc\Blizzard.lua"/>
+	<Script file="Misc\CombatText.lua"/>
 	<Script file="Misc\ErrorFilter.lua"/>
 	<Script file="Misc\LossControl.lua"/>
 	<Script file="Misc\Merchant.lua"/>
@@ -64,12 +65,15 @@
 	<Script file="Misc\TimeTrackers.lua"/>
 	<!-- Skins Blizzard -->
 	<Script file="Skins\Blizzard\Bubbles.lua"/>
+	<Script file="Skins\Blizzard\DamageMeter.lua"/>
+	<Script file="Skins\Blizzard\DeathRecap.lua"/>
+	<Script file="Skins\Blizzard\DropDown.lua"/>
+	<Script file="Skins\Blizzard\EncounterWarnings.lua"/>
 	<Script file="Skins\Blizzard\GameMenu.lua"/>
 	<Script file="Skins\Blizzard\GhostFrame.lua"/>
 	<Script file="Skins\Blizzard\StackSplitFrame.lua"/>
+	<Script file="Skins\Blizzard\StaticPopups.lua"/>
 	<Script file="Skins\Blizzard\TalkingHead.lua"/>
-	<Script file="Skins\Blizzard\DeathRecap.lua"/>
-	<Script file="Skins\Blizzard\DamageMeter.lua"/>
 	<!-- Tooltip -->
 	<Script file="Tooltip\Core.lua"/>
 	<!-- NamePlates -->

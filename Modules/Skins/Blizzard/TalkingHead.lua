@@ -8,7 +8,8 @@ local _G = _G
 local select = select
 local unpack = unpack
 
--- Locals
+-- WoW Globals
+local TalkingHeadFrame = _G.TalkingHeadFrame
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local LoadAddOn = C_AddOns.LoadAddOn
 
@@ -17,11 +18,17 @@ function TalkingHead:Skin()
 		return
 	end
 
-	local TalkingHeadFrame = _G.TalkingHeadFrame
-	TalkingHeadFrame.BackgroundFrame:Hide()
-	TalkingHeadFrame.PortraitFrame:Hide()
-	TalkingHeadFrame.MainFrame.Model.PortraitBg:Hide()
-	TalkingHeadFrame.MainFrame.CloseButton:HandleCloseButton()
+	if (TalkingHeadFrame.BackgroundFrame) then
+		TalkingHeadFrame.BackgroundFrame:Hide()
+	end
+
+	if (TalkingHeadFrame.PortraitFrame) then
+		TalkingHeadFrame.PortraitFrame:Hide()
+	end
+
+	if (TalkingHeadFrame.MainFrame.Model.PortraitBg) then
+		TalkingHeadFrame.MainFrame.Model.PortraitBg:Hide()
+	end
 
 	local TalkingHeadFramePanel = CreateFrame("Frame", nil, TalkingHeadFrame)
 	TalkingHeadFramePanel:SetFrameLevel(TalkingHeadFrame:GetFrameLevel() - 1)
@@ -38,15 +45,14 @@ function TalkingHead:Skin()
 	local Name = TalkingHeadFrame.NameFrame.Name
 	Name:SetFontTemplate("Default", 18)
 	Name:SetTextColor(1, 0.82, 0)
-	Name.SetTextColor = UI.Noop
-	Name.SetShadowOffset = UI.Noop
-	
+
 	local Text = TalkingHeadFrame.TextFrame.Text
 	Text:SetFontTemplate("Default", 14)
 	Text:SetTextColor(1, 1, 1)
-	Text.SetTextColor = UI.Noop
-	Text.SetShadowOffset = UI.Noop
-		
+
+	local CloseButton = TalkingHeadFrame.MainFrame.CloseButton
+	CloseButton:HandleCloseButton()
+	
 	self.IsSkinned = true
 end
 
@@ -55,7 +61,7 @@ function TalkingHead:Initialize()
 		return
 	end
 
-	if not IsAddOnLoaded("Blizzard_TalkingHeadUI") then
+	if (not IsAddOnLoaded("Blizzard_TalkingHeadUI")) then
 		LoadAddOn("Blizzard_TalkingHeadUI")
 	end
 	
