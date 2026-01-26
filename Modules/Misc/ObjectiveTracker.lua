@@ -120,13 +120,13 @@ function ObjectiveTracker:ToggleButtonOnClick()
 		ObjectiveTrackerFrame:SetAlpha(0)
 
 		self.Texture:Point("CENTER", self, 2, 0)
-		self.Texture:SetTexture(Media.Global.PowerArrowLeft)
+		self.Texture:SetTexture(Media.Global.ArrowLeft)
 	else
 		ObjectiveTrackerFrame:SetParent(_G.UIParent)
 		ObjectiveTrackerFrame:SetAlpha(1)
 
 		self.Texture:Point("CENTER", self, -2, 0)
-		self.Texture:SetTexture(Media.Global.PowerArrowRight)
+		self.Texture:SetTexture(Media.Global.ArrowRight)
 	end
 end
 

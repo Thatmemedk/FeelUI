@@ -23,6 +23,9 @@ Media.Global = {
 	ArrowLeft = M..[[Textures\ArrowLeft.tga]],
 	ArrowRight = M..[[Textures\ArrowRight.tga]],
 	ExitVehicle = M..[[Textures\ExitVehicle.tga]],
+	Cogwheel = M..[[Textures\Cogwheel.tga]],
+	CurrentList = M..[[Textures\CurrentList.tga]],
+	ActionList = M..[[Textures\ActionList.tga]],
 	-- Logo
 	Logo = M..[[Logo\Logo.blp]],
 	LogoDiscord = M..[[Logo\LogoDiscord.tga]],

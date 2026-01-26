@@ -12,6 +12,7 @@ local unpack = unpack
 local GetTime = GetTime
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local LoadAddOn = C_AddOns.LoadAddOn
+local SetCVar = C_CVar.SetCVar
 
 -- Locals
 DamageMeter.Time = nil
@@ -22,7 +23,7 @@ DamageMeter.OnlyEncounters = false
 function DamageMeter:CreateCombatTimers()
     local Frame = CreateFrame("Frame", nil, _G.UIParent)
     Frame:Size(26, 26)
-    Frame:Point("LEFT", DamageMeterSessionWindow1.DamageMeterTypeDropdown.TypeName, -38, 0)
+    Frame:Point("RIGHT", DamageMeterSessionWindow1.DamageMeterTypeDropdown.TypeName, 38, 0)
     Frame:SetAlpha(0)
 
     -- UPDATE
@@ -57,7 +58,286 @@ function DamageMeter:CombatTimerOnUpdate()
     end
 end
 
+function DamageMeter:OnEnter(Window)
+    if (not Window.OptionsButtons) then 
+    	return 
+    end
+
+    for _, Button in ipairs(Window.OptionsButtons) do
+        UI:UIFrameFadeIn(Button, 0.25, Button:GetAlpha(), 1)
+    end
+end
+
+function DamageMeter:OnLeave(Window)
+    if (not Window.OptionsButtons) then 
+    	return 
+    end
+
+    for _, Button in ipairs(Window.OptionsButtons) do
+        UI:UIFrameFadeOut(Button, 0.8, Button:GetAlpha(), 0)
+    end
+end
+
+function DamageMeter:MakeWindowMovable(Window)
+    if (not Window or Window.IsUserPlaced) then 
+    	return
+    end
+
+    Window:Size(414, 168)
+    Window:ClearAllPoints()
+    Window:Point("BOTTOMRIGHT", _G.UIParent, -21, 38)
+    Window:SetClampedToScreen(true)
+
+    Window.IsUserPlaced = true
+end
+
+function DamageMeter:SkinButtons(self, Size, Texture)
+	if (not self or self.WindowButtonIsSkinned) then 
+		return 
+	end
+	
+	self:Size(Size, Size)
+	self:StripTexture()
+	self:ClearFrameRegions()
+
+	if (not self.NewTexture) then 
+		self.NewTexture = self:CreateTexture(nil, "OVERLAY", nil, 7)
+	    self.NewTexture:SetInside()
+	    self.NewTexture:SetTexture(Texture)
+	    self.NewTexture:SetVertexColor(0.8, 0.8, 0.8, 1)
+	end
+
+	if (self.Icon) then
+		self.Icon:Hide()
+	end
+
+	if (self.Arrow) then
+		self.Arrow:Hide()
+	end
+
+	if (self.SessionName) then
+		self.SessionName:Hide()
+	end
+
+	self.WindowButtonIsSkinned = true
+end
+
+function DamageMeter:Skin()
+	if (self.IsSkinned) then
+		return
+	end
+
+	for i = 1, 3 do
+		local Window = _G["DamageMeterSessionWindow"..i]
+
+		if (Window) then
+			-- SESSION WINDOW
+			Window:StripTexture()
+
+			if (Window.Background) then
+				Window.Background:Hide()
+			end
+
+			if (Window.ScrollBar.Track.Middle) then
+				Window.ScrollBar.Track.Middle:SetAlpha(0)
+			end
+
+			if (Window.ScrollBar.Track) then
+				Window.ScrollBar.Track:SetAlpha(0)
+			end
+
+			if (Window.ScrollBar.Back) then
+				Window.ScrollBar.Back:SetAlpha(0)
+			end
+
+			if (Window.ScrollBar.Forward) then
+				Window.ScrollBar.Forward:SetAlpha(0)
+			end
+
+			-- SOURCE WINDOW
+			Window.SourceWindow:StripTexture()
+
+			if (not Window.SourceWindow.NewBackdrop) then
+				Window.SourceWindow.NewBackdrop = CreateFrame("Frame", nil, Window.SourceWindow)
+		        Window.SourceWindow.NewBackdrop:SetFrameLevel(Window.SourceWindow:GetFrameLevel() -1)
+		        Window.SourceWindow.NewBackdrop:Size(348, 148)
+		        Window.SourceWindow.NewBackdrop:Point("CENTER", Window.SourceWindow, -11, 1)
+		        Window.SourceWindow.NewBackdrop:CreateBackdrop()
+		        Window.SourceWindow.NewBackdrop:CreateShadow()
+		    end
+
+			if (Window.SourceWindow.Background) then
+				Window.SourceWindow.Background:Hide()
+			end
+
+			if (Window.SourceWindow.ScrollBar.Track.Middle) then
+				Window.SourceWindow.ScrollBar.Track.Middle:SetAlpha(0)
+			end
+
+			if (Window.SourceWindow.ScrollBar.Track) then
+				Window.SourceWindow.ScrollBar.Track:SetAlpha(0)
+			end
+
+			if (Window.SourceWindow.ScrollBar.Back) then
+				Window.SourceWindow.ScrollBar.Back:SetAlpha(0)
+			end
+
+			if (Window.SourceWindow.ScrollBar.Forward) then
+				Window.SourceWindow.ScrollBar.Forward:SetAlpha(0)
+			end
+
+			if (Window.SourceWindow.ResizeButton) then
+				Window.SourceWindow.ResizeButton:Hide()
+			end
+
+			-- NAME
+			Window.DamageMeterTypeDropdown.TypeName:SetParent(Window)
+			Window.DamageMeterTypeDropdown.TypeName:ClearAllPoints()
+			Window.DamageMeterTypeDropdown.TypeName:Point("TOPLEFT", Window, 18, -16)
+			Window.DamageMeterTypeDropdown.TypeName:SetFontTemplate("Default")
+			Window.DamageMeterTypeDropdown.TypeName:SetTextColor(1, 1, 1)
+
+			-- SETTINGS BUTTONS
+			Window.SettingsDropdown:ClearAllPoints()
+			Window.SettingsDropdown:Point("TOPRIGHT", Window, 0, -4)
+
+			Window.SessionDropdown:ClearAllPoints()
+			Window.SessionDropdown:Point("LEFT", Window.SettingsDropdown, -32, 0)
+
+			Window.DamageMeterTypeDropdown:ClearAllPoints()
+			Window.DamageMeterTypeDropdown:Point("LEFT", Window.SessionDropdown, -32, 0)
+
+			-- SKIN BUTTONS
+			self:SkinButtons(Window.SettingsDropdown, 22, Media.Global.Cogwheel)
+			self:SkinButtons(Window.SessionDropdown, 22, Media.Global.CurrentList)
+			self:SkinButtons(Window.DamageMeterTypeDropdown, 22, Media.Global.ActionList)
+
+			-- BUTTONS
+			Window.OptionsButtons = {
+				Window.SettingsDropdown,
+				Window.SessionDropdown,
+				Window.DamageMeterTypeDropdown,
+			}
+
+			-- FADE
+			for _, Button in ipairs(Window.OptionsButtons) do
+			    Button:SetAlpha(0)
+
+			    Button:HookScript("OnEnter", function()
+			        DamageMeter:OnEnter(Window)
+			    end)
+
+			    Button:HookScript("OnLeave", function()
+			        DamageMeter:OnLeave(Window)
+			    end)
+			end
+
+			Window:SetScript("OnEnter", function()
+			    DamageMeter:OnEnter(Window)
+			end)
+
+			Window:SetScript("OnLeave", function()
+			    DamageMeter:OnLeave(Window)
+			end)
+
+			-- MOVE THE FRAME
+			self:MakeWindowMovable(Window)
+		end
+	end
+		
+	self.IsSkinned = true
+end
+
+function DamageMeter:UpdateBarValue(Frame)
+    if (not Frame or not Frame.NewBar) then
+        return
+    end
+
+    local Value = Frame.value
+    local Max = Frame.maxValue
+
+    Frame.NewBar:SetMinMaxValues(0, Max)
+    Frame.NewBar:SetValue(Value, UI.SmoothBars)
+end
+
+function DamageMeter:UpdateBarColors(Frame, ElementData)
+    local ClassFile = ElementData.classFilename
+
+    if (ClassFile) then
+        local Color = UI.Colors.Class[ClassFile]
+
+        if (Color) then
+            Frame.NewBar:SetStatusBarColor(Color.r, Color.g, Color.b, 1)
+        end
+    end
+end
+
+function DamageMeter:UpdateBarSkin(Frame)
+    if (not Frame) then 
+    	return 
+    end
+
+    -- NEW BAR
+    if (not Frame.NewBar) then
+        Frame.NewBar = CreateFrame("StatusBar", nil, Frame)
+        Frame.NewBar:SetFrameLevel(Frame:GetFrameLevel() - 1)
+        Frame.NewBar:SetInside()
+        Frame.NewBar:SetStatusBarTexture(Media.Global.Texture)
+        Frame.NewBar:CreateBackdrop()
+        Frame.NewBar:CreateShadow()
+    end
+
+    -- STATUSBAR
+    local StatusBar = Frame.GetStatusBar and Frame:GetStatusBar()
+
+    if (StatusBar) then
+    	-- Fonts
+        StatusBar.Name:SetFontTemplate("Default")
+        StatusBar.Value:SetFontTemplate("Default")
+
+        -- Background
+        StatusBar.Background:SetParent(UI.HiddenParent)
+        StatusBar.BackgroundEdge:SetParent(UI.HiddenParent)
+
+        local Texture = StatusBar:GetStatusBarTexture()
+
+        if (Texture) then
+            Texture:SetAtlas(nil)
+        end
+    end
+
+    -- ICON
+    if (Frame.Icon and Frame.Icon.Icon) then
+        Frame.Icon.Icon:SetTexCoord(unpack(UI.TexCoords))
+
+        if (not Frame.IconOverlay) then
+	        Frame.IconOverlay = CreateFrame("Frame", nil, Frame)
+	        Frame.IconOverlay:SetFrameLevel(Frame:GetFrameLevel() + 1)
+	        Frame.IconOverlay:SetInside(Frame.Icon.Icon, 0, 0)
+	        Frame.IconOverlay:SetTemplate()
+	        Frame.IconOverlay:CreateShadow()
+	        Frame.IconOverlay:SetShadowOverlay()
+    	end
+    end
+end
+
+function DamageMeter:RefreshAllWindows()
+    for i = 1, 3 do
+        local Window = _G["DamageMeterSessionWindow"..i]
+
+        if (Window and Window.Refresh) then
+            Window:Refresh()
+        end
+    end
+end
+
 function DamageMeter:OnEvent(event)
+    if (event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD") then
+        C_Timer.After(1, function()
+            self:RefreshAllWindows()
+        end)
+    end
+
 	if (self.OnlyEncounters) then
 		if (event == "ENCOUNTER_START") then
 		    self.IsActive = true
@@ -90,6 +370,8 @@ function DamageMeter:OnEvent(event)
 end
 
 function DamageMeter:RegisterEvents()
+   	self:RegisterEvent("PLAYER_LOGIN")
+    self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("PLAYER_REGEN_DISABLED")
     self:RegisterEvent("PLAYER_REGEN_ENABLED")
     self:RegisterEvent("ENCOUNTER_START")
@@ -99,91 +381,32 @@ function DamageMeter:RegisterEvents()
     end)
 end
 
-function DamageMeter:OnEnter()
-	for _, Buttons in ipairs(self.OptionsButtons) do
-		UI:UIFrameFadeIn(Buttons, 0.25, Buttons:GetAlpha(), 1)
-	end
-end
-
-function DamageMeter:OnLeave()
-	for _, Buttons in ipairs(self.OptionsButtons) do
-		UI:UIFrameFadeOut(Buttons, 0.5, Buttons:GetAlpha(), 0)
-	end
-end
-
-function DamageMeter:Skin()
-	if (self.IsSkinned) then
-		return
-	end
-
-	for i = 1, 3 do
-		local DamageMeters = _G["DamageMeterSessionWindow"..i]
-
-		if (DamageMeters) then
-			DamageMeters:StripTexture()
-			DamageMeters.Background:Hide()
-
-			-- NAME
-			DamageMeters.DamageMeterTypeDropdown.TypeName:SetParent(DamageMeters)
-			DamageMeters.DamageMeterTypeDropdown.TypeName:ClearAllPoints()
-			DamageMeters.DamageMeterTypeDropdown.TypeName:Point("TOPLEFT", DamageMeters, 62, -8)
-			DamageMeters.DamageMeterTypeDropdown.TypeName:SetFontTemplate("Default", 12)
-			DamageMeters.DamageMeterTypeDropdown.TypeName:SetTextColor(1, 1, 1)
-
-			-- BUTTONS
-			DamageMeters.OptionsButtons = {
-				DamageMeters.SettingsDropdown,
-				DamageMeters.SessionDropdown,
-				DamageMeters.DamageMeterTypeDropdown
-			}
-
-			DamageMeters.SettingsDropdown:Size(26, 26)
-			DamageMeters.SettingsDropdown:ClearAllPoints()
-			DamageMeters.SettingsDropdown:Point("TOPRIGHT", DamageMeters, 22, 0)
-
-			DamageMeters.SessionDropdown:Size(26, 26)
-			DamageMeters.SessionDropdown:ClearAllPoints()
-			DamageMeters.SessionDropdown:Point("LEFT", DamageMeters.SettingsDropdown, -32, 0)
-
-			DamageMeters.DamageMeterTypeDropdown:Size(26, 26)
-			DamageMeters.DamageMeterTypeDropdown:ClearAllPoints()
-			DamageMeters.DamageMeterTypeDropdown:Point("LEFT", DamageMeters.SessionDropdown, -32, 0)
-
-			-- FADE
-			for _, Buttons in ipairs(DamageMeters.OptionsButtons) do
-				Buttons:SetAlpha(0)
-
-				Buttons:HookScript("OnEnter", function()
-					DamageMeter.OnEnter(DamageMeters)
-				end)
-
-				Buttons:HookScript("OnLeave", function()
-					DamageMeter.OnLeave(DamageMeters)
-				end)
-			end
-
-			DamageMeters:SetScript("OnEnter", function(self)
-				DamageMeter.OnEnter(self)
-			end)
-
-			DamageMeters:SetScript("OnLeave", function(self)
-				DamageMeter.OnLeave(self)
-			end)
-		end
-	end
-		
-	self.IsSkinned = true
+function DamageMeter:SetCVarOnLogin()
+	SetCVar("damageMeterEnabled", "1")
 end
 
 function DamageMeter:Initialize()
-	if (not DB.Global.Theme.Enable) then 
-		return
-	end
+    if (not DB.Global.Theme.Enable) then 
+        return
+    end
 
-	if (not IsAddOnLoaded("Blizzard_DamageMeters")) then
-		LoadAddOn("Blizzard_DamageMeters")
-	end
+    if (not IsAddOnLoaded("Blizzard_DamageMeters")) then
+        LoadAddOn("Blizzard_DamageMeters")
+    end
 
+    hooksecurefunc(_G.DamageMeterEntryMixin, "Init", function(Frame, ElementData)
+        DamageMeter:UpdateBarSkin(Frame)
+        DamageMeter:UpdateBarColors(Frame, ElementData)
+        DamageMeter:UpdateBarValue(Frame)
+    end)
+
+    hooksecurefunc(_G.DamageMeterSpellEntryMixin, "Init", function(Frame, ElementData)
+        DamageMeter:UpdateBarSkin(Frame)
+        DamageMeter:UpdateBarColors(Frame, ElementData)
+        DamageMeter:UpdateBarValue(Frame)
+    end)
+
+    self:SetCVarOnLogin()
     self:CreateCombatTimers()
     self:RegisterEvents()
     self:Skin()

@@ -36,9 +36,7 @@ do
 			UI.Libs[Name], UI.LibsMinor[Name] = _G.LibStub(Major, Minor)
 		end
 	end
-	
-	UI:AddLib("LDB", "LibDataBroker-1.1")
-	UI:AddLib("LDBI", "LibDBIcon-1.0")
+
 	UI:AddLib("LSM", "LibSharedMedia-3.0")
 end
 

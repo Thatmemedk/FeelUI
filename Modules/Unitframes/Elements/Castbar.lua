@@ -147,6 +147,10 @@ function UF:CastStopped(Event, Unit, _, _, ...)
     end
 
     if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
+        -- Set Values
+        Castbar:SetMinMaxValues(0, 1)
+        Castbar:SetValue(1)
+
         -- Reset CastBar
         UF:ResetCastBar(Castbar)
         
@@ -174,6 +178,10 @@ function UF:CastFailed(Event, Unit, _, _, ...)
         Castbar.Text:SetText(INTERRUPTED)
         Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
     end
+
+    -- Set Values
+    Castbar:SetMinMaxValues(0, 1)
+    Castbar:SetValue(1)
 
     -- Reset CastBar
     UF:ResetCastBar(Castbar)
@@ -241,9 +249,21 @@ function UF:CastNonInterruptable(Event, Unit)
 end
 
 function UF.OnUpdate(Castbar)
-    local Duration = Castbar:GetTimerDuration():GetElapsedDuration()
-    local Total = Castbar:GetTimerDuration():GetTotalDuration()
-    Castbar.Time:SetFormattedText("%.1fs/%.1fs", Duration, Total)
+    if (not Castbar) then
+        return
+    end
+
+    if (Castbar.Casting or Castbar.Channel or Castbar.Empower) then
+        if (Castbar.Time) then
+            local DurationObject = Castbar:GetTimerDuration()
+
+            if (DurationObject) then
+                local Duration = Castbar:GetTimerDuration():GetElapsedDuration()
+                local Total = Castbar:GetTimerDuration():GetTotalDuration()
+                Castbar.Time:SetFormattedText("%.1fs/%.1fs", Duration, Total)
+            end
+        end
+    end
 end
 
 function UF:CreateEmpowerPips(Castbar, NumStages)

@@ -25,8 +25,13 @@ function StaticPopups:Update()
         _G[Name].BG:SetAlpha(0) 
     end
 
-    _G[Name]:CreateBackdrop()
-    _G[Name]:CreateShadow()
+    if (not _G[Name].NewBackdrop) then
+        _G[Name].NewBackdrop = CreateFrame("Frame", nil, _G[Name])
+        _G[Name].NewBackdrop:SetFrameLevel(_G[Name]:GetFrameLevel())
+        _G[Name].NewBackdrop:SetInside(_G[Name], 2, 2)
+        _G[Name].NewBackdrop:CreateBackdrop()
+        _G[Name].NewBackdrop:CreateShadow()
+    end
 
     _G[Name.."Button1"]:HandleButton()
     _G[Name.."Button2"]:HandleButton()

@@ -40,7 +40,7 @@ function AB:ToggleButtonOnClick()
 		
 		self:Point("LEFT", _G.UIParent, 54, 0)
 		self.Texture:Point("CENTER", self, 2, 0)
-		self.Texture:SetTexture(Media.Global.PowerArrowLeft)
+		self.Texture:SetTexture(Media.Global.ArrowLeft)
 
 		if (DB.Global.UnitFrames.RaidFrames) then
 			if (FeelUI_Raid) then
@@ -95,7 +95,7 @@ function AB:CreateToggleButtons()
     ToggleButton.Texture:Size(14, 14)
     ToggleButton.Texture:Point("CENTER", ToggleButton, 2, 0)
     ToggleButton.Texture:SetVertexColor(R, G, B)
-    ToggleButton.Texture:SetTexture(Media.Global.PowerArrowLeft)
+    ToggleButton.Texture:SetTexture(Media.Global.ArrowLeft)
 
     ToggleButton:HookScript("OnEnter", function(self)
         UI:UIFrameFadeIn(self, 1, self:GetAlpha(), 1)
