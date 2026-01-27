@@ -11,8 +11,7 @@ function UF:CreateCombatIcon(Frame)
     local CombatIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
     CombatIcon:Size(24, 24)
     CombatIcon:Point("CENTER", Frame, 0, 0)
-    CombatIcon:SetTexture([[Interface\CharacterFrame\UI-StateIcon]])
-    CombatIcon:SetTexCoord(0.5, 1, 0, 0.49)
+    CombatIcon:SetAtlas("UI-HUD-UnitFrame-Player-CombatIcon")
     CombatIcon:Hide()
 
     Frame.CombatIcon = CombatIcon
@@ -34,7 +33,7 @@ function UF:CreateRestingIcon(Frame)
     RestingIcon.AnimationFrame:SetDuration(2)
     RestingIcon.AnimationFrame:SetFlipBookRows(7)
     RestingIcon.AnimationFrame:SetFlipBookColumns(6)
-    RestingIcon.AnimationFrame:SetFlipBookFrames(42)
+    RestingIcon.AnimationFrame:SetFlipBookFrames(52)
     RestingIcon.AnimationFrame:SetSmoothing("NONE")
 
     Frame.RestingIcon = RestingIcon

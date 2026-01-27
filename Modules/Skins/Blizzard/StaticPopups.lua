@@ -19,6 +19,10 @@ StaticPopups.Popups = {
 }
 
 function StaticPopups:Update()
+    if (self.IsSkinned) then
+        return
+    end
+    
     local Name = self:GetName()
 
     if (_G[Name].BG) then 
@@ -45,6 +49,8 @@ function StaticPopups:Update()
     _G[Name.."CloseButton"]:HandleCloseButton()
     _G[Name.."CloseButton"].SetNormalTexture = function() end
     _G[Name.."CloseButton"].SetPushedTexture = function() end
+
+    self.IsSkinned = true
 end
 
 function StaticPopups:Skin()

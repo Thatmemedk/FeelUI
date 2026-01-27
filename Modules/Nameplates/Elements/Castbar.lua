@@ -143,7 +143,7 @@ function NP:CastStarted(Event, Unit)
     UI:UIFrameFadeIn(Castbar, NP.FadeInTime, Castbar:GetAlpha(), 1)
 end
 
-function NP:CastStopped(Event, Unit)
+function NP:CastStopped(Event, Unit, _, _, ...)
     local Frame = self:GetFrameForUnit(Unit)
     local Castbar = Frame and Frame.Castbar
 
@@ -151,7 +151,21 @@ function NP:CastStopped(Event, Unit)
         return
     end
 
-    if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
+    local CastID, InterruptedBy
+
+    if (Event == "UNIT_SPELLCAST_STOP") then
+        CastID = ...
+    elseif (Event == "UNIT_SPELLCAST_CHANNEL_STOP") then
+        InterruptedBy, CastID = ...
+    elseif (Event == "UNIT_SPELLCAST_EMPOWER_STOP") then
+        _, InterruptedBy, CastID = ...
+    end
+
+    if (not CastID or Castbar.CastID ~= CastID) then
+        if (InterruptedBy) then
+            Castbar.Text:SetText(INTERRUPTED..InterruptedBy)
+        end
+
         -- Set Values
         Castbar:SetMinMaxValues(0, 1)
         Castbar:SetValue(1)
@@ -164,7 +178,7 @@ function NP:CastStopped(Event, Unit)
     end
 end
 
-function NP:CastFailed(Event, Unit)
+function NP:CastFailed(Event, Unit, _, _, ...)
     local Frame = self:GetFrameForUnit(Unit)
     local Castbar = Frame and Frame.Castbar
 
@@ -172,16 +186,28 @@ function NP:CastFailed(Event, Unit)
         return
     end
 
-    if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
+    local CastID, InterruptedBy
+
+    if (Event == "UNIT_SPELLCAST_INTERRUPTED") then
+        InterruptedBy, CastID = ...
+    elseif (Event == "UNIT_SPELLCAST_FAILED") then
+        CastID = ...
+    end
+
+    if (not CastID or Castbar.CastID ~= CastID) then
         return
     end
 
-    -- Update Events
     if (Event == "UNIT_SPELLCAST_FAILED") then
         Castbar.Text:SetText(FAILED)
         Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
     elseif (Event == "UNIT_SPELLCAST_INTERRUPTED") then
-        Castbar.Text:SetText(INTERRUPTED)
+        if (InterruptedBy) then
+            Castbar.Text:SetText(INTERRUPTED..InterruptedBy)
+        else
+            Castbar.Text:SetText(INTERRUPTED)
+        end
+
         Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
     end
 
@@ -204,7 +230,7 @@ function NP:CastUpdated(Event, Unit)
         return
     end
 
-    if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
+    if (not CastID or Castbar.CastID ~= CastID) then
         return
     end
 

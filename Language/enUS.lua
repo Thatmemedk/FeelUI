@@ -26,6 +26,7 @@ Language.Help.Move = "|cff00ff00/moveui|r - Move UI-Elements."
 Language.Help.Install = "|cff00ff00/resetui|r - Reset UI-Settings."
 Language.Help.Status = "|cff00ff00/fstatus|r - Debug-UI For Support."
 Language.Help.Grid = "|cff00ff00/fgrid|r - Alignment For The UI."
+Language.Help.CDM = "|cff00ff00/cdm|r - Cooldown Manager Settings."
 Language.Help.Discord = "|cffffd200Discord|r - |cff00aaffhttps://discord.gg/Q2mkRme3Yv|r"
 Language.Help.Website = "|cffffd200Website|r - |cff00aaffhttps://feelui.org/|r"
 

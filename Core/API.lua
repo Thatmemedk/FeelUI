@@ -108,6 +108,7 @@ function UI:RegisterChatCommand(Command, Func)
 				UI:Print(Language.Help.Status)
 				UI:Print(Language.Help.Grid)
 				UI:Print(Language.Help.Discord)
+				UI:Print(Language.Help.CDM)
 				--UI:Print(Language.Help.Website)
 			elseif (Func == "Options") then
 				local Options = UI:CallModule("OptionsUI")

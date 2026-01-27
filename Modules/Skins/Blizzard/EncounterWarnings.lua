@@ -73,5 +73,5 @@ function EW:Initialize()
 		LoadAddOn("Blizzard_EncounterWarnings")
 	end
 
-    self:Skin()
+    --self:Skin()
 end

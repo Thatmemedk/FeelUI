@@ -78,24 +78,12 @@ function DamageMeter:OnLeave(Window)
     end
 end
 
-function DamageMeter:MakeWindowMovable(Window)
-    if (not Window or Window.IsUserPlaced) then 
-    	return
-    end
-
-    Window:Size(414, 168)
-    Window:ClearAllPoints()
-    Window:Point("BOTTOMRIGHT", _G.UIParent, -21, 38)
-    Window:SetClampedToScreen(true)
-
-    Window.IsUserPlaced = true
-end
-
 function DamageMeter:SkinButtons(self, Size, Texture)
 	if (not self or self.WindowButtonIsSkinned) then 
 		return 
 	end
 	
+	self:SetAlpha(0)
 	self:Size(Size, Size)
 	self:StripTexture()
 	self:ClearFrameRegions()
@@ -199,7 +187,7 @@ function DamageMeter:Skin()
 
 			-- SETTINGS BUTTONS
 			Window.SettingsDropdown:ClearAllPoints()
-			Window.SettingsDropdown:Point("TOPRIGHT", Window, 0, -4)
+			Window.SettingsDropdown:Point("TOPRIGHT", Window, 18, -4)
 
 			Window.SessionDropdown:ClearAllPoints()
 			Window.SessionDropdown:Point("LEFT", Window.SettingsDropdown, -32, 0)
@@ -208,9 +196,9 @@ function DamageMeter:Skin()
 			Window.DamageMeterTypeDropdown:Point("LEFT", Window.SessionDropdown, -32, 0)
 
 			-- SKIN BUTTONS
-			self:SkinButtons(Window.SettingsDropdown, 22, Media.Global.Cogwheel)
-			self:SkinButtons(Window.SessionDropdown, 22, Media.Global.CurrentList)
-			self:SkinButtons(Window.DamageMeterTypeDropdown, 22, Media.Global.ActionList)
+			self:SkinButtons(Window.SettingsDropdown, 26, Media.Global.Cogwheel)
+			self:SkinButtons(Window.SessionDropdown, 26, Media.Global.CurrentList)
+			self:SkinButtons(Window.DamageMeterTypeDropdown, 26, Media.Global.ActionList)
 
 			-- BUTTONS
 			Window.OptionsButtons = {
@@ -221,8 +209,6 @@ function DamageMeter:Skin()
 
 			-- FADE
 			for _, Button in ipairs(Window.OptionsButtons) do
-			    Button:SetAlpha(0)
-
 			    Button:HookScript("OnEnter", function()
 			        DamageMeter:OnEnter(Window)
 			    end)
@@ -239,9 +225,6 @@ function DamageMeter:Skin()
 			Window:SetScript("OnLeave", function()
 			    DamageMeter:OnLeave(Window)
 			end)
-
-			-- MOVE THE FRAME
-			self:MakeWindowMovable(Window)
 		end
 	end
 		
@@ -273,11 +256,11 @@ function DamageMeter:UpdateBarColors(Frame, ElementData)
 end
 
 function DamageMeter:UpdateBarSkin(Frame)
-    if (not Frame) then 
+    if (not Frame or Frame.IsSkinned) then 
     	return 
     end
 
-    -- NEW BAR
+    -- New Bar
     if (not Frame.NewBar) then
         Frame.NewBar = CreateFrame("StatusBar", nil, Frame)
         Frame.NewBar:SetFrameLevel(Frame:GetFrameLevel() - 1)
@@ -287,7 +270,7 @@ function DamageMeter:UpdateBarSkin(Frame)
         Frame.NewBar:CreateShadow()
     end
 
-    -- STATUSBAR
+    -- StatusBar
     local StatusBar = Frame.GetStatusBar and Frame:GetStatusBar()
 
     if (StatusBar) then
@@ -306,8 +289,9 @@ function DamageMeter:UpdateBarSkin(Frame)
         end
     end
 
-    -- ICON
+    -- Icon
     if (Frame.Icon and Frame.Icon.Icon) then
+    	Frame.Icon.Icon:SetInside()
         Frame.Icon.Icon:SetTexCoord(unpack(UI.TexCoords))
 
         if (not Frame.IconOverlay) then
@@ -319,6 +303,8 @@ function DamageMeter:UpdateBarSkin(Frame)
 	        Frame.IconOverlay:SetShadowOverlay()
     	end
     end
+
+    Frame.IsSkinned = true
 end
 
 function DamageMeter:RefreshAllWindows()
@@ -385,6 +371,14 @@ function DamageMeter:SetCVarOnLogin()
 	SetCVar("damageMeterEnabled", "1")
 end
 
+function DamageMeter:AutoReset()
+	local IsInInstance = IsInInstance()
+
+    if (IsInInstance) then
+        _G.C_DamageMeter.ResetAllCombatSessions()
+    end
+end
+
 function DamageMeter:Initialize()
     if (not DB.Global.Theme.Enable) then 
         return
@@ -394,18 +388,19 @@ function DamageMeter:Initialize()
         LoadAddOn("Blizzard_DamageMeters")
     end
 
-    hooksecurefunc(_G.DamageMeterEntryMixin, "Init", function(Frame, ElementData)
-        DamageMeter:UpdateBarSkin(Frame)
-        DamageMeter:UpdateBarColors(Frame, ElementData)
-        DamageMeter:UpdateBarValue(Frame)
-    end)
+	hooksecurefunc(_G.DamageMeterEntryMixin, "Init", function(Frame, ElementData)
+	    self:UpdateBarSkin(Frame)
+	    self:UpdateBarColors(Frame, ElementData)
+	    self:UpdateBarValue(Frame)
+	end)
 
-    hooksecurefunc(_G.DamageMeterSpellEntryMixin, "Init", function(Frame, ElementData)
-        DamageMeter:UpdateBarSkin(Frame)
-        DamageMeter:UpdateBarColors(Frame, ElementData)
-        DamageMeter:UpdateBarValue(Frame)
-    end)
+	hooksecurefunc(_G.DamageMeterSpellEntryMixin, "Init", function(Frame, ElementData)
+	    self:UpdateBarSkin(Frame)
+	    self:UpdateBarColors(Frame, ElementData)
+	    self:UpdateBarValue(Frame)
+	end)
 
+    self:AutoReset()
     self:SetCVarOnLogin()
     self:CreateCombatTimers()
     self:RegisterEvents()

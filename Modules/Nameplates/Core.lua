@@ -51,15 +51,6 @@ function NP:UpdateHealth(Frame, Unit)
     else
         if (DB.Global.Nameplates.ReactionColor) then
             Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.70)
-            
-            local HealthColorCurve = C_CurveUtil.CreateColorCurve()
-            HealthColorCurve:SetType(Enum.LuaCurveType.Cosine)
-            HealthColorCurve:AddPoint(0, CreateColor(0.6, 0, 0, 0.7))
-            HealthColorCurve:AddPoint(0.90, CreateColor(0.6, 0.6, 0, 0.7))
-            HealthColorCurve:AddPoint(1, CreateColor(Color.r, Color.g, Color.b, 0.70))
-
-            local CurveColor = UnitHealthPercent(Unit, true, HealthColorCurve)
-            Frame.Health:GetStatusBarTexture():SetVertexColor(CurveColor:GetRGB())
         else
             Frame.Health:SetStatusBarColor(unpack(DB.Global.Nameplates.HealthBarColor))
 
@@ -290,11 +281,11 @@ function NP:OnEvent(event, unit, ...)
         NP:CastStarted(event, unit)
         NP:SetNameplateColor(unit, true)
     elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") then
-        NP:CastStopped(event, unit)
+        NP:CastStopped(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
         NP:CastUpdated(event, unit)
     elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
-        NP:CastFailed(event, unit)
+        NP:CastFailed(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_INTERRUPTIBLE") then
         NP:CastNonInterruptable(event, unit)
     end

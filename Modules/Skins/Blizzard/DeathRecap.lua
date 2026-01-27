@@ -66,5 +66,5 @@ function DeathRecap:Initialize()
 		LoadAddOn("Blizzard_DeathRecap")
 	end
 	
-	self:Skin()
+	--self:Skin()
 end
