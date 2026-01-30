@@ -16,7 +16,7 @@ function SCT:Create()
     -- TEXT
     local Text = Frame:CreateFontString(nil, "OVERLAY")
     Text:Point("CENTER", Frame, 0, 0)
-    Text:SetFontTemplate("Default", 16)
+    Text:SetFontTemplate("CombatText", 18)
 
     -- ANIMATION
     local Animation = Frame:CreateAnimationGroup()

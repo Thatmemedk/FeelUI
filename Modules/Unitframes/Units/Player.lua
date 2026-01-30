@@ -20,4 +20,5 @@ function UF:CreatePlayer(Frame, Height, Orientation)
     self:CreateLeaderIcon(Frame)
     self:CreateAssistantIcon(Frame)
     self:CreateSummonIcon(Frame)
+    --self:CreateDebuffHighlight(Frame)
 end

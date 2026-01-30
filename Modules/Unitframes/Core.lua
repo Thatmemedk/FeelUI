@@ -661,13 +661,13 @@ function UF:UpdateDebuffHighlight(Frame, Unit)
     local Index = 1
 
     while true do
-        local AuraData = GetAuraDataByIndex(Unit, Index, "HARMFUL|RAID")
+        local AuraData = GetAuraDataByIndex(Unit, Index, "HARMFUL")
 
         if (not AuraData or not AuraData.name) then
             break
         end
 
-        local Color = GetAuraDispelTypeColor(Unit, AuraData.auraInstanceID, UI.DispelColorCurve)
+        local Color = GetAuraDispelTypeColor(Unit, AuraData.auraInstanceID, UI.DispelHighlightColorCurve)
 
         if (Color) then
             Frame.DebuffHighlight.Glow:SetBackdropBorderColor(Color.r * 0.55, Color.g * 0.55, Color.b * 0.55, 0.8)
@@ -881,6 +881,8 @@ function UF:UpdateGroupFrame(Frame, Unit)
     if (Frame.ReadyCheckIcon) then self:UpdateReadyCheckIcon(Frame) end
     -- THREAT
     if (Frame.Threat) then self:UpdateThreatHighlightRaid(Frame, Unit) end
+    -- DEBUFF HIGHLIGHT
+    --if (Frame.DebuffHighlight) then self:UpdateDebuffHighlight(Frame, Unit) end
     -- RANGE
     if (Frame.Range) then self:UpdateRange(Frame, Unit) end
 end
@@ -984,7 +986,7 @@ function UF:OnEvent(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") then
         UF:CastStopped(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
-        UF:CastUpdated(event, unit, ...)
+        UF:CastUpdated(event, unit)
     elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
         UF:CastFailed(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then

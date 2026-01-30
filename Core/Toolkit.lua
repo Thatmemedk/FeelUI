@@ -174,6 +174,10 @@ local function SetFontTemplate(self, FontTemplate, FontSize, ShadowOffsetX, Shad
 		self:SetFont(Media.Global.Font, UI:Scale(FontSize or 12), "THINOUTLINE")
 	end
 
+	if (FontTemplate == "CombatText") then
+		self:SetFont(Media.Global.CombatFont, UI:Scale(FontSize or 12), "THINOUTLINE")
+	end
+
 	self:SetShadowOffset(UI:Scale(ShadowOffsetX or 1), -UI:Scale(ShadowOffsetY or 1))
 	self:SetShadowColor(0, 0, 0, 0.5 or ShadowColor)
 	
@@ -618,6 +622,7 @@ local function ClearFrameRegions(self, Remove)
     end
 end
 
+--[[
 local function DisableBackdrops(self)
 	if not self or self:IsForbidden() then 
 		return
@@ -644,6 +649,49 @@ local function DisableBackdrops(self)
             end
         end
     end
+end
+--]]
+
+local function DisableBackdrops(self)
+	if not self or self:IsForbidden() then 
+		return
+	end
+
+	if (self.Bg) then self.Bg:Hide() end
+	if (self.Tail) then self.Tail:Hide() end
+	if (self.Center) then self.Center:Hide() end
+	if (self.TopEdge) then self.TopEdge:Hide() end
+	if (self.BottomEdge) then self.BottomEdge:Hide() end
+	if (self.LeftEdge) then self.LeftEdge:Hide() end
+	if (self.RightEdge) then self.RightEdge:Hide() end
+	if (self.TopLeftCorner) then self.TopLeftCorner:Hide() end
+	if (self.TopRightCorner) then self.TopRightCorner:Hide() end
+	if (self.BottomRightCorner) then self.BottomRightCorner:Hide() end
+	if (self.BottomLeftCorner) then self.BottomLeftCorner:Hide() end
+	
+	if (self.BackdropFrame) then self.BackdropFrame:Kill() end
+	
+	if (self.BorderTop) then self.BorderTop:Hide() end
+	if (self.BorderTopLeft) then self.BorderTopLeft:Hide() end
+	if (self.BorderTopRight) then self.BorderTopRight:Hide() end
+	if (self.BorderBottomLeft) then self.BorderBottomLeft:Hide() end
+	if (self.BorderBottomRight) then self.BorderBottomRight:Hide() end
+	if (self.BorderLeft) then self.BorderLeft:Hide() end
+	if (self.BorderRight) then self.BorderRight:Hide() end
+	if (self.BorderBottom) then self.BorderBottom:Hide() end
+	if (self.Background) then self.Background:Hide() end
+
+	if (self.NineSlice) then
+		if (self.NineSlice.Center) then self.NineSlice.Center:Hide() end
+		if (self.NineSlice.TopEdge) then self.NineSlice.TopEdge:Hide() end
+		if (self.NineSlice.BottomEdge) then self.NineSlice.BottomEdge:Hide() end
+		if (self.NineSlice.LeftEdge) then self.NineSlice.LeftEdge:Hide() end
+		if (self.NineSlice.RightEdge) then self.NineSlice.RightEdge:Hide() end
+		if (self.NineSlice.TopLeftCorner) then self.NineSlice.TopLeftCorner:Hide() end
+		if (self.NineSlice.TopRightCorner) then self.NineSlice.TopRightCorner:Hide() end
+		if (self.NineSlice.BottomRightCorner) then self.NineSlice.BottomRightCorner:Hide() end
+		if (self.NineSlice.BottomLeftCorner) then self.NineSlice.BottomLeftCorner:Hide() end
+	end
 end
 
 local function HandleButton(self, Strip)
@@ -780,6 +828,116 @@ local function HandleSplitButton(self, Width, Height)
 	self.HandleSplitButtonIsSkinned = true
 end
 
+local function HandleArrowButton(self, Width, Height)
+	if (self.HandleArrowButtonIsSkinned) then 
+		return
+	end
+	
+	local Tex = Media.Global.Texture
+	local R, G, B = unpack(UI.GetClassColors)
+	local Normal = self:GetNormalTexture()
+	local Pushed = self:GetPushedTexture()
+	local Disabled = self:GetDisabledTexture()
+	local Highlight = self:GetHighlightTexture()
+
+	self:StripTexture()
+	self:Size(Width or 18, Height or 18)
+	self:SetTemplate()
+	self:CreateShadow()
+
+	if (self.Texture) then
+		self.Texture:SetAlpha(0)
+	end
+
+	self:SetNormalTexture(Tex)
+	self:SetPushedTexture(Tex)
+	self:SetDisabledTexture(Tex)
+	self:SetHighlightTexture(Tex)
+	
+	if (Normal) then
+		Normal:SetVertexColor(R, G, B, 0.8)
+		Normal:SetInside(self)
+	end
+	
+	if (Pushed) then
+		Pushed:SetVertexColor(unpack(DB.Global.ActionBars.HighlightColor))
+		Pushed:SetInside(self)
+	end
+	
+	if (Disabled) then
+		Disabled:SetVertexColor(0.3, 0.3, 0.3, 0.8)
+		Disabled:SetInside(self)
+	end
+	
+	if (Highlight) then
+		Highlight:SetVertexColor(unpack(DB.Global.ActionBars.HighlightColor))
+		Highlight:SetInside(self)
+	end
+	
+	self.HandleArrowButtonIsSkinned = true
+end
+
+local function HandleScrollBar(self)
+	if (self.HandleScrollBarIsSkinned) then 
+		return 
+	end
+
+	self:StripTexture()
+
+	if (self.Forward) then
+		self.Forward:HandleArrowButton(16, 16)
+		self.Forward.Texture:SetAlpha(0)
+	end
+
+	if (self.Back) then
+		self.Back:HandleArrowButton(16, 16)
+		self.Back.Texture:SetAlpha(0)
+	end
+
+	if (self.Track) then
+		self.Track:DisableDrawLayer("ARTWORK")
+	end
+
+	local Thumb = self:GetThumb()
+
+	if (Thumb) then
+		Thumb:Size(16, 16)
+		Thumb:DisableDrawLayer("ARTWORK")
+		Thumb:DisableDrawLayer("BACKGROUND")
+
+		local Tex = Media.Global.Texture
+		local R, G, B = unpack(UI.GetClassColors)
+
+		if (not Thumb.ThumbIsSkinned) then
+			self.ThumbFrame = CreateFrame("Frame", nil, self)
+			self.ThumbFrame:SetInside(Thumb, 0, 0)
+			self.ThumbFrame:CreateBackdrop()
+			self.ThumbFrame:CreateShadow()
+			self.ThumbFrame:SetBackdropColorTemplate(R, G, B, 0.8)
+			
+			self.ThumbHighlight = self:CreateTexture(nil, "OVERLAY")
+			self.ThumbHighlight:SetInside(Thumb)
+			self.ThumbHighlight:SetTexture(Tex)
+			self.ThumbHighlight:SetVertexColor(0, 0, 0, 0)
+			self.ThumbHighlight:Hide()
+			
+			self:HookScript("OnEnter", function(self) 
+				self.ThumbHighlight:SetVertexColor(unpack(DB.Global.ActionBars.HighlightColor))
+				self.ThumbHighlight:Show()
+			end)
+			
+			self:HookScript("OnLeave", function(self) 
+				self.ThumbHighlight:SetVertexColor(0, 0, 0, 0)
+				self.ThumbHighlight:Hide()
+			end)
+
+			Thumb.ThumbIsSkinned = true
+		end
+	end
+
+	self.HandleScrollBarIsSkinned = true
+end
+
 --------------------------------
 -- Merge our API with WoW API --
 --------------------------------
@@ -837,6 +995,8 @@ local function AddAPI(object)
 	if not object.HandleButton then mt.HandleButton = HandleButton end
 	if not object.HandleCloseButton then mt.HandleCloseButton = HandleCloseButton end
 	if not object.HandleSplitButton then mt.HandleSplitButton = HandleSplitButton end
+	if not object.HandleArrowButton then mt.HandleArrowButton = HandleArrowButton end
+	if not object.HandleScrollBar then mt.HandleScrollBar = HandleScrollBar end
 end
 
 local Handled = {["Frame"] = true}

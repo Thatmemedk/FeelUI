@@ -6,7 +6,7 @@ local select = select
 local unpack = unpack
 
 local function SetFont(self, FontSize, FontStyle, ShadowOffsetX, ShadowOffsetY, R, G, B)
-	if (not self) then 
+	if (not self or self:IsForbidden()) then 
 		return 
 	end
 
@@ -122,6 +122,7 @@ function UI:UpdateBlizzardFonts()
 	SetFont(_G.LevelUpDisplayLevelFrameLevel,           		 32, "THINOUTLINE", 1, 1)
 	SetFont(_G.LevelUpDisplayName,                      	     32, "THINOUTLINE", 1, 1)
 	SetFont(_G.BossBanner.Title,    				    		 32, "THINOUTLINE", 1, 1)
+	SetFont(_G.BossBanner.SubTitle,    				    		 14, "THINOUTLINE", 1, 1)
 	SetFont(_G.BossBanner.SubTitle,    				    		 14, "THINOUTLINE", 1, 1)
 	-- LFG
 	SetFont(_G.LFGListFrame.CategorySelection.Label,	                    16, "THINOUTLINE", 1, 1)

@@ -13,27 +13,17 @@ local pairs = pairs
 local C_ChatBubbles_GetAllChatBubbles = C_ChatBubbles.GetAllChatBubbles
 
 function ChatBubbles:SkinBubbles(Frame)
-	if (self.IsSkinned) then
-		return
-	end
-
 	local Scale = _G.UIParent:GetScale()
 	Frame:SetScale(Scale)
 	Frame:CreateBackdrop()
 	Frame:CreateShadow()
+	Frame:DisableBackdrops()
+	
+	if (Frame.String) then
+		Frame.String:SetFontTemplate("Default", 14)
+	end
 
-	Frame.Center:Hide()
-	Frame.TopEdge:Hide()
-	Frame.BottomEdge:Hide()
-	Frame.LeftEdge:Hide()
-	Frame.RightEdge:Hide()
-	Frame.TopLeftCorner:Hide()
-	Frame.TopRightCorner:Hide()
-	Frame.BottomLeftCorner:Hide()
-	Frame.BottomRightCorner:Hide()
-	Frame.Tail:Hide()
-
-	self.IsSkinned = true
+	Frame.IsSkinned = true
 end
 
 function ChatBubbles:OnUpdate(Elapsed)
@@ -46,7 +36,7 @@ function ChatBubbles:OnUpdate(Elapsed)
 	for _, Frame in pairs(C_ChatBubbles_GetAllChatBubbles()) do
 		local Bubbles = Frame:GetChildren()
 
-		if (Bubbles and not Bubbles:IsForbidden()) then
+		if (Bubbles and not Bubbles:IsForbidden() and not Frame.IsSkinned) then
 			self:SkinBubbles(Bubbles)
 		end
 	end

@@ -95,10 +95,10 @@ function UI:UpdateCooldownTextColor(CD, Elapsed, IsAura)
 end
 
 function UI:RegisterCooldown(CD, Parent, OffsetX, OffsetY, DynamicFontSize, IsAura)
-    if (CD.IsRegisteredCooldown) then
+    if (not CD or CD.IsRegisteredCooldown) then
         return
     end
-
+    
     for i = 1, CD:GetNumRegions() do
         local Region = select(i, CD:GetRegions())
 
@@ -108,6 +108,7 @@ function UI:RegisterCooldown(CD, Parent, OffsetX, OffsetY, DynamicFontSize, IsAu
             Region:ClearAllPoints()
             Region:Point("CENTER", Parent, OffsetX or 0, OffsetY or 0)
             Region:SetFontTemplate("Default", FontSize or 12)
+            Region:SetTextColor(1, 1, 1)
         end
     end
 

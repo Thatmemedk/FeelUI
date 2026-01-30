@@ -269,6 +269,8 @@ function FeelUI:CreateGameMenu()
 	Frame:SetFrameStrata("HIGH")
     Frame:SetFrameLevel(GameMenuFrame:GetFrameLevel() - 1)
 	Frame:SetAllPoints()
+	Frame:CreateBackdrop()
+	Frame:CreateShadow()
 	Frame:SetAlpha(0)
 	Frame:Hide()
 
@@ -291,14 +293,7 @@ function FeelUI:CreateGameMenu()
 	Frame.FadeOut:SetScript("OnFinished", function(self)
 		self:GetParent():Hide()
 	end)
-		
-	-- BACKGROUND
-	Frame.Background = CreateFrame("Frame", nil, Frame)
-	Frame.Background:SetInside()
-	Frame.Background:CreateBackdrop()
-	Frame.Background:CreateShadow()
-	Frame.Background:SetBackdropColorTemplate(0, 0, 0, 0.5)
-
+	
 	-- FEELUI LOGO
 	Frame.Logo = Frame.InvisFrame:CreateTexture(nil, "OVERLAY")
 	Frame.Logo:Size(228, 228)
@@ -308,7 +303,7 @@ function FeelUI:CreateGameMenu()
 	-- TEXT
     Frame.FeedbackText = Frame.InvisFrame:CreateFontString(nil, "OVERLAY")
     Frame.FeedbackText:Point("TOP", GameMenuFrame, 0, 32)
-    Frame.FeedbackText:SetFontTemplate("Default", 16, 2, 2)
+    Frame.FeedbackText:SetFontTemplate("Default", 16)
     Frame.FeedbackText:SetText("Need help or info? Join the |cff00aaffFeelUI|r Discord!")
 
 	Frame.DiscordLogo = Frame.InvisFrame:CreateTexture(nil, "OVERLAY")
@@ -318,7 +313,7 @@ function FeelUI:CreateGameMenu()
 
     Frame.DiscordText = Frame.InvisFrame:CreateFontString(nil, "OVERLAY")
     Frame.DiscordText:Point("LEFT", Frame.DiscordLogo, 34, 0)
-    Frame.DiscordText:SetFontTemplate("Default", 12, 2, 2)
+    Frame.DiscordText:SetFontTemplate("Default", 12)
     Frame.DiscordText:SetText("discord.gg/Q2mkRme3Yv")
 
     -- HOOKS

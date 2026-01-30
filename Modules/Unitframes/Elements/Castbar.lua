@@ -18,6 +18,54 @@ local UnitEmpoweredChannelDuration = UnitEmpoweredChannelDuration
 local FAILED = _G.FAILED or "Failed"
 local INTERRUPTED = _G.INTERRUPTED or "Interrupted"
 
+function UF:MarkAsInterrupted(Unit, CastID, InterruptedBy)
+    print(Unit, CastID, InterruptedBy)
+
+    if (not InterruptedBy or not UnitExists(Unit)) then
+        return false
+    end
+
+    local InterruptName
+    local InterruptColor
+    local _, Class, _, _, _, Name = GetPlayerInfoByGUID(InterruptedBy)
+
+    if (not Name) then
+        local Token = UnitTokenFromGUID(InterruptedBy)
+
+        if (Token) then
+            Name = UnitName(Token)
+        end
+    end
+
+    InterruptName = Name or _G.UNKNOWN
+    InterruptColor = Class and C_ClassColor.GetClassColor(Class) or nil
+
+    local Frame = self:GetFrameForUnit(Unit)
+    local Castbar = Frame and Frame.Castbar
+
+    if (not Castbar) then
+        return false
+    end
+
+    Castbar.Interrupted = true
+    Castbar.InterruptedBy = InterruptName
+    Castbar.InterruptColor = InterruptColor
+
+    if (Castbar.Text) then
+        local NameText = InterruptName
+
+        if (InterruptColor) then
+            local R, G, B = InterruptColor:GetRGB()
+
+            NameText = string.format("|cff%02x%02x%02x%s|r", R * 255, G * 255, B * 255, InterruptName)
+        end
+
+        Castbar.Text:SetText(string.format("Interrupted [%s]", NameText))
+    end
+
+    return true
+end
+
 function UF:CastStarted(Event, Unit)
     local Castbar = self.Frames[Unit] and self.Frames[Unit].Castbar
 
@@ -26,17 +74,17 @@ function UF:CastStarted(Event, Unit)
     end
 
     -- Cache Names
-    local Name, Icon, StartTime, EndTime, Interrupt, CastID, SpellID, Empowered
+    local Name, Text, Icon, StartTime, EndTime, IsTradeSkill, Interrupt, CastID, SpellID, Empowered
 
     -- Normal Casts
     if (Event == "UNIT_SPELLCAST_START") then
-        Name, _, Icon, StartTime, EndTime, _, CastID, Interrupt, SpellID = UnitCastingInfo(Unit)
+        Name, Text, Icon, StartTime, EndTime, IsTradeSkill, CastID, Interrupt, SpellID = UnitCastingInfo(Unit)
 
         Castbar.Duration = UnitCastingDuration(Unit)
         Castbar.Direction = UI.DirectionElapsed
     else
         -- Channel / Empower Casts
-        Name, _, Icon, StartTime, EndTime, _, Interrupt, SpellID, Empowered, _, CastID = UnitChannelInfo(Unit)
+        Name, Text, Icon, StartTime, EndTime, IsTradeSkill, Interrupt, SpellID, Empowered, _, CastID = UnitChannelInfo(Unit)
         
         if (Empowered) then
             Event = "UNIT_SPELLCAST_EMPOWER_START"
@@ -51,7 +99,7 @@ function UF:CastStarted(Event, Unit)
         end
     end
 
-    if (not Name) then
+    if (not Name or IsTradeSkill) then
         return
     end
 
@@ -64,6 +112,7 @@ function UF:CastStarted(Event, Unit)
     Castbar.Interrupt = Interrupt
     Castbar.CastID = CastID
     Castbar.SpellID = SpellID
+    Castbar.SpellName = Text
 
     -- Set Values
     Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBars, Castbar.Direction)
@@ -79,9 +128,9 @@ function UF:CastStarted(Event, Unit)
     -- Text
     if (Castbar.Text) then
         if (Unit == "player") then
-            Castbar.Text:SetText(UI:UTF8Sub(Name, 22, true))
+            Castbar.Text:SetText(UI:UTF8Sub(Text, 22, true))
         else
-            Castbar.Text:SetText(Name)
+            Castbar.Text:SetText(Text)
         end
     end
 
@@ -129,7 +178,7 @@ function UF:CastStarted(Event, Unit)
 
     -- Call On Update
     if (Castbar.Casting or Castbar.Channel or Castbar.Empower) then
-        Castbar:SetScript("OnUpdate", UF.OnUpdate)
+        Castbar:SetScript("OnUpdate", UF.CastBarOnUpdate)
     else
         -- Stop Update
         Castbar:SetScript("OnUpdate", nil)
@@ -146,10 +195,28 @@ function UF:CastStopped(Event, Unit, _, _, ...)
         return
     end
 
-    if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
-        -- Set Values
-        Castbar:SetMinMaxValues(0, 1)
-        Castbar:SetValue(1)
+    local CastID, InterruptedBy
+
+    if (Event == "UNIT_SPELLCAST_STOP") then
+        CastID = ...
+    elseif (Event == "UNIT_SPELLCAST_CHANNEL_STOP") then
+        InterruptedBy, CastID = ...
+    elseif (Event == "UNIT_SPELLCAST_EMPOWER_STOP") then
+        _, InterruptedBy, CastID = ...
+    end
+
+    if (not CastID or Castbar.CastID ~= CastID) then
+        if (InterruptedBy and self:MarkAsInterrupted(Unit, CastID, InterruptedBy)) then
+            -- Set Text
+            Castbar.Text:SetText(INTERRUPTED)
+
+            -- Set Values
+            Castbar:SetMinMaxValues(0, 1)
+            Castbar:SetValue(1)
+            Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
+
+            return
+        end
 
         -- Reset CastBar
         UF:ResetCastBar(Castbar)
@@ -166,22 +233,29 @@ function UF:CastFailed(Event, Unit, _, _, ...)
         return
     end
 
-    if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
+    local CastID, InterruptedBy
+
+    if (Event == "UNIT_SPELLCAST_INTERRUPTED") then
+        InterruptedBy, CastID = ...
+    elseif (Event == "UNIT_SPELLCAST_FAILED") then
+        CastID = ...
+    end
+
+    if (not CastID or Castbar.CastID ~= CastID) then
         return
     end
 
-    -- Update Events
-    if (Event == "UNIT_SPELLCAST_FAILED") then
-        Castbar.Text:SetText(FAILED)
-        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
-    elseif (Event == "UNIT_SPELLCAST_INTERRUPTED") then
-        Castbar.Text:SetText(INTERRUPTED)
-        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
-    end
+    -- Set Text
+    Castbar.Text:SetText(Event == "UNIT_SPELLCAST_FAILED" and FAILED or INTERRUPTED)
 
     -- Set Values
     Castbar:SetMinMaxValues(0, 1)
     Castbar:SetValue(1)
+    Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
+
+    if (InterruptedBy and self:MarkAsInterrupted(Unit, CastID, InterruptedBy)) then
+        return
+    end
 
     -- Reset CastBar
     UF:ResetCastBar(Castbar)
@@ -197,7 +271,7 @@ function UF:CastUpdated(Event, Unit, _, _, CastID)
         return
     end
 
-    if (Castbar.CastID ~= CastID or Castbar.SpellID ~= SpellID) then
+    if (not CastID or Castbar.CastID ~= CastID) then
         return
     end
 
@@ -248,7 +322,7 @@ function UF:CastNonInterruptable(Event, Unit)
     end
 end
 
-function UF.OnUpdate(Castbar)
+function UF.CastBarOnUpdate(Castbar)
     if (not Castbar) then
         return
     end
@@ -344,6 +418,7 @@ function UF:ResetCastBar(Castbar)
     Castbar.Interrupt = nil
     Castbar.CastID = nil
     Castbar.SpellID = nil
+    Castbar.SpellText = nil
 
     if (Castbar.StagePips) then
         for _, Pip in ipairs(Castbar.StagePips) do

@@ -11,14 +11,14 @@ local select = select
 -- WoW Globals
 local C_Item = _G.C_Item
 local C_Container = _G.C_Container
-local GetContainerNumSlots = GetContainerNumSlots or (C_Container and C_Container.GetContainerNumSlots)
-local GetContainerItemInfo = GetContainerItemInfo or (C_Container and C_Container.GetContainerItemInfo)
-local GetContainerItemQuestInfo = GetContainerItemQuestInfo or (C_Container and C_Container.GetContainerItemQuestInfo)
-local SetSortBagsRightToLeft = C_Container and C_Container.SetSortBagsRightToLeft or SetSortBagsRightToLeft
-local SetInsertItemsLeftToRight = C_Container and C_Container.SetInsertItemsLeftToRight or SetSortBagsRightToLeft
-local PickupContainerItem = C_Container.PickupContainerItem
-local UseContainerItem = C_Container.UseContainerItem
-local SetItemSearch = C_Container.SetItemSearch
+local GetContainerNumSlots = GetContainerNumSlots or (C_Container and _G.C_Container.GetContainerNumSlots)
+local GetContainerItemInfo = GetContainerItemInfo or (C_Container and _G.C_Container.GetContainerItemInfo)
+local GetContainerItemQuestInfo = GetContainerItemQuestInfo or (C_Container and _G.C_Container.GetContainerItemQuestInfo)
+local SetSortBagsRightToLeft = C_Container and C_Container.SetSortBagsRightToLeft or _G.SetSortBagsRightToLeft
+local SetInsertItemsLeftToRight = C_Container and C_Container.SetInsertItemsLeftToRight or _G.SetInsertItemsLeftToRight
+local PickupContainerItem = _G.C_Container.PickupContainerItem
+local UseContainerItem = _G.C_Container.UseContainerItem
+local SetItemSearch = _G.C_Container.SetItemSearch
 
 -- Locals
 B.ButtonWidth = 32
@@ -27,6 +27,7 @@ B.ButtonSpacing = 4
 B.ButtonsPerRow = 12
 
 -- Locals
+B.PendingBagUpdate = false
 B.ItemNameCache = {}
 B.BagSlots = {}
 B.ReagentSlots = {}
@@ -57,6 +58,13 @@ function B:DisableBlizzard()
         _G.ReagentBankFrame:UnregisterAllEvents()
         _G.ReagentBankFrame:Hide() 
     end
+
+    hooksecurefunc(_G.ContainerFrameCombinedBags, "Show", function()
+        B:ToggleStandaloneBag()
+
+        _G.ContainerFrameCombinedBags:UnregisterAllEvents()
+        _G.ContainerFrameCombinedBags:Hide()
+    end)
 end
 
 function B:GetCachedItemName(ItemID)
@@ -155,9 +163,7 @@ function B:CreateContainer()
 
         for _, Frames in ipairs(SlotTables) do
             for _, Button in ipairs(Frames) do
-                local Info = (C_Container and C_Container.GetContainerItemInfo) and C_Container.GetContainerItemInfo(Button.bag, Button.slot)
-                local Name = B:GetCachedItemName(Info and Info.itemID)
-
+                local Name = B:GetCachedItemName(Button.ItemID)
                 Button:SetAlpha((Text == "" or Name:find(Text)) and 1 or 0.5)
             end
         end
@@ -258,6 +264,25 @@ function B:CreateItemSlot(Frame)
     Button:RegisterForClicks("AnyUp")
     Button:RegisterForDrag("LeftButton")
 
+    if not InCombatLockdown() then
+        Button:SetAttribute("type2", "item")
+        Button:SetAttribute("bag", nil)
+        Button:SetAttribute("slot", nil)
+    end
+
+    Button:SetScript("OnClick", function(self, button)
+        if IsShiftKeyDown() and button == "LeftButton" then
+            ChatEdit_InsertLink(self.ItemLink)
+        elseif button == "LeftButton" then
+            if self.ItemLink then
+                -- Attempt to use/equip
+                UseContainerItem(self.bag, self.slot)
+            end
+        elseif button == "RightButton" then
+            PickupContainerItem(self.bag, self.slot)
+        end
+    end)
+
     Button:HookScript("PreClick", function(self, mouseButton)
         if IsShiftKeyDown() and mouseButton == "LeftButton" and self.ItemLink then
             ChatEdit_InsertLink(self.ItemLink)
@@ -265,10 +290,22 @@ function B:CreateItemSlot(Frame)
     end)
 
     Button:HookScript("OnEnter", function(self)
-        if (self.ItemLink) then
-            _G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            _G.GameTooltip:SetBagItem(self.bag, self.slot)
-            _G.GameTooltip:Show()
+        if self.ItemLink then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetBagItem(self.bag, self.slot)
+            GameTooltip:Show()
+        end
+
+        if C_NewItems.IsNewItem(self.bag, self.slot) then
+            C_NewItems.RemoveNewItem(self.bag, self.slot)
+
+            if self.NewItemTexture then
+                self.NewItemTexture:Hide()
+            end
+
+            if self.NewItemAnimation and self.NewItemAnimation:IsPlaying() then
+                self.NewItemAnimation:Stop()
+            end
         end
     end)
 
@@ -295,30 +332,17 @@ function B:UpdateItemSlots(BagID, StartIndex, SlotTable, ParentFrame, isReagent)
         -- Assign bag and slot
         Button.bag, Button.slot = BagID, Slot
 
-        -- set attributes for the secure template
-        Button:SetAttribute("type", "item")
-        Button:SetAttribute("bag", BagID)
-        Button:SetAttribute("slot", Slot)
+        if not InCombatLockdown() then
+            Button:SetAttribute("type1", "item")
+            Button:SetAttribute("type2", "item")
+            Button:SetAttribute("bag", BagID)
+            Button:SetAttribute("slot", Slot)
+        end
 
         -- Get item info
         local Info = B:GetContainerItemInfo(BagID, Slot)
         local Quest = B:GetContainerItemQuestInfo(BagID, Slot)
         Button.ItemID, Button.ItemLink = Info.itemID, Info.hyperlink
-
-        -- Handle tooltip & new item glow
-        Button:HookScript("OnEnter", function(self)
-            if C_NewItems.IsNewItem(self.bag, self.slot) then
-                C_NewItems.RemoveNewItem(self.bag, self.slot)
-
-                if (self.NewItemTexture) then 
-                    self.NewItemTexture:Hide() 
-                end
-
-                if self.NewItemAnimation and self.NewItemAnimation:IsPlaying() then
-                    self.NewItemAnimation:Stop()
-                end
-            end
-        end)
 
         -- Update visuals
         if (Button.ItemLink) then
@@ -438,7 +462,7 @@ function B:UpdateBags()
         B.BagSlots[i]:Hide()
     end
 
-    ReagentIndex = B:UpdateItemSlots(5, ReagentIndex, B.ReagentSlots, B.ReagentContainer, true)
+    ReagentIndex = B:UpdateItemSlots(Enum.BagIndex.ReagentBag, ReagentIndex, B.ReagentSlots, B.ReagentContainer, true)
 
     for i = ReagentIndex, #B.ReagentSlots do
         B.ReagentSlots[i]:Hide()
@@ -476,12 +500,12 @@ function B:OnEvent(event, ...)
 end
 
 function B:OpenBags()
-    hooksecurefunc("OpenBackpack", function() B:ToggleStandaloneBag() end)
-    hooksecurefunc("CloseBackpack", function() B:CloseAllBags() end)
-    hooksecurefunc("ToggleBackpack", function() B:ToggleStandaloneBag() end)
     hooksecurefunc("OpenAllBags", function() B:ToggleStandaloneBag() end)
-    hooksecurefunc("CloseAllBags", function() B:CloseAllBags() end)
+    hooksecurefunc("OpenBackpack", function() B:ToggleStandaloneBag() end)
+    hooksecurefunc("ToggleBackpack", function() B:ToggleStandaloneBag() end)
     hooksecurefunc("ToggleAllBags", function() B:ToggleStandaloneBag() end)
+    hooksecurefunc("CloseBackpack", function() B:CloseAllBags() end)
+    hooksecurefunc("CloseAllBags", function() B:CloseAllBags() end)
 end
 
 function B:RegisterEvents()

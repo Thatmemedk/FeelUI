@@ -167,6 +167,25 @@ function NP:CreateAuraButton(Frame, ExtraBorder)
     return Button
 end
 
+--[[
+
+"HELPFUL"; Displays helpeful Buffs no filtering
+"HARMFUL"; Displays harmful Debuffs, no filtering
+
+"HELPFUL|PLAYER"; Displays helpful Buffs only from player and no filtering.
+"HARMFUL|PLAYER"; Displays harmful Debuffs only from player and no filtering.
+
+"HELPFUL|RAID"; Buffs filtered by the player's class, e.g. for Priests it will only return  [Power Word: Fortitude] etc.
+"HARMFUL|RAID"; Certain Debuffs that only show up on raid frames, e.g. most Debuffs that are relevant in a Raid Setting.
+"HARMFUL|RAID_PLAYER_DISPELLABLE"; Returns auras the player can be Dispelled.
+"HELPFUL|PLAYER|RAID_IN_COMBAT; Returns auras that are flagged to show on raid frames in combat, this should return mostly just HotS.
+
+"HELPFUL|EXTERNAL_DEFENSIVE"; Displays External Defensives such as [Pain Suppression] etc.
+"HELPFUL|BIG_DEFENSIVE"; Displays Defensives such as [Barkskin] etc.
+"HARMFUL|CROWD_CONTROL"; Returns auras that are flagged as Crowd Control.
+
+--]]
+
 function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, AnchorPoint, OffsetX, OffsetY, Direction, InitialAnchor, NumAuras, Filter, ExtraBorder)
     local Container = CreateFrame("Frame", nil, Frame)
     Container.Width = ButtonWidth
@@ -175,7 +194,7 @@ function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, Ancho
     Container.Direction = Direction
     Container.InitialAnchor = InitialAnchor
     Container.NumAuras = NumAuras
-    Container.Filter = Filter -- HELPFUL; HARMFUL; HELPFUL|PLAYER; HARMFUL|PLAYER; "HARMFUL|RAID"; "HELPFUL|RAID"; "HELPFUL|EXTERNAL_DEFENSIVE";
+    Container.Filter = Filter
     Container.Buttons = {}
     
     local TotalWidth = (ButtonWidth * NumAuras) + (Spacing * (NumAuras - 1))

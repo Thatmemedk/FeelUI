@@ -30,7 +30,7 @@ function CDM:Initialize()
 		return
 	end
 
-	if not IsAddOnLoaded("Blizzard_CooldownViewer") then
+	if (not IsAddOnLoaded("Blizzard_CooldownViewer")) then
 		LoadAddOn("Blizzard_CooldownViewer")
 	end
 

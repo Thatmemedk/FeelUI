@@ -326,15 +326,27 @@ function NP:SetCVarOnLogin()
     SetCVar("nameplateSelectedScaleFactor", 1)
     SetCVar("nameplateGlobalScale", 1)
     SetCVar("nameplateMinScale", 1)
-    SetCVar("nameplateShowSelf", 0)
     SetCVar("nameplateMotion", 0)
+    SetCVar("nameplateOverlapH", 0.8)
+    SetCVar("nameplateOverlapV", 1.1)
+    -- All
     SetCVar("nameplateShowAll", 1)
-    SetCVar("nameplateShowFriends", 0)
+    -- Friendly
+    SetCVar("nameplateShowFriends", 1)
+    SetCVar("nameplateShowFriendlyNPCs", 0)
+    SetCVar("nameplateShowFriendlyPets", 0)
+    SetCVar("nameplateShowFriendlyTotems", 0)
+    SetCVar("nameplateShowFriendlyMinions", 0)
+    SetCVar("nameplateShowFriendlyGuardians", 0)
+    -- Enemies
     SetCVar("nameplateShowEnemies", 1)
     SetCVar("nameplateShowEnemyMinion", 1)
     SetCVar("nameplateShowEnemyMinus", 1)
+    -- Names Only
     SetCVar("nameplateUseClassColorForFriendlyPlayerUnitNames", 1)
     SetCVar("nameplateShowOnlyNameForFriendlyPlayerUnits", 1)
+    -- Never Show
+    SetCVar("nameplateShowSelf", 0)
 end
 
 -- REGISTER EVENTS

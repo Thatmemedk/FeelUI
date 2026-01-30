@@ -38,7 +38,7 @@ function GameMenu:Skin()
 
 	local GameMenuFrameNew = CreateFrame("Frame", nil, GameMenuFrame)
 	GameMenuFrameNew:Size(162, 296)
-	GameMenuFrameNew:Point("CENTER", GameMenuFrame, 0, -6)
+	GameMenuFrameNew:Point("CENTER", GameMenuFrame, 0, -7)
 	GameMenuFrameNew:CreateBackdrop()
 	GameMenuFrameNew:CreateShadow()
 
@@ -48,13 +48,15 @@ function GameMenu:Skin()
 		end
 
 		for Button in self.buttonPool:EnumerateActive() do
-			Button:Size(144, 22)
-			Button:HandleButton()
-			Button.Backdrop:SetInside(Button, 1, 1)
-			Button.BorderBackdrop:SetInside(Button, 1, 1)
+			if (not Button.IsSkinned) then
+				Button:Size(144, 22)
+				Button:HandleButton()
+				Button.Backdrop:SetInside(Button, 1, 1)
+				Button.BorderBackdrop:SetInside(Button, 1, 1)
 
-			Button:GetFontString():SetFontTemplate("Default")
-			Button:GetFontString():SetTextColor(0.8, 0.8, 0.8)
+				Button:GetFontString():SetFontTemplate("Default")
+				Button:GetFontString():SetTextColor(0.8, 0.8, 0.8)
+			end
 		end
 	end)
 
