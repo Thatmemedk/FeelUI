@@ -18,9 +18,11 @@ function CDM:CreateContainers(Frame, Point, Anchor, X, Y, IconSpacing)
         return 
     end
 
-    local AnchorFrame = CreateFrame("Frame", nil, _G.UIParent)
+    local AnchorFrame = CreateFrame("Frame", nil, _G.UIParent, "SecureHandlerStateTemplate")
     AnchorFrame:Size(36, 18)
     AnchorFrame:Point(Point, Anchor, X or 0, Y or 0)
+
+    RegisterStateDriver(AnchorFrame, "visibility", "[bonusbar:5] hide; show")
 
     self.Anchors[Frame] = {
         Frame = AnchorFrame,

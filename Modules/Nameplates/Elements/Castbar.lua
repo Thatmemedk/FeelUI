@@ -139,6 +139,7 @@ function NP:CastStarted(Event, Unit)
     Castbar.CastID = CastID
     Castbar.SpellID = SpellID
     Castbar.SpellName = Text
+    Castbar.CastDelayed = 0
 
     -- Set Values
     Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBars, Castbar.Direction)
@@ -342,11 +343,28 @@ function NP.CastBarOnUpdate(Castbar)
             local DurationObject = Castbar:GetTimerDuration()
 
             if (DurationObject) then
-                local Duration = Castbar:GetTimerDuration():GetElapsedDuration()
-                local Total = Castbar:GetTimerDuration():GetTotalDuration()
-                Castbar.Time:SetFormattedText("%.1fs/%.1fs", Duration, Total)
+                if (Castbar.CastDelayed ~= 0) then
+                    local Duration = Castbar:GetTimerDuration():GetElapsedDuration()
+                    local Total = Castbar:GetTimerDuration():GetTotalDuration()
+                    
+                    Castbar.Time:SetFormattedText("%.1fs/%.1fs |cffff0000%s%.2f|r", Duration, Total, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
+                else
+                    local Duration = Castbar:GetTimerDuration():GetElapsedDuration()
+                    local Total = Castbar:GetTimerDuration():GetTotalDuration()
+
+                    Castbar.Time:SetFormattedText("%.1fs/%.1fs", Duration, Total)
+                end
             end
         end
+    else
+        -- Update
+        Castbar:SetScript("OnUpdate", nil)
+        
+        -- Reset CastBar
+        NP:ResetCastBar(Castbar)
+
+        -- Call Fade
+        UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
     end
 end
 

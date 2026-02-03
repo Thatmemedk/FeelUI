@@ -41,6 +41,7 @@
 	<Script file="DataBars\SoulFragmentsBar.lua"/>
 	<Script file="DataBars\MaelstormBar.lua"/>
 	<Script file="DataBars\TotemBar.lua"/>
+	<Script file="DataBars\VigorBar.lua"/>
 	<!-- DataTexts -->
 	<Script file="DataTexts\Date.lua"/>
 	<Script file="DataTexts\Durability.lua"/>

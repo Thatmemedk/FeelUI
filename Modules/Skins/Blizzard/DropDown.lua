@@ -30,7 +30,7 @@ function DropDownMenu:SkinMenu(Frame)
     BackdropNew:SetInside()
     BackdropNew:SetBackdrop({
         edgeFile = Media.Global.Blank,
-        bgFile   = Media.Global.Texture,
+        bgFile = Media.Global.Texture,
         edgeSize = UI:Scale(1),
     })
     BackdropNew:SetBackdropColor(unpack(DB.Global.General.BackdropColor))

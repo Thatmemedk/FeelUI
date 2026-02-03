@@ -96,6 +96,20 @@ function PowerBar:RegisterEvents()
 	self:SetScript("OnEvent", self.OnEvent)
 end
 
+function PowerBar:CheckDragonflying()
+    local IsGliding = C_PlayerInfo.GetGlidingInfo()
+
+    if (IsGliding and not self.IsFlying) then
+        self.IsFlying = true
+
+        UI:UIFrameFadeOut(self.Bar, 0.25, self.Bar:GetAlpha(), 0)
+    elseif (not IsGliding and self.IsFlying) then
+        self.IsFlying = false
+
+        UI:UIFrameFadeIn(self.Bar, 0.25, self.Bar:GetAlpha(), 1)
+    end
+end
+
 function PowerBar:Initialize()
 	if (not DB.Global.DataBars.PowerBar) then
 		return
@@ -103,4 +117,8 @@ function PowerBar:Initialize()
 
 	self:CreateBar()
 	self:RegisterEvents()
+
+    C_Timer.NewTicker(0.2, function()
+        self:CheckDragonflying()
+    end)
 end

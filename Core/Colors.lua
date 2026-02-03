@@ -42,6 +42,11 @@ end
 -- COLOR TABLES
 
 UI.Colors = {
+	Vigor = {
+		NORMAL = UI:CreateColor(0, 0.82, 1),
+		THRILL = UI:CreateColor(1, 0.82, 0),
+	},
+
 	EmpowerStagesColors = {
 	    [1] = UI:CreateColor(0, 0.82, 0),
 	    [2] = UI:CreateColor(0.82, 0, 0),

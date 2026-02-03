@@ -57,6 +57,10 @@ LibAnimated.Groups = {
         self.Stopped = false
     end,
 
+    IsPlaying = function(self)
+        return self.Playing
+    end,
+
     Pause = function(self)
         for i, Frames in ipairs(LibAnimated.Running) do
             if (Frames == self) then

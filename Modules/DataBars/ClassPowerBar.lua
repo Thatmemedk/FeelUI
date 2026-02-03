@@ -40,7 +40,6 @@ local Mult = 0.5
 
 function ClassPowerBar:CreateBar()
     local Bar = CreateFrame("Frame", nil, _G.UIParent)
-    Bar:SetFrameStrata("LOW")
     Bar:Size(242, 8)
     Bar:Point(unpack(DB.Global.DataBars.ClassPowerPoint))
     Bar:Hide()
@@ -245,6 +244,20 @@ function ClassPowerBar:RegisterEvents()
     self:SetScript("OnEvent", self.OnEvent)
 end
 
+function ClassPowerBar:CheckDragonflying()
+    local IsGliding = C_PlayerInfo.GetGlidingInfo()
+
+    if (IsGliding and not self.IsFlying) then
+        self.IsFlying = true
+
+        UI:UIFrameFadeOut(self.Bar, 0.25, self.Bar:GetAlpha(), 0)
+    elseif (not IsGliding and self.IsFlying) then
+        self.IsFlying = false
+
+        UI:UIFrameFadeIn(self.Bar, 0.25, self.Bar:GetAlpha(), 1)
+    end
+end
+
 function ClassPowerBar:Initialize()
     if (not DB.Global.DataBars.ClassPowerBar) then
         return
@@ -252,4 +265,8 @@ function ClassPowerBar:Initialize()
 
     self:CreateBar()
     self:RegisterEvents()
+
+    C_Timer.NewTicker(0.2, function()
+        self:CheckDragonflying()
+    end)
 end
