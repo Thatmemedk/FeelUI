@@ -1,1 +1,1 @@
-local UI, DB, Media, Language = select(2, ...):Call()
+local UI, DB, Media = select(2, ...):Call()

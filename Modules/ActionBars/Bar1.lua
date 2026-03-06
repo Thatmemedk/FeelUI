@@ -9,6 +9,10 @@ local select = select
 local unpack = unpack
 
 function AB:UpdateMainBarButtons()
+    if InCombatLockdown() then
+        return
+    end
+    
 	local Bar = AB.ActionBar1
 	local Spacing = DB.Global.ActionBars.ButtonSpacing
 

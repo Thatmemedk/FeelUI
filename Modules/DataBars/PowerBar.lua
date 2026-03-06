@@ -12,113 +12,260 @@ local floor = math.floor
 local UnitPower = UnitPower
 local UnitPowerMax = UnitPowerMax
 local UnitPowerType = UnitPowerType
-local CreateFrame = CreateFrame
+local UnitStagger = UnitStagger
+local UnitHealthMax = UnitHealthMax
+
+-- WoW Globals
+local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
+
+-- WoW Globals
+local STAGGER_YELLOW_TRANSITION =  _G.STAGGER_YELLOW_TRANSITION or 0.3
+local STAGGER_RED_TRANSITION = _G.STAGGER_RED_TRANSITION or 0.6
 
 -- Locals
-local _, Class = UnitClass("player")
+local Class = select(2, UnitClass("player"))
 
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
 
-function PowerBar:CreateBar()
-	local Bar = CreateFrame("StatusBar", nil, _G.UIParent)
+function PowerBar:CreateBar(Name)
+	local Bar = CreateFrame("StatusBar", "FeelUI_" .. Name, _G.UIParent)
 	Bar:Size(242, 8)
-	Bar:Point(unpack(DB.Global.DataBars.PowerBarPoint))
+
+	if (Name == "PowerBar") then
+		Bar:Point(unpack(DB.Global.DataBars.PowerBarPoint))
+	else
+		Bar:Point(unpack(DB.Global.DataBars.ClassPowerPoint))
+	end
+
 	Bar:SetStatusBarTexture(Media.Global.Texture)
 	Bar:CreateBackdrop()
 	Bar:CreateShadow()
 	Bar:Hide()
 	
-	local InvisFrame = CreateFrame("Frame", nil, Bar)
-	InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
-	InvisFrame:SetInside()
+	Bar.InvisFrame = CreateFrame("Frame", nil, Bar)
+	Bar.InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
+	Bar.InvisFrame:SetInside()
 
-	local Text = InvisFrame:CreateFontString(nil, "OVERLAY")
-	Text:SetFontTemplate("Default", 16)
-	
-	-- Cache
-	self.Bar = Bar
-	self.Text = Text
+	Bar.Text = Bar.InvisFrame:CreateFontString(nil, "OVERLAY")
+	Bar.Text:SetFontTemplate("Default", 16)
+	Bar.Text:Point("CENTER", Bar, 0, 6)
+
+	-- ANIMATION
+    Bar.Fade = UI:CreateAnimationGroup(Bar)
+
+    Bar.FadeIn = UI:CreateAnimation(Bar.Fade, "Fade")
+    Bar.FadeIn:SetDuration(0.25)
+    Bar.FadeIn:SetChange(1)
+    Bar.FadeIn:SetEasing("In-SineEase")
+
+    Bar.FadeOut = UI:CreateAnimation(Bar.Fade, "Fade")
+    Bar.FadeOut:SetDuration(0.25)
+    Bar.FadeOut:SetChange(0)
+    Bar.FadeOut:SetEasing("Out-SineEase")
+    
+    return Bar
 end
 
-function PowerBar:Update()
+function PowerBar:PowerUpdate()
+	local Bar = self.Power
+
+    if (not Bar) then
+    	return
+    end
+
+    local Spec = GetSpecialization()
+
+    if (Class == "MAGE" or Class == "WARLOCK") then
+        Bar:Hide()
+    elseif (Class == "PALADIN" and (Spec == 2 or Spec == 3)) then
+        Bar:Hide()
+    elseif (Class == "SHAMAN" and (Spec == 2)) then
+    	Bar:Hide()
+    elseif (Class == "EVOKER" and (Spec == 1 or Spec == 3)) then
+    	Bar:Hide()
+    else
+        Bar:Show()
+    end
+
 	local PowerType, PowerToken = UnitPowerType("player")
 	local Min, Max = UnitPower("player", PowerType), UnitPowerMax("player", PowerType)
 	local Percent = UnitPowerPercent("player", PowerType, false, UI.CurvePercent)
 	local PowerColor = UI.Colors.Power[PowerToken]
 
 	-- Set Values
-	self.Bar:SetMinMaxValues(0, Max)
-	self.Bar:SetValue(Min, UI.SmoothBars)
+	Bar:SetMinMaxValues(0, Max, UI.SmoothBars)
+	Bar:SetValue(Min, UI.SmoothBars)
 
+	-- Set Text
 	if (PowerType == Enum.PowerType.Mana) then
-		self.Text:SetFormattedText("%.0f%%", Percent)
-		self.Text:Point("CENTER", Bar, 2, 6)
+		Bar.Text:SetFormattedText("%.0f%%", Percent)
+		Bar.Text:Point("CENTER", Bar, 2, 6)
 	else
-		self.Text:SetText(Min)
-		self.Text:Point("CENTER", Bar, 0, 6)
+		Bar.Text:SetText(Min)
+		Bar.Text:Point("CENTER", Bar, 0, 6)
 	end
 
+	-- Set Color
 	if (PowerColor) then
-		self.Bar:SetStatusBarColor(unpack(PowerColor))
+		Bar:SetStatusBarColor(unpack(PowerColor))
 	end
 end
 
-function PowerBar:UpdateSpec()
+function PowerBar:StaggerUpdate()
+	local Bar = self.Stagger
+
+    if (not Bar) then
+    	return
+    end
+
     local Spec = GetSpecialization()
 
-    if (Class == "MAGE" or Class == "WARLOCK") then
-        self.Bar:Hide()
-    elseif (Class == "PALADIN" and (Spec == 2 or Spec == 3)) then
-        self.Bar:Hide()
-    elseif (Class == "SHAMAN" and (Spec == 2)) then
-    	self.Bar:Hide()
-    elseif (Class == "EVOKER" and (Spec == 1 or Spec == 3)) then
-    else
-        self.Bar:Show()
+    if (Class ~= "MONK" or Spec ~= 1) then
+        Bar:Hide()
+        return
     end
+
+	local Min, Max = UnitStagger("player"), UnitHealthMax("player")
+	local Percent = Min/Max
+
+	-- Set Values
+	Bar:SetMinMaxValues(0, Max, UI.SmoothBars)
+	Bar:SetValue(Min, UI.SmoothBars)
+
+	-- Set Text
+	Bar.Text:SetText(AbbreviateNumbers(Min))
+
+	-- Set Colors
+	if (Percent >= STAGGER_RED_TRANSITION) then
+		Bar:SetStatusBarColor(1, 0.52, 0.52)
+	elseif (Percent > STAGGER_YELLOW_TRANSITION) then
+		Bar:SetStatusBarColor(1, 0.82, 0.52)
+	else
+		Bar:SetStatusBarColor(0.52, 1, 0.52)
+	end
 end
 
-function PowerBar:OnEvent(event, unit)
-   	self:Update()
-    self:UpdateSpec()
+function PowerBar:SoulFragmentsUpdate()
+	local Bar = self.SoulFragments
+
+    if (not Bar) then
+    	return
+    end
+
+    local Spec = GetSpecialization()
+
+    if (Class ~= "DEMONHUNTER" or Spec ~= 2) then
+        Bar:Show()
+    else
+        Bar:Hide()
+    end
+
+    local Aura = GetPlayerAuraBySpellID(1225789) or GetPlayerAuraBySpellID(1227702)
+    local Min = Aura and Aura.applications or 0
+    local Max = 50
+
+    -- Set Values
+    Bar:SetMinMaxValues(0, Max, UI.SmoothBars)
+    Bar:SetValue(Min, UI.SmoothBars)
+
+    -- Set Text
+    Bar.Text:SetText(Min)
+
+    -- Set Colors
+    Bar:SetStatusBarColor(0.55, 0.25, 1 * 2)
+end
+function PowerBar:OnEvent(event)
+   	self:PowerUpdate()
+   	self:StaggerUpdate()
+   	self:SoulFragmentsUpdate()
 end
 
 function PowerBar:RegisterEvents()
+	-- PLAYER
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
+	self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+    self:RegisterEvent("PLAYER_TALENT_UPDATE")
+    -- UNIT
+	self:RegisterEvent("UNIT_AURA", "player")
+	self:RegisterEvent("UNIT_SPELLCAST_START", "player")
 	self:RegisterEvent("UNIT_POWER_FREQUENT", "player")
 	self:RegisterEvent("UNIT_MAXPOWER", "player")
 	self:RegisterEvent("UNIT_POWER_UPDATE", "player")
 	self:RegisterEvent("UNIT_DISPLAYPOWER", "player")
-	self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-    self:RegisterEvent("PLAYER_TALENT_UPDATE")
+	-- SPELLS
     self:RegisterEvent("SPELLS_CHANGED")
+    -- ON EVENT
 	self:SetScript("OnEvent", self.OnEvent)
 end
 
-function PowerBar:CheckDragonflying()
+function PowerBar:GlidingState()
     local IsGliding = C_PlayerInfo.GetGlidingInfo()
 
-    if (IsGliding and not self.IsFlying) then
-        self.IsFlying = true
+    local Bars = {
+        self.Power,
+        self.Stagger,
+        self.SoulFragments
+    }
 
-        UI:UIFrameFadeOut(self.Bar, 0.25, self.Bar:GetAlpha(), 0)
-    elseif (not IsGliding and self.IsFlying) then
-        self.IsFlying = false
+    for _, Bar in ipairs(Bars) do
+        if (Bar) then
+            if (IsGliding and not self.IsFlying) then
+            	self.IsFlying = true
 
-        UI:UIFrameFadeIn(self.Bar, 0.25, self.Bar:GetAlpha(), 1)
+                if Bar.FadeIn:IsPlaying() then
+                    Bar.FadeIn:Stop()
+                end
+
+                Bar.FadeOut:Play()
+
+            elseif (not IsGliding and self.IsFlying) then
+            	self.IsFlying = false
+
+                if Bar.FadeOut:IsPlaying() then
+                    Bar.FadeOut:Stop()
+                end
+
+                Bar.FadeIn:Play()
+            end
+        end
     end
 end
 
-function PowerBar:Initialize()
-	if (not DB.Global.DataBars.PowerBar) then
+function PowerBar:CheckDragonflying()
+    C_Timer.NewTicker(0.2, function()
+        self:GlidingState()
+    end)
+end
+
+function PowerBar:CreatePowerBar()
+    if (not DB.Global.DataBars.PowerBar) then
+    	return
+    end
+
+	self.Power = self:CreateBar("PowerBar")
+end
+
+function PowerBar:CreateStaggerBar()
+	if (Class ~= "MONK") then
 		return
 	end
 
-	self:CreateBar()
-	self:RegisterEvents()
+	self.Stagger = self:CreateBar("StaggerBar")
+end
 
-    C_Timer.NewTicker(0.2, function()
-        self:CheckDragonflying()
-    end)
+function PowerBar:CreateSoulFragmentsBar()
+    if (Class ~= "DEMONHUNTER") then
+        return
+    end
+
+	self.SoulFragments = self:CreateBar("SoulFragmentsBar")
+end
+
+function PowerBar:Initialize()
+    self:CreatePowerBar()
+    self:CreateStaggerBar()
+    self:CreateSoulFragmentsBar()
+    self:RegisterEvents()
+    self:CheckDragonflying()
 end

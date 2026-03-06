@@ -25,7 +25,6 @@ VB.Count = 0
 local R, G, B = unpack(UI.GetClassColors)
 
 function VB:CreateBar()
-    -- FRAMES
     local VigorBars = CreateFrame("Frame", nil, _G.UIParent)
     VigorBars:Size(242, 8)
     VigorBars:Point("CENTER", _G.UIParent, 0, -212)
@@ -40,7 +39,7 @@ function VB:CreateBar()
     InvisFrame:SetInside()
 
     local SpeedText = InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
-    SpeedText:Point("CENTER", VigorBars, 0, 6)
+    SpeedText:Point("CENTER", VigorBars, 0, 8)
     SpeedText:SetFontTemplate("Default", 16)
 
     -- ANIMATION
@@ -52,36 +51,50 @@ function VB:CreateBar()
     VigorBars.FadeIn:SetEasing("In-SineEase")
 
     VigorBars.FadeOut = UI:CreateAnimation(VigorBars.Fade, "Fade")
-    VigorBars.FadeOut:SetDuration(1)
+    VigorBars.FadeOut:SetDuration(0.25)
     VigorBars.FadeOut:SetChange(0)
     VigorBars.FadeOut:SetEasing("Out-SineEase")
 
-    -- CACHE
+    -- Cache
     self.VigorBars = VigorBars
     self.CooldownsBars = CooldownsBars
     self.InvisFrame = InvisFrame
     self.SpeedText = SpeedText
 end
 
-function VB:CreateSegementBars(Frame, Index)
+function VB:CreateSegmentBars(Frame, Index)
     local SegmentBar = CreateFrame("StatusBar", nil, Frame)
-    SegmentBar:SetStatusBarTexture(Media.Global.Texture)
     SegmentBar:Height(Frame:GetHeight())
-    SegmentBar:SetStatusBarColor(R, G, B)
-    SegmentBar:CreateBackdrop()
-    SegmentBar:CreateShadow()
+    SegmentBar:SetStatusBarTexture(Media.Global.Texture)
 
     SegmentBar.Text = self.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
     SegmentBar.Text:Point("CENTER", SegmentBar, 0, 6)
     SegmentBar.Text:SetFontTemplate("Default", 16)
 
     if (Index == 1) then
-        SegmentBar:Point("LEFT", Frame, 0, 0)
+        SegmentBar:Point("LEFT", Frame, "LEFT", 0, 0)
     else
-        SegmentBar:Point("LEFT", Frame[Index -1], "RIGHT", self.Spacing, 0)
+        SegmentBar:Point("LEFT", Frame[Index - 1], "RIGHT", self.Spacing, 0)
+    end
+
+    if (not Frame.Backdrop) then
+        Frame.Backdrop = {}
+    end
+
+    local Backdrop = CreateFrame("StatusBar", nil, Frame)
+    Backdrop:Height(Frame:GetHeight())
+    Backdrop:SetStatusBarTexture(Media.Global.Texture)
+    Backdrop:CreateBackdrop()
+    Backdrop:CreateShadow()
+
+    if (Index == 1) then
+        Backdrop:Point("LEFT", Frame, "LEFT", 0, 0)
+    else
+        Backdrop:Point("LEFT", Frame.Backdrop[Index - 1], "RIGHT", self.Spacing, 0)
     end
 
     Frame[Index] = SegmentBar
+    Frame.Backdrop[Index] = Backdrop
 
     return SegmentBar
 end
@@ -91,11 +104,19 @@ function VB:ResizeBars(Frame, Num)
     local BarWidth = math.floor((MaxWidth / Num) - self.Spacing + (self.Spacing / Num))
     local NewWidth = MaxWidth - ((BarWidth * Num) + (self.Spacing * (Num - 1)))
 
-    for Index = 1, Num do
-        if (NewWidth > Num - Index) then
-            Frame[Index]:Width(BarWidth + 1)
+    for i = 1, Num do
+        if (NewWidth > Num - i) then
+            Frame[i]:Width(BarWidth + 1)
+
+            if (Frame.Backdrop and Frame.Backdrop[i]) then
+                Frame.Backdrop[i]:Width(BarWidth + 1)
+            end
         else
-            Frame[Index]:Width(BarWidth)
+            Frame[i]:Width(BarWidth)
+
+            if (Frame.Backdrop and Frame.Backdrop[i]) then
+                Frame.Backdrop[i]:Width(BarWidth)
+            end
         end
     end
 end
@@ -103,14 +124,17 @@ end
 function VB:UpdateCooldowns()
     self.NeedsResize = false
 
-    for Index, SpellID in ipairs(self.CooldownSpells) do
-        local SegmentBar = self.CooldownsBars[Index]
+    for i, SpellID in ipairs(self.CooldownSpells) do
+        local SegmentBar = self.CooldownsBars[i]
 
         if (not SegmentBar) then
-            SegmentBar = self:CreateSegementBars(self.CooldownsBars, Index)
+            SegmentBar = self:CreateSegmentBars(self.CooldownsBars, i)
 
             self.NeedsResize = true
         end
+
+        SegmentBar:SetStatusBarColor(R, G, B)
+        self.CooldownsBars.Backdrop[i]:SetStatusBarColor(R * 0.5, G * 0.5, B * 0.5, 0.5)
 
         local Charges = GetSpellCharges(SpellID)
         local CurCharges = Charges and Charges.currentCharges or 0
@@ -121,8 +145,12 @@ function VB:UpdateCooldowns()
 
         if (Charges and CurCharges > 0) then
             self.Duration = GetSpellChargeDuration(SpellID)
+
+            UI:UIFrameFadeIn(SegmentBar, 0.25, SegmentBar:GetAlpha(), 1)
         else
             self.Duration = GetSpellCooldownDuration(SpellID)
+
+            UI:UIFrameFadeOut(SegmentBar, 1, SegmentBar:GetAlpha(), 0.5)
         end
 
         if (self.Duration and not self.Duration:IsZero()) then
@@ -148,21 +176,36 @@ function VB:UpdateVigor()
     local MaxCharges = Charges.maxCharges
     local CurCharges = Charges.currentCharges
 
-    for Index = 1, MaxCharges do
-        local SegmentBar = self.VigorBars[Index] or self:CreateSegementBars(self.VigorBars, Index)
+    for i = 1, MaxCharges do
+        local SegmentBar = self.VigorBars[i]
 
-        if (CurCharges >= Index) then
+        if (not SegmentBar) then
+            SegmentBar = self:CreateSegmentBars(self.VigorBars, i)
+
+            self.NeedsResize = true
+        end
+
+        SegmentBar:SetStatusBarColor(0, 0.82, 1)
+        self.VigorBars.Backdrop[i]:SetStatusBarColor(0, 0.82 * 0.5, 1 * 0.5, 0.5)
+
+        if (CurCharges >= i) then
             SegmentBar:SetMinMaxValues(0, 1, UI.SmoothBars)
             SegmentBar:SetValue(1, UI.SmoothBars)
-        elseif (CurCharges + 1 == Index) then
+
+            UI:UIFrameFadeIn(SegmentBar, 0.25, SegmentBar:GetAlpha(), 1)
+        elseif (CurCharges + 1 == i) then
             local Duration = GetSpellChargeDuration(self.VigorSpell)
 
             if (Duration) then
                 SegmentBar:SetTimerDuration(Duration)
             end
+
+            UI:UIFrameFadeOut(SegmentBar, 1, SegmentBar:GetAlpha(), 0.5)
         else
             SegmentBar:SetMinMaxValues(0, 1, UI.SmoothBars)
             SegmentBar:SetValue(0, UI.SmoothBars)
+
+            UI:UIFrameFadeOut(SegmentBar, 1, SegmentBar:GetAlpha(), 0.5)
         end
     end
 
@@ -173,24 +216,31 @@ function VB:UpdateVigor()
     end
 end
 
-function VB:UpdateVigorColor()
-    if (GetUnitAuraBySpellID("player", self.ThrillSpell, "HELPFUL")) then
-        self.Color = UI.Colors.Vigor.THRILL
-    else
-        self.Color = UI.Colors.Vigor.NORMAL
-    end
-
-    for Index = 1, self.Count do
-        self.VigorBars[Index]:SetStatusBarColor(self.Color.r, self.Color.g, self.Color.b)
-    end
-end
-
 function VB:UpdateSpeed()
     local _, _, Speed = C_PlayerInfo.GetGlidingInfo()
     self.SpeedText:SetFormattedText("%d%%", Speed / BASE_MOVEMENT_SPEED * 100 + 0.5)
 end
 
-function VB:CheckDragonflying()
+function VB:StartSpeedTicker()
+    if (self.SpeedTicker) then
+        return
+    end
+
+    self.SpeedTicker = C_Timer.NewTicker(0.05, function()
+        VB:UpdateSpeed()
+    end)
+end
+
+function VB:StopSpeedTicker()
+    if (not self.SpeedTicker) then 
+        return 
+    end
+
+    self.SpeedTicker:Cancel()
+    self.SpeedTicker = nil
+end
+
+function VB:GlidingState()
     local IsGliding = C_PlayerInfo.GetGlidingInfo()
 
     if (IsGliding and not self.IsFlying) then
@@ -215,23 +265,10 @@ function VB:CheckDragonflying()
     end
 end
 
-function VB:StartSpeedTicker()
-    if (self.SpeedTicker) then
-        return
-    end
-
-    self.SpeedTicker = C_Timer.NewTicker(0.05, function()
-        VB:UpdateSpeed()
+function VB:CheckDragonflying()
+    C_Timer.NewTicker(0.2, function()
+        self:GlidingState()
     end)
-end
-
-function VB:StopSpeedTicker()
-    if (not self.SpeedTicker) then 
-        return 
-    end
-
-    self.SpeedTicker:Cancel()
-    self.SpeedTicker = nil
 end
 
 function VB:OnEvent(event)
@@ -239,26 +276,19 @@ function VB:OnEvent(event)
         self:UpdateCooldowns()
     elseif (event == "SPELL_UPDATE_CHARGES") then
         self:UpdateVigor()
-    elseif (event == "UNIT_AURA") then
-        self:UpdateVigorColor()
     end
 end
 
 function VB:RegisterEvents()
-    self:RegisterEvent("UNIT_AURA", "player")
     self:RegisterEvent("SPELL_UPDATE_CHARGES")
     self:RegisterEvent("SPELL_UPDATE_COOLDOWN")
     self:SetScript("OnEvent", self.OnEvent)
-
-    C_Timer.NewTicker(0.2, function()
-        self:CheckDragonflying()
-    end)
 end
 
 function VB:Initialize()
     self:CreateBar()
     self:UpdateVigor()
-    self:UpdateVigorColor()
     self:UpdateCooldowns()
     self:RegisterEvents()
+    self:CheckDragonflying()
 end

@@ -178,6 +178,9 @@ function DamageMeter:Skin()
 				Window.SourceWindow.ResizeButton:Hide()
 			end
 
+			-- SESSION TIMER
+			Window.SessionTimer:Hide()
+
 			-- NAME
 			Window.DamageMeterTypeDropdown.TypeName:SetParent(Window)
 			Window.DamageMeterTypeDropdown.TypeName:ClearAllPoints()
@@ -231,62 +234,29 @@ function DamageMeter:Skin()
 	self.IsSkinned = true
 end
 
-function DamageMeter:UpdateBarValue(Frame)
-    if (not Frame or not Frame.NewBar) then
-        return
-    end
-
-    local Value = Frame.value
-    local Max = Frame.maxValue
-
-    Frame.NewBar:SetMinMaxValues(0, Max)
-    Frame.NewBar:SetValue(Value, UI.SmoothBars)
-end
-
-function DamageMeter:UpdateBarColors(Frame, ElementData)
-    local ClassFile = ElementData.classFilename
-
-    if (ClassFile) then
-        local Color = UI.Colors.Class[ClassFile]
-
-        if (Color) then
-            Frame.NewBar:SetStatusBarColor(Color.r, Color.g, Color.b, 1)
-        end
-    end
-end
-
 function DamageMeter:UpdateBarSkin(Frame)
     if (not Frame or Frame.IsSkinned) then 
     	return 
     end
 
-    -- New Bar
     if (not Frame.NewBar) then
         Frame.NewBar = CreateFrame("StatusBar", nil, Frame)
         Frame.NewBar:SetFrameLevel(Frame:GetFrameLevel() - 1)
         Frame.NewBar:SetInside()
-        Frame.NewBar:SetStatusBarTexture(Media.Global.Texture)
         Frame.NewBar:CreateBackdrop()
         Frame.NewBar:CreateShadow()
     end
 
-    -- StatusBar
-    local StatusBar = Frame.GetStatusBar and Frame:GetStatusBar()
-
-    if (StatusBar) then
+    if (Frame.StatusBar) then
     	-- Fonts
-        StatusBar.Name:SetFontTemplate("Default")
-        StatusBar.Value:SetFontTemplate("Default")
+        Frame.StatusBar.Name:SetFontTemplate("Default")
+        Frame.StatusBar.Value:SetFontTemplate("Default")
 
         -- Background
-        StatusBar.Background:SetParent(UI.HiddenParent)
-        StatusBar.BackgroundEdge:SetParent(UI.HiddenParent)
+        Frame.StatusBar.Background:SetParent(UI.HiddenParent)
+        Frame.StatusBar.BackgroundEdge:SetParent(UI.HiddenParent)
 
-        local Texture = StatusBar:GetStatusBarTexture()
-
-        if (Texture) then
-            Texture:SetAtlas(nil)
-        end
+		Frame.StatusBar:GetStatusBarTexture():SetTexture(Media.Global.Texture)
     end
 
     -- Icon
@@ -307,23 +277,7 @@ function DamageMeter:UpdateBarSkin(Frame)
     Frame.IsSkinned = true
 end
 
-function DamageMeter:RefreshAllWindows()
-    for i = 1, 3 do
-        local Window = _G["DamageMeterSessionWindow"..i]
-
-        if (Window and Window.Refresh) then
-            Window:Refresh()
-        end
-    end
-end
-
 function DamageMeter:OnEvent(event)
-    if (event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD") then
-        C_Timer.After(1, function()
-            self:RefreshAllWindows()
-        end)
-    end
-
 	if (self.OnlyEncounters) then
 		if (event == "ENCOUNTER_START") then
 		    self.IsActive = true
@@ -371,14 +325,6 @@ function DamageMeter:SetCVarOnLogin()
 	SetCVar("damageMeterEnabled", "1")
 end
 
-function DamageMeter:AutoReset()
-	local IsInInstance = IsInInstance()
-
-    if (IsInInstance) then
-        _G.C_DamageMeter.ResetAllCombatSessions()
-    end
-end
-
 function DamageMeter:Initialize()
     if (not DB.Global.Theme.Enable) then 
         return
@@ -388,19 +334,6 @@ function DamageMeter:Initialize()
         LoadAddOn("Blizzard_DamageMeters")
     end
 
-	hooksecurefunc(_G.DamageMeterEntryMixin, "Init", function(Frame, ElementData)
-	    self:UpdateBarSkin(Frame)
-	    self:UpdateBarColors(Frame, ElementData)
-	    self:UpdateBarValue(Frame)
-	end)
-
-	hooksecurefunc(_G.DamageMeterSpellEntryMixin, "Init", function(Frame, ElementData)
-	    self:UpdateBarSkin(Frame)
-	    self:UpdateBarColors(Frame, ElementData)
-	    self:UpdateBarValue(Frame)
-	end)
-
-    self:AutoReset()
     self:SetCVarOnLogin()
     self:CreateCombatTimers()
     self:RegisterEvents()

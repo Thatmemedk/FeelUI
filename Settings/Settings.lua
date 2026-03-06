@@ -100,18 +100,10 @@ DB.Global = {
 		ReputationBar = false,
 		ClassPowerBar = true,
 		PowerBar = true,
-		RuneBar = true,
-		StaggerBar = true,
-		SoulFragmentsBar = true,
-		MaelstromBar = true,
 		TotemBar = true,
 		-- Points Settings
 		PowerBarPoint = { "BOTTOM", _G.UIParent, 0, 250 },
 		ClassPowerPoint = { "BOTTOM", _G.UIParent, 0, 266 },
-		RuneBarPoint = { "BOTTOM", _G.UIParent, 0, 266 },
-		StaggerBarPoint = { "BOTTOM", _G.UIParent, 0, 266 },
-		SoulFragmentsBarPoint = { "BOTTOM", _G.UIParent, 0, 266 },
-		MaelstromBarPoint = { "BOTTOM", _G.UIParent, 0, 266 },
 	},
 
 	DataTexts = {

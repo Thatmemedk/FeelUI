@@ -10,7 +10,6 @@ function UF:SetupGroupFrame(Frame, type)
 
     if InCombatLockdown() then
         Frame.NeedsSetup = true
-
         return
     end
 
@@ -32,14 +31,17 @@ function UF:SetupGroupFrame(Frame, type)
     -- REGISTER UNIT WATCH
     RegisterUnitWatch(Frame)
 
+    -- ON ATTRIBUTE CHANGED
     Frame:HookScript("OnAttributeChanged", function(self, name, value)
         if (name ~= "unit") then
             return
         end
 
-        self.unit = value
+        if (self.unit) then
+            UF:UpdateGroupFrame(self, self.unit)
+        end
 
-        UF:UpdateGroupFrame(self, self.unit)
+        self.unit = value
     end)
 
     Frame.UnitIsCreated = true
@@ -93,19 +95,18 @@ function UF:SpawnGroupHeader(type)
     -- EVENTS
     Header:RegisterEvent("PLAYER_ENTERING_WORLD")
     Header:RegisterEvent("GROUP_ROSTER_UPDATE")
-    Header:RegisterEvent("UPDATE_INSTANCE_INFO")
-    Header:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+    Header:RegisterEvent("PLAYER_REGEN_ENABLED")
     Header:SetScript("OnEvent", function(self, event)
         if InCombatLockdown() then
-            self:RegisterEvent("PLAYER_REGEN_ENABLED")
             return
         end
 
-        if (event == "PLAYER_REGEN_ENABLED") then
-            self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+        if (event == "GROUP_ROSTER_UPDATE") then
+            UF:FullRefreshGroup()
         end
 
-        if (event == "GROUP_ROSTER_UPDATE") then
+        if (event == "PLAYER_REGEN_ENABLED" and self.NeedsRefresh) then
+            self.NeedsRefresh = nil
             UF:FullRefreshGroup()
         end
 
@@ -122,7 +123,6 @@ function UF:SpawnGroupHeader(type)
 
             if (Frame.NeedsSetup) then
                 Frame.NeedsSetup = nil
-
                 UF:SetupGroupFrame(Frame, type)
             end
 

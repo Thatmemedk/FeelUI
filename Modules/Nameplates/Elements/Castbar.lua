@@ -126,6 +126,12 @@ function NP:CastStarted(Event, Unit)
     end
 
     if (not Name or IsTradeSkill) then
+        -- Reset CastBar
+        NP:ResetCastBar(Castbar)
+        
+        -- Call Fade
+        UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
+
         return
     end
 
@@ -158,6 +164,7 @@ function NP:CastStarted(Event, Unit)
     end
 
     -- Target Text
+    --[[
     if (Castbar.TargetText) then
         NP:UpdateCastTarget(Castbar, Unit)
 
@@ -173,6 +180,7 @@ function NP:CastStarted(Event, Unit)
             end
         end
     end
+    --]]
 
     -- Create EmpowerPips
     if (Castbar.Empower) then
@@ -180,12 +188,7 @@ function NP:CastStarted(Event, Unit)
     end
 
     -- Call On Update
-    if (Castbar.Casting or Castbar.Channel or Castbar.Empower) then
-        Castbar:SetScript("OnUpdate", NP.CastBarOnUpdate)
-    else
-        -- Stop Update
-        Castbar:SetScript("OnUpdate", nil)
-    end
+    Castbar:SetScript("OnUpdate", NP.CastBarOnUpdate)
 
     -- Call Fade
     UI:UIFrameFadeIn(Castbar, NP.FadeInTime, Castbar:GetAlpha(), 1)
@@ -210,24 +213,39 @@ function NP:CastStopped(Event, Unit, _, _, ...)
     end
 
     if (not CastID or Castbar.CastID ~= CastID) then
-        if (InterruptedBy and self:MarkAsInterrupted(Unit, CastID, InterruptedBy)) then
-            -- Set Text
-            Castbar.Text:SetText(INTERRUPTED)
-
-            -- Set Values
-            Castbar:SetMinMaxValues(0, 1)
-            Castbar:SetValue(1)
-            Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
-
-            return
-        end
-
+        -- Set Values
+        --Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
+        --Castbar:SetValue(1, UI.SmoothBars)
+        --Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
+        
         -- Reset CastBar
         NP:ResetCastBar(Castbar)
         
         -- Call Fade
         UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
+
+        return
     end
+
+    --[[
+    if (InterruptedBy and self:MarkAsInterrupted(Unit, CastID, InterruptedBy)) then
+        -- Set Text
+        Castbar.Text:SetText(INTERRUPTED)
+
+        -- Set Values
+        Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
+        Castbar:SetValue(1, UI.SmoothBars)
+        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
+
+        return
+    end
+    --]]
+
+    -- Reset CastBar
+    NP:ResetCastBar(Castbar)
+    
+    -- Call Fade
+    UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
 end
 
 function NP:CastFailed(Event, Unit, _, _, ...)
@@ -254,8 +272,8 @@ function NP:CastFailed(Event, Unit, _, _, ...)
     Castbar.Text:SetText(Event == "UNIT_SPELLCAST_FAILED" and FAILED or INTERRUPTED)
 
     -- Set Values
-    Castbar:SetMinMaxValues(0, 1)
-    Castbar:SetValue(1)
+    Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
+    Castbar:SetValue(1, UI.SmoothBars)
     Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
 
     if (InterruptedBy and self:MarkAsInterrupted(Unit, CastID, InterruptedBy)) then
@@ -313,7 +331,7 @@ function NP:CastUpdated(Event, Unit)
     Castbar.Empower = (Event == "UNIT_SPELLCAST_EMPOWER_UPDATE")
 
     -- Update Target Casts
-    NP:UpdateCastTarget(Castbar, Unit)
+    --NP:UpdateCastTarget(Castbar, Unit)
 
     -- Set Values
     Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBars, Castbar.Direction)
@@ -323,7 +341,7 @@ function NP:CastNonInterruptable(Event, Unit)
     local Frame = self:GetFrameForUnit(Unit)
     local Castbar = Frame and Frame.Castbar
 
-    if (not Castbar) then
+    if (not Castbar) then   
         return
     end
 
@@ -357,12 +375,9 @@ function NP.CastBarOnUpdate(Castbar)
             end
         end
     else
-        -- Update
-        Castbar:SetScript("OnUpdate", nil)
-        
         -- Reset CastBar
         NP:ResetCastBar(Castbar)
-
+        
         -- Call Fade
         UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
     end
@@ -439,6 +454,9 @@ function NP:SetupEmpowerPips(Castbar, StagePercentages)
 end
 
 function NP:ResetCastBar(Castbar)
+    -- Stop Updating
+    Castbar:SetScript("OnUpdate", nil)
+
     -- Reset Cache
     Castbar.Casting = nil
     Castbar.Channel = nil
@@ -473,7 +491,7 @@ function NP:CreateCastBar(Frame)
 
     local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
     CastbarIcon:Size(36, 26)
-    CastbarIcon:Point("RIGHT", Castbar, "LEFT", -4, 3)
+    CastbarIcon:Point("LEFT", Castbar, "RIGHT", 4, 3)
     UI:KeepAspectRatio(CastbarIcon, CastbarIcon)
     
     local IconOverlay = CreateFrame("Frame", nil, Castbar)
@@ -494,6 +512,7 @@ function NP:CreateCastBar(Frame)
     CastbarText:Point("LEFT", Castbar, 2, -8)
     CastbarText:SetFontTemplate("Default")
 
+    --[[
     local CastbarTargetText = InvisFrameCastbar:CreateFontString(nil, "OVERLAY", nil, 7)
     CastbarTargetText:Width(60)
     CastbarTargetText:Point("RIGHT", Frame, 64, -22)
@@ -503,10 +522,11 @@ function NP:CreateCastBar(Frame)
     CastbarTargetText:SetWordWrap(false)
     CastbarTargetText:SetNonSpaceWrap(false)
     CastbarTargetText:SetMaxLines(1)
+    --]]
     
     Frame.Castbar = Castbar
     Frame.Castbar.Icon = CastbarIcon
     Frame.Castbar.Time = CastbarTime
     Frame.Castbar.Text = CastbarText
-    Frame.Castbar.TargetText = CastbarTargetText
+    --Frame.Castbar.TargetText = CastbarTargetText
 end

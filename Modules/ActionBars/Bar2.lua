@@ -9,6 +9,10 @@ local select = select
 local unpack = unpack
 
 function AB:CreateBar2()
+	if InCombatLockdown() then
+		return
+	end
+
 	local Bar = AB.ActionBar2
 	local Spacing = DB.Global.ActionBars.ButtonSpacing
 

@@ -140,6 +140,10 @@ function ExperienceBar:CheckDragonflying()
 
         UI:UIFrameFadeIn(self.Bar, 0.25, self.Bar:GetAlpha(), 0.25)
     end
+
+    if (UI.MyLevel == 90 or IsXPUserDisabled()) then
+		self.Bar:Hide()
+	end
 end
 
 function ExperienceBar:Initialize()

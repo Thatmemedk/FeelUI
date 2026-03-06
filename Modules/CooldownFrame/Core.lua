@@ -16,23 +16,25 @@ function Cooldown:IsActionBarParent(CD)
     return Name:match("ActionButton") or Name:match("MultiBar")
 end
 
-function Cooldown:UpdateCooldownFrameSet(Start, Duration, Enable, ForceShowDrawEdge, ModRate)
-    if (not self or self.CDTextIsModified) then
+function Cooldown.UpdateCooldownFrameSet(CD, Start, Duration, Enable, ForceShowDrawEdge, ModRate)
+    if (not CD or type(CD.GetRegions) ~= "function") then
         return
     end
 
-    for i = 1, self:GetNumRegions() do
-        local Region = select(i, self:GetRegions())
+    local Regions = { CD:GetRegions() }
+
+    for i = 1, #Regions do
+        local Region = Regions[i]
 
         if (Region and Region.GetText) then
-            local FontSize = UI:GetCooldownFontScale(self)
+            local FontSize = UI:GetCooldownFontScale(CD)
 
             Region:ClearAllPoints()
 
-            if (Cooldown:IsActionBarParent(self)) then
-                Region:Point("CENTER", self, 0, 0)
+            if (Cooldown:IsActionBarParent(CD)) then
+                Region:Point("CENTER", CD, 0, 0)
             else
-                Region:Point("CENTER", self, 0, -6)
+                Region:Point("CENTER", CD, 0, -6)
             end
 
             Region:SetFontTemplate("Default", FontSize)
@@ -40,7 +42,7 @@ function Cooldown:UpdateCooldownFrameSet(Start, Duration, Enable, ForceShowDrawE
         end
     end
 
-    self.CDTextIsModified = true
+    CD.CDTextIsModified = true
 end
 
 function Cooldown:Initialize()

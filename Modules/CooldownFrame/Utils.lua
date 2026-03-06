@@ -10,13 +10,21 @@ local GetAuraDuration = _G.C_UnitAuras.GetAuraDuration
 local GetActionCooldownDuration = _G.C_ActionBar.GetActionCooldownDuration
 
 function UI:GetCooldownFontScale(CD)
-    if (not CD) then 
+    if (not CD) then
         return
     end
 
-    local Width = CD:GetWidth() or 36
-    local Height = CD:GetHeight() or 36
-    local BaseSize = min(Width, Height)
+    local Width = CD:GetWidth()
+    local Height = CD:GetHeight()
+
+    if (issecretvalue(Width) or issecretvalue(Height)) then
+        return 12
+    end
+
+    Width = Width or 36
+    Height = Height or 36
+
+    local BaseSize = math.min(Width, Height)
     local Scale = BaseSize / 36
 
     if (Scale < 0.7) then
@@ -29,7 +37,7 @@ function UI:GetCooldownFontScale(CD)
         Scale = 0.8 + (Scale * 0.2)
     end
 
-    local FontSize = floor(Scale * 15 + 0.6)
+    local FontSize = math.floor(Scale * 15 + 0.6)
 
     if (FontSize < 10) then
         FontSize = 10
@@ -48,7 +56,9 @@ function UI:GetCooldownDuration(Button, IsAura)
     else
         local ActionID = Button.action
 
-        if (ActionID and not issecretvalue(ActionID)) then
+        if (issecretvalue(ActionID)) then
+            return
+        elseif (ActionID and not issecretvalue(ActionID)) then
             return GetActionCooldownDuration(ActionID)
         end
     end
@@ -75,13 +85,13 @@ function UI:UpdateCooldownTextColor(CD, Elapsed, IsAura)
 
     local Duration = UI:GetCooldownDuration(Button, IsAura)
 
-    if (not Duration) then 
+    if (not Duration or issecretvalue(Duration)) then 
         return 
     end
 
     local Evaluated = Duration:EvaluateRemainingDuration(UI.CooldownColorCurve)
     
-    if (not Evaluated) then 
+    if (not Evaluated or issecretvalue(Evaluated)) then 
         return 
     end
 

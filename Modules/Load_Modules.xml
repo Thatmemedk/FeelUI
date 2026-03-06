@@ -36,10 +36,6 @@
 	<Script file="DataBars\ClassPowerBar.lua"/>
 	<Script file="DataBars\ExperienceBar.lua"/>
 	<Script file="DataBars\PowerBar.lua"/>
-	<Script file="DataBars\RuneBar.lua"/>
-	<Script file="DataBars\StaggerBar.lua"/>
-	<Script file="DataBars\SoulFragmentsBar.lua"/>
-	<Script file="DataBars\MaelstormBar.lua"/>
 	<Script file="DataBars\TotemBar.lua"/>
 	<Script file="DataBars\VigorBar.lua"/>
 	<!-- DataTexts -->

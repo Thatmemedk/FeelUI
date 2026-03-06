@@ -84,7 +84,7 @@ end
 
 function UF:CreateRaidTexts(Frame)
     local Name = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
-    Name:Point("CENTER", Frame.Health, 2, 2)
+    Name:Point("CENTER", Frame, 0, 2)
     Name:SetFontTemplate("Default")
     
     Frame.Name = Name

@@ -93,7 +93,7 @@ function UF:UpdateHealth(Frame, Unit)
     --local Unit = Frame.unit
     local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
 
-    Frame.Health:SetMinMaxValues(0, Max)
+    Frame.Health:SetMinMaxValues(0, Max, UI.SmoothBars)
     Frame.Health:SetValue(Min, UI.SmoothBars)
 
     if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit)) then
@@ -186,21 +186,21 @@ function UF:UpdateHealthPred(Frame, Unit)
     local BarWidth, BarHeight = Frame.Health:GetSize()
 
     PlayerHealsBar:SetOrientation(Orientation)
-    PlayerHealsBar:SetMinMaxValues(0, Max)
+    PlayerHealsBar:SetMinMaxValues(0, Max, UI.SmoothBars)
     PlayerHealsBar:SetValue(PlayerHeals, UI.SmoothBars)
 
     OtherHealsBar:SetOrientation(Orientation)
-    OtherHealsBar:SetMinMaxValues(0, Max)
+    OtherHealsBar:SetMinMaxValues(0, Max, UI.SmoothBars)
     OtherHealsBar:SetValue(OtherHeals, UI.SmoothBars)
 
     AllAbsorbsBar:SetOrientation(Orientation)
     AllAbsorbsBar:SetReverseFill(true)
-    AllAbsorbsBar:SetMinMaxValues(0, Max)
+    AllAbsorbsBar:SetMinMaxValues(0, Max, UI.SmoothBars)
     AllAbsorbsBar:SetValue(AbsorbsAmount, UI.SmoothBars)
 
     HealAbsorbsBar:SetOrientation(Orientation)
     HealAbsorbsBar:SetReverseFill(true)
-    HealAbsorbsBar:SetMinMaxValues(0, Max)
+    HealAbsorbsBar:SetMinMaxValues(0, Max, UI.SmoothBars)
     HealAbsorbsBar:SetValue(HealAbsorbAmount, UI.SmoothBars)
 
     -- Healing Prediction
@@ -301,7 +301,7 @@ function UF:UpdateAdditionalPower(Frame)
     end
 
     if (EnableState) then
-        Frame.AdditionalPower:SetMinMaxValues(0, Max)
+        Frame.AdditionalPower:SetMinMaxValues(0, Max, UI.SmoothBars)
         Frame.AdditionalPower:SetValue(Min, UI.SmoothBars)
         Frame.AdditionalPower:Show()
 
@@ -872,7 +872,7 @@ function UF:UpdateGroupFrame(Frame, Unit)
     if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
     if (Frame.External) then self:UpdateAuras(Frame, Unit, false, true) end
     -- ICONS
-    if (Frame.CombatIcon) then self:UpdateRaidIcon(Frame) end
+    if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame) end
     if (Frame.LeaderIcon) then self:UpdateLeaderIcon(Frame) end
     if (Frame.AssistantIcon) then self:UpdateAssistantIcon(Frame) end
     if (Frame.ResurrectionIcon) then self:UpdateResurrectionIcon(Frame, Unit) end
@@ -948,8 +948,8 @@ function UF:OnEvent(event, unit, ...)
         UF:RefreshUnit("target")
         UF:RefreshUnit("player")
         UF:RefreshUnit("targettarget")
-        UF:ClearCastBarOnUnit("target")
         UF:UpdateTargetPortrait()
+        UF:ClearCastBarOnUnit("target")
     elseif (event == "UNIT_TARGET" and unit == "target") then
         UF:RefreshUnit("targettarget")
     elseif (event == "UNIT_PET") then
@@ -998,8 +998,17 @@ function UF:OnEvent(event, unit, ...)
     end
 
     if (event == "UNIT_AURA") then
-        UF:UpdateAuras(FramesUF, unit, false)
-        UF:UpdateAuras(FramesUF, unit, true)
+        if (FramesUF and unit) then
+            local t = GetTime()
+
+            if (not FramesUF.LastAuraUpdate or t - FramesUF.LastAuraUpdate > 0.25) then
+                FramesUF.LastAuraUpdate = t
+
+                UF:UpdateAuras(FramesUF, unit, false)
+                UF:UpdateAuras(FramesUF, unit, true)
+            end
+        end
+
         --UF:UpdateDebuffHighlight(FramesUF, unit)
     elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
         UF:UpdateHealth(FramesUF, unit)

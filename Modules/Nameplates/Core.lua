@@ -21,6 +21,7 @@ local SetCVar = C_CVar.SetCVar
 
 -- Tables
 NP.Hooked = {}
+NP.Modified = {}
 NP.ForcedCasters = {}
 NP.Range = {}
 
@@ -39,7 +40,7 @@ function NP:UpdateHealth(Frame, Unit)
     local Reaction = UnitReaction(Unit, "player")
     local Color = UI.Colors.Reaction[Reaction]
 
-    Frame.Health:SetMinMaxValues(0, Max)
+    Frame.Health:SetMinMaxValues(0, Max, UI.SmoothBars)
     Frame.Health:SetValue(Min, UI.SmoothBars)
 
     if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit)) then
@@ -184,18 +185,23 @@ end
 -- EVENT HANDLER
 
 function NP:OnEvent(event, unit, ...)
-    local Plates = C_NamePlate.GetNamePlates()
-    local Plate = unit and C_NamePlate.GetNamePlateForUnit(unit)
+    if (unit and unit:match("^boss%d+$")) then
+        return
+    end
+
+    local Plate, Enemy, Friendly, IsFriend
+
+    if (unit) then
+        Plate = C_NamePlate.GetNamePlateForUnit(unit)
+
+        if (Plate) then
+            Enemy = Plate.FeelUINameplatesEnemy
+            Friendly = Plate.FeelUINameplatesFriendly
+            IsFriend = UnitIsFriend("player", unit)
+        end
+    end
 
     if (event == "NAME_PLATE_UNIT_ADDED") then
-        if (not Plate) then
-            return
-        end
-
-        local Friendly = Plate.FeelUINameplatesFriendly
-        local Enemy = Plate.FeelUINameplatesEnemy
-        local IsFriend = UnitIsFriend("player", unit)
-
         if (IsFriend) then
             if (Enemy) then
                 Enemy:Hide()
@@ -231,49 +237,37 @@ function NP:OnEvent(event, unit, ...)
     end
 
     if (event == "NAME_PLATE_UNIT_REMOVED") then
-        if (not Plate) then 
-            return
+        if (Friendly) then
+            Friendly.Unit = nil
         end
 
-        if (Plate.FeelUINameplatesFriendly) then
-            Plate.FeelUINameplatesFriendly.Unit = nil
-        end
-
-        if (Plate.FeelUINameplatesEnemy) then
-            Plate.FeelUINameplatesEnemy.Unit = nil
+        if (Enemy) then
+            Enemy.Unit = nil
         end
 
         NP:ClearForcedCasters(unit)
     end
 
     if (event == "PLAYER_TARGET_CHANGED" or event == "UNIT_TARGETABLE_CHANGED") then
-        for _, Plate in ipairs(Plates) do
-            local Friendly = Plate.FeelUINameplatesFriendly
-            local Enemy = Plate.FeelUINameplatesEnemy
+        for _, Frames in ipairs(C_NamePlate.GetNamePlates()) do
+            local NPEnemy = Frames.FeelUINameplatesEnemy
 
-            if (Friendly and Friendly.Unit) then
-                NP:UpdateFriendlyPlates(Friendly)
-            end
-
-            if (Enemy and Enemy.Unit) then
-                NP:UpdateEnemyPlates(Enemy)
-                NP:SetNameplateColor(Enemy.Unit, false)
+            if (NPEnemy and NPEnemy.Unit) then
+                NP:UpdateTargetIndicator(NPEnemy, NPEnemy.Unit)
+                NP:UpdateHighlight(NPEnemy, NPEnemy.Unit)
+                NP:UpdateThreatHighlight(NPEnemy, NPEnemy.Unit)
+                NP:SetNameplateColor(NPEnemy.Unit, false)
             end
         end
     end
 
     if (event == "RAID_TARGET_UPDATE") then
-        for _, Plate in ipairs(Plates) do
-            local Friendly = Plate.FeelUINameplatesFriendly
-            local Enemy = Plate.FeelUINameplatesEnemy
+        if (Friendly and Friendly.Unit) then
+            NP:UpdateRaidIcon(Friendly, Friendly.Unit)
+        end
 
-            if (Friendly and Friendly.Unit) then
-                NP:UpdateRaidIcon(Friendly, Friendly.Unit)
-            end
-
-            if (Enemy and Enemy.Unit) then
-                NP:UpdateRaidIcon(Enemy, Enemy.Unit)
-            end
+        if (Enemy and Enemy.Unit) then
+            NP:UpdateRaidIcon(Enemy, Enemy.Unit)
         end
     end
 
@@ -290,30 +284,24 @@ function NP:OnEvent(event, unit, ...)
         NP:CastNonInterruptable(event, unit)
     end
 
-    if (not Plate) then
-        return
-    end
+    if (event == "UNIT_AURA") then
+        if (Enemy and Enemy.Unit == unit) then
+            local t = GetTime()
 
-    local Friendly = Plate.FeelUINameplatesFriendly
-    local Enemy = Plate.FeelUINameplatesEnemy
-    local IsFriend = UnitIsFriend("player", unit)
+            if (not Enemy.LastAuraUpdate or t - Enemy.LastAuraUpdate > 0.25) then
+                Enemy.LastAuraUpdate = t
 
-    if (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
-        if (IsFriend) then
-            if (Friendly) then
-                NP:UpdateFriendlyPlates(Friendly)
-            end
-        else
-            if (Enemy) then
-                NP:UpdateEnemyPlates(Enemy)
-                NP:SetNameplateColor(unit, false)
+                NP:UpdateAuras(Enemy, unit, true)
             end
         end
-    end
-
-    if (event == "UNIT_AURA") then
+    elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
+        if (Enemy and Enemy.Unit == unit) then
+            NP:UpdateHealth(Enemy, unit)
+            NP:UpdateHealthText(Enemy, unit)
+        end
+    elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
         if (Enemy and Enemy.Unit) then
-            NP:UpdateAuras(Enemy, Enemy.Unit, true)
+            NP:UpdateThreatHighlight(Enemy, Enemy.Unit)
         end
     end
 end

@@ -12,6 +12,7 @@ local unpack = unpack
 local EssentialCooldownViewer = _G.EssentialCooldownViewer
 local UtilityCooldownViewer = _G.UtilityCooldownViewer
 local BuffIconCooldownViewer = _G.BuffIconCooldownViewer
+local SetCVar = C_CVar.SetCVar
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local LoadAddOn = C_AddOns.LoadAddOn
 
@@ -25,6 +26,10 @@ CDM.Viewers = {
     UtilityCooldownViewer,
 }
 
+function CDM:SetCVarOnLogin()
+	SetCVar("cooldownViewerEnabled", 1)
+end
+
 function CDM:Initialize()
 	if (not DB.Global.CooldownManager.Enable) then
 		return
@@ -36,4 +41,5 @@ function CDM:Initialize()
 
 	self:UpdateLayout()
 	self:UpdateIcons()
+	self:SetCVarOnLogin()
 end

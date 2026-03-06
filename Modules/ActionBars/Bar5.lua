@@ -9,6 +9,10 @@ local select = select
 local unpack = unpack
 
 function AB:CreateBar5()
+    if InCombatLockdown() then
+        return
+    end
+    
     local Bar = AB.ActionBar5
     local Spacing = DB.Global.ActionBars.ButtonSpacing
     local NumButtons = 6
@@ -43,7 +47,7 @@ function AB:CreateBar5()
         if (Button) then
             Button:ClearAllPoints()
             Button:SetPoint("TOP", _G.UIParent, "TOP", 0, 3000)
-            Button:Hide()
+            Button:SetScale(0.001)
         end
     end
 

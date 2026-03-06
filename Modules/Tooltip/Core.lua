@@ -137,11 +137,13 @@ function TT:FormatUnitName(Unit)
         end
     end
 
+    --[[
     if (UnitIsAFK(Unit)) then
         StatusText = " |CFF559655" .. CHAT_FLAG_AFK .. "|r"
     elseif (UnitIsDND(Unit)) then
         StatusText = " |CFF559655" .. CHAT_FLAG_DND .. "|r"
     end
+    --]]
 
     _G.GameTooltipTextLeft1:SetFormattedText("%s%s%s%s", Color, Name, "|r", StatusText) 
 end

@@ -26,6 +26,8 @@ function Loot:SetQualityBackdrop(Button)
 
     if (Color) then
         Button.NewBackdrop:SetBackdropColorTemplate(Color.r * 0.25, Color.g * 0.25, Color.b * 0.25, 0.7)
+    else
+    	Button.NewBackdrop:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
     end
 end
 
@@ -80,7 +82,7 @@ function Loot:UpdateButtons(Button)
     Button.NewBackdrop:Point("TOP", Items, "TOP", 0, 0)
     Button.NewBackdrop:Point("BOTTOM", Items, "BOTTOM", 0, 0)
 
-    Loot:SetQualityBackdrop(Button)
+    --Loot:SetQualityBackdrop(Button)
 
 	if (Button.Text and Button.Text.SetFont) then
 	    Button.Text:SetFontTemplate("Default")
@@ -111,7 +113,7 @@ function Loot:UpdateButtons(Button)
 	end
 
 	if (Button.NameFrame) then
-		Button.NameFrame:SetAlpha(0)
+		Button.NameFrame:SetParent(UI.HiddenParent)
 	end
 
 	if (Button.BorderFrame) then
