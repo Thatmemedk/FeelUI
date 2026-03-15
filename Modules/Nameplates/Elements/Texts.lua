@@ -32,7 +32,12 @@ end
 function NP:CreateNameMiddle(Frame)
     local Name = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
     Name:Point("CENTER", Frame.Panel, 0, 0)
-    Name:SetFontTemplate("Default", 14)
+    Name:SetFontTemplate("Default", 16, 2, 2)
 
+    local Guild = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
+    Guild:Point("CENTER", Frame.Panel, 0, -20)
+    Guild:SetFontTemplate("Default", 14, 2, 2)
+
+    Frame.Guild = Guild
     Frame.Name = Name
 end

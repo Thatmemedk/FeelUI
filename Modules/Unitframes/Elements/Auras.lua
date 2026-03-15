@@ -286,7 +286,7 @@ function UF:CreateRaidBuffs(Frame)
         return
     end
 
-    Frame.Buffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 18, 12, 3, "TOPLEFT", 0, 0, "RIGHT", "RIGHT", 4, "HELPFUL|PLAYER|RAID", false)
+    Frame.Buffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 18, 12, 3, "TOPLEFT", 0, 0, "RIGHT", "RIGHT", 4, "HELPFUL|PLAYER|RAID_IN_COMBAT", false)
 
     for i = 1, #Frame.Buffs.Buttons do
         local Button = Frame.Buffs.Buttons[i]
@@ -302,5 +302,5 @@ function UF:CreateRaidExternal(Frame)
         return
     end
 
-    Frame.External = UF:CreateAuraContainer(Frame.InvisFrameHigher, 28, 12, 4, "CENTER", 0, -18, "CENTER", "RIGHT", 1, "EXTERNAL_DEFENSIVE", false)
+    Frame.External = UF:CreateAuraContainer(Frame.InvisFrameHigher, 28, 12, 4, "CENTER", 0, -18, "CENTER", "RIGHT", 1, "HELPFUL|EXTERNAL_DEFENSIVE", false)
 end

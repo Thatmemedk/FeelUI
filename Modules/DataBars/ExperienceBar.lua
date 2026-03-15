@@ -33,7 +33,6 @@ function ExperienceBar:CreateBar()
 	Bar:CreateShadow()
 	Bar:SetScript("OnEnter", self.OnEnter)
 	Bar:SetScript("OnLeave", self.OnLeave)
-	Bar:SetAlpha(0.25)
 	
 	local BarRested = CreateFrame("StatusBar", nil, Bar)
 	BarRested:Size(171, 8)
@@ -83,14 +82,10 @@ function ExperienceBar:OnEnter()
 	end
 
 	GameTooltip:Show()
-	
-	UI:UIFrameFadeIn(self, 1, self:GetAlpha(), 1)
 end
 
 function ExperienceBar:OnLeave()
 	_G.GameTooltip_Hide()
-
-	UI:UIFrameFadeOut(self, 1, self:GetAlpha(), 0.25)
 end
 
 function ExperienceBar:OnEvent(event)
@@ -128,24 +123,6 @@ function ExperienceBar:RegisterEvents()
 	self:SetScript("OnEvent", self.OnEvent)
 end
 
-function ExperienceBar:CheckDragonflying()
-    local IsGliding = C_PlayerInfo.GetGlidingInfo()
-
-    if (IsGliding and not self.IsFlying) then
-        self.IsFlying = true
-
-        UI:UIFrameFadeOut(self.Bar, 0.25, self.Bar:GetAlpha(), 0)
-    elseif (not IsGliding and self.IsFlying) then
-        self.IsFlying = false
-
-        UI:UIFrameFadeIn(self.Bar, 0.25, self.Bar:GetAlpha(), 0.25)
-    end
-
-    if (UI.MyLevel == 90 or IsXPUserDisabled()) then
-		self.Bar:Hide()
-	end
-end
-
 function ExperienceBar:Initialize()
 	if (not DB.Global.DataBars.ExperienceBar) then
 		return
@@ -153,8 +130,4 @@ function ExperienceBar:Initialize()
 
 	self:CreateBar()
 	self:RegisterEvents()
-
-    C_Timer.NewTicker(0.2, function()
-        self:CheckDragonflying()
-    end)
 end

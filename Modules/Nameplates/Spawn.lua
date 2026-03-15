@@ -7,7 +7,7 @@ local NP = UI:CallModule("NamePlates")
 
 function NP:CreateFriendlyPlates(Plate, Unit)
     if (Plate.FriendlyIsCreated) then
-        return
+        return Plate.FeelUINameplatesFriendly
     end
 
     local Frame = Plate.FeelUINameplatesFriendly
@@ -24,16 +24,19 @@ function NP:CreateFriendlyPlates(Plate, Unit)
 
     -- Create Elements
     self:CreateFriendlyElements(Frame)
-    self:UpdateFriendlyPlates(Frame)
+    self:QueueUpdate(Frame, Unit, "NeedsHealth")
+    self:QueueUpdate(Frame, Unit, "NeedsName")
 
     Plate.FriendlyIsCreated = true
+
+    return Frame
 end
 
 function NP:CreateEnemyPlates(Plate, Unit)
     if (Plate.EnemyIsCreated) then
-        return
+        return Plate.FeelUINameplatesEnemy
     end
-    
+
     local Frame = Plate.FeelUINameplatesEnemy
 
     if (not Frame) then
@@ -48,7 +51,10 @@ function NP:CreateEnemyPlates(Plate, Unit)
 
     -- Create Elements
     self:CreateEnemyElements(Frame)
-    self:UpdateEnemyPlates(Frame)
+    self:QueueUpdate(Frame, Unit, "NeedsHealth")
+    self:QueueUpdate(Frame, Unit, "NeedsName")
 
     Plate.EnemyIsCreated = true
+
+    return Frame
 end

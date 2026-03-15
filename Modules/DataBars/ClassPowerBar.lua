@@ -176,8 +176,15 @@ function ClassPowerBar:Update()
         end
 
         local SegmentWidth = math.floor((BarWidth - TotalSpacing) * i / BarCount) - math.floor((BarWidth - TotalSpacing) * (i - 1) / BarCount)
-        Segment:Size(SegmentWidth, 8)
-        Backdrop:Size(SegmentWidth, 8)
+
+        if (IsMaelstrom) then
+            Segment:Size(SegmentWidth, 12)
+            Backdrop:Size(SegmentWidth, 12)
+        else
+            Segment:Size(SegmentWidth, 8)
+            Backdrop:Size(SegmentWidth, 8)
+        end
+
         Segment:ClearAllPoints()
         Backdrop:ClearAllPoints()
 
@@ -227,7 +234,7 @@ function ClassPowerBar:Update()
                 end
             end
         elseif (IsMaelstrom) then
-            Segment:SetStatusBarColor(R, G, B)
+            Segment:SetStatusBarColor(R * 1.5, G * 1.5, B * 1.5)
             Backdrop:SetStatusBarColor(R * 0.5, G * 0.5, B * 0.5, 0.5)
             
             if (i <= Min) then 

@@ -9,17 +9,15 @@ local select = select
 local unpack = unpack
 
 function AB:UpdateMainBarButtons()
-    if InCombatLockdown() then
-        return
-    end
-    
+    if InCombatLockdown() then return end
+
 	local Bar = AB.ActionBar1
 	local Spacing = DB.Global.ActionBars.ButtonSpacing
 
 	for i = 1, _G.NUM_ACTIONBAR_BUTTONS do
 		local Button = _G["ActionButton"..i]
+        Button:SetParent(Bar)
         Button:Size(unpack(DB.Global.ActionBars.ButtonSize))
-		Button:SetParent(Bar)
 		Button:ClearAllPoints()
 		
 		AB.SkinButton(Button)

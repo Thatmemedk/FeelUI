@@ -17,11 +17,17 @@ function Cooldown:IsActionBarParent(CD)
 end
 
 function Cooldown.UpdateCooldownFrameSet(CD, Start, Duration, Enable, ForceShowDrawEdge, ModRate)
-    if (not CD or type(CD.GetRegions) ~= "function") then
+    if (not CD) then
         return
     end
 
-    local Regions = { CD:GetRegions() }
+    local Success, Regions = pcall(function()
+        return { CD:GetRegions() }
+    end)
+
+    if (not Success or not Regions) then
+        return
+    end
 
     for i = 1, #Regions do
         local Region = Regions[i]

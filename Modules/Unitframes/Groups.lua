@@ -38,7 +38,13 @@ function UF:SetupGroupFrame(Frame, type)
         end
 
         if (self.unit) then
-            UF:UpdateGroupFrame(self, self.unit)
+            UF:QueueUpdate(self, self.unit, "NeedsHealth")
+            UF:QueueUpdate(self, self.unit, "NeedsHealthPred")
+            UF:QueueUpdate(self, self.unit, "NeedsPower")
+            UF:QueueUpdate(self, self.unit, "NeedsName")
+            UF:QueueUpdate(self, self.unit, "NeedsIcons")
+            UF:QueueUpdate(self, self.unit, "NeedsThreat")
+            UF:QueueUpdate(self, self.unit, "NeedsRange")
         end
 
         self.unit = value

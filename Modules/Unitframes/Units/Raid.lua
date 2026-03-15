@@ -20,6 +20,7 @@ function UF:CreateRaid(Frame)
     self:CreateSummonIcon(Frame)
     self:CreatePhaseIcon(Frame)
     self:CreateReadyCheckIcon(Frame)
+    self:CreateRoleIcon(Frame)
     self:CreateThreatHighlight(Frame)
     --self:CreateDebuffHighlight(Frame)
 end

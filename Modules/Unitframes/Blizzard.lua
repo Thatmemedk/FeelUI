@@ -17,6 +17,57 @@ function UF:SafeHide(Frame, SkipParent)
         Frame:SetParent(UI.HiddenParent)
     end
 
+    local PetFrame = Frame.petFrame or Frame.PetFrame
+    local TargetTargetFrame = Frame.totFrame
+    local Health = Frame.healthBar or Frame.healthbar or Frame.HealthBar
+    local Power = Frame.manabar or Frame.ManaBar
+    local BuffFrame = Frame.BuffFrame
+    local DebuffFrame = Frame.DebuffFrame
+    local CCFrame = Frame.CcRemoverFrame
+    local CastBar = Frame.castBar or Frame.spellbar or Frame.CastingBarFrame
+    local AltPowerBar = Frame.powerBarAlt or Frame.PowerBarAlt
+    local ClassPowerBar = Frame.classPowerBar
+
+    if (PetFrame) then
+        PetFrame:UnregisterAllEvents()
+    end
+
+    if (TargetTargetFrame) then
+        TargetTargetFrame:UnregisterAllEvents()
+    end
+
+    if (Health) then
+        Health:UnregisterAllEvents()
+    end
+
+    if (Power) then
+        Power:UnregisterAllEvents()
+    end
+
+    if (BuffFrame) then
+        BuffFrame:UnregisterAllEvents()
+    end
+
+    if (DebuffFrame) then
+        DebuffFrame:UnregisterAllEvents()
+    end
+
+    if (CCFrame) then
+        CCFrame:UnregisterAllEvents()
+    end
+
+    if (CastBar) then
+        CastBar:UnregisterAllEvents()
+    end
+
+    if (AltPowerBar) then
+        AltPowerBar:UnregisterAllEvents()
+    end
+
+    if (ClassPowerBar) then
+        ClassPowerBar:UnregisterAllEvents()
+    end
+
     UF.Frames.Hidden[Frame] = true
 end
 

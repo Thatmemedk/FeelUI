@@ -69,7 +69,7 @@ function AFK:OnUpdate(Elapsed)
     end
 
     if (TotalPlayTime and LevelPlayTime) then
-        local Days, Hours, Minutes, Seconds = ChatFrame_TimeBreakDown(TotalPlayTime + GetTime())
+        local Days, Hours, Minutes, Seconds = ChatFrame_TimeBreakDown(TotalPlayTime + (GetTime() - LevelPlayTimeOffset))
 
         if (self.TotalPlayedText) then
             self.TotalPlayedText:SetFormattedText("|cffffffff%02d|r Days |cffffffff%02d|r Hours |cffffffff%02d|r Mins |cffffffff%02d|r Secs", Days, Hours, Minutes, Seconds)
@@ -218,6 +218,7 @@ function AFK:OnEvent(event, ...)
         self.EventRequesting = false
         TotalPlayTime, LevelPlayTime = ...
         LevelPlayTimeOffset = GetTime()
+
     elseif (event == "PLAYER_LEVEL_UP") then
         if not (LevelPlayTime) then
             self.EventRequesting = true
@@ -225,25 +226,45 @@ function AFK:OnEvent(event, ...)
         else
             LevelPlayTimeOffset = GetTime()
         end
-    elseif (event == "PLAYER_FLAGS_CHANGED" or event == "ZONE_CHANGED") then
-        if UnitIsAFK("player") then
+
+    elseif (event == "PLAYER_FLAGS_CHANGED") then
+        local unit = ...
+        if unit ~= "player" then return end
+
+        local isAFK = UnitIsAFK("player")
+
+        if isAFK == true then
             self:UpdateAFKState(true)
         else
             self:UpdateAFKState(false)
         end
+
+    elseif (event == "ZONE_CHANGED") then
+        local isAFK = UnitIsAFK("player")
+
+        if isAFK == true then
+            self:UpdateAFKState(true)
+        else
+            self:UpdateAFKState(false)
+        end
+
     elseif (event == "PLAYER_REGEN_DISABLED") then
         self:UpdateAFKState(false)
         self:RegisterEvent("PLAYER_REGEN_ENABLED")
+
     elseif (event == "PLAYER_REGEN_ENABLED") then
         self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+
     elseif (event == "UPDATE_BATTLEFIELD_STATUS") then
         local Status = GetBattlefieldStatus(...)
 
         if (Status == "confirm") then
             self:UpdateAFKState(false)
         end
+
     elseif (event == "LFG_PROPOSAL_SHOW") then
         self:UpdateAFKState(false)
+
     elseif (event == "LOADING_SCREEN_DISABLED" or event == "PLAYER_LOGOUT") then
         if (not self.EventRequesting) then
             self.EventRequesting = true

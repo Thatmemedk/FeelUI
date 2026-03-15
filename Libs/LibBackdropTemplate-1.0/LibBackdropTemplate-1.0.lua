@@ -97,12 +97,20 @@ local function SetupBackdropTextureCoordinates(Region, PieceSetup, RepeatX, Repe
 end
 
 function LibBackdropTemplateMixin:SetupTextureCoordinates()
+    if (type(self) ~= "table" or type(self.GetWidth) ~= "function") then
+        return
+    end
+
     local Width = self:GetWidth()
     local Height = self:GetHeight()
     local EffectiveScale = self:GetEffectiveScale()
     local EdgeSize = self:GetEdgeSize()
 
     if (issecretvalue(Width) or issecretvalue(Height) or issecretvalue(EffectiveScale) or issecretvalue(EdgeSize)) then
+        return
+    end
+
+    if (not Width or not Height or Width <= 0 or Height <= 0) then
         return
     end
 
@@ -226,7 +234,10 @@ function LibBackdropTemplateMixin:ApplyBackdrop()
 
     self:SetBackdropColor(1, 1, 1, 1)
     self:SetBackdropBorderColor(1, 1, 1, 1)
-    self:SetupTextureCoordinates()
+
+    if (type(self.SetupTextureCoordinates) == "function") then
+        self:SetupTextureCoordinates()
+    end
 end
 
 function LibBackdropTemplateMixin:SetBackdrop(BackdropInfo)

@@ -50,18 +50,18 @@ function UF:CreateRaidIcon(Frame)
 end
 
 function UF:CreateResurrectIcon(Frame)
-    local ResurrectIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
-    ResurrectIcon:Size(28, 28)
-    ResurrectIcon:Point("CENTER", Frame.Health, 0, 0)
-    ResurrectIcon:SetTexture([[Interface\RaidFrame\Raid-Icon-Rez]])
-    ResurrectIcon:Hide()
+    local ResurrectionIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
+    ResurrectionIcon:Size(28, 28)
+    ResurrectionIcon:Point("CENTER", Frame.Health, 0, 0)
+    ResurrectionIcon:SetTexture([[Interface\RaidFrame\Raid-Icon-Rez]])
+    ResurrectionIcon:Hide()
 
-    Frame.ResurrectIcon = ResurrectIcon
+    Frame.ResurrectionIcon = ResurrectionIcon
 end
 
 function UF:CreateLeaderIcon(Frame)
     local LeaderIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
-    LeaderIcon:Size(11, 11)
+    LeaderIcon:Size(16, 16)
     LeaderIcon:Point("TOPLEFT", Frame.Health, -4, 0)
     LeaderIcon:Hide()
     
@@ -70,7 +70,7 @@ end
 
 function UF:CreateAssistantIcon(Frame)
     local AssistantIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
-    AssistantIcon:Size(11, 11)
+    AssistantIcon:Size(14, 14)
     AssistantIcon:Point("TOPLEFT", Frame.Health, -4, 0)
     AssistantIcon:SetTexture([[Interface\GroupFrame\UI-Group-AssistantIcon]])
     AssistantIcon:Hide()
@@ -110,10 +110,23 @@ end
 
 function UF:CreatePhaseIcon(Frame)
     local PhaseIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
-    PhaseIcon:Size(22, 22)
-    PhaseIcon:Point("CENTER", Frame.Health, 0, 0)
+    PhaseIcon:Size(26, 26)
+    PhaseIcon:Point("TOP", Frame.Health, 0, 12)
     PhaseIcon:SetTexture([[Interface\TargetingFrame\UI-PhasingIcon]])
     PhaseIcon:Hide()
 
     Frame.PhaseIcon = PhaseIcon
+end
+
+function UF:CreateRoleIcon(Frame)
+    if (not DB.Global.UnitFrames.RoleIcons) then 
+        return
+    end
+
+    local RoleIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
+    RoleIcon:Size(16, 16)
+    RoleIcon:Point("TOP", Frame.Health, 0, 4)
+    RoleIcon:Hide()
+
+    Frame.RoleIcon = RoleIcon
 end

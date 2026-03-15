@@ -9,19 +9,36 @@ local _G = _G
 local select = select
 local unpack = unpack
 
--- WoW Globals
-local EditModeManagerFrame = _G.EditModeManagerFrame
-
 function AB:DisableBlizzard()
+    local UntaintedFrames = {
+    	BagsBar = true,
+        MicroButtonAndBagsBar = true,
+        OverrideActionBar = true,
+		MainMenuBar = true,
+		MainActionBar = true,
+		--MultiBarBottomLeft = true,
+    	--MultiBarBottomRight = true,
+    	--MultiBarRight = true,
+    	--MultiBarLeft = true,
+		--MultiBar5 = true,
+		--MultiBar6 = true,
+		--MultiBar7 = true,
+    }
+
+    for Name in next, UntaintedFrames do
+        if (_G.UIPARENT_MANAGED_FRAME_POSITIONS) then
+            _G.UIPARENT_MANAGED_FRAME_POSITIONS[Name] = nil
+        end
+
+        local Frames = _G[Name]
+
+        if (Frames) then
+        	Frames:SetParent(UI.HiddenParent)
+        	Frames:UnregisterAllEvents()
+        end
+    end
+
 	for _, Frames in pairs({
-		_G.MainMenuBar,
-		_G.OverrideActionBar,
-		_G.PossessBarFrame,
-		_G.MainActionBar,
-		_G.MicroButtonAndBagsBar,
-		_G.StatusTrackingBarManager,
-		_G.BagsBar,
-		_G.BagBarExpandToggle,
 		_G.CharacterMicroButton,
 		_G.SpellbookMicroButton,
 		_G.ProfessionMicroButton,
@@ -43,18 +60,42 @@ function AB:DisableBlizzard()
 		end
 	end
 
-	_G.MultiBarRight.QuickKeybindGlow:SetParent(UI.HiddenParent)
-	_G.MultiBarLeft.QuickKeybindGlow:SetParent(UI.HiddenParent)
-	_G.MultiBarBottomRight.QuickKeybindGlow:SetParent(UI.HiddenParent)
-	_G.MultiBarBottomLeft.QuickKeybindGlow:SetParent(UI.HiddenParent)
-	
-	if (DB.Global.ActionBars.AddNewSpells) then
-		_G.IconIntroTracker:RegisterEvent("SPELL_PUSHED_TO_ACTIONBAR")
-		UnregisterStateDriver(_G.IconIntroTracker, "visibility")
-	else
-		_G.IconIntroTracker:UnregisterAllEvents()
-		RegisterStateDriver(_G.IconIntroTracker, "visibility", "hide")
-	end
+    local Glows = {
+        _G.MultiBarRight.QuickKeybindGlow,
+        _G.MultiBarLeft.QuickKeybindGlow,
+        _G.MultiBarBottomRight.QuickKeybindGlow,
+        _G.MultiBarBottomLeft.QuickKeybindGlow
+    }
+
+    for _, Frames in ipairs(Glows) do
+        if (Frames) then
+            Frames:SetParent(UI.HiddenParent)
+        end
+    end
+
+    -- StatusTrackingBarManager
+    _G.StatusTrackingBarManager:Kill()
+
+    -- IconIntroTracker
+    if (DB.Global.ActionBars.AddNewSpells) then
+        _G.IconIntroTracker:RegisterEvent("SPELL_PUSHED_TO_ACTIONBAR")
+        UnregisterStateDriver(_G.IconIntroTracker, "visibility")
+    else
+        _G.IconIntroTracker:UnregisterAllEvents()
+        RegisterStateDriver(_G.IconIntroTracker, "visibility", "hide")
+    end
+    
+    -- ActionBarController
+	_G.ActionBarController:UnregisterAllEvents()
+	_G.ActionBarController:RegisterEvent("SETTINGS_LOADED")
+	_G.ActionBarController:RegisterEvent("UPDATE_EXTRA_ACTIONBAR")
+
+	-- ActionBarButtonEventsFrame
+	_G.ActionBarButtonEventsFrame:UnregisterAllEvents()
+	_G.ActionBarButtonEventsFrame:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
+	_G.ActionBarButtonEventsFrame:RegisterEvent("ACTIONBAR_UPDATE_COOLDOWN")
+	_G.ActionBarButtonEventsFrame:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW")
+	_G.ActionBarButtonEventsFrame:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_HIDE")
 end
 
 function AB:CreateActionBars()
@@ -161,9 +202,9 @@ function AB:Load(event)
 		self:CreateBarPet()
 		self:CreateBarStance()
 
-		if (EditModeManagerFrame) then
-			EditModeManagerFrame:UnregisterAllEvents()
-			EditModeManagerFrame:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
+		if (_G.EditModeManagerFrame) then
+			_G.EditModeManagerFrame:UnregisterAllEvents()
+			_G.EditModeManagerFrame:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
 		end
 	end
 
@@ -181,8 +222,8 @@ function AB:Load(event)
         "UNIT_SPELLCAST_EMPOWER_STOP",
     }
 
-    for _, events in ipairs(ActionBarAnimationEvents) do
-        _G.ActionBarActionEventsFrame:UnregisterEvent(events)
+    for _, Frames in ipairs(ActionBarAnimationEvents) do
+        _G.ActionBarActionEventsFrame:UnregisterEvent(Frames)
     end
 end
 

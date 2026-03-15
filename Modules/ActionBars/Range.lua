@@ -17,7 +17,7 @@ function AB:RangeUpdate(ChecksRange, InRange)
 	local Icon = self.icon
 	local ID = self.action
 
-	if not (ID) then 
+	if (not ID) then 
 		return 
 	end
 

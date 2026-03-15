@@ -15,6 +15,7 @@ function NP:CreateThreatHighlight(Frame)
     local Threat = CreateFrame("Frame", nil, Frame)
     Threat:SetInside(Frame, 1, 1)
     Threat:CreateGlow(2.5, 3, 0, 0, 0, 0)
+    Threat:Hide()
 
     Frame.Threat = Threat
 end

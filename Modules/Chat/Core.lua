@@ -22,12 +22,6 @@ local ChatConfigFrameDefaultButton = _G.ChatConfigFrameDefaultButton
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
 
-function CH:AddMessage(msg, ...)
-	msg = format("%s %s", date"|CFF909090[%H:%M:%S]|r", msg) -- Time Stamps
-	
-	self.OldAddMessage(self, msg, ...)
-end
-
 function CH:StyleFrames(Frame)
 	if (Frame.ChatIsSkinned) then
 		return
@@ -77,11 +71,6 @@ function CH:StyleFrames(Frame)
 	if (Scroll) then Scroll:Kill() end
 	if (ScrollBottom) then ScrollBottom:Kill() end
 	if (MinimizeButton) then MinimizeButton:Kill() end
-
-	if (i ~= 2) then
-		Frame.OldAddMessage = Frame.AddMessage
-		Frame.AddMessage = CH.AddMessage
-	end
 
 	Frame.ChatIsSkinned = true
 end
