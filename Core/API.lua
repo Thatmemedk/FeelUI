@@ -14,6 +14,7 @@ local LSM = UI.Libs.LSM
 local _G = _G
 local select = select
 local unpack = unpack
+local pcall = pcall
 local print = print
 local type = type
 local match = string.match
@@ -23,6 +24,12 @@ local max = math.max
 local len = string.len
 local byte = string.byte
 local sub = string.sub
+
+-- WoW Globals
+local issecretvalue = issecretvalue
+local issecrettable = issecrettable
+local canaccessvalue = canaccessvalue
+local UnitSecret = C_Secrets.ShouldUnitIdentityBeSecret
 
 -- WoW Globals
 local GetMouseFocus = GetMouseFocus
@@ -49,9 +56,54 @@ UI.DirectionElapsed = Enum.StatusBarTimerDirection.ElapsedTime
 UI.DirectionRemaining = Enum.StatusBarTimerDirection.RemainingTime
 UI.CurvePercent = CurveConstants.ScaleTo100
 
+-- Secret Values
+function UI:IsSecretUnit(Unit)
+	local Pass, Value = pcall(UnitSecret, Unit)
+
+	if (Pass) then
+		return Value
+	end
+end
+
+function UI:NotSecretUnit(Unit)
+	return not UI:IsSecretUnit(Unit)
+end
+
+function UI:IsSecretValue(Value)
+	return issecretvalue and issecretvalue(Value)
+end
+
+function UI:NotSecretValue(Value)
+	return not UI:IsSecretValue(Value)
+end
+
+function UI:IsSecretTable(Object)
+	return issecrettable and issecrettable(Object)
+end
+
+function UI:NotSecretTable(Object)
+	return not UI:IsSecretTable(Object)
+end
+
+function UI:CanAccessValue(Value)
+	return not canaccessvalue or canaccessvalue(Value)
+end
+
+function UI:CanNotAccessValue(Value)
+	return not UI:CanAccessValue(Value)
+end
+
+function UI:HasSecretValues(Object)
+	return Object.HasSecretValues and Object:HasSecretValues()
+end
+
+function UI:NoSecretValues(Object)
+	return not UI:HasSecretValues(Object)
+end
+
 -- UFT8
 function UI:UTF8Sub(Text, Index, Dots)
-    if not (Text) then 
+    if (not (Text) or issecretvalue(Text))  then 
         return 
     end
     

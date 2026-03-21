@@ -26,9 +26,25 @@ NP.ForcedCasters = {}
 NP.Range = {}
 
 -- Tables
+NP.UnitFrames = {}
+NP.FrameUnits = {}
+
+-- Tables
 NP.UpdateQueue = {}
-NP.ActivePlates = {}
-NP.UpdaterTicker = 0
+
+-- Tables
+NP.PlateTypes = {
+    [true] = {
+        Key = "FeelUINameplatesFriendly",
+        Opposite = "FeelUINameplatesEnemy",
+        Create = "CreateFriendlyPlates"
+    },
+    [false] = {
+        Key = "FeelUINameplatesEnemy",
+        Opposite = "FeelUINameplatesFriendly",
+        Create = "CreateEnemyPlates"
+    }
+}
 
 -- Locals
 NP.FadeInTime = 0.5
@@ -224,8 +240,10 @@ function NP:ProcessFrame(Frame)
     end
 end
 
+-- QUEUE UPDATES
+
 function NP:QueueUpdate(Frame, Unit, Flag)
-    if (type(Frame) ~= "table" or not Unit or not Frame:IsShown()) then
+    if (not Frame or not Unit or not Frame:IsShown()) then
         return
     end
 
@@ -233,154 +251,189 @@ function NP:QueueUpdate(Frame, Unit, Flag)
         Frame[Flag] = true
     end
 
-    local Queue = self.UpdateQueue
-    local UnitQueue = Queue[Unit]
+    local UnitQueue = self.UpdateQueue[Unit]
 
     if (not UnitQueue) then
         UnitQueue = {}
-        Queue[Unit] = UnitQueue
+        self.UpdateQueue[Unit] = UnitQueue
     end
 
     UnitQueue[Frame] = true
 end
 
 function NP:UpdateQueueTicker()
-    self:SetScript("OnUpdate", function(_, Elapsed)
-        NP.UpdaterTicker = (NP.UpdaterTicker or 0) + Elapsed
-        
-        if (NP.UpdaterTicker < 0.1) then 
-            return 
-        end
+    if (self.UpdateTicker) then 
+        return 
+    end
 
-        NP.UpdaterTicker = 0
+    local TickerInterval = 0.15
+    local MaxPerTick = 20
 
+    self.UpdateTicker = C_Timer.NewTicker(TickerInterval, function()
         local Processed = 0
-        local MaxPerTick = 6
 
-        for Unit, Frames in next, NP.UpdateQueue do
+        for Unit, Frames in next, self.UpdateQueue do
             for Frame in next, Frames do
                 if (Frame and Frame:IsShown()) then
-                    NP:ProcessFrame(Frame)
+                    self:ProcessFrame(Frame)
                 end
 
                 Frames[Frame] = nil
                 Processed = Processed + 1
 
-                if (Processed >= MaxPerTick) then 
-                    return 
+                if (Processed >= MaxPerTick) then
+                    return
                 end
             end
 
             if (not next(Frames)) then
-                NP.UpdateQueue[Unit] = nil
+                self.UpdateQueue[Unit] = nil
             end
         end
     end)
 end
 
--- EVENT HANDLER
+-- EVENT UPDATES
 
-function NP:OnEvent(event, unit, ...)
-    if (type(unit) ~= "string") then 
-        return 
-    end
-
-    if (not unit:match("^nameplate%d+$")) then
-        return
-    end
-
-    local Plate = C_NamePlate.GetNamePlateForUnit(unit)
+function NP:NameplateAdded(Unit)
+    local Plate = C_NamePlate.GetNamePlateForUnit(Unit)
 
     if (not Plate) then
         return
     end
 
-    local Enemy = Plate.FeelUINameplatesEnemy
-    local Friendly = Plate.FeelUINameplatesFriendly
-    local IsFriend = UnitIsFriend("player", unit)
+    local Type = self.PlateTypes[UnitIsFriend("player", Unit)]
 
+    if (not Plate[Type.Key]) then
+        Plate[Type.Key] = self[Type.Create](self, Plate, Unit)
+    end
+
+    local Frame = Plate[Type.Key]
+
+    if (not Frame) then
+        return
+    end
+
+    if (Plate[Type.Opposite]) then
+        Plate[Type.Opposite]:Hide()
+        Plate[Type.Opposite].Unit = nil
+    end
+
+    -- Show Unit
+    Frame.Unit = Unit
+    Frame:Show()
+
+    -- Cache Units
+    self.UnitFrames[Unit] = Frame
+    self.FrameUnits[Frame] = Unit
+
+    -- Batch Flags
+    Frame.NeedsHealth = true
+    Frame.NeedsName = true
+    Frame.NeedsAuras = true
+    Frame.NeedsTargetIndicator = true
+    Frame.NeedsThreat = true
+
+    -- Queue Updates
+    self:QueueUpdate(Frame, Unit)
+end
+
+function NP:NameplateRemoved(Unit)
+    local Frame = self.UnitFrames[Unit]
+
+    if (not Frame) then
+        return
+    end
+
+    -- Hide Unit
+    Frame.Unit = nil
+    Frame:Hide()
+
+    -- Reset Unit Cache
+    self.FrameUnits[Frame] = nil
+    self.UnitFrames[Unit] = nil
+
+    -- Reset Cache
+    Frame.NeedsHealth = nil
+    Frame.NeedsName = nil
+    Frame.NeedsIcons = nil
+    Frame.NeedsThreat = nil
+    Frame.NeedsAuras = nil
+    Frame.NeedsTargetIndicator = nil
+end
+
+function NP:UnitHealth(Unit)
+    local Frame = NP.UnitFrames[Unit]
+
+    if (not Frame) then
+        return
+    end
+
+    NP:QueueUpdate(Frame, Unit, "NeedsHealth")
+end
+
+function NP:UnitAura(Unit)
+    local Frame = NP.UnitFrames[Unit]
+
+    if (not Frame) then
+        return
+    end
+
+    NP:QueueUpdate(Frame, Unit, "NeedsAuras")
+end
+
+function NP:UnitNameUpdate(Unit)
+    local Frame = NP.UnitFrames[Unit]
+
+    if (not Frame) then
+        return
+    end
+
+    NP:QueueUpdate(Frame, Unit, "NeedsName")
+end
+
+function NP:ThreatUpdate(Unit)
+    local Frame = NP.UnitFrames[Unit]
+
+    if (not Frame) then
+        return
+    end
+
+    NP:QueueUpdate(Frame, Unit, "NeedsThreat")
+end
+
+function NP:TargetChanged()
+    for Unit, Frame in pairs(NP.UnitFrames) do
+        NP:QueueUpdate(Frame, Unit, "NeedsTargetIndicator")
+        NP:QueueUpdate(Frame, Unit, "NeedsThreat")
+    end
+end
+
+function NP:RaidIconUpdate()
+    for Unit, Frame in pairs(NP.UnitFrames) do
+        NP:QueueUpdate(Frame, Unit, "NeedsIcons")
+    end
+end
+
+-- EVENT HANDLER
+
+function NP:OnEvent(event, unit, ...)
     if (event == "NAME_PLATE_UNIT_ADDED") then
-        if (IsFriend) then
-            if (Enemy) then
-                Enemy:Hide()
-                Enemy.Unit = nil
-                NP.ActivePlates[Enemy] = nil
-            end
-
-            if (not Friendly) then
-                NP:CreateFriendlyPlates(Plate, unit)
-
-                return
-            end
-
-            Friendly:Show()
-            Friendly.Unit = unit
-            NP.ActivePlates[Friendly] = true
-
-            NP:QueueUpdate(Friendly, unit, "NeedsHealth")
-            NP:QueueUpdate(Friendly, unit, "NeedsName")
-            NP:QueueUpdate(Friendly, unit, "NeedsIcons")
-        else
-            if (Friendly) then
-                Friendly:Hide()
-                Friendly.Unit = nil
-                NP.ActivePlates[Friendly] = nil
-            end
-
-            if (not Enemy) then
-                NP:CreateEnemyPlates(Plate, unit)
-
-                return
-            end
-
-            Enemy:Show()
-            Enemy.Unit = unit
-            NP.ActivePlates[Enemy] = true
-
-            NP:QueueUpdate(Enemy, unit, "NeedsHealth")
-            NP:QueueUpdate(Enemy, unit, "NeedsName")
-            NP:QueueUpdate(Enemy, unit, "NeedsAura")
-            NP:QueueUpdate(Enemy, unit, "NeedsIcons")
-            NP:QueueUpdate(Enemy, unit, "NeedsThreat")
-            NP:QueueUpdate(Enemy, unit, "NeedsTargetIndicator")
-            NP:SetNameplateColor(unit, false)
-        end
-    end
-
-    if (event == "NAME_PLATE_UNIT_REMOVED") then
-        if (Friendly) then
-            Friendly.Unit = nil
-            NP.ActivePlates[Friendly] = nil
-        end
-
-        if (Enemy) then
-            Enemy.Unit = nil
-            NP.ActivePlates[Enemy] = nil
-        end
-
-        NP:ClearForcedCasters(unit)
-    end
-
-    if (event == "PLAYER_TARGET_CHANGED" or event == "UNIT_TARGETABLE_CHANGED") then
-        for Frame in next, NP.ActivePlates do
-            if (Frame and Frame.Unit) then
-                NP:QueueUpdate(Frame, Frame.Unit, "NeedsHealth")
-                NP:QueueUpdate(Frame, Frame.Unit, "NeedsName")
-                NP:QueueUpdate(Frame, Frame.Unit, "NeedsAura")
-                NP:QueueUpdate(Frame, Frame.Unit, "NeedsIcons")
-                NP:QueueUpdate(Frame, Frame.Unit, "NeedsThreat")
-                NP:QueueUpdate(Frame, Frame.Unit, "NeedsTargetIndicator")
-                NP:SetNameplateColor(Frame.Unit, false)
-            end
-        end
-    end
-
-    if (event == "RAID_TARGET_UPDATE") then
-        for Frame in next, NP.ActivePlates do
-            if (Frame and Frame.Unit) then
-                NP:QueueUpdate(Frame, Frame.Unit, "NeedsIcons")
-            end
-        end
+        NP:NameplateAdded(unit)
+    elseif (event == "NAME_PLATE_UNIT_REMOVED") then
+        NP:NameplateRemoved(unit)
+    elseif (event == "PLAYER_TARGET_CHANGED") then
+        NP:TargetChanged()
+    elseif (event == "RAID_TARGET_UPDATE") then
+        NP:RaidIconUpdate()
+    elseif (event == "UNIT_AURA") then
+        NP:UnitAura(unit)
+    elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
+        NP:UnitHealth(unit)
+    elseif (event == "UNIT_NAME_UPDATE") then
+        NP:UnitNameUpdate(unit)
+    elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
+        NP:ThreatUpdate(unit)
     end
 
     if (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then
@@ -396,32 +449,6 @@ function NP:OnEvent(event, unit, ...)
         NP:CastUpdated(event, unit)
     elseif (event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_INTERRUPTIBLE") then
         NP:CastNonInterruptable(event, unit)
-    end
-
-    if (event == "UNIT_AURA") then
-        for Frame in next, NP.ActivePlates do
-            if (Frame and Frame.Unit) then
-                NP:QueueUpdate(Frame, Frame.Unit, "NeedsAuras")
-            end
-        end
-    elseif (event == "UNIT_HEALTH") then
-        for Frame in next, NP.ActivePlates do
-            if (Frame and Frame.Unit) then
-                NP:QueueUpdate(Frame, Frame.Unit, "NeedsHealth")
-            end
-        end
-    elseif (event == "UNIT_NAME_UPDATE" or event == "UNIT_LEVEL" or event == "PLAYER_LEVEL_UP") then
-        for Frame in next, NP.ActivePlates do
-            if (Frame and Frame.Unit) then
-                NP:QueueUpdate(Frame, Frame.Unit, "NeedsName")
-            end
-        end
-    elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
-        for Frame in next, NP.ActivePlates do
-            if (Frame and Frame.Unit) then
-                NP:QueueUpdate(Frame, Frame.Unit, "NeedsThreat")
-            end
-        end
     end
 end
 

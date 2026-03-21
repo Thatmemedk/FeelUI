@@ -81,7 +81,7 @@ DB.Global = {
 	CooldownManager = {
 		Enable = true,
 		-- Size Settings
-		BuffViewerButtonSize = { 36, 12 },
+		BuffViewerButtonSize = { 40 , 12 },
 		EssentialViewerButtonSize = { 32, 12 },
 		UtilityViewerButtonSize = { 32, 12 },
 		ButtonSpacing = 2,

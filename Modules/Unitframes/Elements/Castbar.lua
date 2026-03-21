@@ -215,14 +215,10 @@ function UF:CastStarted(Event, Unit)
     UI:UIFrameFadeIn(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 1)
 end
 
-function UF:CastSucceeded(Event, Unit, _, _, CastID)
+function UF:CastSucceeded(Event, Unit)
     local Castbar = self.Frames[Unit] and self.Frames[Unit].Castbar
 
     if (not Castbar or not Unit) then
-        return
-    end
-
-    if (CastID and Castbar.CastID and Castbar.CastID ~= CastID) then
         return
     end
 
@@ -253,24 +249,24 @@ function UF:CastStopped(Event, Unit, _, _, ...)
     end
 
     if (CastID and Castbar.CastID and Castbar.CastID ~= CastID) then
+        -- Reset CastBar
+        UF:ResetCastBar(Castbar)
+        
+        -- Call Fade
+        UI:UIFrameFadeOut(Castbar, UF.CastHoldTime, Castbar:GetAlpha(), 0)
+
+        if (InterruptedBy) then
+            -- Set Text
+            Castbar.Text:SetText(INTERRUPTED)
+
+            -- Set Values
+            Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
+            Castbar:SetValue(1, UI.SmoothBars)
+            Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
+        end
+
         return
     end
-
-    if (InterruptedBy) then
-        -- Set Text
-        Castbar.Text:SetText(INTERRUPTED)
-
-        -- Set Values
-        Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
-        Castbar:SetValue(1, UI.SmoothBars)
-        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
-    end
-
-    -- Reset CastBar
-    UF:ResetCastBar(Castbar)
-    
-    -- Call Fade
-    UI:UIFrameFadeOut(Castbar, UF.CastHoldTime, Castbar:GetAlpha(), 0)
 end
 
 function UF:CastFailed(Event, Unit, _, _, ...)
@@ -383,26 +379,28 @@ function UF.CastBarOnUpdate(Castbar)
         return
     end
 
-    if (not Castbar.Casting or not Castbar.Channel or not Castbar.Empower) then
-        return
-    end
+    if (Castbar.Casting or Castbar.Channel or Castbar.Empower) then
+        if (Castbar.Time) then
+            local DurationObject = Castbar:GetTimerDuration()
 
-    if (Castbar.Time) then
-        local DurationObject = Castbar:GetTimerDuration()
+            if (DurationObject) then
+                if (Castbar.CastDelayed ~= 0) then
+                    local Duration = Castbar:GetTimerDuration():GetElapsedDuration()
+                    local Total = Castbar:GetTimerDuration():GetTotalDuration()
+                    
+                    Castbar.Time:SetFormattedText("%.1fs/%.1fs |cffff0000%s%.2f|r", Duration, Total, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
+                else
+                    local Duration = Castbar:GetTimerDuration():GetElapsedDuration()
+                    local Total = Castbar:GetTimerDuration():GetTotalDuration()
 
-        if (DurationObject) then
-            if (Castbar.CastDelayed ~= 0) then
-                local Duration = Castbar:GetTimerDuration():GetElapsedDuration()
-                local Total = Castbar:GetTimerDuration():GetTotalDuration()
-                
-                Castbar.Time:SetFormattedText("%.1fs/%.1fs |cffff0000%s%.2f|r", Duration, Total, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
-            else
-                local Duration = Castbar:GetTimerDuration():GetElapsedDuration()
-                local Total = Castbar:GetTimerDuration():GetTotalDuration()
-
-                Castbar.Time:SetFormattedText("%.1fs/%.1fs", Duration, Total)
+                    Castbar.Time:SetFormattedText("%.1fs/%.1fs", Duration, Total)
+                end
             end
+        else
+            return
         end
+    else
+        return
     end
 end
 
@@ -420,8 +418,6 @@ function UF:ResetCastBar(Castbar)
             Pip:Hide()
         end
     end
-
-    Castbar:SetScript("OnUpdate", nil)
 end
 
 function UF:ClearCastBarOnUnit(Unit)

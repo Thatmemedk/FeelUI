@@ -75,7 +75,6 @@ UF.Frames.Range = {}
 
 -- Tables
 UF.UpdateQueue = {}
-UF.UpdaterTicker = 0
 
 -- Locals
 UF.FadeInTime = 0.5
@@ -954,12 +953,11 @@ function UF:QueueUpdate(Frame, Unit, Flag)
         Frame[Flag] = true
     end
 
-    local Queue = self.UpdateQueue
-    local UnitQueue = Queue[Unit]
+    local UnitQueue = self.UpdateQueue[Unit]
 
     if (not UnitQueue) then
         UnitQueue = {}
-        Queue[Unit] = UnitQueue
+        self.UpdateQueue[Unit] = UnitQueue
     end
 
     UnitQueue[Frame] = true
@@ -1022,25 +1020,33 @@ function UF:QueueIconsForAll()
 end
 
 function UF:UpdateQueueTicker()
-    self:SetScript("OnUpdate", function(_, Elapsed)
-        if (not next(UF.UpdateQueue)) then
-            return
-        end
+    if (self.UpdateTicker) then 
+        return 
+    end
 
-        UF.UpdaterTicker = UF.UpdaterTicker + Elapsed
+    local TickerInterval = 0.15
+    local MaxPerTick = 20
 
-        if (UF.UpdaterTicker < 0.1) then
-            return
-        end
+    self.UpdateTicker = C_Timer.NewTicker(TickerInterval, function()
+        local Processed = 0
 
-        UF.UpdaterTicker = 0
-
-        for Unit, Frames in next, UF.UpdateQueue do
+        for Unit, Frames in next, self.UpdateQueue do
             for Frame in next, Frames do
-                UF:ProcessFrame(Frame)
+                if (Frame and Frame:IsShown()) then
+                    self:ProcessFrame(Frame)
+                end
+
+                Frames[Frame] = nil
+                Processed = Processed + 1
+
+                if (Processed >= MaxPerTick) then
+                    return
+                end
             end
 
-            UF.UpdateQueue[Unit] = nil
+            if (not next(Frames)) then
+                self.UpdateQueue[Unit] = nil
+            end
         end
     end)
 end

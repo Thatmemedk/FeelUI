@@ -22,6 +22,10 @@ local ChatConfigFrameDefaultButton = _G.ChatConfigFrameDefaultButton
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
 
+local strfind = string.find
+local strmatch = string.match
+local date = date
+
 function CH:StyleFrames(Frame)
 	if (Frame.ChatIsSkinned) then
 		return

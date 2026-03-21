@@ -101,6 +101,7 @@ function ObjectiveTracker:ToggleButtonOnEvent(event)
 		return UI:Print(ERR_NOT_IN_COMBAT)
 	end
 
+	--[[
 	if (event == "PLAYER_REGEN_DISABLED") then
 		ObjectiveTrackerFrame:SetParent(UI.HiddenParent)
 		ObjectiveTrackerFrame:SetAlpha(0)
@@ -108,6 +109,7 @@ function ObjectiveTracker:ToggleButtonOnEvent(event)
 		ObjectiveTrackerFrame:SetParent(_G.UIParent)
 		ObjectiveTrackerFrame:SetAlpha(1)
 	end
+	--]]
 end
 
 function ObjectiveTracker:ToggleButtonOnClick()
@@ -137,10 +139,10 @@ function ObjectiveTracker:CreateToggleButtons()
     ToggleButton:Point("RIGHT", _G.UIParent, -6, 0)
     ToggleButton:HandleButton()
     ToggleButton:RegisterForClicks("AnyUp")
-    ToggleButton:RegisterEvent("PLAYER_REGEN_ENABLED")
-	ToggleButton:RegisterEvent("PLAYER_REGEN_DISABLED")
+    --ToggleButton:RegisterEvent("PLAYER_REGEN_ENABLED")
+	--ToggleButton:RegisterEvent("PLAYER_REGEN_DISABLED")
     ToggleButton:SetScript("OnClick", self.ToggleButtonOnClick)
-    ToggleButton:SetScript("OnEvent", self.ToggleButtonOnEvent)
+    --ToggleButton:SetScript("OnEvent", self.ToggleButtonOnEvent)
     ToggleButton:SetAlpha(0)
 
     ToggleButton.Texture = ToggleButton:CreateTexture(nil, "OVERLAY", nil, 7)

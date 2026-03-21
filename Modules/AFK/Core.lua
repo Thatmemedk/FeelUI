@@ -84,7 +84,7 @@ function AFK:OnUpdate(Elapsed)
 end
 
 function AFK:UpdateAFKState(State)
-    if InCombatLockdown() or MovieFrame:IsShown() or CinematicFrame:IsShown() then 
+    if issecretvalue(State) or InCombatLockdown() or MovieFrame:IsShown() or CinematicFrame:IsShown() then 
         return
     end
 
@@ -292,6 +292,6 @@ function AFK:Initialize()
         return 
     end
 
-    self:Create()
-    self:RegisterEvents()
+    --self:Create()
+    --self:RegisterEvents()
 end
