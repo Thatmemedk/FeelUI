@@ -31,6 +31,7 @@ NP.FrameUnits = {}
 
 -- Tables
 NP.UpdateQueue = {}
+NP.UpdateScheduled = false
 
 -- Tables
 NP.PlateTypes = {
@@ -232,9 +233,9 @@ function NP:ProcessFrame(Frame)
         Frame.NeedsTargetIndicator = nil
     end
 
-    -- AURAS
-    if (Frame.NeedsAuras) then
-        if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
+    -- AURAS 
+    if (Frame.NeedsAuras) then 
+        --if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
 
         Frame.NeedsAuras = nil
     end
@@ -242,8 +243,20 @@ end
 
 -- QUEUE UPDATES
 
-function NP:QueueUpdate(Frame, Unit, Flag)
-    if (not Frame or not Unit or not Frame:IsShown()) then
+function NP:RunUpdateQueue()
+    for Frame in next, self.UpdateQueue do
+        if Frame:IsShown() then
+            self:ProcessFrame(Frame)
+        end
+
+        self.UpdateQueue[Frame] = nil
+    end
+
+    self.UpdateScheduled = false
+end
+
+function NP:QueueUpdate(Frame, Unit, Flag, Update)
+    if (type(Frame) ~= "table" or not Unit or not Frame:IsShown()) then
         return
     end
 
@@ -251,116 +264,24 @@ function NP:QueueUpdate(Frame, Unit, Flag)
         Frame[Flag] = true
     end
 
-    local UnitQueue = self.UpdateQueue[Unit]
+    self.UpdateQueue[Frame] = true
 
-    if (not UnitQueue) then
-        UnitQueue = {}
-        self.UpdateQueue[Unit] = UnitQueue
+    if (Update) then
+        self:RunUpdateQueue()
+
+        return
     end
 
-    UnitQueue[Frame] = true
-end
+    if (not self.UpdateScheduled) then
+        self.UpdateScheduled = true
 
-function NP:UpdateQueueTicker()
-    if (self.UpdateTicker) then 
-        return 
+        C_Timer.After(0, function()
+            self:RunUpdateQueue()
+        end)
     end
-
-    local TickerInterval = 0.15
-    local MaxPerTick = 20
-
-    self.UpdateTicker = C_Timer.NewTicker(TickerInterval, function()
-        local Processed = 0
-
-        for Unit, Frames in next, self.UpdateQueue do
-            for Frame in next, Frames do
-                if (Frame and Frame:IsShown()) then
-                    self:ProcessFrame(Frame)
-                end
-
-                Frames[Frame] = nil
-                Processed = Processed + 1
-
-                if (Processed >= MaxPerTick) then
-                    return
-                end
-            end
-
-            if (not next(Frames)) then
-                self.UpdateQueue[Unit] = nil
-            end
-        end
-    end)
 end
 
 -- EVENT UPDATES
-
-function NP:NameplateAdded(Unit)
-    local Plate = C_NamePlate.GetNamePlateForUnit(Unit)
-
-    if (not Plate) then
-        return
-    end
-
-    local Type = self.PlateTypes[UnitIsFriend("player", Unit)]
-
-    if (not Plate[Type.Key]) then
-        Plate[Type.Key] = self[Type.Create](self, Plate, Unit)
-    end
-
-    local Frame = Plate[Type.Key]
-
-    if (not Frame) then
-        return
-    end
-
-    if (Plate[Type.Opposite]) then
-        Plate[Type.Opposite]:Hide()
-        Plate[Type.Opposite].Unit = nil
-    end
-
-    -- Show Unit
-    Frame.Unit = Unit
-    Frame:Show()
-
-    -- Cache Units
-    self.UnitFrames[Unit] = Frame
-    self.FrameUnits[Frame] = Unit
-
-    -- Batch Flags
-    Frame.NeedsHealth = true
-    Frame.NeedsName = true
-    Frame.NeedsAuras = true
-    Frame.NeedsTargetIndicator = true
-    Frame.NeedsThreat = true
-
-    -- Queue Updates
-    self:QueueUpdate(Frame, Unit)
-end
-
-function NP:NameplateRemoved(Unit)
-    local Frame = self.UnitFrames[Unit]
-
-    if (not Frame) then
-        return
-    end
-
-    -- Hide Unit
-    Frame.Unit = nil
-    Frame:Hide()
-
-    -- Reset Unit Cache
-    self.FrameUnits[Frame] = nil
-    self.UnitFrames[Unit] = nil
-
-    -- Reset Cache
-    Frame.NeedsHealth = nil
-    Frame.NeedsName = nil
-    Frame.NeedsIcons = nil
-    Frame.NeedsThreat = nil
-    Frame.NeedsAuras = nil
-    Frame.NeedsTargetIndicator = nil
-end
 
 function NP:UnitHealth(Unit)
     local Frame = NP.UnitFrames[Unit]
@@ -375,7 +296,7 @@ end
 function NP:UnitAura(Unit)
     local Frame = NP.UnitFrames[Unit]
 
-    if (not Frame) then
+    if (not Frame or not Frame:IsShown()) then
         return
     end
 
@@ -415,13 +336,123 @@ function NP:RaidIconUpdate()
     end
 end
 
+function NP:CastBarOnNamePlateUnitAdded(Unit)
+    local Frame = NP.UnitFrames[Unit]
+    local Castbar = Frame and Frame.Castbar
+
+    if (not Castbar) then
+        return
+    end
+
+    -- Reset CastBar
+    NP:ResetCastBar(Frame.Castbar)
+
+    -- Call Fade
+    UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
+end
+
+function NP:CastBarOnNamePlateUnitRemoved(Unit)
+    local Frame = NP.UnitFrames[Unit]
+    local Castbar = Frame and Frame.Castbar
+
+    if (not Castbar) then
+        return
+    end
+
+    -- Reset CastBar
+    NP:ResetCastBar(Frame.Castbar)
+
+    -- Call Fade
+    UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
+end
+
 -- EVENT HANDLER
 
+function NP:NameplateAdded(Unit)
+    local Plate = C_NamePlate.GetNamePlateForUnit(Unit)
+
+    if (not Plate or not Unit) then
+        return
+    end
+
+    local Type = self.PlateTypes[UnitIsFriend("player", Unit)]
+
+    if (not Plate[Type.Key]) then
+        Plate[Type.Key] = self[Type.Create](self, Plate, Unit)
+    end
+
+    local Frame = Plate[Type.Key]
+
+    if (not Frame) then
+        return
+    end
+
+    local Opposite = Plate[Type.Opposite]
+
+    if (Opposite and Opposite:IsShown()) then
+        Opposite:Hide()
+        Opposite.Unit = nil
+    end
+
+    -- Show Unit
+    Frame.Unit = Unit
+    Frame:Show()
+
+    -- Cache Units
+    self.UnitFrames[Unit] = Frame
+    self.FrameUnits[Frame] = Unit
+
+    -- Batch Flags
+    --Frame.NeedsAuras = true
+    Frame.NeedsHealth = true
+    Frame.NeedsName = true
+    Frame.NeedsIcons = true
+    Frame.NeedsThreat = true
+    Frame.NeedsTargetIndicator = true
+
+    -- Queue Updates
+    self:QueueUpdate(Frame, Unit, nil, true)
+end
+
+function NP:NameplateRemoved(Unit)
+    local Frame = self.UnitFrames[Unit]
+
+    if (not Plate or not Unit) then
+        return
+    end
+
+    -- Hide Unit
+    Frame.Unit = nil
+    Frame:Hide()
+
+    -- Reset Unit Cache
+    self.FrameUnits[Frame] = nil
+    self.UnitFrames[Unit] = nil
+
+    -- Reset Flags
+    --Frame.NeedsAuras = nil
+    Frame.NeedsHealth = nil
+    Frame.NeedsName = nil
+    Frame.NeedsIcons = nil
+    Frame.NeedsThreat = nil
+    Frame.NeedsTargetIndicator = nil
+end
+
+local function IsNameplateUnit(unit)
+    return unit and unit:match("^nameplate%d+$")
+end
+
 function NP:OnEvent(event, unit, ...)
+    if (unit and not IsNameplateUnit(unit)) then
+        return
+    end
+
     if (event == "NAME_PLATE_UNIT_ADDED") then
         NP:NameplateAdded(unit)
+        NP:CastBarOnNamePlateUnitAdded(unit)
     elseif (event == "NAME_PLATE_UNIT_REMOVED") then
         NP:NameplateRemoved(unit)
+        NP:CastBarOnNamePlateUnitRemoved(unit)
     elseif (event == "PLAYER_TARGET_CHANGED") then
         NP:TargetChanged()
     elseif (event == "RAID_TARGET_UPDATE") then
@@ -438,15 +469,16 @@ function NP:OnEvent(event, unit, ...)
 
     if (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then
         NP:CastStarted(event, unit)
-        NP:SetNameplateColor(unit, true)
     elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") then
         NP:CastStopped(event, unit, ...)
-    elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
+    elseif (event == "UNIT_SPELLCAST_FAILED") then
         NP:CastFailed(event, unit, ...)
+    elseif (event == "UNIT_SPELLCAST_INTERRUPTED") then
+        NP:CastInterrupted(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_SUCCEEDED") then
-        NP:CastSucceeded(event, unit, ...)
+        --NP:CastSucceeded(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
-        NP:CastUpdated(event, unit)
+        NP:CastUpdated(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_INTERRUPTIBLE") then
         NP:CastNonInterruptable(event, unit)
     end
@@ -537,5 +569,4 @@ function NP:Initialize()
     self:DisableBlizzard()
     self:RegisterEvents()
     self:SetCVarOnLogin()
-    self:UpdateQueueTicker()
 end

@@ -19,68 +19,55 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
 
     local Auras = IsDebuff and Frame.Debuffs or IsExternal and Frame.External or Frame.Buffs
 
-    if (not Auras or not Auras.Filter) then
-        return
+    if (not Auras or not Auras.Filter) then 
+        return 
     end
 
-    local ButtonWidth = Auras.Width or 16
-    local ButtonHeight = Auras.Height or 16
-    local Spacing = Auras.Spacing or 4
-    local Direction = Auras.Direction or "RIGHT"
+    local Buttons = Auras.Buttons
     local MaxAuras = Auras.NumAuras or 6
     local AuraMinCount = 2
     local AuraMaxCount = 99
     local Active = 0
     local Index = 1
-    local PreviousButton
-
-    for _, Button in ipairs(Auras.Buttons) do
-        Button:Hide()
-        Button:ClearAllPoints()
-    end
+    local IsFriendly = UnitCanCooperate("player", Unit)
 
     while Active < MaxAuras do
         local AuraData = GetAuraDataByIndex(Unit, Index, Auras.Filter)
         Index = Index + 1
 
-        if (not AuraData or not AuraData.name) then
+        if (not AuraData) then
             break
         end
 
-        local Icon = AuraData.icon
-        local Count = AuraData.applications
-        local Duration = AuraData.duration
-        local ExpirationTime = AuraData.expirationTime
-        local AuraInstanceID = AuraData.auraInstanceID
-        local AuraIsStealable = AuraData.isStealable
-        local Button = Auras.Buttons[Active + 1]
+        local Button = Buttons[Active + 1]
 
         if (not Button) then
             break
         end
 
-        Button:Size(ButtonWidth, ButtonHeight)
-        Button:ClearAllPoints()
+        local AuraInstanceID = AuraData.auraInstanceID
+        local Icon = AuraData.icon
+        local Duration = AuraData.duration
+        local ExpirationTime = AuraData.expirationTime
+        local AuraIsStealable = AuraData.isStealable
 
-        if (not PreviousButton) then
-            if (Direction == "RIGHT") then
-                Button:Point("TOPLEFT", Auras, "TOPLEFT", 0, 0)
-            else
-                Button:Point("TOPRIGHT", Auras, "TOPRIGHT", 0, 0)
+        if (Button.AuraInstanceID ~= AuraInstanceID) then
+            if (Button.Icon) then
+                Button.Icon:SetTexture(Icon)
+                UI:KeepAspectRatio(Button, Button.Icon)
             end
-        else
-            if (Direction == "RIGHT") then
-                Button:Point("LEFT", PreviousButton, "RIGHT", Spacing, 0)
+
+            if (IsDebuff) then
+                local Color = GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
+
+                if (Color) then
+                    Button:SetColorTemplate(Color.r, Color.g, Color.b)
+                end
             else
-                Button:Point("RIGHT", PreviousButton, "LEFT", -Spacing, 0)
+                Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
             end
-        end
 
-        Button:Show()
-
-        if (Button.Icon) then
-            Button.Icon:SetTexture(Icon)
-            UI:KeepAspectRatio(Button, Button.Icon)
+            Button.AuraInstanceID = AuraInstanceID
         end
 
         if (Button.Count) then
@@ -88,43 +75,39 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
         end
 
         if (Button.Cooldown) then
-            if (C_StringUtil.TruncateWhenZero(Duration)) then
-                Button.Cooldown:SetCooldown(Duration, ExpirationTime)
-                Button.Cooldown:SetCooldownFromExpirationTime(ExpirationTime, Duration)
+            local CD = C_UnitAuras.GetAuraDuration(Unit, AuraInstanceID)
 
-                UI:RegisterCooldown(Button.Cooldown, Button.Overlay, 0, -8, false, true)
+            if (CD) then
+                Button.Cooldown:SetCooldownFromDurationObject(CD)
+                Button.Cooldown:Show()
             else
                 Button.Cooldown:Hide()
             end
         end
 
-        if (IsDebuff) then
-            local Color = GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
-
-            if (Color) then
-                Button:SetColorTemplate(Color.r, Color.g, Color.b)
-            end
-        else
-            Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
-        end
-
         if (Button.Highlight) then
-            if (not UnitCanCooperate("player", Unit)) then
+            if (not IsFriendly) then
                 Button.Highlight:SetAlphaFromBoolean(AuraIsStealable, 1, 0)
             else
                 Button.Highlight:SetAlpha(0)
             end
         end
 
-        -- Cache
         Button.Unit = Unit
-        Button.AuraInstanceID = AuraInstanceID
         Button.AuraFilter = Auras.Filter
         Button.AuraIndex = Index
+        Button:Show()
 
-        -- Cache
-        PreviousButton = Button
         Active = Active + 1
+    end
+
+    for i = Active + 1, #Buttons do
+        local Button = Buttons[i]
+
+        if Button:IsShown() then
+            Button:Hide()
+            Button.AuraInstanceID = nil
+        end
     end
 end
 
@@ -171,12 +154,16 @@ function UF:CreateAuraButton(Frame, ExtraBorder, HideNumbers)
     Highlight:SetFrameLevel(Button:GetFrameLevel() -1)
     Highlight:SetInside(Button, 4, 4)
     Highlight:CreateGlow(3, 3, 1, 0, 1, 1)
+    Highlight:SetAlpha(0)
 
     local Cooldown = CreateFrame("Cooldown", nil, Button, "CooldownFrameTemplate")
     Cooldown:SetInside()
     Cooldown:SetDrawEdge(false)
     Cooldown:SetDrawBling(false)
     Cooldown:SetReverse(true)
+    Cooldown:Hide()
+
+    UI:RegisterCooldown(Cooldown, Overlay, 0, -8, false, true)
 
     -- Cache
     Button.Overlay = Overlay
@@ -223,11 +210,29 @@ function UF:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, Ancho
     Container:Size(TotalWidth, ButtonHeight)
     Container:Point(AnchorPoint, Frame, AnchorPoint, OffsetX or 0, OffsetY or 0)
 
+    local Previous
+
     for i = 1, NumAuras do
         local Button = UF:CreateAuraButton(Container, ExtraBorder)
+        Button:Size(ButtonWidth, ButtonHeight)
         Button:Hide()
 
+        if (not Previous) then
+            if (Direction == "RIGHT") then
+                Button:Point("LEFT", Container, "LEFT", 0, 0)
+            else
+                Button:Point("RIGHT", Container, "RIGHT", 0, 0)
+            end
+        else
+            if (Direction == "RIGHT") then
+                Button:Point("LEFT", Previous, "RIGHT", Spacing, 0)
+            else
+                Button:Point("RIGHT", Previous, "LEFT", -Spacing, 0)
+            end
+        end
+
         Container.Buttons[i] = Button
+        Previous = Button
     end
 
     return Container

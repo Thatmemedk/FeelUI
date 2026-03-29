@@ -1,46 +1,95 @@
 local UI, DB, Media = select(2, ...):Call()
 
 -- Call Modules
-local ET = UI:RegisterModule("EncounterTimeline")
+local NPA = UI:RegisterModule("NoPetAlert")
 
--- WoW Globals
-local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-local LoadAddOn = C_AddOns.LoadAddOn
+function NPA:Create()
+	-- Frame
+	local Frame = CreateFrame("Frame", "FeelUI_NoPetAlert", _G.UIParent)
+	Frame:Size(200, 60)
+	Frame:Point("CENTER", _G.UIParent, "CENTER", 0, 200)
+	Frame:Hide()
 
-function ET:Skin()
-    if (self.IsSkinned) then
-        return
-    end
+	-- Icon
+	local Icon = Frame:CreateTexture(nil, "ARTWORK")
+	Icon:Size(52, 22)
+	Icon:Point("TOP", Frame, "TOP", 0, 12)
+	Icon:SetTexture(4667414)
 
-	EncounterTimeline.TrackView.Background:SetAlpha(0)
-	EncounterTimeline.TrackView.LineStart:SetAlpha(0)
-	EncounterTimeline.TrackView.LineEnd:SetAlpha(0)
-	EncounterTimeline.TrackView.PipText:SetAlpha(0)
-	EncounterTimeline.TrackView.PipIcon:SetAlpha(0)
-	EncounterTimeline.TrackView.LongDivider:SetAlpha(0)
-	EncounterTimeline.TrackView.QueueDivider:SetAlpha(0)
+	UI:KeepAspectRatio(Icon, Icon)
 
-	--[[
-	local EncounterTimelineFrameNew = CreateFrame("Frame", nil, EncounterTimeline)
-	EncounterTimelineFrameNew:SetFrameLevel(EncounterTimeline:GetFrameLevel() -1)
-	EncounterTimelineFrameNew:SetFrameStrata("LOW")
-	EncounterTimelineFrameNew:Size(3, 420)
-	EncounterTimelineFrameNew:Point("CENTER", EncounterTimeline, 0, 0)
-	EncounterTimelineFrameNew:CreateBackdrop()
-	EncounterTimelineFrameNew:CreateShadow()
-	--]]
+	local IconOverlay = CreateFrame("Frame", nil, Frame)
+	IconOverlay:SetInside(Icon)
+	IconOverlay:SetTemplate()
+	IconOverlay:CreateShadow()
+	IconOverlay:SetShadowOverlay()
 
-	self.IsSkinned = true
+	-- Text
+	local Text = Frame:CreateFontString(nil, "OVERLAY")
+	Text:SetFontTemplate("CombatText", 32, 2, 2)
+	Text:Point("CENTER", Bar, 0, 0)
+	Text:SetText("NO PET")
+	Text:SetTextColor(1, 1, 1)
+
+	-- Animation
+	local Anim = Frame:CreateAnimationGroup()
+	Anim:SetLooping("REPEAT")
+
+	local FadeOut = Anim:CreateAnimation("Alpha")
+	FadeOut:SetFromAlpha(1)
+	FadeOut:SetToAlpha(0.25)
+	FadeOut:SetDuration(0.4)
+	FadeOut:SetOrder(1)
+
+	local FadeIn = Anim:CreateAnimation("Alpha")
+	FadeIn:SetFromAlpha(0.25)
+	FadeIn:SetToAlpha(1)
+	FadeIn:SetDuration(0.4)
+	FadeIn:SetOrder(2)
+
+	self.Frame = Frame
+	self.Text = Text
+	self.Anim = Anim
 end
 
-function ET:Initialize()
-    if (not DB.Global.Theme.Enable) then 
+function NPA:UpdatePetStatus()
+    local _, Class = UnitClass("player")
+
+    if (Class ~= "DEATHKNIGHT") then
+        self.Frame:Hide()
+        self.Anim:Stop()
+
         return
     end
 
-	if (not IsAddOnLoaded("Blizzard_EncounterTimeline")) then
-		LoadAddOn("Blizzard_EncounterTimeline")
-	end
+    if (UnitExists("pet")) then
+        self.Frame:Hide()
+        self.Anim:Stop()
+    else
+        self.Frame:Show()
 
-    self:Skin()
+        if (not self.Anim:IsPlaying()) then
+            self.Anim:Play()
+        end
+    end
+end
+
+function NPA:OnEvent(event, unit)
+    if (event == "UNIT_PET" and unit ~= "player") then 
+    	return 
+    end
+
+    self:UpdatePetStatus()
+end
+
+function NPA:RegisterEvents()
+	self:RegisterEvent("PLAYER_ENTERING_WORLD")
+	self:RegisterEvent("UNIT_PET")
+	self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+	self:SetScript("OnEvent", self.OnEvent)
+end
+
+function NPA:Initialize()
+    self:Create()
+    self:RegisterEvents()
 end

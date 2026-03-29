@@ -6,55 +6,39 @@ local NP = UI:CallModule("NamePlates")
 -- CREATE NAMEPLATES
 
 function NP:CreateFriendlyPlates(Plate, Unit)
-    if (Plate.FriendlyIsCreated) then
-        return Plate.FeelUINameplatesFriendly
+    if (not Unit) then
+        return
     end
 
-    local Frame = Plate.FeelUINameplatesFriendly
+    local Frame = CreateFrame("Button", nil, Plate, "PingableUnitFrameTemplate")
+    Frame:Size(unpack(DB.Global.Nameplates.Size))
+    Frame:Point("CENTER", Plate, 0, 0)
 
-    if (not Frame) then
-        Frame = CreateFrame("Button", "FeelUI_NameplatesFriendly", Plate, "PingableUnitFrameTemplate")
-        Frame:Size(unpack(DB.Global.Nameplates.Size))
-        Frame:Point("CENTER", Plate, 0, 0)
+    if (not Frame.Initialized) then
+        -- Create Elements
+        self:CreateFriendlyElements(Frame)
 
-        Plate.FeelUINameplatesFriendly = Frame
+        Frame.Initialized = true
     end
-
-    Frame.Unit = Unit
-
-    -- Create Elements
-    self:CreateFriendlyElements(Frame)
-    self:QueueUpdate(Frame, Unit, "NeedsHealth")
-    self:QueueUpdate(Frame, Unit, "NeedsName")
-
-    Plate.FriendlyIsCreated = true
 
     return Frame
 end
 
 function NP:CreateEnemyPlates(Plate, Unit)
-    if (Plate.EnemyIsCreated) then
-        return Plate.FeelUINameplatesEnemy
+    if (not Unit) then
+        return
     end
 
-    local Frame = Plate.FeelUINameplatesEnemy
+    local Frame = CreateFrame("Button", nil, Plate, "PingableUnitFrameTemplate")
+    Frame:Size(unpack(DB.Global.Nameplates.Size))
+    Frame:Point("CENTER", Plate, 0, 0)
 
-    if (not Frame) then
-        Frame = CreateFrame("Button", "FeelUI_NameplatesEnemy", Plate, "PingableUnitFrameTemplate")
-        Frame:Size(unpack(DB.Global.Nameplates.Size))
-        Frame:Point("CENTER", Plate, 0, 0)
+    if (not Frame.Initialized) then
+        -- Create Elements
+        self:CreateEnemyElements(Frame)
 
-        Plate.FeelUINameplatesEnemy = Frame
+        Frame.Initialized = true
     end
-
-    Frame.Unit = Unit
-
-    -- Create Elements
-    self:CreateEnemyElements(Frame)
-    self:QueueUpdate(Frame, Unit, "NeedsHealth")
-    self:QueueUpdate(Frame, Unit, "NeedsName")
-
-    Plate.EnemyIsCreated = true
 
     return Frame
 end

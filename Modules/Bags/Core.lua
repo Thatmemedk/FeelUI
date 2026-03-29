@@ -223,9 +223,10 @@ function B:CreateReagentContainer()
 end
 
 function B:CreateItemSlot(Frame)
-    local Button = CreateFrame("Button", nil, Frame, "SecureActionButtonTemplate")
+    local Button = CreateFrame("Button", nil, Frame, "ContainerFrameItemButtonTemplate")
     Button:SetFrameLevel(Frame:GetFrameLevel() + 10)
     Button:Size(B.ButtonWidth, B.ButtonHeight)
+    Button:StripTexture()
     Button:CreateButtonPanel()
     Button:CreateButtonBackdrop()
     Button:CreateShadow()
@@ -263,13 +264,6 @@ function B:CreateItemSlot(Frame)
     Button:EnableMouse(true)
     Button:RegisterForClicks("AnyUp")
     Button:RegisterForDrag("LeftButton")
-
-    if not InCombatLockdown() then
-        Button:SetAttribute("type2", "item")
-        Button:SetAttribute("bag", nil)
-        Button:SetAttribute("slot", nil)
-    end
-
     Button:SetScript("OnClick", function(self, button)
         if IsShiftKeyDown() and button == "LeftButton" then
             ChatEdit_InsertLink(self.ItemLink)
@@ -332,12 +326,8 @@ function B:UpdateItemSlots(BagID, StartIndex, SlotTable, ParentFrame, isReagent)
         -- Assign bag and slot
         Button.bag, Button.slot = BagID, Slot
 
-        if not InCombatLockdown() then
-            Button:SetAttribute("type1", "item")
-            Button:SetAttribute("type2", "item")
-            Button:SetAttribute("bag", BagID)
-            Button:SetAttribute("slot", Slot)
-        end
+        Button:SetAttribute("bag", BagID)
+        Button:SetAttribute("slot", Slot)
 
         -- Get item info
         local Info = B:GetContainerItemInfo(BagID, Slot)

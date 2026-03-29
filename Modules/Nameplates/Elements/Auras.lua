@@ -23,64 +23,51 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
         return 
     end
 
-    local ButtonWidth = Auras.Width or 16
-    local ButtonHeight = Auras.Height or 16
-    local Spacing = Auras.Spacing or 4
-    local Direction = Auras.Direction or "RIGHT"
+    local Buttons = Auras.Buttons
     local MaxAuras = Auras.NumAuras or 6
     local AuraMinCount = 2
     local AuraMaxCount = 99
     local Active = 0
     local Index = 1
-    local PreviousButton
-
-    for _, Button in ipairs(Auras.Buttons) do
-        Button:Hide()
-        Button:ClearAllPoints()
-    end
+    local IsFriendly = UnitCanCooperate("player", Unit)
 
     while Active < MaxAuras do
         local AuraData = GetAuraDataByIndex(Unit, Index, Auras.Filter)
         Index = Index + 1
 
-        if (not AuraData or not AuraData.name) then
+        if (not AuraData) then
             break
         end
 
-        local Icon = AuraData.icon
-        local Count = AuraData.applications
-        local Duration = AuraData.duration
-        local ExpirationTime = AuraData.expirationTime
-        local AuraInstanceID = AuraData.auraInstanceID
-        local AuraIsStealable = AuraData.isStealable
-        local Button = Auras.Buttons[Active + 1]
+        local Button = Buttons[Active + 1]
 
         if (not Button) then
             break
         end
 
-        Button:Size(ButtonWidth, ButtonHeight)
-        Button:ClearAllPoints()
+        local AuraInstanceID = AuraData.auraInstanceID
+        local Icon = AuraData.icon
+        local Duration = AuraData.duration
+        local ExpirationTime = AuraData.expirationTime
+        local AuraIsStealable = AuraData.isStealable
 
-        if (not PreviousButton) then
-            if (Direction == "RIGHT") then
-                Button:Point("TOPLEFT", Auras, "TOPLEFT", 0, 0)
-            else
-                Button:Point("TOPRIGHT", Auras, "TOPRIGHT", 0, 0)
+        if (Button.AuraInstanceID ~= AuraInstanceID) then
+            if (Button.Icon) then
+                Button.Icon:SetTexture(Icon)
+                UI:KeepAspectRatio(Button, Button.Icon)
             end
-        else
-            if (Direction == "RIGHT") then
-                Button:Point("LEFT", PreviousButton, "RIGHT", Spacing, 0)
+
+            if (IsDebuff) then
+                local Color = GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
+
+                if (Color) then
+                    Button:SetColorTemplate(Color.r, Color.g, Color.b)
+                end
             else
-                Button:Point("RIGHT", PreviousButton, "LEFT", -Spacing, 0)
+                Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
             end
-        end
 
-        Button:Show()
-
-        if (Button.Icon) then
-            Button.Icon:SetTexture(Icon)
-            UI:KeepAspectRatio(Button, Button.Icon)
+            Button.AuraInstanceID = AuraInstanceID
         end
 
         if (Button.Count) then
@@ -88,43 +75,39 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
         end
 
         if (Button.Cooldown) then
-            if (C_StringUtil.TruncateWhenZero(Duration)) then
-                Button.Cooldown:SetCooldown(Duration, ExpirationTime)
-                Button.Cooldown:SetCooldownFromExpirationTime(ExpirationTime, Duration)
+            local CD = C_UnitAuras.GetAuraDuration(Unit, AuraInstanceID)
 
-                UI:RegisterCooldown(Button.Cooldown, Button.Overlay, 0, -8, false, true)
+            if (CD) then
+                Button.Cooldown:SetCooldownFromDurationObject(CD)
+                Button.Cooldown:Show()
             else
                 Button.Cooldown:Hide()
             end
         end
 
-        if (IsDebuff) then
-            local Color = GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
-
-            if (Color) then
-                Button:SetColorTemplate(Color.r, Color.g, Color.b)
-            end
-        else
-            Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
-        end
-
         if (Button.Highlight) then
-            if (not UnitCanCooperate("player", Unit)) then
+            if (not IsFriendly) then
                 Button.Highlight:SetAlphaFromBoolean(AuraIsStealable, 1, 0)
             else
                 Button.Highlight:SetAlpha(0)
             end
         end
 
-        -- Cache
         Button.Unit = Unit
-        Button.AuraInstanceID = AuraInstanceID
         Button.AuraFilter = Auras.Filter
         Button.AuraIndex = Index
+        Button:Show()
 
-        -- Cache
-        PreviousButton = Button
         Active = Active + 1
+    end
+
+    for i = Active + 1, #Buttons do
+        local Button = Buttons[i]
+
+        if Button:IsShown() then
+            Button:Hide()
+            Button.AuraInstanceID = nil
+        end
     end
 end
 
@@ -156,6 +139,9 @@ function NP:CreateAuraButton(Frame, ExtraBorder)
     Cooldown:SetDrawEdge(false)
     Cooldown:SetDrawBling(false)
     Cooldown:SetReverse(true)
+    Cooldown:Hide()
+
+    UI:RegisterCooldown(Cooldown, Overlay, 0, -8, false, true)
 
     -- Cache
     Button.Overlay = Overlay
@@ -179,6 +165,7 @@ end
 "HARMFUL|RAID"; Certain Debuffs that only show up on raid frames, e.g. most Debuffs that are relevant in a Raid Setting.
 "HARMFUL|RAID_PLAYER_DISPELLABLE"; Returns auras the player can be Dispelled.
 "HELPFUL|PLAYER|RAID_IN_COMBAT; Returns auras that are flagged to show on raid frames in combat, this should return mostly just HotS.
+"HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY"; Auras that should be shown on nameplates.
 
 "HELPFUL|EXTERNAL_DEFENSIVE"; Displays External Defensives such as [Pain Suppression] etc.
 "HELPFUL|BIG_DEFENSIVE"; Displays Defensives such as [Barkskin] etc.
@@ -196,17 +183,35 @@ function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, Ancho
     Container.NumAuras = NumAuras
     Container.Filter = Filter
     Container.Buttons = {}
-    
+
     local TotalWidth = (ButtonWidth * NumAuras) + (Spacing * (NumAuras - 1))
 
     Container:Size(TotalWidth, ButtonHeight)
     Container:Point(AnchorPoint, Frame, AnchorPoint, OffsetX or 0, OffsetY or 0)
 
+    local Previous
+
     for i = 1, NumAuras do
         local Button = NP:CreateAuraButton(Container, ExtraBorder)
+        Button:Size(ButtonWidth, ButtonHeight)
         Button:Hide()
 
+        if (not Previous) then
+            if (Direction == "RIGHT") then
+                Button:Point("LEFT", Container, "LEFT", 0, 0)
+            else
+                Button:Point("RIGHT", Container, "RIGHT", 0, 0)
+            end
+        else
+            if (Direction == "RIGHT") then
+                Button:Point("LEFT", Previous, "RIGHT", Spacing, 0)
+            else
+                Button:Point("RIGHT", Previous, "LEFT", -Spacing, 0)
+            end
+        end
+
         Container.Buttons[i] = Button
+        Previous = Button
     end
 
     return Container
@@ -217,5 +222,5 @@ function NP:CreateDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = NP:CreateAuraContainer(Frame, 28, 12, 4, "TOPRIGHT", -2, 30, "RIGHT", "RIGHT", 6, "HARMFUL|PLAYER", true)
+    Frame.Debuffs = NP:CreateAuraContainer(Frame, 28, 12, 4, "TOPRIGHT", -2, 30, "RIGHT", "RIGHT", 6, "HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY", true)
 end

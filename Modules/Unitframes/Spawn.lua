@@ -80,6 +80,8 @@ function UF:CreateUF()
         else
             Boss:Point("BOTTOM", self.Frames["boss"..(i-1)], "TOP", 0, 28)
         end
+
+        self.Frames.Boss = Boss
     end
 
     -- PARTY FRAMES

@@ -177,8 +177,12 @@ function TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Ra
         local Text = Line and Line:GetText()
         local LowerText = Text:lower()
 
-        if (not Text) then 
-            break 
+        if (not Text) then
+            break
+        end
+
+        if (issecretvalue(Text)) then
+            return
         end
 
         if (Player and ClassName and LowerText:find(ClassName:lower()) and not LowerText:find("alliance") and not LowerText:find("horde")) then
@@ -234,7 +238,7 @@ function TT:OnTooltipSetUnit()
 
     TT:FormatUnitName(Unit)
     TT:FormatGuildInfo(Unit)
-    TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Race, CreatureType, ClassificationUnit, Level)
+    --TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Race, CreatureType, ClassificationUnit, Level)
     TT:ApplyStatusBarColor(Unit, ClassFile, Reaction)
 end
 

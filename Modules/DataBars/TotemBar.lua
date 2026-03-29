@@ -62,6 +62,7 @@ function TotemBar:OnEvent(event)
     for i = 1, _G.MAX_TOTEMS do
         local Button = self.Buttons[i]
         local PlayerHaveTotem, Name, Start, Duration, Icon = GetTotemInfo(i)
+        local DurationObject = GetTotemDuration(i)
 
         if (Icon and Icon ~= "") then
             UI:UIFrameFadeIn(Button, 0.25, Button:GetAlpha(), 1)
@@ -70,21 +71,8 @@ function TotemBar:OnEvent(event)
                 Button.Icon:SetTexture(Icon)
             end
 
-            if (Duration and Start) then
-                Button.Cooldown:SetCooldown(Start, Duration)
-
-                for i = 1, Button.Cooldown:GetNumRegions() do
-                    local Region = select(i, Button.Cooldown:GetRegions())
-
-                    if (Region and Region.GetText) then
-                        local FontSize = UI:GetCooldownFontScale(Button.Cooldown)
-
-                        Region:ClearAllPoints()
-                        Region:Point("CENTER", Button.Overlay, 0, -6)
-                        Region:SetFontTemplate("Default", FontSize)
-                        Region:SetTextColor(1, 0.82, 0)
-                    end
-                end
+            if (Button.Cooldown) then
+                Button.Cooldown:SetCooldownFromDurationObject(DurationObject)
             end
       	else
             UI:UIFrameFadeOut(Button, 0.25, Button:GetAlpha(), 0)

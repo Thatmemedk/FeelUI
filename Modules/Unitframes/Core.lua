@@ -75,10 +75,11 @@ UF.Frames.Range = {}
 
 -- Tables
 UF.UpdateQueue = {}
+UF.UpdateScheduled = false
 
 -- Locals
 UF.FadeInTime = 0.5
-UF.CastHoldTime = 1.25
+UF.CastHoldTime = 2
 
 -- SecureFrame
 UF.SecureFrame = CreateFrame("Frame", "UF_SecureFrame", _G.UIParent, "SecureHandlerStateTemplate")
@@ -433,7 +434,7 @@ function UF:UpdatePortrait(Frame, Unit)
             Frame.Portrait:SetPosition(0, 0, 0.20)
             Frame.Portrait:SetModel("Interface\\Buttons\\TalkToMeQuestionMark.m2")
         else
-            Frame.Portrait:SetCamDistanceScale(3)
+            Frame.Portrait:SetCamDistanceScale(2)
             Frame.Portrait:SetPortraitZoom(1)
             Frame.Portrait:SetPosition(0, 0, 0)
             Frame.Portrait:SetUnit(Unit)
@@ -883,13 +884,13 @@ function UF:ProcessFrame(Frame)
         Frame.NeedsPower = nil
     end
 
-    -- AURAS
+    -- AURAS 
     if (Frame.NeedsAuras) then
         if (Frame.Buffs) then self:UpdateAuras(Frame, Unit, false) end
         if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
         if (Frame.External) then self:UpdateAuras(Frame, Unit, false, true) end
 
-        Frame.NeedsAuras = nil
+        Frame.NeedsAuras = nil 
     end
 
     -- NAME
@@ -944,8 +945,22 @@ function UF:ProcessFrame(Frame)
     end
 end
 
-function UF:QueueUpdate(Frame, Unit, Flag)
-    if (type(Frame) ~= "table" or not Unit) then
+-- QUEUE UPDATES
+
+function UF:RunUpdateQueue()
+    for Frame in next, self.UpdateQueue do
+        if Frame:IsShown() then
+            self:ProcessFrame(Frame)
+        end
+
+        self.UpdateQueue[Frame] = nil
+    end
+
+    self.UpdateScheduled = false
+end
+
+function UF:QueueUpdate(Frame, Unit, Flag, Update)
+    if (type(Frame) ~= "table" or not Unit or not Frame:IsShown()) then
         return
     end
 
@@ -953,14 +968,21 @@ function UF:QueueUpdate(Frame, Unit, Flag)
         Frame[Flag] = true
     end
 
-    local UnitQueue = self.UpdateQueue[Unit]
+    self.UpdateQueue[Frame] = true
 
-    if (not UnitQueue) then
-        UnitQueue = {}
-        self.UpdateQueue[Unit] = UnitQueue
+    if (Update) then
+        self:RunUpdateQueue()
+
+        return
     end
 
-    UnitQueue[Frame] = true
+    if (not self.UpdateScheduled) then
+        self.UpdateScheduled = true
+
+        C_Timer.After(0, function()
+            self:RunUpdateQueue()
+        end)
+    end
 end
 
 local RefreshFlags = {
@@ -972,26 +994,31 @@ local RefreshFlags = {
     "NeedsIcons",
     "NeedsThreat",
     "NeedsRange",
-    "NeedsPortrait"
 }
 
-function UF:RefreshUnit(Unit)
+function UF:RefreshUnit(Unit, Update)
     local Frame = self.Frames[Unit]
 
     if (not Frame) then
         return
     end
 
-    for i = 1, #RefreshFlags do
-        local Flag = RefreshFlags[i]
-        self:QueueUpdate(Frame, Unit, Flag)
-    end
+    Frame.NeedsHealth = true
+    Frame.NeedsHealthPred = true
+    Frame.NeedsPower = true
+    Frame.NeedsAuras = true
+    Frame.NeedsName = true
+    Frame.NeedsIcons = true
+    Frame.NeedsThreat = true
+    Frame.NeedsRange = true
+
+    self:QueueUpdate(Frame, Unit, nil, Update)
 end
 
 function UF:FullRefresh()
     for Unit, Frame in next, self.Frames do
-        if (type(Frame) == "table" and Frame.unit) then
-            self:RefreshUnit(Unit)
+        if (Frame and Frame.unit) then
+            self:RefreshUnit(Unit, true)
         end
     end
 end
@@ -1004,7 +1031,7 @@ function UF:FullRefreshGroup()
             for Unit, Frame in next, Frames do
                 for i = 1, #Flags do
                     local Flag = Flags[i]
-                    self:QueueUpdate(Frame, Unit, Flag)
+                    self:QueueUpdate(Frame, Unit, Flag, true)
                 end
             end
         end
@@ -1013,47 +1040,17 @@ end
 
 function UF:QueueIconsForAll()
     for Unit, Frame in next, self.Frames do
-        if (type(Frame) == "table" and Frame.unit) then
+        if (Frame and Frame.unit) then
             self:QueueUpdate(Frame, Frame.unit, "NeedsIcons")
         end
     end
 end
 
-function UF:UpdateQueueTicker()
-    if (self.UpdateTicker) then 
-        return 
-    end
-
-    local TickerInterval = 0.15
-    local MaxPerTick = 20
-
-    self.UpdateTicker = C_Timer.NewTicker(TickerInterval, function()
-        local Processed = 0
-
-        for Unit, Frames in next, self.UpdateQueue do
-            for Frame in next, Frames do
-                if (Frame and Frame:IsShown()) then
-                    self:ProcessFrame(Frame)
-                end
-
-                Frames[Frame] = nil
-                Processed = Processed + 1
-
-                if (Processed >= MaxPerTick) then
-                    return
-                end
-            end
-
-            if (not next(Frames)) then
-                self.UpdateQueue[Unit] = nil
-            end
-        end
-    end)
-end
-
 -- ON EVENTS
 
 local IconEvents = {
+    UNIT_FLAGS = true,
+    UNIT_PHASE = true,
     PLAYER_UPDATE_RESTING = true,
     RAID_TARGET_UPDATE = true,
     READY_CHECK = true,
@@ -1063,7 +1060,6 @@ local IconEvents = {
     GROUP_ROSTER_UPDATE = true,
     INCOMING_RESURRECT_CHANGED = true,
     INCOMING_SUMMON_CHANGED = true,
-    UNIT_PHASE = true,
     PLAYER_ROLES_ASSIGNED = true,
 }
 
@@ -1074,23 +1070,22 @@ function UF:OnEvent(event, unit, ...)
         C_Timer.After(0.7, function()
             UF:FullRefresh()
             UF:UpdatePlayerPortrait()
-            UF:UpdateTargetPortrait()
         end)
     elseif (event == "PLAYER_TARGET_CHANGED") then
-        UF:RefreshUnit("target")
-        UF:RefreshUnit("player")
-        UF:RefreshUnit("targettarget")
+        UF:RefreshUnit("target", true)
+        UF:RefreshUnit("player", true)
+        UF:RefreshUnit("targettarget", true)
         UF:UpdateTargetPortrait()
         UF:ClearCastBarOnUnit("target")
     elseif (event == "UNIT_TARGET" and unit == "target") then
-        UF:RefreshUnit("targettarget")
+        UF:RefreshUnit("targettarget", true)
     elseif (event == "UNIT_PET") then
-        UF:RefreshUnit("pet")
+        UF:RefreshUnit("pet", true)
     elseif (event == "PLAYER_FOCUS_CHANGED") then
-        UF:RefreshUnit("focus")
+        UF:RefreshUnit("focus", true)
     elseif (event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" or event == "UNIT_TARGETABLE_CHANGED") then
         for i = 1, 5 do
-            UF:RefreshUnit("boss"..i)
+            UF:RefreshUnit("boss"..i, true)
         end
     end
 
@@ -1102,12 +1097,14 @@ function UF:OnEvent(event, unit, ...)
         UF:CastStarted(event, unit)
     elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") then
         UF:CastStopped(event, unit, ...)
-    elseif (event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_INTERRUPTED") then
+    elseif (event == "UNIT_SPELLCAST_FAILED") then
         UF:CastFailed(event, unit, ...)
+    elseif (event == "UNIT_SPELLCAST_INTERRUPTED") then
+        UF:CastInterrupted(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_SUCCEEDED") then
-        UF:CastSucceeded(event, unit, ...)
+        --UF:CastSucceeded(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
-        UF:CastUpdated(event, unit)
+        UF:CastUpdated(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
         UF:CastNonInterruptable(event, unit)
     end
@@ -1120,7 +1117,7 @@ function UF:OnEvent(event, unit, ...)
         UF:QueueUpdate(FramesUF, unit, "NeedsAuras")
     elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
         UF:QueueUpdate(FramesUF, unit, "NeedsHealth")
-        UF:RefreshUnit("targettarget")
+        UF:RefreshUnit("targettarget", true)
     elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
         UF:QueueUpdate(FramesUF, unit, "NeedsHealthPred")
     elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER") then
@@ -1131,8 +1128,6 @@ function UF:OnEvent(event, unit, ...)
         UF:QueueUpdate(FramesUF, unit, "NeedsThreat")
     elseif (event == "UNIT_MODEL_CHANGED" or event == "UNIT_PORTRAIT_UPDATE" or event == "PORTRAITS_UPDATED") then
         UF:QueueUpdate(FramesUF, unit, "NeedsPortrait")
-    elseif (event == "UNIT_FLAGS") then
-        UF:QueueUpdate(FramesUF, unit, "NeedsIcons")
     end
 end
 
@@ -1219,5 +1214,4 @@ function UF:Initialize()
     self:DisableBlizzard()
     self:CreateUF()
     self:RegisterEvents()
-    self:UpdateQueueTicker()
 end

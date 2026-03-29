@@ -155,11 +155,11 @@ DB.Global = {
 
 	Nameplates = {
 		Enable = true,
-		Size = { 188, 18 },
+		Size = { 182, 12 },
 		-- Colors
 		HealthBarColor = { 0.5, 0.4, 1, 0.7 },
 		UnitColors = false,
-		ReactionColor = true,
+		ReactionColor = false,
 		-- Target Indicator Color
 		TargetIndicatorColor = { 0.30, 0.70, 1 },
 	},

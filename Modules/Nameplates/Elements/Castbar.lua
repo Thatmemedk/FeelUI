@@ -92,46 +92,35 @@ function NP:CastStarted(Event, Unit)
     local Frame = NP.UnitFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
-    if (not Castbar or not Unit) then
+    if (not Castbar) then
         return
     end
 
     -- Cache Names
-    local Name, Text, Icon, StartTime, EndTime, IsTradeSkill, CastID, NotInterruptible, SpellID = UnitCastingInfo(Unit)
+    local Direction, Duration = Enum.StatusBarTimerDirection.ElapsedTime
+    local Name, Text, Icon, StartTime, EndTime, _, _, NotInterruptible, SpellID, CastID = UnitCastingInfo(Unit)
 
-    -- Normal Casts
     if (Name) then
         Castbar.Casting = true
 
-        Castbar.Duration = UnitCastingDuration(Unit)
-        Castbar.Direction = UI.DirectionElapsed
+        Duration = UnitCastingDuration(Unit)
     else
-        -- Channel / Empower Casts
-        local Empowered
-        Name, Text, Icon, StartTime, EndTime, IsTradeSkill, NotInterruptible, SpellID, Empowered, _, CastID = UnitChannelInfo(Unit)
-        
-        if (Empowered) then
+        local IsEmpowered
+        Name, Text, Icon, StartTime, EndTime, _, NotInterruptible, SpellID, IsEmpowered, _, CastID = UnitChannelInfo(Unit)
+
+        if (IsEmpowered) then
             Castbar.Empower = true
 
-            Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
-            Castbar.Direction = UI.DirectionElapsed
+            Duration = UnitEmpoweredChannelDuration(Unit)
         else
             Castbar.Channel = true
 
-            Castbar.Duration = UnitChannelDuration(Unit)
-            Castbar.Direction = UI.DirectionRemaining
+            Duration = UnitChannelDuration(Unit)
+            Direction = Enum.StatusBarTimerDirection.RemainingTime
         end
     end
 
     if (not Name) then
-        if (Event ~= "PLAYER_TARGET_CHANGED") then
-            -- Reset CastBar
-            NP:ResetCastBar(Castbar)
-            
-            -- Call Fade
-            Castbar:SetAlpha(0)
-        end
-
         return
     end
 
@@ -143,7 +132,7 @@ function NP:CastStarted(Event, Unit)
     Castbar.CastDelayed = 0
 
     -- Set Values
-    Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBars, Castbar.Direction)
+    Castbar:SetTimerDuration(Duration, UI.SmoothBars, Direction)
 
     -- Interrupt Color
     Castbar:GetStatusBarTexture():SetVertexColorFromBoolean(NotInterruptible, CreateColor(0.67, 0, 0, 0.7), CreateColor(0.45, 0.45, 0.45, 0.7))
@@ -171,24 +160,18 @@ function NP:CastSucceeded(Event, Unit)
     local Frame = NP.UnitFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
-    if (not Castbar or not Unit) then
+    if (not Castbar) then
         return
     end
 
     Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarSucceededColor))
-
-    -- Reset CastBar
-    NP:ResetCastBar(Castbar)
-    
-    -- Call Fade
-    UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
 end
 
 function NP:CastStopped(Event, Unit, _, _, ...)
     local Frame = NP.UnitFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
-    if (not Castbar or not Unit) then
+    if (not Castbar) then
         return
     end
 
@@ -202,32 +185,65 @@ function NP:CastStopped(Event, Unit, _, _, ...)
         _, InterruptedBy, CastID = ...
     end
 
-    if (CastID and Castbar.CastID and Castbar.CastID ~= CastID) then
-        -- Reset CastBar
-        NP:ResetCastBar(Castbar)
-        
-        -- Call Fade
-        UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
-
-        if (InterruptedBy) then
-            -- Set Text
-            Castbar.Text:SetText(INTERRUPTED)
-
-            -- Set Values
-            Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
-            Castbar:SetValue(1, UI.SmoothBars)
-            Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
-        end
-
+    if (not CastID or Castbar.CastID ~= CastID) then
         return
     end
+
+    if (InterruptedBy) then
+        -- Set Text
+        Castbar.Text:SetText(INTERRUPTED)
+
+        -- Set Values
+        Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
+        Castbar:SetValue(1, UI.SmoothBars)
+        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
+    end
+
+    -- Reset CastBar
+    NP:ResetCastBar(Castbar)
+    
+    -- Call Fade
+    UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
 end
 
 function NP:CastFailed(Event, Unit, _, _, ...)
     local Frame = NP.UnitFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
-    if (not Castbar or not Unit) then
+    if (not Castbar) then
+        return
+    end
+
+    local CastID, InterruptedBy
+
+    if (Event == "UNIT_SPELLCAST_FAILED") then
+        CastID = ...
+    end
+
+    if (not CastID or Castbar.CastID ~= CastID) then
+        return
+    end
+
+    -- Set Text
+    Castbar.Text:SetText(FAILED)
+
+    -- Set Values
+    Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
+    Castbar:SetValue(1, UI.SmoothBars)
+    Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
+
+    -- Reset CastBar
+    NP:ResetCastBar(Castbar)
+
+    -- Call Fade
+    UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
+end
+
+function NP:CastInterrupted(Event, Unit, _, _, ...)
+    local Frame = NP.UnitFrames[Unit]
+    local Castbar = Frame and Frame.Castbar
+
+    if (not Castbar) then
         return
     end
 
@@ -235,16 +251,32 @@ function NP:CastFailed(Event, Unit, _, _, ...)
 
     if (Event == "UNIT_SPELLCAST_INTERRUPTED") then
         InterruptedBy, CastID = ...
-    elseif (Event == "UNIT_SPELLCAST_FAILED") then
-        CastID = ...
     end
 
-    if (CastID and Castbar.CastID and Castbar.CastID ~= CastID) then
+    if (not CastID or Castbar.CastID ~= CastID) then
+        -- Set Text
+        Castbar.Text:SetText(INTERRUPTED)
+
+        -- Set Values
+        Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
+        Castbar:SetValue(1, UI.SmoothBars)
+        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
+
+        -- Reset CastBar
+        NP:ResetCastBar(Castbar)
+        
+        -- Call Fade
+        UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
+
+        if (InterruptedBy) then
+            --Castbar.Text:SetText(INTERRUPTED..InterruptedBy)
+        end
+
         return
     end
 
     -- Set Text
-    Castbar.Text:SetText(Event == "UNIT_SPELLCAST_FAILED" and FAILED or INTERRUPTED)
+    Castbar.Text:SetText(INTERRUPTED)
 
     -- Set Values
     Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
@@ -262,33 +294,27 @@ function NP:CastUpdated(Event, Unit, _, _, CastID)
     local Frame = NP.UnitFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
-    if (not Castbar or not Unit) then
+    if (not Castbar) then
         return
     end
 
-    if (CastID and Castbar.CastID and Castbar.CastID ~= CastID) then
+    if (not CastID or Castbar.CastID ~= CastID) then
         return
     end
 
-    -- Cache Names
-    local Name, Icon, StartTime, EndTime
+    local Direction, Duration, Name, StartTime, _ = Enum.StatusBarTimerDirection.ElapsedTime
 
-    -- Normal Casts
     if (Event == "UNIT_SPELLCAST_DELAYED") then
-        Name, _, _, StartTime, EndTime = UnitCastingInfo(Unit)
-
-        Castbar.Duration = UnitChannelDuration(Unit)
-        Castbar.Direction = UI.DirectionElapsed
+        Name, _, _, StartTime = UnitCastingInfo(Unit)
+        Duration = UnitCastingDuration(Unit)
     else
-        -- Channel Casts / Empower Casts
-        Name, _, _, StartTime, EndTime = UnitChannelInfo(Unit)
+        Name, _, _, StartTime = UnitChannelInfo(Unit)
 
         if (Event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
-            Castbar.Duration = UnitEmpoweredChannelDuration(Unit)
-            Castbar.Direction = UI.DirectionElapsed
+            Duration = UnitEmpoweredChannelDuration(Unit)
         else
-            Castbar.Duration = UnitChannelDuration(Unit)
-            Castbar.Direction = UI.DirectionRemaining
+            Duration = UnitChannelDuration(Unit)
+            Direction = Enum.StatusBarTimerDirection.RemainingTime
         end
     end
 
@@ -296,15 +322,34 @@ function NP:CastUpdated(Event, Unit, _, _, CastID)
         return
     end
 
+    if (Unit == "player") then
+        -- Convert milliseconds to seconds
+        StartTime = StartTime / 1000
+        
+        local Delay
+
+        if (Castbar.Channel) then
+            Delay = Castbar.StartTime - StartTime
+        else
+            Delay = StartTime - Castbar.StartTime
+        end
+
+        if (Delay < 0) then
+            Delay = 0
+        end
+
+        Castbar.CastDelayed = Castbar.CastDelayed + Delay
+    end
+
     -- Set Values
-    Castbar:SetTimerDuration(Castbar.Duration, UI.SmoothBars, Castbar.Direction)
+    Castbar:SetTimerDuration(Duration, UI.SmoothBars, Direction)
 end
 
 function NP:CastNonInterruptable(Event, Unit)
     local Frame = NP.UnitFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
-    if (not Castbar or not Unit) then   
+    if (not Castbar) then   
         return
     end
 
@@ -318,28 +363,23 @@ function NP.CastBarOnUpdate(Castbar)
         return
     end
 
-    if (Castbar.Casting or Castbar.Channel or Castbar.Empower) then
-        if (Castbar.Time) then
-            local DurationObject = Castbar:GetTimerDuration()
-
-            if (DurationObject) then
-                if (Castbar.CastDelayed ~= 0) then
-                    local Duration = Castbar:GetTimerDuration():GetElapsedDuration()
-                    local Total = Castbar:GetTimerDuration():GetTotalDuration()
-                    
-                    Castbar.Time:SetFormattedText("%.1fs/%.1fs |cffff0000%s%.2f|r", Duration, Total, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
-                else
-                    local Duration = Castbar:GetTimerDuration():GetElapsedDuration()
-                    local Total = Castbar:GetTimerDuration():GetTotalDuration()
-
-                    Castbar.Time:SetFormattedText("%.1fs/%.1fs", Duration, Total)
-                end
-            end
-        else
-            return
-        end
-    else
+    if not (Castbar.Casting or Castbar.Channel or Castbar.Empower) then
         return
+    end
+
+    if (Castbar.Time) then
+        local DurationObject = Castbar:GetTimerDuration()
+
+        if (DurationObject) then
+            local Duration = DurationObject:GetElapsedDuration()
+            local Total = DurationObject:GetTotalDuration()
+
+            if (Castbar.CastDelayed ~= 0) then
+                Castbar.Time:SetFormattedText("%.1fs/%.1fs |cffff0000%s%.2f|r", Duration, Total, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
+            else
+                Castbar.Time:SetFormattedText("%.1fs/%.1fs", Duration, Total)
+            end
+        end
     end
 end
 
@@ -365,13 +405,16 @@ function NP:CreateCastBar(Frame)
     local Width, Height = unpack(DB.Global.Nameplates.Size)
 
     local Castbar = CreateFrame("StatusBar", nil, Frame)
-    Castbar:Size(Width, Height+2)
+    Castbar:Size(Width, 20)
     Castbar:Point("BOTTOM", Frame, 0, -22)
     Castbar:SetStatusBarTexture(Media.Global.Texture)
     Castbar:CreateBackdrop()
     Castbar:CreateShadow()
     Castbar:CreateSpark()
     Castbar:SetAlpha(0)
+
+    -- Call On Update
+    Castbar:SetScript("OnUpdate", NP.CastBarOnUpdate)
 
     local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
     CastbarIcon:Size(36, 26)
@@ -400,7 +443,4 @@ function NP:CreateCastBar(Frame)
     Frame.Castbar.Icon = CastbarIcon
     Frame.Castbar.Time = CastbarTime
     Frame.Castbar.Text = CastbarText
-
-    -- Call On Update
-    Castbar:SetScript("OnUpdate", NP.CastBarOnUpdate)
 end

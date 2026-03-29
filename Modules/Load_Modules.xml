@@ -66,6 +66,7 @@
 	<Script file="Skins\Blizzard\DeathRecap.lua"/>
 	<Script file="Skins\Blizzard\DropDown.lua"/>
 	<Script file="Skins\Blizzard\EncounterWarnings.lua"/>
+	<Script file="Skins\Blizzard\EncounterTimeline.lua"/>
 	<Script file="Skins\Blizzard\GameMenu.lua"/>
 	<Script file="Skins\Blizzard\GhostFrame.lua"/>
 	<Script file="Skins\Blizzard\StackSplitFrame.lua"/>

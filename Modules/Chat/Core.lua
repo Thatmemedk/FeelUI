@@ -9,9 +9,8 @@ local _G = _G
 local unpack = unpack
 local select = select
 local type = type
-local gsub = gsub
 local format = format
-local strsub = strsub
+local date = date
 
 -- WoW Globals
 local ChatFrame1Tab = _G.ChatFrame1Tab
@@ -22,9 +21,21 @@ local ChatConfigFrameDefaultButton = _G.ChatConfigFrameDefaultButton
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
 
-local strfind = string.find
-local strmatch = string.match
-local date = date
+function CH:AddMessage(msg, ...)
+	if (UI:IsSecretValue(msg)) then
+		return self:OldAddMessage(msg, ...)
+	end
+
+	if (type(msg) == "string" and msg:find("|K")) then
+		return self:OldAddMessage(msg, ...)
+	end
+
+	if (type(msg) == "string") then
+		msg = date("|CFF909090[%H:%M:%S]|r ") .. " " .. msg
+	end
+
+	return self:OldAddMessage(msg, ...)
+end
 
 function CH:StyleFrames(Frame)
 	if (Frame.ChatIsSkinned) then
@@ -75,6 +86,11 @@ function CH:StyleFrames(Frame)
 	if (Scroll) then Scroll:Kill() end
 	if (ScrollBottom) then ScrollBottom:Kill() end
 	if (MinimizeButton) then MinimizeButton:Kill() end
+
+	if (i ~= 2 and not Frame.OldAddMessage) then
+		Frame.OldAddMessage = Frame.AddMessage
+		Frame.AddMessage = CH.AddMessage
+	end
 
 	Frame.ChatIsSkinned = true
 end

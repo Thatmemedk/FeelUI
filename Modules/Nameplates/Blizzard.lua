@@ -5,19 +5,6 @@ local NP = UI:CallModule("NamePlates")
 
 --- HIDE BLIZZARD NP
 
-  local BlizzFrames = {
-    "name",
-    "castBar",
-    "SoftTargetFrame",
-    "HealthBarsContainer",
-    "RaidTargetFrame",
-    "ClassificationFrame",
-    "PlayerLevelDiffFrame",
-    "aggroHighlight",
-    "aggroHighlightBase",
-    "aggroHighlightAdditive",
-  }
-
 function NP:DisableBlizzard()
     hooksecurefunc(_G.NamePlateDriverFrame, "OnNamePlateAdded", function(_, Unit)
         if (Unit == "preview") then

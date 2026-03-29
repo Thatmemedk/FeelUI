@@ -88,14 +88,14 @@ function Auras:UpdateAura(Index)
 	end
 
 	if (self.Cooldown) then
-		if (C_StringUtil.TruncateWhenZero(AuraData.duration)) then
-			self.Cooldown:SetCooldown(AuraData.duration, AuraData.expirationTime) 
-			self.Cooldown:SetCooldownFromExpirationTime(AuraData.expirationTime, AuraData.duration)
+        local CD = C_UnitAuras.GetAuraDuration(Unit, AuraData.auraInstanceID)
 
-			UI:RegisterCooldown(self.Cooldown, self.InvisFrame, 0, -8, false, true)
-		end
-	else
-		self.Cooldown:Hide()
+        if (CD) then
+            self.Cooldown:SetCooldownFromDurationObject(CD)
+            self.Cooldown:Show()
+        else
+            self.Cooldown:Hide()
+        end
 	end
 
 	if (self.Filter == "HARMFUL") then
@@ -183,6 +183,9 @@ function Auras:Skin()
 	Cooldown:SetInside()
 	Cooldown:SetDrawEdge(false)
 	Cooldown:SetSwipeColor(0, 0, 0, 0)
+	Cooldown:Hide()
+
+	UI:RegisterCooldown(Cooldown, InvisFrame, 0, -8, false, true)
 
 	local TempEnchHighlight = self:CreateTexture(nil, "OVERLAY")
 	TempEnchHighlight:SetBlendMode("ADD")
