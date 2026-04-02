@@ -43,7 +43,7 @@ DB.Global = {
 		EquipColor = { 0.64, 0.19, 0.79, 0.5 },
 		OverlayGlowColor = { R, G, B, 0.80 },
 		-- Points Settings
-		Bar1Point = { "BOTTOM", _G.UIParent, 0, 122 }
+		Bar1Point = { "BOTTOM", _G.UIParent, 0, 122 },
 	},
 
 	Auras = {
@@ -54,7 +54,12 @@ DB.Global = {
 		ButtonPerRow = 12,
 		ButtonRowSpacing = 12,
 		-- Points Settings
-		AuraPoint = { "TOPRIGHT", _G.UIParent, -182, -6 },
+		Point = { "TOPRIGHT", _G.UIParent, -182, -6 },
+	},
+
+	PrivateAuras = {
+		Enable = true,
+		Point = { "TOPRIGHT", _G.UIParent, -182, -6 },
 	},
 
 	AFK = {
@@ -91,6 +96,12 @@ DB.Global = {
 		UtilityViewerPoint = { "CENTER", _G.UIParent, 0, -248 },
 	},
 
+	PotionButtonMenu = {
+		ButtonSize = { 38 , 12 }
+		ButtonSpacing = 2,
+		Point = { "BOTTOMLEFT", _G.UIParent, 482, 282 },
+	}
+
 	ScrollingCombatText = {
 		Enable = true,
 	},
@@ -117,7 +128,7 @@ DB.Global = {
 	},
 
 	ErrorsFrame = {
-		Enable = true,
+		Enable = false,
 		-- Colors Settings
 		TextColor = { 1, 1, 1 },
 	},
@@ -158,7 +169,7 @@ DB.Global = {
 		Size = { 182, 12 },
 		-- Colors
 		HealthBarColor = { 0.5, 0.4, 1, 0.7 },
-		UnitColors = false,
+		UnitColors = true,
 		ReactionColor = false,
 		-- Target Indicator Color
 		TargetIndicatorColor = { 0.30, 0.70, 1 },

@@ -94,9 +94,7 @@ function UF:UpdateHealth(Frame, Unit)
         return
     end
 
-    --local Unit = Frame.unit
     local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
-
     Frame.Health:SetMinMaxValues(0, Max, UI.SmoothBars)
     Frame.Health:SetValue(Min, UI.SmoothBars)
 

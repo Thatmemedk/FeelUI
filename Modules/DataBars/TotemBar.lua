@@ -73,6 +73,21 @@ function TotemBar:OnEvent(event)
 
             if (Button.Cooldown) then
                 Button.Cooldown:SetCooldownFromDurationObject(DurationObject)
+
+                for i = 1, Button.Cooldown:GetNumRegions() do
+                    local Region = select(i, Button.Cooldown:GetRegions())
+
+                    if (Region.GetText) then
+                        if (Region and Region.GetText) then
+                            local FontSize = UI:GetCooldownFontScale(Button.Cooldown)
+
+                            Region:ClearAllPoints()
+                            Region:Point("CENTER", Button, 0, -6)
+                            Region:SetFontTemplate("Default", FontSize)
+                            Region:SetTextColor(1, 0.82, 0)
+                        end
+                    end
+                end
             end
       	else
             UI:UIFrameFadeOut(Button, 0.25, Button:GetAlpha(), 0)

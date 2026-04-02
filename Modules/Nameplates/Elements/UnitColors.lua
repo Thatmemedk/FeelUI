@@ -18,7 +18,7 @@ local UnitClass = UnitClass
 local UnitEffectiveLevel = UnitEffectiveLevel
 
 function NP:GetUnitColor(Unit, IsCaster)
-    if (not UnitExists(Unit)) then
+    if (not Unit) then
         return
     end
 
@@ -67,52 +67,5 @@ function NP:GetUnitColor(Unit, IsCaster)
         end
     elseif (Classif == "normal" or Classif == "trivial") then
         return UI.Colors.Reaction[Reaction]
-    end
-
-    return UI.Colors.Reaction[Reaction]
-end
-
-function NP:SetNameplateColor(Unit, IsCaster)
-    if (not DB.Global.Nameplates.UnitColors) then
-        return
-    end
-
-    if (not Unit or not UnitIsEnemy("player", Unit)) then
-        return
-    end
-
-    local NamePlate = C_NamePlate.GetNamePlateForUnit(Unit)
-    
-    if (not NamePlate) then
-        return
-    end
-
-    local EnemyFrame = NamePlate.FeelUINameplatesEnemy
-
-    if (not EnemyFrame or not EnemyFrame.Health) then
-        return
-    end
-
-    -- Update persistent caster cache
-    if (IsCasting) then
-        NP.ForcedCasters[Unit] = true
-    end
-
-    -- Determine final caster flag: currently casting OR persistent
-    local FinalIsCaster = IsCaster or IsCasting or NP.ForcedCasters[Unit]
-
-    -- Get the color from your dungeon-only logic
-    local Color = self:GetUnitColor(Unit, FinalIsCaster)
-
-    if (not Color) then
-        return
-    end
-
-    EnemyFrame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
-end
-
-function NP:ClearForcedCasters(Unit)
-    if (NP.ForcedCasters[Unit]) then
-        NP.ForcedCasters[Unit] = nil
     end
 end

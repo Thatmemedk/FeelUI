@@ -38,6 +38,7 @@ function UF:SetupGroupFrame(Frame, type)
         end
 
         if (self.unit) then
+            UF:QueueUpdate(self, self.unit, "NeedsAuras")
             UF:QueueUpdate(self, self.unit, "NeedsHealth")
             UF:QueueUpdate(self, self.unit, "NeedsHealthPred")
             UF:QueueUpdate(self, self.unit, "NeedsPower")

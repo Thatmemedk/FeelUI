@@ -11,6 +11,8 @@ local select = select
 local type = type
 local format = format
 local date = date
+local gsub = gsub
+local find = find
 
 -- WoW Globals
 local ChatFrame1Tab = _G.ChatFrame1Tab
@@ -21,20 +23,30 @@ local ChatConfigFrameDefaultButton = _G.ChatConfigFrameDefaultButton
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
 
-function CH:AddMessage(msg, ...)
+local CanChangeMessage = function(arg1, ID)
+	if (ID and arg1 == "") then 
+		return ID 
+	end
+end
+
+function CH:MessageIsProtected(msg)
 	if (UI:IsSecretValue(msg)) then
-		return self:OldAddMessage(msg, ...)
+		return true
 	end
 
-	if (type(msg) == "string" and msg:find("|K")) then
-		return self:OldAddMessage(msg, ...)
+	return msg and (msg ~= gsub(msg, "(:?|?)|K(.-)|k", CanChangeMessage))
+end
+
+function CH:AddMessage(msg, ...)
+	local IsProtected = CH:MessageIsProtected(msg)
+
+	if (IsProtected or (type(msg) == "string" and (strmatch(msg, "^%s*$") or strmatch(msg, "^|Helvtime|h") or strmatch(msg, "^|Hcpl:")))) then
+		return msg
 	end
 
-	if (type(msg) == "string") then
-		msg = date("|CFF909090[%H:%M:%S]|r ") .. " " .. msg
-	end
+	msg = date("|CFF909090%H:%M:%S|r ") .. " " .. msg
 
-	return self:OldAddMessage(msg, ...)
+	return msg
 end
 
 function CH:StyleFrames(Frame)
@@ -87,9 +99,14 @@ function CH:StyleFrames(Frame)
 	if (ScrollBottom) then ScrollBottom:Kill() end
 	if (MinimizeButton) then MinimizeButton:Kill() end
 
-	if (i ~= 2 and not Frame.OldAddMessage) then
+	if (ID ~= 2) then
 		Frame.OldAddMessage = Frame.AddMessage
-		Frame.AddMessage = CH.AddMessage
+
+		Frame.AddMessage = function(self, msg, ...)
+			msg = CH:AddMessage(msg, ...)
+			
+			return self:OldAddMessage(msg, ...)
+		end
 	end
 
 	Frame.ChatIsSkinned = true
@@ -150,7 +167,7 @@ function CH:SetupChat()
 		local Frame = _G["ChatFrame"..i]
 		self:StyleFrames(Frame)
 		
-		if not (Frame.isLocked) then
+		if (not Frame.isLocked) then
 			FCF_SetLocked(Frame, 1)
 		end
 

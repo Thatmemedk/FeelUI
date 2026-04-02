@@ -110,10 +110,6 @@ function LibBackdropTemplateMixin:SetupTextureCoordinates()
         return
     end
 
-    if (not Width or not Height or Width <= 0 or Height <= 0) then
-        return
-    end
-
     local EdgeRepeatX = max(0, (Width / EdgeSize) * EffectiveScale -2 - CoordStart)
     local EdgeRepeatY = max(0, (Height / EdgeSize) * EffectiveScale -2 - CoordStart)
 

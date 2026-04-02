@@ -20,6 +20,7 @@
 	<Script file="ActionBars\Glow.lua"/>
 	<!-- Auras -->
 	<Include file="Auras\SecureAuraTemplate.xml"/>
+	<Script file="Auras\PrivateAuras.lua"/>
 	<!-- Chat -->
 	<Script file="Chat\Core.lua"/>
 	<Script file="Chat\CopyChat.lua"/>
@@ -58,7 +59,9 @@
 	<Script file="Misc\LossControl.lua"/>
 	<Script file="Misc\Merchant.lua"/>
 	<Script file="Misc\MirrorTimers.lua"/>
+	<Script file="Misc\NoPetAlert.lua"/>
 	<Script file="Misc\ObjectiveTracker.lua"/>
+	<Script file="Misc\PotionButtonMenu.lua"/>
 	<Script file="Misc\TimeTrackers.lua"/>
 	<!-- Skins Blizzard -->
 	<Script file="Skins\Blizzard\Bubbles.lua"/>
@@ -81,6 +84,7 @@
 	<Script file="Nameplates\Elements\Auras.lua"/>
 	<Script file="Nameplates\Elements\Castbar.lua"/>
 	<Script file="Nameplates\Elements\Health.lua"/>
+	<Script file="Nameplates\Elements\HealthPred.lua"/>
 	<Script file="Nameplates\Elements\Highlight.lua"/>
 	<Script file="Nameplates\Elements\Icons.lua"/>
 	<Script file="Nameplates\Elements\Texts.lua"/>

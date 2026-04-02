@@ -276,7 +276,7 @@ end
 
 function Auras:CreateAuras()
 	self.BuffFrame = self:CreateAuraHeader("HELPFUL")
-	self.BuffFrame:Point(unpack(DB.Global.Auras.AuraPoint))
+	self.BuffFrame:Point(unpack(DB.Global.Auras.Point))
 
 	self.DebuffFrame = self:CreateAuraHeader("HARMFUL")
 	self.DebuffFrame:Point("TOPRIGHT", self.BuffFrame, 0, -42*3)

@@ -116,92 +116,94 @@ function TT:ApplyDefaultStatusBarColor()
     GameTooltipStatusBar:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
 end
 
-function TT:FormatUnitName(Unit)
-    local Name, Realm = UnitName(Unit)
-    local Title = UnitPVPName(Unit)
-    local Relationship = UnitRealmRelationship(Unit)
-    local Color = TT:GetColor(Unit) or "|CFFFFFFFF"
-    local StatusText = ""
+function TT:FormatUnitName(Unit, Player)
+    if (Player and not UI:IsSecretUnit(Unit)) then
+        local Name, Realm = UnitName(Unit)
+        local Title = UnitPVPName(Unit)
+        local Relationship = UnitRealmRelationship(Unit)
+        local Color = TT:GetColor(Unit) or "|CFFFFFFFF"
+        local StatusText = ""
 
-    if (Title) then
-        Name = Title
-    end
-
-    if (Realm and Realm ~= "") then
-        if IsShiftKeyDown() then
-            Name = Name .. "-" .. Realm
-        elseif (Relationship == LE_REALM_RELATION_COALESCED) then
-            Name = Name .. FOREIGN_SERVER_LABEL
-        elseif (Relationship == LE_REALM_RELATION_VIRTUAL) then
-            Name = Name .. INTERACTIVE_SERVER_LABEL
-        end
-    end
-
-    --[[
-    if (UnitIsAFK(Unit)) then
-        StatusText = " |CFF559655" .. CHAT_FLAG_AFK .. "|r"
-    elseif (UnitIsDND(Unit)) then
-        StatusText = " |CFF559655" .. CHAT_FLAG_DND .. "|r"
-    end
-    --]]
-
-    _G.GameTooltipTextLeft1:SetFormattedText("%s%s%s%s", Color, Name, "|r", StatusText) 
-end
-
-function TT:FormatGuildInfo(Unit)
-    local GuildName, GuildRankName = GetGuildInfo(Unit)
-
-    if (not GuildName) then 
-        return 
-    end
-
-    local SameGuild = IsInGuild() and GetGuildInfo("player") == GuildName
-    local Color = SameGuild and "|CFFFF66CC[%s]|r |CFF00FF10[%s]|r" or "|CFFFFFFFF[%s]|r |CFF00FF10[%s]|r"
-
-    _G.GameTooltipTextLeft2:SetFormattedText(Color, GuildName, GuildRankName)
-end
-
-function TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Race, CreatureType, ClassificationUnit, Level)
-    local ClassColor = UI.Colors.Class[ClassFile]
-    local DiffColor = GetQuestDifficultyColor(Level)
-    local LevelColor
-
-    if (Level == -1 or ClassificationUnit == "worldboss") then
-        LevelColor = { r = 1, g = 0, b = 0 }
-    else
-        LevelColor = DiffColor
-    end
-
-    for i = 2, NumLines do
-        local Line = _G["GameTooltipTextLeft" .. i]
-        local Text = Line and Line:GetText()
-        local LowerText = Text:lower()
-
-        if (not Text) then
-            break
+        if (Title) then
+            Name = Title
         end
 
-        if (issecretvalue(Text)) then
-            return
-        end
-
-        if (Player and ClassName and LowerText:find(ClassName:lower()) and not LowerText:find("alliance") and not LowerText:find("horde")) then
-            local SpecText = Text:gsub(ClassName, ""):trim()
-            Line:SetFormattedText("|cFFFFFFFF%s |cff%02x%02x%02x%s|r", SpecText, ClassColor[1]*255, ClassColor[2]*255, ClassColor[3]*255, ClassName)
-        end
-
-        if (LowerText:find(LEVEL1) or LowerText:find(LEVEL2)) then
-            if (Player) then
-                Line:SetFormattedText("Level |cff%02x%02x%02x%s|r %s", DiffColor.r * 255, DiffColor.g * 255, DiffColor.b * 255, Level > 0 and Level or "??", Race or "")
-            else
-                local ClassText = ClassificationText[ClassificationUnit] or ""
-                Line:SetFormattedText("Level |cff%02x%02x%02x%s|r %s%s", LevelColor.r * 255, LevelColor.g * 255, LevelColor.b * 255, Level > 0 and Level or "??", ClassText, CreatureType or "")
+        if (Realm and Realm ~= "") then
+            if IsShiftKeyDown() then
+                Name = Name .. "-" .. Realm
+            elseif (Relationship == LE_REALM_RELATION_COALESCED) then
+                Name = Name .. FOREIGN_SERVER_LABEL
+            elseif (Relationship == LE_REALM_RELATION_VIRTUAL) then
+                Name = Name .. INTERACTIVE_SERVER_LABEL
             end
         end
 
-        if (Text == CreatureType or Text == _G.FACTION_HORDE or Text == _G.FACTION_ALLIANCE or Text == _G.PVP) then
-            Line:SetText("")
-            Line:Hide()
+        --[[
+        if (UnitIsAFK(Unit)) then
+            StatusText = " |CFF559655" .. CHAT_FLAG_AFK .. "|r"
+        elseif (UnitIsDND(Unit)) then
+            StatusText = " |CFF559655" .. CHAT_FLAG_DND .. "|r"
+        end
+        --]]
+
+        _G.GameTooltipTextLeft1:SetFormattedText("%s%s%s%s", Color, Name, "|r", StatusText)
+    end
+end
+
+function TT:FormatGuildInfo(Unit, Player)
+    if (Player and not UI:IsSecretUnit(Unit)) then
+        local GuildName, GuildRankName = GetGuildInfo(Unit)
+
+        if (not GuildName) then 
+            return 
+        end
+
+        local SameGuild = IsInGuild() and GetGuildInfo("player") == GuildName
+        local Color = SameGuild and "|CFFFF66CC[%s]|r |CFF00FF10[%s]|r" or "|CFFFFFFFF[%s]|r |CFF00FF10[%s]|r"
+
+        _G.GameTooltipTextLeft2:SetFormattedText(Color, GuildName, GuildRankName)
+    end
+end
+
+function TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Race, CreatureType, ClassificationUnit, Level)
+    if (Player and not UI:IsSecretUnit(Unit)) then
+        local ClassColor = UI.Colors.Class[ClassFile]
+        local DiffColor = GetQuestDifficultyColor(Level)
+        local LevelColor
+
+        if (Level == -1 or ClassificationUnit == "worldboss") then
+            LevelColor = { r = 1, g = 0, b = 0 }
+        else
+            LevelColor = DiffColor
+        end
+
+        for i = 2, NumLines do
+            local Line = _G["GameTooltipTextLeft" .. i]
+            local Text = Line and Line:GetText()
+            local LowerText = Text:lower()
+
+            if (not Text) then
+                break
+            end
+
+            if (Player and ClassName and LowerText:find(ClassName:lower()) and not LowerText:find("alliance") and not LowerText:find("horde")) then
+                local SpecText = Text:gsub(ClassName, ""):trim()
+                Line:SetFormattedText("|cFFFFFFFF%s |cff%02x%02x%02x%s|r", SpecText, ClassColor[1]*255, ClassColor[2]*255, ClassColor[3]*255, ClassName)
+            end
+
+            if (LowerText:find(LEVEL1) or LowerText:find(LEVEL2)) then
+                if (Player) then
+                    Line:SetFormattedText("Level |cff%02x%02x%02x%s|r %s", DiffColor.r * 255, DiffColor.g * 255, DiffColor.b * 255, Level > 0 and Level or "??", Race or "")
+                else
+                    local ClassText = ClassificationText[ClassificationUnit] or ""
+                    Line:SetFormattedText("Level |cff%02x%02x%02x%s|r %s%s", LevelColor.r * 255, LevelColor.g * 255, LevelColor.b * 255, Level > 0 and Level or "??", ClassText, CreatureType or "")
+                end
+            end
+
+            if (Text == CreatureType or Text == _G.FACTION_HORDE or Text == _G.FACTION_ALLIANCE or Text == _G.PVP) then
+                Line:SetText("")
+                Line:Hide()
+            end
         end
     end
 end
@@ -236,9 +238,9 @@ function TT:OnTooltipSetUnit()
     local ClassificationUnit = UnitClassification(Unit)
     local Reaction = UnitReaction(Unit, "player")
 
-    TT:FormatUnitName(Unit)
-    TT:FormatGuildInfo(Unit)
-    --TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Race, CreatureType, ClassificationUnit, Level)
+    TT:FormatUnitName(Unit, Player)
+    TT:FormatGuildInfo(Unit, Player)
+    TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Race, CreatureType, ClassificationUnit, Level)
     TT:ApplyStatusBarColor(Unit, ClassFile, Reaction)
 end
 
@@ -305,6 +307,11 @@ function TT:StyleTooltips()
         end
     end
 
+    _G.AutoCompleteBox.NineSlice:SetAlpha(0)
+    _G.AutoCompleteBox:StripTexture()
+    _G.AutoCompleteBox:CreateBackdrop()
+    _G.AutoCompleteBox:CreateShadow()
+    
     hooksecurefunc("SharedTooltip_SetBackdropStyle", self.SetBackdropStyle) 
 end
 

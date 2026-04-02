@@ -11,7 +11,7 @@ local select = select
 -- WoW Global
 local UIErrorsFrame = _G.UIErrorsFrame
 
-function ErrorFilter:UpdateErros()
+function ErrorFilter:UpdateErrors()
 	UIErrorsFrame:UnregisterEvent("UI_ERROR_MESSAGE")
 	UIErrorsFrame:ClearAllPoints()
 	UIErrorsFrame:Point("TOP", _G.UIParent, 0, -222)
@@ -29,9 +29,10 @@ end
 
 function ErrorFilter:Initialize()
 	if (not DB.Global.ErrorsFrame.Enable) then
-		return
+		UIErrorsFrame:UnregisterEvent("UI_ERROR_MESSAGE")
+		UIErrorsFrame:SetFontTemplate("Default", 16)
+	else
+		self:UpdateErrors()
+		self:RegisterEvents()
 	end
-
-	self:UpdateErros()
-	self:RegisterEvents()
 end

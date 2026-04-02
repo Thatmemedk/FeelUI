@@ -26,19 +26,16 @@ function DamageMeter:CreateCombatTimers()
     Frame:Point("RIGHT", DamageMeterSessionWindow1.DamageMeterTypeDropdown.TypeName, 38, 0)
     Frame:SetAlpha(0)
 
-    -- UPDATE
     Frame:SetScript("OnUpdate", function(_, Elapsed)
         if (self.IsActive) then
             self:CombatTimerOnUpdate(Elapsed)
         end
     end)
 
-    -- TEXT
     local Text = Frame:CreateFontString(nil, "OVERLAY")
     Text:Point("CENTER", Frame, 0, 0)
     Text:SetFontTemplate("Default", 12)
 
-    -- CACHE
     self.Frame = Frame
     self.Text = Text
 end
@@ -59,8 +56,8 @@ function DamageMeter:CombatTimerOnUpdate()
 end
 
 function DamageMeter:OnEnter(Window)
-    if (not Window.OptionsButtons) then 
-    	return 
+    if (not Window.OptionsButtons) then
+    	return
     end
 
     for _, Button in ipairs(Window.OptionsButtons) do
@@ -69,8 +66,8 @@ function DamageMeter:OnEnter(Window)
 end
 
 function DamageMeter:OnLeave(Window)
-    if (not Window.OptionsButtons) then 
-    	return 
+    if (not Window.OptionsButtons) then
+    	return
     end
 
     for _, Button in ipairs(Window.OptionsButtons) do
@@ -79,8 +76,8 @@ function DamageMeter:OnLeave(Window)
 end
 
 function DamageMeter:SkinButtons(self, Size, Texture)
-	if (not self or self.WindowButtonIsSkinned) then 
-		return 
+	if (not self or self.WindowButtonIsSkinned) then
+		return
 	end
 	
 	self:SetAlpha(0)
@@ -110,9 +107,62 @@ function DamageMeter:SkinButtons(self, Size, Texture)
 	self.WindowButtonIsSkinned = true
 end
 
+function DamageMeter:UpdateBarSkin(Frame)
+    if (not Frame) then
+    	return
+    end
+
+    if (not Frame.NewBar) then
+        Frame.NewBar = CreateFrame("StatusBar", nil, Frame)
+        Frame.NewBar:SetFrameLevel(Frame:GetFrameLevel() - 1)
+        Frame.NewBar:SetInside()
+        Frame.NewBar:CreateBackdrop()
+        Frame.NewBar:CreateShadow()
+    end
+
+    if (Frame.StatusBar) then
+        Frame.StatusBar.Name:SetFontTemplate("Default")
+        Frame.StatusBar.Value:SetFontTemplate("Default")
+
+        if (Frame.StatusBar.Background) then
+            Frame.StatusBar.Background:SetParent(UI.HiddenParent)
+        end
+
+        if (Frame.StatusBar.BackgroundEdge) then
+            Frame.StatusBar.BackgroundEdge:SetParent(UI.HiddenParent)
+        end
+
+        Frame.StatusBar:GetStatusBarTexture():SetTexture(Media.Global.Texture)
+    end
+
+    if (Frame.Icon and Frame.Icon.Icon) then
+        Frame.Icon.Icon:SetInside()
+        Frame.Icon.Icon:SetTexCoord(unpack(UI.TexCoords))
+
+        if (not Frame.IconOverlay) then
+	        Frame.IconOverlay = CreateFrame("Frame", nil, Frame)
+	        Frame.IconOverlay:SetFrameLevel(Frame:GetFrameLevel() + 1)
+	        Frame.IconOverlay:SetInside(Frame.Icon.Icon, 0, 0)
+	        Frame.IconOverlay:SetTemplate()
+	        Frame.IconOverlay:CreateShadow()
+	        Frame.IconOverlay:SetShadowOverlay()
+        end
+    end
+end
+
+function DamageMeter:UpdateScrollBoxBars(ScrollBox)
+    if (not ScrollBox) then
+    	return
+    end
+
+    ScrollBox:ForEachFrame(function(Frame)
+        DamageMeter:UpdateBarSkin(Frame)
+    end)
+end
+
 function DamageMeter:Skin()
-	if (self.IsSkinned) then
-		return
+	if (self.IsSkinned) then 
+		return 
 	end
 
 	for i = 1, 3 do
@@ -121,6 +171,14 @@ function DamageMeter:Skin()
 		if (Window) then
 			-- SESSION WINDOW
 			Window:StripTexture()
+
+			if (Window.ScrollBox) then
+				self:UpdateScrollBoxBars(Window.ScrollBox)
+
+				hooksecurefunc(Window.ScrollBox, "Update", function(ScrollBox)
+					DamageMeter:UpdateScrollBoxBars(ScrollBox)
+				end)
+			end
 
 			if (Window.Background) then
 				Window.Background:Hide()
@@ -144,6 +202,14 @@ function DamageMeter:Skin()
 
 			-- SOURCE WINDOW
 			Window.SourceWindow:StripTexture()
+
+			if (Window.SourceWindow.ScrollBox) then
+				self:UpdateScrollBoxBars(Window.SourceWindow.ScrollBox)
+
+				hooksecurefunc(Window.SourceWindow.ScrollBox, "Update", function(ScrollBox)
+					DamageMeter:UpdateScrollBoxBars(ScrollBox)
+				end)
+			end
 
 			if (not Window.SourceWindow.NewBackdrop) then
 				Window.SourceWindow.NewBackdrop = CreateFrame("Frame", nil, Window.SourceWindow)
@@ -190,7 +256,7 @@ function DamageMeter:Skin()
 
 			-- SETTINGS BUTTONS
 			Window.SettingsDropdown:ClearAllPoints()
-			Window.SettingsDropdown:Point("TOPRIGHT", Window, 18, -4)
+			Window.SettingsDropdown:Point("TOPRIGHT", Window, 16, -4)
 
 			Window.SessionDropdown:ClearAllPoints()
 			Window.SessionDropdown:Point("LEFT", Window.SettingsDropdown, -32, 0)
@@ -232,49 +298,6 @@ function DamageMeter:Skin()
 	end
 		
 	self.IsSkinned = true
-end
-
-function DamageMeter:UpdateBarSkin(Frame)
-    if (not Frame or Frame.IsSkinned) then 
-    	return 
-    end
-
-    if (not Frame.NewBar) then
-        Frame.NewBar = CreateFrame("StatusBar", nil, Frame)
-        Frame.NewBar:SetFrameLevel(Frame:GetFrameLevel() - 1)
-        Frame.NewBar:SetInside()
-        Frame.NewBar:CreateBackdrop()
-        Frame.NewBar:CreateShadow()
-    end
-
-    if (Frame.StatusBar) then
-    	-- Fonts
-        Frame.StatusBar.Name:SetFontTemplate("Default")
-        Frame.StatusBar.Value:SetFontTemplate("Default")
-
-        -- Background
-        Frame.StatusBar.Background:SetParent(UI.HiddenParent)
-        Frame.StatusBar.BackgroundEdge:SetParent(UI.HiddenParent)
-
-		Frame.StatusBar:GetStatusBarTexture():SetTexture(Media.Global.Texture)
-    end
-
-    -- Icon
-    if (Frame.Icon and Frame.Icon.Icon) then
-    	Frame.Icon.Icon:SetInside()
-        Frame.Icon.Icon:SetTexCoord(unpack(UI.TexCoords))
-
-        if (not Frame.IconOverlay) then
-	        Frame.IconOverlay = CreateFrame("Frame", nil, Frame)
-	        Frame.IconOverlay:SetFrameLevel(Frame:GetFrameLevel() + 1)
-	        Frame.IconOverlay:SetInside(Frame.Icon.Icon, 0, 0)
-	        Frame.IconOverlay:SetTemplate()
-	        Frame.IconOverlay:CreateShadow()
-	        Frame.IconOverlay:SetShadowOverlay()
-    	end
-    end
-
-    Frame.IsSkinned = true
 end
 
 function DamageMeter:OnEvent(event)

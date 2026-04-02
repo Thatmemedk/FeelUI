@@ -275,7 +275,7 @@ function UF:CreatePartyExternal(Frame)
         return
     end
 
-    Frame.External = UF:CreateAuraContainer(Frame.InvisFrameHigher, 36, 12, 4, "CENTER", 0, 0, "CENTER", "RIGHT", 1, "HELPFUL|EXTERNAL_DEFENSIVE", false)
+    Frame.External = UF:CreateAuraContainer(Frame.InvisFrameHigher, 36, 12, 4, "CENTER", 0, 0, "CENTER", "RIGHT", 1, "HELPFUL|BIG_DEFENSIVE", false)
 end
 
 function UF:CreateRaidDebuffs(Frame)
@@ -307,5 +307,5 @@ function UF:CreateRaidExternal(Frame)
         return
     end
 
-    Frame.External = UF:CreateAuraContainer(Frame.InvisFrameHigher, 28, 12, 4, "CENTER", 0, -18, "CENTER", "RIGHT", 1, "HELPFUL|EXTERNAL_DEFENSIVE", false)
+    Frame.External = UF:CreateAuraContainer(Frame.InvisFrameHigher, 28, 12, 4, "CENTER", 0, -18, "CENTER", "RIGHT", 1, "HELPFUL|BIG_DEFENSIVE", false)
 end

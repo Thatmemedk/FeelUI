@@ -13,6 +13,7 @@ function NP:CreateFriendlyPlates(Plate, Unit)
     local Frame = CreateFrame("Button", nil, Plate, "PingableUnitFrameTemplate")
     Frame:Size(unpack(DB.Global.Nameplates.Size))
     Frame:Point("CENTER", Plate, 0, 0)
+    Frame:EnableMouse(false)
 
     if (not Frame.Initialized) then
         -- Create Elements
@@ -32,6 +33,7 @@ function NP:CreateEnemyPlates(Plate, Unit)
     local Frame = CreateFrame("Button", nil, Plate, "PingableUnitFrameTemplate")
     Frame:Size(unpack(DB.Global.Nameplates.Size))
     Frame:Point("CENTER", Plate, 0, 0)
+    Frame:EnableMouse(false)
 
     if (not Frame.Initialized) then
         -- Create Elements

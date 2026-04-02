@@ -23,22 +23,81 @@ local MinimapNorthTag = _G.MinimapNorthTag
 local TimeManagerClockButton = _G.TimeManagerClockButton
 local ExpansionMinimapButton = _G.ExpansionLandingPageMinimapButton
 
-function Maps:GetLocTextColor()
-	local GetZonePVPInfo = GetZonePVPInfo()
+function Maps:Disable()
+	local HiddenFrames = {
+		"MinimapBorder",
+		"MinimapBorderTop",
+		"MinimapNorthTag",
+		"MiniMapWorldMapButton",
+		"MinimapBackdrop",
+		"TimeManagerClockTicker",
+		"AddonCompartmentFrame",
+	}
 
-	if (GetZonePVPInfo == "friendly") then
-		return 0.1, 1.0, 0.1
-	elseif (GetZonePVPInfo == "hostile") then
-		return 1.0, 0.1, 0.1
-	elseif (GetZonePVPInfo == "contested") then
-		return 1.0, 0.7, 0.0
-	elseif (GetZonePVPInfo == "sanctuary") then
-		return 0.41, 0.8, 0.94
-	elseif (GetZonePVPInfo == "arena") then
-		return 1.0, 0.1, 0.1
-	else
-		return 1, 0.82, 0
+	local DisableFrames = {
+        GameTimeFrame,
+        MinimapZoneText,
+        MapsCluster and MapsCluster.BorderTop,
+        MapsZoomIn,
+        MapsZoomOut,
+        ExpansionMinimapButton,
+        TimeManagerClockButton,
+    }
+
+    local DisableBG = {
+        MapsInstanceDifficulty.Default,
+        MapsInstanceDifficulty.ChallengeMode,
+        MapsInstanceDifficulty.Guild,
+    }
+
+	for i, FrameName in pairs(HiddenFrames) do
+		local Frame = _G[FrameName]
+		
+		if (Frame) then
+			Frame:SetParent(UI.HiddenParent)
+			
+			if (Frame.UnregisterAllEvents) then
+				Frame:UnregisterAllEvents()
+			end
+		end
 	end
+
+    for _, Frames in ipairs(DisableFrames) do
+        if (Frames) then 
+        	Frames:Kill() 
+        end
+    end
+
+    for _, Frames in ipairs(DisableBG) do
+        if (Frames) then
+            if (Frames.Background) then 
+            	Frames.Background:Hide()
+            end
+
+            if (Frames.Border) then 
+            	Frames.Border:Hide() 
+            end
+        end
+    end
+
+    if (MapsCluster and MapsCluster.Tracking) then
+        MapsCluster.Tracking:SetAlpha(0)
+        MapsCluster.Tracking:SetScale(0.0001)
+        MapsCluster.Tracking:ClearAllPoints()
+        MapsCluster.Tracking:Point("BOTTOMLEFT", Minimap, 0, 0)
+    end
+
+    if (MinimapZoneTextButton) then
+        MinimapZoneTextButton:EnableMouse(false)
+    end
+
+    if (MapsCluster and MapsCluster.ZoneTextButton) then
+        MapsCluster.ZoneTextButton:EnableMouse(false)
+    end
+    
+    if (MinimapNorthTag) then
+        MinimapNorthTag:SetTexture(nil)
+    end
 end
 
 function Maps:QueueStatusSetPoint(_, Anchor)
@@ -120,85 +179,48 @@ function Maps:ScrollZoom(Zoom)
 	end
 end
 
-function Maps:Disable()
-	local HiddenFrames = {
-		"MinimapBorder",
-		"MinimapBorderTop",
-		"MinimapNorthTag",
-		"MiniMapWorldMapButton",
-		"MinimapBackdrop",
-		"TimeManagerClockTicker",
-	}
+function Maps:EnableZoom()
+	Minimap:SetScript("OnMouseWheel", self.ScrollZoom)
+end
 
-	local DisableFrames = {
-        GameTimeFrame,
-        MinimapZoneText,
-        MapsCluster and MapsCluster.BorderTop,
-        MapsZoomIn,
-        MapsZoomOut,
-        ExpansionMinimapButton,
-        TimeManagerClockButton,
-    }
+function Maps:OnMouseDown(Button)
+	if (Button == "RightButton") then
+		local TrackingButton = _G.MinimapCluster.Tracking.Button
 
-    local DisableBG = {
-        MapsInstanceDifficulty.Default,
-        MapsInstanceDifficulty.ChallengeMode,
-        MapsInstanceDifficulty.Guild,
-    }
-
-	for i, FrameName in pairs(HiddenFrames) do
-		local Frame = _G[FrameName]
-		
-		if (Frame) then
-			Frame:SetParent(UI.HiddenParent)
-			
-			if (Frame.UnregisterAllEvents) then
-				Frame:UnregisterAllEvents()
-			end
+		if (TrackingButton) then
+			TrackingButton:OpenMenu()
 		end
 	end
+end
 
-    for _, Frames in ipairs(DisableFrames) do
-        if (Frames) then 
-        	Frames:Kill() 
-        end
-    end
+function Maps:EnableClick()
+	Minimap:HookScript("OnMouseDown", function(_, Button)
+		Maps:OnMouseDown(Button)
+	end)
+end
 
-    for _, Frames in ipairs(DisableBG) do
-        if (Frames) then
-            if (Frames.Background) then 
-            	Frames.Background:Hide()
-            end
+function Maps:GetLocTextColor()
+	local Info = GetZonePVPInfo()
 
-            if (Frames.Border) then 
-            	Frames.Border:Hide() 
-            end
-        end
-    end
-
-    if (MapsCluster and MapsCluster.Tracking) then
-        MapsCluster.Tracking:Hide()
-
-        if (MapsCluster.Tracking.Button) then
-            MapsCluster.Tracking.Button:Hide()
-        end
-    end
-
-    if (MinimapZoneTextButton) then
-        MinimapZoneTextButton:EnableMouse(false)
-    end
-
-    if (MapsCluster and MapsCluster.ZoneTextButton) then
-        MapsCluster.ZoneTextButton:EnableMouse(false)
-    end
-    
-    if (MinimapNorthTag) then
-        MinimapNorthTag:SetTexture(nil)
-    end
+	if (Info == "friendly") then
+		return 0.1, 1.0, 0.1
+	elseif (Info == "hostile") then
+		return 1.0, 0.1, 0.1
+	elseif (Info == "contested") then
+		return 1.0, 0.7, 0.0
+	elseif (Info == "sanctuary") then
+		return 0.41, 0.8, 0.94
+	elseif (Info == "arena") then
+		return 1.0, 0.1, 0.1
+	else
+		return 1, 0.82, 0
+	end
 end
 
 function Maps:OnEvent()
-	Minimap.Location:SetText(GetMinimapZoneText())
+	local Text = GetMinimapZoneText()
+
+	Minimap.Location:SetText(Text)
 	Minimap.Location:SetTextColor(Maps:GetLocTextColor())
 end
 
@@ -210,13 +232,10 @@ function Maps:RegisterEvents()
 	self:SetScript("OnEvent", self.OnEvent)
 end
 
-function Maps:EnableZoom()
-	Minimap:SetScript("OnMouseWheel", self.ScrollZoom)
-end
-
 function Maps:Initialize()
 	self:Disable()
 	self:Style()
-	self:RegisterEvents()
 	self:EnableZoom()
+	self:EnableClick()
+	self:RegisterEvents()
 end

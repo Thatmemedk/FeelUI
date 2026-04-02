@@ -206,6 +206,9 @@ function UF:CastStarted(Event, Unit)
         UF:SetupEmpowerPips(Castbar, UnitEmpoweredStagePercentages(Unit))
     end
 
+    -- Call On Update
+    Castbar:SetScript("OnUpdate", UF.CastBarOnUpdate)  
+
     -- Call Fade
     UI:UIFrameFadeIn(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 1)
 end
@@ -472,9 +475,6 @@ function UF:CreatePlayerCastbar(Frame)
     Castbar:CreateShadow()
     Castbar:CreateSpark()
     Castbar:SetAlpha(0)
-
-    -- Call On Update
-    Castbar:SetScript("OnUpdate", UF.CastBarOnUpdate)
     
     local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
     CastbarIcon:Size(38, 26)
@@ -522,9 +522,6 @@ function UF:CreateTargetCastbar(Frame)
     Castbar:CreateSpark()
     Castbar:SetAlpha(0)
 
-    -- Call On Update
-    Castbar:SetScript("OnUpdate", UF.CastBarOnUpdate)
-
     local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
     CastbarIcon:Size(42, 32)
     CastbarIcon:Point("LEFT", Castbar, "RIGHT", 4, 5)
@@ -560,9 +557,6 @@ function UF:CreatePetCastbar(Frame)
     Castbar:CreateSpark()
     Castbar:SetAlpha(0)
 
-    -- Call On Update
-    Castbar:SetScript("OnUpdate", UF.CastBarOnUpdate)
-
     local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
     CastbarIcon:Size(42, 32)
     CastbarIcon:Point("RIGHT", Castbar, "LEFT", -4, 5)
@@ -597,9 +591,6 @@ function UF:CreateFocusCastbar(Frame)
     Castbar:CreateShadow()
     Castbar:CreateSpark()
     Castbar:SetAlpha(0)
-   
-    -- Call On Update
-    Castbar:SetScript("OnUpdate", UF.CastBarOnUpdate)
 
     local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
     CastbarIcon:Size(42, 32)
@@ -629,15 +620,12 @@ end
 function UF:CreateBossCastbar(Frame)
     local Castbar = CreateFrame("StatusBar", nil, Frame)
     Castbar:Size(204, 20)
-    Castbar:Point("BOTTOM", Frame, 0, -22)
+    Castbar:Point("BOTTOM", Frame, 0, -24)
     Castbar:SetStatusBarTexture(Media.Global.Texture)
     Castbar:CreateBackdrop()
     Castbar:CreateShadow()
     Castbar:CreateSpark()
     Castbar:SetAlpha(0)
-    
-    -- Call On Update
-    Castbar:SetScript("OnUpdate", UF.CastBarOnUpdate)
 
     local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
     CastbarIcon:Size(42, 36)

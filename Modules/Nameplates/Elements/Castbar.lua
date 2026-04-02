@@ -152,6 +152,9 @@ function NP:CastStarted(Event, Unit)
         NP:SetupEmpowerPips(Castbar, UnitEmpoweredStagePercentages(Unit))
     end
 
+    -- Call On Update
+    Castbar:SetScript("OnUpdate", NP.CastBarOnUpdate)
+
     -- Call Fade
     UI:UIFrameFadeIn(Castbar, NP.FadeInTime, Castbar:GetAlpha(), 1)
 end
@@ -399,8 +402,6 @@ function NP:ResetCastBar(Castbar)
     end
 end
 
--- CREATE CASTBAR
-
 function NP:CreateCastBar(Frame)
     local Width, Height = unpack(DB.Global.Nameplates.Size)
 
@@ -412,9 +413,6 @@ function NP:CreateCastBar(Frame)
     Castbar:CreateShadow()
     Castbar:CreateSpark()
     Castbar:SetAlpha(0)
-
-    -- Call On Update
-    Castbar:SetScript("OnUpdate", NP.CastBarOnUpdate)
 
     local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
     CastbarIcon:Size(36, 26)

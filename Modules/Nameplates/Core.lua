@@ -12,6 +12,8 @@ local UnitIsTapDenied = UnitIsTapDenied
 local UnitIsConnected = UnitIsConnected
 local UnitIsGhost = UnitIsGhost
 local UnitIsDead = UnitIsDead
+local UnitCastingInfo = UnitCastingInfo
+local UnitChannelInfo = UnitChannelInfo
 local UnitName = UnitName
 local UnitIsPlayer = UnitIsPlayer
 local UnitClass = UnitClass
@@ -22,8 +24,6 @@ local SetCVar = C_CVar.SetCVar
 -- Tables
 NP.Hooked = {}
 NP.Modified = {}
-NP.ForcedCasters = {}
-NP.Range = {}
 
 -- Tables
 NP.UnitFrames = {}
@@ -59,9 +59,6 @@ function NP:UpdateHealth(Frame, Unit)
     end
 
     local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
-    local Reaction = UnitReaction(Unit, "player")
-    local Color = UI.Colors.Reaction[Reaction]
-
     Frame.Health:SetMinMaxValues(0, Max, UI.SmoothBars)
     Frame.Health:SetValue(Min, UI.SmoothBars)
 
@@ -73,7 +70,17 @@ function NP:UpdateHealth(Frame, Unit)
         Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
     else
         if (DB.Global.Nameplates.ReactionColor) then
+            local Reaction = UnitReaction(Unit, "player")
+            local Color = UI.Colors.Reaction[Reaction]
+
             Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.70)
+        elseif (DB.Global.Nameplates.UnitColors) then
+            local IsCaster = UnitCastingInfo(Unit) or UnitChannelInfo(Unit)
+            local UnitClassifColor = NP:GetUnitColor(Unit, IsCaster and true)
+
+            if (UnitClassifColor) then
+                Frame.Health:SetStatusBarColor(UnitClassifColor.r, UnitClassifColor.g, UnitClassifColor.b, 0.70)
+            end
         else
             Frame.Health:SetStatusBarColor(unpack(DB.Global.Nameplates.HealthBarColor))
 
@@ -92,6 +99,106 @@ function NP:UpdateHealthText(Frame, Unit)
 
     local Percent = UnitHealthPercent(Unit, false, UI.CurvePercent)
     Frame.HealthText:SetFormattedText("%d%%", Percent or 0)
+end
+
+-- HEAL PRED
+
+function NP:UpdateHealthPred(Frame, Unit)
+    if (not Frame or not Unit or not Frame.HealthPrediction) then
+        return
+    end
+
+    local Calculator = Frame.HealthPrediction.Calculator
+    local PlayerHealsBar = Frame.HealthPrediction.PlayerHeals
+    local OtherHealsBar = Frame.HealthPrediction.OtherHeals
+    local AllAbsorbsBar = Frame.HealthPrediction.AllAbsorbs
+    local HealAbsorbsBar = Frame.HealthPrediction.HealAbsorbs
+    local OverHealsBar = Frame.HealthPrediction.OverHeals
+    local OverAbsorbsBar = Frame.HealthPrediction.OverAbsorbs
+    local OverHealsAbsorbsBar = Frame.HealthPrediction.OverHealsAbsorbs
+
+    UnitGetDetailedHealPrediction(Unit, "player", Calculator)
+
+    -- Calculate Predictions
+    local AllHeals, PlayerHeals, OtherHeals, HealingClamped = Calculator:GetIncomingHeals()
+    local AbsorbsAmount, AbsorbsClamped = Calculator:GetDamageAbsorbs()
+    local HealAbsorbAmount, HealAbsorbClamped = Calculator:GetHealAbsorbs()
+    local Max = UnitHealthMax(Unit)
+
+    local Orientation = Frame.Health:GetOrientation()
+    local PrevTexture = Frame.Health:GetStatusBarTexture()
+    local BarWidth, BarHeight = Frame.Health:GetSize()
+
+    PlayerHealsBar:SetOrientation(Orientation)
+    PlayerHealsBar:SetMinMaxValues(0, Max, UI.SmoothBars)
+    PlayerHealsBar:SetValue(PlayerHeals, UI.SmoothBars)
+
+    OtherHealsBar:SetOrientation(Orientation)
+    OtherHealsBar:SetMinMaxValues(0, Max, UI.SmoothBars)
+    OtherHealsBar:SetValue(OtherHeals, UI.SmoothBars)
+
+    AllAbsorbsBar:SetOrientation(Orientation)
+    AllAbsorbsBar:SetReverseFill(true)
+    AllAbsorbsBar:SetMinMaxValues(0, Max, UI.SmoothBars)
+    AllAbsorbsBar:SetValue(AbsorbsAmount, UI.SmoothBars)
+
+    HealAbsorbsBar:SetOrientation(Orientation)
+    HealAbsorbsBar:SetReverseFill(true)
+    HealAbsorbsBar:SetMinMaxValues(0, Max, UI.SmoothBars)
+    HealAbsorbsBar:SetValue(HealAbsorbAmount, UI.SmoothBars)
+
+    -- Healing Prediction
+    PlayerHealsBar:SetAlphaFromBoolean(PlayerHeals, 1, 0)
+    OtherHealsBar:SetAlphaFromBoolean(OtherHeals, 1, 0)
+    AllAbsorbsBar:SetAlphaFromBoolean(AbsorbsAmount, 1, 0)
+    HealAbsorbsBar:SetAlphaFromBoolean(HealAbsorbAmount, 1, 0)
+
+    -- Over Healing/Absorbs
+    OverHealsBar:SetAlphaFromBoolean(HealingClamped, 1, 0)
+    OverAbsorbsBar:SetAlphaFromBoolean(AbsorbsClamped, 1, 0)
+    OverHealsAbsorbsBar:SetAlphaFromBoolean(HealAbsorbClamped, 1, 0)
+
+    if (Orientation == "HORIZONTAL") then
+        PlayerHealsBar:Size(BarWidth, BarHeight)
+        OtherHealsBar:Size(BarWidth, BarHeight)
+        AllAbsorbsBar:Size(BarWidth, BarHeight)
+        HealAbsorbsBar:Size(BarWidth, BarHeight)
+
+        -- Player Heals
+        PlayerHealsBar:SetOutsideRight(PrevTexture, 0, 0)
+        -- Other Heals
+        OtherHealsBar:SetOutsideRight(PlayerHealsBar:GetStatusBarTexture(), 0, 0)
+        -- All Absorbs
+        AllAbsorbsBar:SetInsideRight(PrevTexture, 0, 0)
+        -- Heal Absorbs
+        HealAbsorbsBar:SetInsideRight(PrevTexture, 0, 0)
+        -- OverHeals
+        OverHealsBar:SetOutsideRight(OtherHealsBar:GetStatusBarTexture(), -1, 0)
+        -- OverAbsorbs
+        OverAbsorbsBar:SetOutsideRight(AllAbsorbsBar:GetStatusBarTexture(), 0, 0)
+        -- OverHealsAbsorbs
+        OverHealsAbsorbsBar:SetOutsideRight(HealAbsorbsBar:GetStatusBarTexture(), 0, 0)
+    else
+        PlayerHealsBar:Size(BarHeight, BarWidth)
+        OtherHealsBar:Size(BarHeight, BarWidth)
+        AllAbsorbsBar:Size(BarHeight, BarWidth)
+        HealAbsorbsBar:Size(BarHeight, BarWidth)
+
+        -- Player Heals
+        PlayerHealsBar:SetOutsideTop(PrevTexture, 0, 0)
+        -- Other Heals
+        OtherHealsBar:SetOutsideTop(PlayerHealsBar:GetStatusBarTexture(), 0, 0)
+        -- All Absorbs
+        AllAbsorbsBar:SetInsideTop(PrevTexture, 0, 0)
+        -- Heal Absorbs
+        HealAbsorbsBar:SetInsideTop(PrevTexture, 0, 0)
+        -- OverHeals
+        OverHealsBar:SetOutsideTop(OtherHealsBar:GetStatusBarTexture(), 0, 0)
+        -- OverAbsorbs
+        OverAbsorbsBar:SetOutsideTop(AllAbsorbsBar:GetStatusBarTexture(), 0, 0)
+        -- OverHealsAbsorbs
+        OverHealsAbsorbsBar:SetOutsideTop(HealAbsorbsBar:GetStatusBarTexture(), 0, 0)
+    end
 end
 
 -- NAME UPDATE
@@ -204,6 +311,13 @@ function NP:ProcessFrame(Frame)
         Frame.NeedsHealth = nil
     end
 
+    -- HEALTH PRED
+    if (Frame.NeedsHealthPred) then
+        if (Frame.HealthPrediction) then self:UpdateHealthPred(Frame, Unit) end
+
+        Frame.NeedsHealthPred = nil
+    end
+
     -- NAME
     if (Frame.NeedsName) then
         if (Frame.Name) then self:UpdateName(Frame, Unit) end
@@ -233,12 +347,14 @@ function NP:ProcessFrame(Frame)
         Frame.NeedsTargetIndicator = nil
     end
 
-    -- AURAS 
+    -- AURAS
+    --[[
     if (Frame.NeedsAuras) then 
-        --if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
+        if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
 
         Frame.NeedsAuras = nil
     end
+    --]]
 end
 
 -- QUEUE UPDATES
@@ -291,6 +407,16 @@ function NP:UnitHealth(Unit)
     end
 
     NP:QueueUpdate(Frame, Unit, "NeedsHealth")
+end
+
+function NP:UnitHealthPred(Unit)
+    local Frame = NP.UnitFrames[Unit]
+
+    if (not Frame) then
+        return
+    end
+
+    NP:QueueUpdate(Frame, Unit, "NeedsHealthPred")
 end
 
 function NP:UnitAura(Unit)
@@ -405,6 +531,7 @@ function NP:NameplateAdded(Unit)
     -- Batch Flags
     --Frame.NeedsAuras = true
     Frame.NeedsHealth = true
+    Frame.NeedsHealthPred = true
     Frame.NeedsName = true
     Frame.NeedsIcons = true
     Frame.NeedsThreat = true
@@ -432,6 +559,7 @@ function NP:NameplateRemoved(Unit)
     -- Reset Flags
     --Frame.NeedsAuras = nil
     Frame.NeedsHealth = nil
+    Frame.NeedsHealthPred = nil
     Frame.NeedsName = nil
     Frame.NeedsIcons = nil
     Frame.NeedsThreat = nil
@@ -458,9 +586,11 @@ function NP:OnEvent(event, unit, ...)
     elseif (event == "RAID_TARGET_UPDATE") then
         NP:RaidIconUpdate()
     elseif (event == "UNIT_AURA") then
-        NP:UnitAura(unit)
+        --NP:UnitAura(unit)
     elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
         NP:UnitHealth(unit)
+    elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
+        NP:UnitHealthPred(unit)
     elseif (event == "UNIT_NAME_UPDATE") then
         NP:UnitNameUpdate(unit)
     elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
@@ -526,6 +656,11 @@ function NP:RegisterEvents()
     -- HEALTH
     self:RegisterEvent("UNIT_HEALTH")
     self:RegisterEvent("UNIT_MAXHEALTH")
+    -- HEALTH PRED
+    self:RegisterEvent("UNIT_HEAL_PREDICTION")
+    self:RegisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
+    self:RegisterEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
+    self:RegisterEvent("UNIT_MAX_HEALTH_MODIFIERS_CHANGED")
     -- AURA
     self:RegisterEvent("UNIT_AURA")
     -- NAME
