@@ -97,10 +97,10 @@ DB.Global = {
 	},
 
 	PotionButtonMenu = {
-		ButtonSize = { 38 , 12 }
+		ButtonSize = { 36 , 18 },
 		ButtonSpacing = 2,
 		Point = { "BOTTOMLEFT", _G.UIParent, 482, 282 },
-	}
+	},
 
 	ScrollingCombatText = {
 		Enable = true,
@@ -189,7 +189,7 @@ DB.Global = {
 		CastBarInterruptColor = { 0.67, 0, 0, 0.70 },
 		CastBarSucceededColor = { 0, 0.67, 0, 0.70 },
 		-- Portraits
-		Portraits = true,
+		Portraits = false,
 		RoleIcons = false,
 		-- Points Settings
 		PlayerPoint = { "BOTTOMLEFT", _G.UIParent, 482, 244 },

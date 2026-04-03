@@ -495,22 +495,27 @@ end
 -- EVENT HANDLER
 
 function NP:NameplateAdded(Unit)
+    if (not Unit) then 
+        return 
+    end
+
     local Plate = C_NamePlate.GetNamePlateForUnit(Unit)
 
-    if (not Plate or not Unit) then
+    if (not Plate) then
         return
     end
 
-    local Type = self.PlateTypes[UnitIsFriend("player", Unit)]
-
-    if (not Plate[Type.Key]) then
-        Plate[Type.Key] = self[Type.Create](self, Plate, Unit)
-    end
-
+    local isFriendly = UnitIsFriend("player", Unit)
+    local Type = self.PlateTypes[isFriendly]
     local Frame = Plate[Type.Key]
 
     if (not Frame) then
-        return
+        Frame = self[Type.Create](self, Plate, Unit)
+        Plate[Type.Key] = Frame
+    end
+
+    if (not Frame) then 
+        return 
     end
 
     local Opposite = Plate[Type.Opposite]
@@ -529,22 +534,21 @@ function NP:NameplateAdded(Unit)
     self.FrameUnits[Frame] = Unit
 
     -- Batch Flags
-    --Frame.NeedsAuras = true
     Frame.NeedsHealth = true
-    Frame.NeedsHealthPred = true
     Frame.NeedsName = true
-    Frame.NeedsIcons = true
-    Frame.NeedsThreat = true
-    Frame.NeedsTargetIndicator = true
 
     -- Queue Updates
-    self:QueueUpdate(Frame, Unit, nil, true)
+    self:QueueUpdate(Frame, Unit)
 end
 
 function NP:NameplateRemoved(Unit)
+    if (not Unit) then 
+        return 
+    end
+
     local Frame = self.UnitFrames[Unit]
 
-    if (not Plate or not Unit) then
+    if (not Frame) then
         return
     end
 
@@ -557,13 +561,15 @@ function NP:NameplateRemoved(Unit)
     self.UnitFrames[Unit] = nil
 
     -- Reset Flags
-    --Frame.NeedsAuras = nil
     Frame.NeedsHealth = nil
     Frame.NeedsHealthPred = nil
     Frame.NeedsName = nil
     Frame.NeedsIcons = nil
     Frame.NeedsThreat = nil
     Frame.NeedsTargetIndicator = nil
+
+    -- Remove Queued Updates
+    self.UpdateQueue[Frame] = nil
 end
 
 local function IsNameplateUnit(unit)

@@ -35,9 +35,9 @@ end
 function PBM:CreateIcon(Type, Name, ID)
     local Frame = CreateFrame("Button", nil, self.Holder, "SecureActionButtonTemplate")
     Frame:SetFrameStrata("LOW")
-    Frame:Size(38, 18)
+    Frame:Size(unpack(DB.Global.PotionButtonMenu.ButtonSize))
     Frame:EnableMouse(true)
-    Frame:RegisterForClicks("AnyUp")
+    Frame:RegisterForClicks("AnyUp", "AnyDown")
     Frame:StyleButton()
 
     local Index = #self.Buttons + 1
@@ -45,13 +45,8 @@ function PBM:CreateIcon(Type, Name, ID)
     if (Index == 1) then
         Frame:Point("LEFT", self.Holder, "LEFT", 0, 0)
     else
-        Frame:Point("LEFT", self.Buttons[Index -1], "RIGHT", 2, 0)
+        Frame:Point("LEFT", self.Buttons[Index -1], "RIGHT", DB.Global.PotionButtonMenu.ButtonSpacing, 0)
     end
-
-    Frame.InvisFrame = CreateFrame("Frame", nil, Frame)
-    Frame.InvisFrame:SetFrameLevel(Frame:GetFrameLevel() + 10)
-    Frame.InvisFrame:SetInside()
-    Frame.InvisFrame:EnableMouse(false)
 
     Frame.Icon = Frame:CreateTexture(nil, "ARTWORK")
     Frame.Icon:SetInside()
@@ -64,15 +59,12 @@ function PBM:CreateIcon(Type, Name, ID)
     Frame.IconOverlay:SetShadowOverlay()
     Frame.IconOverlay:EnableMouse(false)
 
-    Frame.Count = Frame.InvisFrame:CreateFontString(nil, "OVERLAY")
-    Frame.Count:Point("TOPRIGHT", Frame, 2, 2)
+    Frame.Count = Frame:CreateFontString(nil, "OVERLAY")
+    Frame.Count:Point("TOPRIGHT", Frame, -2, -2)
     Frame.Count:SetFontTemplate("Default")
 
     Frame.Cooldown = CreateFrame("Cooldown", nil, Frame, "CooldownFrameTemplate")
     Frame.Cooldown:SetInside()
-    Frame.Cooldown:SetReverse(false)
-    Frame.Cooldown:SetDrawBling(false)
-    Frame.Cooldown:SetDrawEdge(false)
     Frame.Cooldown:Hide()
 
     -- Cache
@@ -97,19 +89,34 @@ function PBM:UpdateButton(Button)
         return
     end
 
-    local ItemID = List[1]
-    local Count = C_Item.GetItemCount(ItemID)
+    local ItemID
+    local Count = 0
 
-    if (ItemID == 224464 or ItemID == 5512) then
-        Count = C_Item.GetItemCount(ItemID, false, true)
+    for _, ID in ipairs(List) do
+        if (ID == 224464 or ID == 5512) then
+            Count = C_Item.GetItemCount(ID, false, true)
+        else
+            Count = C_Item.GetItemCount(ID)
+        end
+
+        if (Count > 0) then
+            ItemID = ID
+
+            break
+        end
     end
 
-    local _, ItemLink = C_Item.GetItemInfo(ID)
-
-    if (ItemLink) then
-        Button:SetAttribute("type", "item")
-        Button:SetAttribute("item", ItemLink)
+    if (not ItemID) then
+        ItemID = List[1]
     end
+
+    local _, ItemLink = GetItemInfo(ItemID)
+
+    if not InCombatLockdown() then
+    	local _, ItemLink = GetItemInfo(ItemID)
+		Button:SetAttribute("type", "item")
+		Button:SetAttribute("item", ItemLink)
+	end
 
     if (Button.Icon) then
         local Texture = C_Item.GetItemIconByID(ItemID)
