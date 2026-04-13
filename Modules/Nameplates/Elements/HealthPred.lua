@@ -20,6 +20,10 @@ function NP:CreateOverflowBorder(Frame)
 end
 
 function NP:CreateHealthPrediction(Frame)
+    if (Frame.HealthPrediction) then
+        return
+    end
+    
     local HealthPrediction = {}
     HealthPrediction.OverFlowAmount = 1.2
 

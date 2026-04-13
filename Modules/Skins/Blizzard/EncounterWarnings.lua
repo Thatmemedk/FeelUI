@@ -55,13 +55,13 @@ function EW:SkinIcons(Button)
 end
 
 function EW:Skin()
-    self:SkinIcons(CriticalEncounterWarnings)
-    self:SkinIcons(MediumEncounterWarnings)
-    self:SkinIcons(MinorEncounterWarnings)
+    --self:SkinIcons(CriticalEncounterWarnings)
+    --self:SkinIcons(MediumEncounterWarnings)
+    --self:SkinIcons(MinorEncounterWarnings)
 
-	CriticalEncounterWarnings.View.Text:SetFontTemplate("Default", 26, 2, 2, 1)
-	MediumEncounterWarnings.View.Text:SetFontTemplate("Default", 18, 2, 2, 1)
-	MinorEncounterWarnings.View.Text:SetFontTemplate("Default", 14, 2, 2, 1)
+	_G.CriticalEncounterWarnings.View.Text:SetFontTemplate("Default", 48, 2, 2, 1)
+	_G.MediumEncounterWarnings.View.Text:SetFontTemplate("Default", 38, 2, 2, 1)
+	_G.MinorEncounterWarnings.View.Text:SetFontTemplate("Default", 28, 2, 2, 1)
 end
 
 function EW:Initialize()
@@ -73,5 +73,5 @@ function EW:Initialize()
 		LoadAddOn("Blizzard_EncounterWarnings")
 	end
 
-    --self:Skin()
+    self:Skin()
 end

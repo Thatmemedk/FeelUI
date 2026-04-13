@@ -12,12 +12,12 @@ local GetAuraDataByIndex = _G.C_UnitAuras.GetAuraDataByIndex
 local GetAuraApplicationDisplayCount = _G.C_UnitAuras.GetAuraApplicationDisplayCount
 local GetAuraDispelTypeColor = _G.C_UnitAuras.GetAuraDispelTypeColor
 
-function NP:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
+function NP:UpdateAuras(Frame, Unit, IsDebuff, IsCrowdControl)
     if (not Frame or not Unit) then
         return
     end
 
-    local Auras = IsDebuff and Frame.Debuffs or IsExternal and Frame.External or Frame.Buffs
+    local Auras = IsDebuff and Frame.Debuffs or IsCrowdControl and Frame.CrowdControl or Frame.Buffs
 
     if (not Auras or not Auras.Filter) then 
         return 
@@ -57,7 +57,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
                 UI:KeepAspectRatio(Button, Button.Icon)
             end
 
-            if (IsDebuff) then
+            if (IsDebuff or IsCrowdControl) then
                 local Color = GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
 
                 if (Color) then
@@ -173,13 +173,12 @@ end
 
 --]]
 
-function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, AnchorPoint, OffsetX, OffsetY, Direction, InitialAnchor, NumAuras, Filter, ExtraBorder)
+function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, AnchorPoint, OffsetX, OffsetY, Direction, NumAuras, Filter, ExtraBorder)
     local Container = CreateFrame("Frame", nil, Frame)
     Container.Width = ButtonWidth
     Container.Height = ButtonHeight
     Container.Spacing = Spacing
     Container.Direction = Direction
-    Container.InitialAnchor = InitialAnchor
     Container.NumAuras = NumAuras
     Container.Filter = Filter
     Container.Buttons = {}
@@ -222,5 +221,13 @@ function NP:CreateDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = NP:CreateAuraContainer(Frame, 28, 12, 4, "TOPRIGHT", -2, 30, "RIGHT", "RIGHT", 6, "HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY", true)
+    Frame.Debuffs = NP:CreateAuraContainer(Frame, 28, 12, 4, "TOPRIGHT", -2, 30, "RIGHT", 6, "HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY", true)
+end
+
+function NP:CreateCrowdControlDebuffs(Frame)
+    if (Frame.CrowdControl) then
+        return
+    end
+
+    Frame.CrowdControl = NP:CreateAuraContainer(Frame, 36, 12, 4, "TOPLEFT", -240, 0, "LEFT", 6, "HARMFUL|CROWD_CONTROL", true)
 end

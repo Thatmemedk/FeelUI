@@ -23,28 +23,8 @@ local ChatConfigFrameDefaultButton = _G.ChatConfigFrameDefaultButton
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
 
-local CanChangeMessage = function(arg1, ID)
-	if (ID and arg1 == "") then 
-		return ID 
-	end
-end
-
-function CH:MessageIsProtected(msg)
-	if (UI:IsSecretValue(msg)) then
-		return true
-	end
-
-	return msg and (msg ~= gsub(msg, "(:?|?)|K(.-)|k", CanChangeMessage))
-end
-
 function CH:AddMessage(msg, ...)
-	local IsProtected = CH:MessageIsProtected(msg)
-
-	if (IsProtected or (type(msg) == "string" and (strmatch(msg, "^%s*$") or strmatch(msg, "^|Helvtime|h") or strmatch(msg, "^|Hcpl:")))) then
-		return msg
-	end
-
-	msg = date("|CFF909090%H:%M:%S|r ") .. " " .. msg
+	msg = BetterDate("|CFF909090%H:%M:%S|r ") .. msg
 
 	return msg
 end
@@ -100,13 +80,15 @@ function CH:StyleFrames(Frame)
 	if (MinimizeButton) then MinimizeButton:Kill() end
 
 	if (ID ~= 2) then
-		Frame.OldAddMessage = Frame.AddMessage
+	    Frame.OldAddMessage = Frame.AddMessage
 
-		Frame.AddMessage = function(self, msg, ...)
-			msg = CH:AddMessage(msg, ...)
-			
-			return self:OldAddMessage(msg, ...)
-		end
+	    Frame.AddMessage = function(self, msg, ...)
+	        if (not UI:IsSecretValue(msg)) then
+	            msg = CH:AddMessage(msg, ...)
+	        else
+	        	return self:OldAddMessage(msg, ...)
+	        end
+	    end
 	end
 
 	Frame.ChatIsSkinned = true
@@ -192,5 +174,5 @@ function CH:Initialize()
 	self:AddHooks()
 	self:StyleCombatLog()
 	self:EnableURL()
-	self:CreateCopyButton()
+	--self:CreateCopyButton()
 end

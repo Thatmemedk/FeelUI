@@ -156,7 +156,7 @@ function VB:UpdateCooldowns()
         if (self.Duration and not self.Duration:IsZero()) then
             SegmentBar:SetTimerDuration(self.Duration)
         else
-            SegmentBar:SetMinMaxValues(0, 1, UI.SmoothBars)
+            SegmentBar:SetMinMaxValues(0, 1)
             SegmentBar:SetValue(1, UI.SmoothBars)
         end
     end
@@ -189,7 +189,7 @@ function VB:UpdateVigor()
         self.VigorBars.Backdrop[i]:SetStatusBarColor(0, 0.82 * 0.5, 1 * 0.5, 0.5)
 
         if (CurCharges >= i) then
-            SegmentBar:SetMinMaxValues(0, 1, UI.SmoothBars)
+            SegmentBar:SetMinMaxValues(0, 1)
             SegmentBar:SetValue(1, UI.SmoothBars)
 
             UI:UIFrameFadeIn(SegmentBar, 0.25, SegmentBar:GetAlpha(), 1)
@@ -202,7 +202,7 @@ function VB:UpdateVigor()
 
             UI:UIFrameFadeOut(SegmentBar, 1, SegmentBar:GetAlpha(), 0.5)
         else
-            SegmentBar:SetMinMaxValues(0, 1, UI.SmoothBars)
+            SegmentBar:SetMinMaxValues(0, 1)
             SegmentBar:SetValue(0, UI.SmoothBars)
 
             UI:UIFrameFadeOut(SegmentBar, 1, SegmentBar:GetAlpha(), 0.5)

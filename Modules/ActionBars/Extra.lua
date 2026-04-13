@@ -46,18 +46,11 @@ function AB:CreateExtraActionButton()
 			UI:KeepAspectRatio(Icon, Icon)
 			
 			if (Button.cooldown) then
-		        for i = 1, Button.cooldown:GetNumRegions() do
-		            local Region = select(i, Button.cooldown:GetRegions())
+				Button.cooldown:ClearAllPoints()
+				Button.cooldown:SetInside()
 
-		            if (Region and Region.GetText) then
-		                local FontSize = UI:GetCooldownFontScale(Button.cooldown)
-
-		                Region:ClearAllPoints()
-		                Region:Point("CENTER", Button, 0, 0)
-		                Region:SetFontTemplate("Default", FontSize)
-		                Region:SetTextColor(1, 0.82, 0)
-		            end
-		        end
+                -- Update The Text
+                UI:UpdateCooldownText(Button.cooldown, Button, 0, 0, true)
 			end
 		
 			Button.ExtraActionButtonIsSkinned = true
@@ -90,18 +83,11 @@ function AB:CreateExtraActionButton()
 				UI:KeepAspectRatio(Icon, Icon)
 				
 				if (Button.Cooldown) then
-			        for i = 1, Button.Cooldown:GetNumRegions() do
-			            local Region = select(i, Button.Cooldown:GetRegions())
+					Button.Cooldown:ClearAllPoints()
+					Button.Cooldown:SetInside()
 
-			            if (Region and Region.GetText) then
-			                local FontSize = UI:GetCooldownFontScale(Button.Cooldown)
-
-			                Region:ClearAllPoints()
-			                Region:Point("CENTER", Button, 0, 0)
-			                Region:SetFontTemplate("Default", FontSize)
-			                Region:SetTextColor(1, 0.82, 0)
-			            end
-			        end
+	                -- Update The Text
+	                UI:UpdateCooldownText(Button.Cooldown, Button, 0, 0, true)
 				end
 
 				Button.ZoneAbilityIsSkinned = true

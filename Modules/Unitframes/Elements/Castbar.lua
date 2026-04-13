@@ -249,7 +249,7 @@ function UF:CastStopped(Event, Unit, _, _, ...)
         Castbar.Text:SetText(INTERRUPTED)
 
         -- Set Values
-        Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
+        Castbar:SetMinMaxValues(0, 1)
         Castbar:SetValue(1, UI.SmoothBars)
         Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
     end
@@ -282,7 +282,7 @@ function UF:CastFailed(Event, Unit, _, _, ...)
     Castbar.Text:SetText(FAILED)
 
     -- Set Values
-    Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
+    Castbar:SetMinMaxValues(0, 1)
     Castbar:SetValue(1, UI.SmoothBars)
     Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
 
@@ -307,24 +307,6 @@ function UF:CastInterrupted(Event, Unit, _, _, ...)
     end
 
     if (not CastID or Castbar.CastID ~= CastID) then
-        -- Set Text
-        Castbar.Text:SetText(INTERRUPTED)
-
-        -- Set Values
-        Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
-        Castbar:SetValue(1, UI.SmoothBars)
-        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
-
-        -- Reset CastBar
-        UF:ResetCastBar(Castbar)
-        
-        -- Call Fade
-        UI:UIFrameFadeOut(Castbar, UF.CastHoldTime, Castbar:GetAlpha(), 0)
-
-        if (InterruptedBy) then
-            --Castbar.Text:SetText(INTERRUPTED..InterruptedBy)
-        end
-
         return
     end
 
@@ -332,7 +314,7 @@ function UF:CastInterrupted(Event, Unit, _, _, ...)
     Castbar.Text:SetText(INTERRUPTED)
 
     -- Set Values
-    Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
+    Castbar:SetMinMaxValues(0, 1)
     Castbar:SetValue(1, UI.SmoothBars)
     Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
 
@@ -463,24 +445,51 @@ function UF:ClearCastBarOnUnit(Unit)
     UI:UIFrameFadeOut(Castbar, UF.FadeInTime, Castbar:GetAlpha(), 0)
 end
 
+function UF:CheckUnitCasting(Unit)
+    local Casting = UnitCastingInfo(Unit)
+    local Channeling = UnitChannelInfo(Unit)
+
+    if (Casting or Channeling) then
+        UF:CastStarted("UNIT_SPELLCAST_START", Unit)
+    else
+        UF:ClearCastBarOnUnit(Unit)
+    end
+end
+
 -- CREATE CASTBARS
 
 function UF:CreatePlayerCastbar(Frame)
+    if (Frame.Castbar) then
+        return
+    end
+    
     local Castbar = CreateFrame("StatusBar", nil, _G.UIParent)
-    Castbar:Size(222, 26)
-    Castbar:Point(unpack(DB.Global.UnitFrames.CastBarPlayerPoint))
     Castbar:SetStatusBarTexture(Media.Global.Texture)
     Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarColor))
+
+    local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
+
+    if (DB.Global.UnitFrames.CastBarDetached) then
+        Castbar:Size(222, 26)
+        Castbar:Point(unpack(DB.Global.UnitFrames.CastBarPlayerPoint))
+
+        CastbarIcon:Size(38, 26)
+        CastbarIcon:Point("RIGHT", Castbar, "LEFT", -4, 0)
+    else
+        Castbar:Size(228, 20) 
+        Castbar:Point("BOTTOM", Frame, 0, -24)
+
+        CastbarIcon:Size(42, 32)
+        CastbarIcon:Point("RIGHT", Castbar, "LEFT", -4, 5)
+    end
+    
+    UI:KeepAspectRatio(CastbarIcon, CastbarIcon)
+
     Castbar:CreateBackdrop()
     Castbar:CreateShadow()
     Castbar:CreateSpark()
     Castbar:SetAlpha(0)
-    
-    local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
-    CastbarIcon:Size(38, 26)
-    CastbarIcon:Point("RIGHT", Castbar, "LEFT", -4, 0)
-    UI:KeepAspectRatio(CastbarIcon, CastbarIcon)
-    
+
     local IconOverlay = CreateFrame("Frame", nil, Castbar)
     IconOverlay:SetInside(CastbarIcon)
     IconOverlay:SetTemplate()
@@ -513,6 +522,10 @@ function UF:CreatePlayerCastbar(Frame)
 end
 
 function UF:CreateTargetCastbar(Frame)
+    if (Frame.Castbar) then
+        return
+    end
+
     local Castbar = CreateFrame("StatusBar", nil, Frame)
     Castbar:Size(228, 20) 
     Castbar:Point("BOTTOM", Frame, 0, -24)
@@ -548,6 +561,10 @@ function UF:CreateTargetCastbar(Frame)
 end
 
 function UF:CreatePetCastbar(Frame)
+    if (Frame.Castbar) then
+        return
+    end
+
     local Castbar = CreateFrame("StatusBar", nil, Frame)
     Castbar:Size(114, 20) 
     Castbar:Point("BOTTOM", Frame, 0, -22)
@@ -583,6 +600,10 @@ function UF:CreatePetCastbar(Frame)
 end
 
 function UF:CreateFocusCastbar(Frame)
+    if (Frame.Castbar) then
+        return
+    end
+
     local Castbar = CreateFrame("StatusBar", nil, Frame)
     Castbar:Size(300, 32)
     Castbar:Point("CENTER", _G.UIParent, 0, -2)
@@ -618,6 +639,10 @@ function UF:CreateFocusCastbar(Frame)
 end
 
 function UF:CreateBossCastbar(Frame)
+    if (Frame.Castbar) then
+        return
+    end
+
     local Castbar = CreateFrame("StatusBar", nil, Frame)
     Castbar:Size(204, 20)
     Castbar:Point("BOTTOM", Frame, 0, -24)

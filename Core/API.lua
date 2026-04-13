@@ -29,6 +29,7 @@ local sub = string.sub
 local issecretvalue = issecretvalue
 local issecrettable = issecrettable
 local canaccessvalue = canaccessvalue
+local hasanysecretvalues = hasanysecretvalues
 local UnitSecret = C_Secrets.ShouldUnitIdentityBeSecret
 
 -- WoW Globals
@@ -73,16 +74,20 @@ function UI:IsSecretValue(Value)
 	return issecretvalue and issecretvalue(Value)
 end
 
+function UI:HasAnySecretValues(...)
+	return hasanysecretvalues and hasanysecretvalues(...)
+end
+
 function UI:NotSecretValue(Value)
 	return not UI:IsSecretValue(Value)
 end
 
-function UI:IsSecretTable(Object)
-	return issecrettable and issecrettable(Object)
+function UI:IsSecretTable(Table)
+	return issecrettable and issecrettable(Table)
 end
 
-function UI:NotSecretTable(Object)
-	return not UI:IsSecretTable(Object)
+function UI:NotSecretTable(Table)
+	return not UI:IsSecretTable(Table)
 end
 
 function UI:CanAccessValue(Value)
@@ -93,17 +98,17 @@ function UI:CanNotAccessValue(Value)
 	return not UI:CanAccessValue(Value)
 end
 
-function UI:HasSecretValues(Object)
-	return Object.HasSecretValues and Object:HasSecretValues()
+function UI:HasSecretValues(Value)
+	return Value.HasSecretValues and Value:HasSecretValues()
 end
 
-function UI:NoSecretValues(Object)
-	return not UI:HasSecretValues(Object)
+function UI:NoSecretValues(Value)
+	return not UI:HasSecretValues(Value)
 end
 
 -- UFT8
 function UI:UTF8Sub(Text, Index, Dots)
-    if (not (Text) or issecretvalue(Text))  then 
+    if (not (Text) or UI:IsSecretValue(Text))  then 
         return 
     end
     

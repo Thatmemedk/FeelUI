@@ -27,7 +27,6 @@ NP.Modified = {}
 
 -- Tables
 NP.UnitFrames = {}
-NP.FrameUnits = {}
 
 -- Tables
 NP.UpdateQueue = {}
@@ -59,7 +58,7 @@ function NP:UpdateHealth(Frame, Unit)
     end
 
     local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
-    Frame.Health:SetMinMaxValues(0, Max, UI.SmoothBars)
+    Frame.Health:SetMinMaxValues(0, Max)
     Frame.Health:SetValue(Min, UI.SmoothBars)
 
     if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit)) then
@@ -130,21 +129,21 @@ function NP:UpdateHealthPred(Frame, Unit)
     local BarWidth, BarHeight = Frame.Health:GetSize()
 
     PlayerHealsBar:SetOrientation(Orientation)
-    PlayerHealsBar:SetMinMaxValues(0, Max, UI.SmoothBars)
+    PlayerHealsBar:SetMinMaxValues(0, Max)
     PlayerHealsBar:SetValue(PlayerHeals, UI.SmoothBars)
 
     OtherHealsBar:SetOrientation(Orientation)
-    OtherHealsBar:SetMinMaxValues(0, Max, UI.SmoothBars)
+    OtherHealsBar:SetMinMaxValues(0, Max)
     OtherHealsBar:SetValue(OtherHeals, UI.SmoothBars)
 
     AllAbsorbsBar:SetOrientation(Orientation)
     AllAbsorbsBar:SetReverseFill(true)
-    AllAbsorbsBar:SetMinMaxValues(0, Max, UI.SmoothBars)
+    AllAbsorbsBar:SetMinMaxValues(0, Max)
     AllAbsorbsBar:SetValue(AbsorbsAmount, UI.SmoothBars)
 
     HealAbsorbsBar:SetOrientation(Orientation)
     HealAbsorbsBar:SetReverseFill(true)
-    HealAbsorbsBar:SetMinMaxValues(0, Max, UI.SmoothBars)
+    HealAbsorbsBar:SetMinMaxValues(0, Max)
     HealAbsorbsBar:SetValue(HealAbsorbAmount, UI.SmoothBars)
 
     -- Healing Prediction
@@ -279,7 +278,9 @@ end
 -- HIGHLIGHT
 
 function NP:UpdateTargetIndicator(Frame, Unit)
-    if (UnitExists("target") and UnitIsUnit("target", Unit)) then
+    local IsTarget = UnitIsUnit("target", Unit)
+
+    if (IsTarget) then
         Frame.TargetIndicator:Show()
     else
         Frame.TargetIndicator:Hide()
@@ -287,10 +288,22 @@ function NP:UpdateTargetIndicator(Frame, Unit)
 end
 
 function NP:UpdateHighlight(Frame, Unit)
-    if (UnitExists("target") and UnitIsUnit("target", Unit)) then
+    local IsTarget = UnitIsUnit("target", Unit)
+
+    if (IsTarget) then
         Frame.Highlight:Show()
     else
         Frame.Highlight:Hide()
+    end
+end
+
+function NP:UpdateHighlightMouseOver(Frame, Unit)
+    local IsMouseover = UnitIsUnit("mouseover", Unit)
+
+    if (IsMouseover) then
+        Frame.HighlightMouseOver:Show()
+    else
+        Frame.HighlightMouseOver:Hide()
     end
 end
 
@@ -347,14 +360,19 @@ function NP:ProcessFrame(Frame)
         Frame.NeedsTargetIndicator = nil
     end
 
-    -- AURAS
-    --[[
-    if (Frame.NeedsAuras) then 
-        if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
+    if (Frame.NeedsHighlightOnMouseOver) then
+        if (Frame.HighlightMouseOver) then self:UpdateHighlightMouseOver(Frame, Unit) end
 
+        Frame.NeedsHighlightOnMouseOver = nil
+    end
+
+    -- AURAS
+    if (Frame.NeedsAuras) then 
+        --if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
+        if (Frame.CrowdControl) then self:UpdateAuras(Frame, Unit, false, true) end
+    
         Frame.NeedsAuras = nil
     end
-    --]]
 end
 
 -- QUEUE UPDATES
@@ -429,7 +447,7 @@ function NP:UnitAura(Unit)
     NP:QueueUpdate(Frame, Unit, "NeedsAuras")
 end
 
-function NP:UnitNameUpdate(Unit)
+function NP:UnitName(Unit)
     local Frame = NP.UnitFrames[Unit]
 
     if (not Frame) then
@@ -439,7 +457,7 @@ function NP:UnitNameUpdate(Unit)
     NP:QueueUpdate(Frame, Unit, "NeedsName")
 end
 
-function NP:ThreatUpdate(Unit)
+function NP:UnitThreat(Unit)
     local Frame = NP.UnitFrames[Unit]
 
     if (not Frame) then
@@ -449,14 +467,20 @@ function NP:ThreatUpdate(Unit)
     NP:QueueUpdate(Frame, Unit, "NeedsThreat")
 end
 
-function NP:TargetChanged()
+function NP:UnitTargetChanged()
     for Unit, Frame in pairs(NP.UnitFrames) do
         NP:QueueUpdate(Frame, Unit, "NeedsTargetIndicator")
         NP:QueueUpdate(Frame, Unit, "NeedsThreat")
     end
 end
 
-function NP:RaidIconUpdate()
+function NP:UnitMouseOver()
+    for Unit, Frame in pairs(NP.UnitFrames) do
+        NP:QueueUpdate(Frame, Unit, "NeedsHighlightOnMouseOver")
+    end
+end
+
+function NP:UnitRaidIcon()
     for Unit, Frame in pairs(NP.UnitFrames) do
         NP:QueueUpdate(Frame, Unit, "NeedsIcons")
     end
@@ -492,21 +516,28 @@ function NP:CastBarOnNamePlateUnitRemoved(Unit)
     UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
 end
 
+function NP:CheckUnitCasting(Unit)
+    local Casting = UnitCastingInfo(Unit)
+    local Channeling = UnitChannelInfo(Unit)
+
+    if (Casting or Channeling) then
+        NP:CastStarted("UNIT_SPELLCAST_START", Unit)
+    end
+end
+
 -- EVENT HANDLER
 
 function NP:NameplateAdded(Unit)
-    if (not Unit) then 
-        return 
-    end
-
     local Plate = C_NamePlate.GetNamePlateForUnit(Unit)
 
-    if (not Plate) then
+    if (not Plate or not Plate.UnitFrame or Plate:IsForbidden()) then
         return
     end
 
-    local isFriendly = UnitIsFriend("player", Unit)
-    local Type = self.PlateTypes[isFriendly]
+    Plate.UnitFrame:SetAttribute("unit", Unit)
+
+    local IsFriendly = UnitIsFriend("player", Unit)
+    local Type = self.PlateTypes[IsFriendly]
     local Frame = Plate[Type.Key]
 
     if (not Frame) then
@@ -515,7 +546,7 @@ function NP:NameplateAdded(Unit)
     end
 
     if (not Frame) then 
-        return 
+        return
     end
 
     local Opposite = Plate[Type.Opposite]
@@ -531,20 +562,29 @@ function NP:NameplateAdded(Unit)
 
     -- Cache Units
     self.UnitFrames[Unit] = Frame
-    self.FrameUnits[Frame] = Unit
 
     -- Batch Flags
     Frame.NeedsHealth = true
+    Frame.NeedsHealthPred = true
     Frame.NeedsName = true
+    Frame.NeedsIcons = true
+    Frame.NeedsThreat = true
+    Frame.NeedsTargetIndicator = true
+    Frame.NeedsHighlightOnMouseOver = true
+    Frame.NeedsAuras = true
 
     -- Queue Updates
     self:QueueUpdate(Frame, Unit)
 end
 
 function NP:NameplateRemoved(Unit)
-    if (not Unit) then 
-        return 
+    local Plate = C_NamePlate.GetNamePlateForUnit(Unit)
+
+    if (not Plate or not Plate.UnitFrame) then 
+        return
     end
+
+    Plate.UnitFrame:SetAttribute("unit", nil)
 
     local Frame = self.UnitFrames[Unit]
 
@@ -557,7 +597,6 @@ function NP:NameplateRemoved(Unit)
     Frame:Hide()
 
     -- Reset Unit Cache
-    self.FrameUnits[Frame] = nil
     self.UnitFrames[Unit] = nil
 
     -- Reset Flags
@@ -567,6 +606,8 @@ function NP:NameplateRemoved(Unit)
     Frame.NeedsIcons = nil
     Frame.NeedsThreat = nil
     Frame.NeedsTargetIndicator = nil
+    Frame.NeedsHighlightOnMouseOver = nil
+    Frame.NeedsAuras = nil
 
     -- Remove Queued Updates
     self.UpdateQueue[Frame] = nil
@@ -588,19 +629,21 @@ function NP:OnEvent(event, unit, ...)
         NP:NameplateRemoved(unit)
         NP:CastBarOnNamePlateUnitRemoved(unit)
     elseif (event == "PLAYER_TARGET_CHANGED") then
-        NP:TargetChanged()
+        NP:UnitTargetChanged()
+    elseif (event == "UPDATE_MOUSEOVER_UNIT") then
+        NP:UnitMouseOver()
     elseif (event == "RAID_TARGET_UPDATE") then
-        NP:RaidIconUpdate()
+        NP:UnitRaidIcon()
     elseif (event == "UNIT_AURA") then
-        --NP:UnitAura(unit)
+        NP:UnitAura(unit)
     elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
         NP:UnitHealth(unit)
     elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
         NP:UnitHealthPred(unit)
     elseif (event == "UNIT_NAME_UPDATE") then
-        NP:UnitNameUpdate(unit)
+        NP:UnitName(unit)
     elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
-        NP:ThreatUpdate(unit)
+        NP:UnitThreat(unit)
     end
 
     if (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then
@@ -658,7 +701,7 @@ function NP:RegisterEvents()
     self:RegisterEvent("NAME_PLATE_UNIT_ADDED")
     self:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
     self:RegisterEvent("PLAYER_TARGET_CHANGED")
-    self:RegisterEvent("UNIT_TARGETABLE_CHANGED")
+    self:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
     -- HEALTH
     self:RegisterEvent("UNIT_HEALTH")
     self:RegisterEvent("UNIT_MAXHEALTH")

@@ -53,6 +53,7 @@
 	<Script file="Maps\Core.lua"/>
 	<Script file="Maps\MinimapButtonsBar.lua"/>
 	<!-- Misc -->
+	<Script file="Misc\Alerts.lua"/>
 	<Script file="Misc\Blizzard.lua"/>
 	<Script file="Misc\CombatText.lua"/>
 	<Script file="Misc\ErrorFilter.lua"/>

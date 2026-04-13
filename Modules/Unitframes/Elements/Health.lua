@@ -8,6 +8,10 @@ local select = select
 local unpack = unpack
 
 function UF:CreateHealth(Frame, Size, Orientation)
+    if (Frame.Health) then
+        return
+    end
+    
     local Health = CreateFrame("StatusBar", nil, Frame)
     Health:Height(Size or 36)
     Health:Point("TOPRIGHT", Frame, 0, 0)

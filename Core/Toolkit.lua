@@ -416,17 +416,21 @@ local function SetBackdropTemplate(self, InsetLeft, InsetRight, InsetTop, InsetB
 end
 
 local function SetColorTemplate(self, R, G, B, Alpha)
-	if (self and self.Border) then
-		for i = 1, 4 do
-			self.Border[i]:SetColorTexture(R, G, B, Alpha)
-		end
+	if (not self or not self.Border) then
+		return
+	end
+
+	for i = 1, 4 do
+		self.Border[i]:SetColorTexture(R, G, B, Alpha)
 	end
 end
 
 function SetBackdropColorTemplate(self, R, G, B, Alpha)
-	if (self and self.BorderBackdrop) then
-		self.BorderBackdrop:SetColorTexture(R, G, B, Alpha)
+	if (not self or not self.BorderBackdrop) then
+		return
 	end
+
+	self.BorderBackdrop:SetColorTexture(R, G, B, Alpha)
 end
 
 local function CreateBackdrop(self, ExtraShadowBorders)
@@ -536,6 +540,10 @@ local function CreateButtonBackdrop(self)
 end
 
 local function StyleButton(self, NoHover, NoPushed, NoChecked)
+	if (not self) then
+		return
+	end
+
 	if (self.SetHighlightTexture and self.CreateTexture and not self.Highlight and not NoHover) then
 		self:SetHighlightTexture(Media.Global.Texture)
 
@@ -603,7 +611,7 @@ end
 --------------
 
 local function ClearFrameRegions(self, Remove)
-	if not self or self:IsForbidden() then 
+	if (not self or self:IsForbidden()) then 
 		return
 	end
 
@@ -653,7 +661,7 @@ end
 --]]
 
 local function DisableBackdrops(self)
-	if not self or self:IsForbidden() then 
+	if (not self or self:IsForbidden()) then 
 		return
 	end
 

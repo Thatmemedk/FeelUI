@@ -12,8 +12,8 @@ local unpack = unpack
 local TimerTracker = _G.TimerTracker
 
 function TimeTrackers:UpdateBar(Bar)
-	if not (Bar) then 
-		return 
+	if (not Bar) then
+		return
 	end
 
 	for i = 1, Bar:GetNumRegions() do
@@ -43,7 +43,7 @@ function TimeTrackers:UpdateBar(Bar)
 end
 
 function TimeTrackers:Update()
-	if not (TimerTracker and TimerTracker.timerList) then
+	if (not TimerTracker and TimerTracker.timerList) then
 		return
 	end
 

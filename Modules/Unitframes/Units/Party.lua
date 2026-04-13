@@ -5,7 +5,7 @@ local UF = UI:CallModule("UnitFrames")
 
 function UF:CreateParty(Frame)
     self:CreatePanels(Frame)
-    self:CreateHightlight(Frame)
+    self:CreateHighlight(Frame)
     self:CreateRange(Frame)
     self:CreateHealth(Frame)
     self:CreateHealthPrediction(Frame)

@@ -23,6 +23,60 @@ local MinimapNorthTag = _G.MinimapNorthTag
 local TimeManagerClockButton = _G.TimeManagerClockButton
 local ExpansionMinimapButton = _G.ExpansionLandingPageMinimapButton
 
+function Maps:Style()
+	local MinimapBG = CreateFrame("Frame", nil, Minimap)
+	MinimapBG:SetFrameLevel(Minimap:GetFrameLevel() - 1)
+	MinimapBG:Size(171, 171)
+	MinimapBG:Point("TOPRIGHT", _G.UIParent, -6, -6)
+	MinimapBG:CreateBackdrop()
+	MinimapBG:CreateShadow()
+
+	Minimap:SetMaskTexture(Media.Global.Blank)
+	Minimap:Size(162, 162)
+	Minimap:ClearAllPoints()
+	Minimap:Point("CENTER", MinimapBG, 0, 0)
+	Minimap:SetTemplate()
+	Minimap:CreateShadow()
+	Minimap:SetShadowOverlay()
+
+	MapsCluster:ClearAllPoints()
+	MapsCluster:SetAllPoints(Minimap)
+	MinimapBackdrop:ClearAllPoints()
+	MinimapBackdrop:SetAllPoints(Minimap)
+
+	local InvisFrame = CreateFrame("Frame", nil, Minimap)
+	InvisFrame:SetFrameLevel(Minimap:GetFrameLevel() + 10)
+	InvisFrame:SetInside()
+
+	Minimap.Location = InvisFrame:CreateFontString(nil, "OVERLAY")
+	Minimap.Location:Size(162, 162)
+	Minimap.Location:Point("TOP", Minimap, 0, 82)
+	Minimap.Location:SetJustifyH("CENTER")
+	Minimap.Location:SetJustifyV("MIDDLE")
+	Minimap.Location:SetFontTemplate("Default", 12)
+
+	if (QueueStatusButton) then
+		local MapsQueueStatus = CreateFrame("Frame", "FeelUIQueueStatus", _G.UIParent)
+		MapsQueueStatus:SetFrameLevel(10)
+		MapsQueueStatus:Size(32)
+		MapsQueueStatus:Point("BOTTOMLEFT", Minimap, 4, 2)
+
+		hooksecurefunc(QueueStatusButton, "SetParent", Maps.QueueStatusSetParent)
+		hooksecurefunc(QueueStatusButton, "SetPoint", Maps.QueueStatusSetPoint)
+	end
+ 	
+ 	if (MapsInstanceDifficulty) then
+		MapsInstanceDifficulty:ClearAllPoints()
+		MapsInstanceDifficulty:Point("BOTTOM", Minimap, 0, 22)
+	end
+
+	if (MapsCluster.IndicatorFrame) then
+		MapsCluster.IndicatorFrame:SetParent(Minimap)
+		MapsCluster.IndicatorFrame:ClearAllPoints()
+		MapsCluster.IndicatorFrame:Point("BOTTOMRIGHT", Minimap, -8, 8)
+	end
+end
+
 function Maps:Disable()
 	local HiddenFrames = {
 		"MinimapBorder",
@@ -115,74 +169,6 @@ function Maps:QueueStatusSetParent(Parent)
 	end
 end
 
-function Maps:Style()
-	local MinimapBG = CreateFrame("Frame", nil, Minimap)
-	MinimapBG:SetFrameLevel(Minimap:GetFrameLevel() - 1)
-	MinimapBG:Size(171, 171)
-	MinimapBG:Point("TOPRIGHT", _G.UIParent, -6, -6)
-	MinimapBG:CreateBackdrop()
-	MinimapBG:CreateShadow()
-
-	Minimap:SetMaskTexture(Media.Global.Blank)
-	Minimap:Size(162, 162)
-	Minimap:ClearAllPoints()
-	Minimap:Point("CENTER", MinimapBG, 0, 0)
-	Minimap:SetTemplate()
-	Minimap:CreateShadow()
-	Minimap:SetShadowOverlay()
-
-	MapsCluster:ClearAllPoints()
-	MapsCluster:SetAllPoints(Minimap)
-	MinimapBackdrop:ClearAllPoints()
-	MinimapBackdrop:SetAllPoints(Minimap)
-
-	local InvisFrame = CreateFrame("Frame", nil, Minimap)
-	InvisFrame:SetFrameLevel(Minimap:GetFrameLevel() + 10)
-	InvisFrame:SetInside()
-
-	Minimap.Location = InvisFrame:CreateFontString(nil, "OVERLAY")
-	Minimap.Location:Size(162, 162)
-	Minimap.Location:Point("TOP", Minimap, 0, 82)
-	Minimap.Location:SetJustifyH("CENTER")
-	Minimap.Location:SetJustifyV("MIDDLE")
-	Minimap.Location:SetFontTemplate("Default", 12)
-
-	if (QueueStatusButton) then
-		local MapsQueueStatus = CreateFrame("Frame", "FeelUIQueueStatus", _G.UIParent)
-		MapsQueueStatus:SetFrameLevel(10)
-		MapsQueueStatus:Size(32)
-		MapsQueueStatus:Point("BOTTOMLEFT", Minimap, 4, 2)
-
-		hooksecurefunc(QueueStatusButton, "SetParent", Maps.QueueStatusSetParent)
-		hooksecurefunc(QueueStatusButton, "SetPoint", Maps.QueueStatusSetPoint)
-	end
- 	
- 	if (MapsInstanceDifficulty) then
-		MapsInstanceDifficulty:ClearAllPoints()
-		MapsInstanceDifficulty:Point("BOTTOM", Minimap, 0, 22)
-	end
-
-	if (MapsCluster.IndicatorFrame) then
-		MapsCluster.IndicatorFrame:SetParent(Minimap)
-		MapsCluster.IndicatorFrame:ClearAllPoints()
-		MapsCluster.IndicatorFrame:Point("BOTTOMRIGHT", Minimap, -8, 8)
-	end
-end
-
-function Maps:ScrollZoom(Zoom)
-	self:EnableMouseWheel(true)
-
-	if (Zoom > 0) then
-		MapsZoomIn:Click()
-	elseif (Zoom < 0) then
-		MapsZoomOut:Click()
-	end
-end
-
-function Maps:EnableZoom()
-	Minimap:SetScript("OnMouseWheel", self.ScrollZoom)
-end
-
 function Maps:OnMouseDown(Button)
 	if (Button == "RightButton") then
 		local TrackingButton = _G.MinimapCluster.Tracking.Button
@@ -235,7 +221,6 @@ end
 function Maps:Initialize()
 	self:Disable()
 	self:Style()
-	self:EnableZoom()
 	self:EnableClick()
 	self:RegisterEvents()
 end

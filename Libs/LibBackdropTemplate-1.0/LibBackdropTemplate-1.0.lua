@@ -1,3 +1,5 @@
+local UI, DB, Media, Language = select(2, ...):Call()
+
 -----------------------------
 -- LibBackdropTemplate 1.0 --
 -----------------------------
@@ -97,16 +99,12 @@ local function SetupBackdropTextureCoordinates(Region, PieceSetup, RepeatX, Repe
 end
 
 function LibBackdropTemplateMixin:SetupTextureCoordinates()
-    if (type(self) ~= "table" or type(self.GetWidth) ~= "function") then
-        return
-    end
-
     local Width = self:GetWidth()
     local Height = self:GetHeight()
     local EffectiveScale = self:GetEffectiveScale()
     local EdgeSize = self:GetEdgeSize()
 
-    if (issecretvalue(Width) or issecretvalue(Height) or issecretvalue(EffectiveScale) or issecretvalue(EdgeSize)) then
+    if (UI:HasAnySecretValues(Width, Height, EffectiveScale, EdgeSize)) then
         return
     end
 

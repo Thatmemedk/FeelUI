@@ -8,6 +8,10 @@ local select = select
 local unpack = unpack
 
 function UF:CreateRange(Frame)
+    if (Frame.Range) then
+        return
+    end
+    
     local Range = {}
     Range.InRangeAlpha = 1
     Range.OutOfRangeAlpha = 0.3

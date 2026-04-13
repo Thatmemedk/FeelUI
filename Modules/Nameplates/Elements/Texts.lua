@@ -8,6 +8,10 @@ local select = select
 local unpack = unpack
 
 function NP:CreateHealthText(Frame)
+    if (Frame.HealthText) then
+        return
+    end
+
     local HealthText = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
     HealthText:Point("LEFT", Frame.Health, 4, 10)
     HealthText:SetFontTemplate("Default", 14)
@@ -16,6 +20,10 @@ function NP:CreateHealthText(Frame)
 end
 
 function NP:CreateName(Frame)
+    if (Frame.Name) then
+        return
+    end
+
     local Name = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
     Name:Width(125)
     Name:Point("RIGHT", Frame.Health, -4, 10)
@@ -30,6 +38,10 @@ function NP:CreateName(Frame)
 end
 
 function NP:CreateNameMiddle(Frame)
+    if (Frame.Name or Frame.Guild) then
+        return
+    end
+
     local Name = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
     Name:Point("CENTER", Frame.Panel, 0, 0)
     Name:SetFontTemplate("Default", 16, 2, 2)

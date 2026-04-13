@@ -20,6 +20,10 @@ function UF:CreateOverflowBorder(Frame)
 end
 
 function UF:CreateHealthPrediction(Frame)
+    if (Frame.HealthPrediction) then
+        return
+    end
+    
     local HealthPrediction = {}
     HealthPrediction.OverFlowAmount = 1.2
 

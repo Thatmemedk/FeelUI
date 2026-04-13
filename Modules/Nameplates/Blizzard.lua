@@ -18,9 +18,8 @@ function NP:DisableBlizzard()
         end
 
         if (not NP.Hooked[BlizzNP.UnitFrame]) then
-            NP.Hooked[BlizzNP.UnitFrame] = true
-
             local NPLocked = true
+
             hooksecurefunc(BlizzNP.UnitFrame, "SetAlpha", function(Frame)
                 if (NPLocked or Frame:IsForbidden()) then
                     return
@@ -30,6 +29,8 @@ function NP:DisableBlizzard()
                 Frame:SetAlpha(0)
                 NPLocked = false
             end)
+
+            NP.Hooked[BlizzNP.UnitFrame] = true
         end
 
         BlizzNP.UnitFrame:SetAlpha(0)

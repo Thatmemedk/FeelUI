@@ -5,7 +5,7 @@ local UF = UI:CallModule("UnitFrames")
 
 function UF:CreateRaid(Frame)
     self:CreatePanels(Frame)
-    self:CreateHightlight(Frame)
+    self:CreateHighlight(Frame)
     self:CreateRange(Frame)
     self:CreateHealth(Frame, 42, "VERTICAL")
     self:CreateHealthPrediction(Frame)

@@ -197,7 +197,7 @@ function NP:CastStopped(Event, Unit, _, _, ...)
         Castbar.Text:SetText(INTERRUPTED)
 
         -- Set Values
-        Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
+        Castbar:SetMinMaxValues(0, 1)
         Castbar:SetValue(1, UI.SmoothBars)
         Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
     end
@@ -231,7 +231,7 @@ function NP:CastFailed(Event, Unit, _, _, ...)
     Castbar.Text:SetText(FAILED)
 
     -- Set Values
-    Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
+    Castbar:SetMinMaxValues(0, 1)
     Castbar:SetValue(1, UI.SmoothBars)
     Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
 
@@ -257,24 +257,6 @@ function NP:CastInterrupted(Event, Unit, _, _, ...)
     end
 
     if (not CastID or Castbar.CastID ~= CastID) then
-        -- Set Text
-        Castbar.Text:SetText(INTERRUPTED)
-
-        -- Set Values
-        Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
-        Castbar:SetValue(1, UI.SmoothBars)
-        Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
-
-        -- Reset CastBar
-        NP:ResetCastBar(Castbar)
-        
-        -- Call Fade
-        UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
-
-        if (InterruptedBy) then
-            --Castbar.Text:SetText(INTERRUPTED..InterruptedBy)
-        end
-
         return
     end
 
@@ -282,7 +264,7 @@ function NP:CastInterrupted(Event, Unit, _, _, ...)
     Castbar.Text:SetText(INTERRUPTED)
 
     -- Set Values
-    Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
+    Castbar:SetMinMaxValues(0, 1)
     Castbar:SetValue(1, UI.SmoothBars)
     Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
 
@@ -403,6 +385,10 @@ function NP:ResetCastBar(Castbar)
 end
 
 function NP:CreateCastBar(Frame)
+    if (Frame.Castbar) then
+        return
+    end
+
     local Width, Height = unpack(DB.Global.Nameplates.Size)
 
     local Castbar = CreateFrame("StatusBar", nil, Frame)

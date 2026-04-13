@@ -15,6 +15,7 @@ Media.Global = {
 	Texture = M..[[Textures\SmoothV2.tga]],
 	Overlay = M..[[Textures\Overlay.tga]],
 	Shadow = M..[[Textures\ShadowTex.tga]],
+	Glow = [[Interface\PETBATTLES\PetBattle-SelectedPetGlow]],
 	Highlight = M..[[Textures\Highlight.tga]],
 	Backdrop = M..[[Textures\BackdropBlizz.tga]],
 	-- Icons/Misc

@@ -127,7 +127,7 @@ function MinimapButtonBar:SkinButtons()
 					else
 						Texture = strlower(tostring(Region:GetTexture()))
 					
-						if RemoveTextureFile[Texture] or strfind(Texture, "interface/characterframe") or (strfind(Texture, "interface/minimap") and not strfind(Texture, "interface/minimap/tracking")) or strfind(Texture, "border") or strfind(Texture, "background") or strfind(Texture, "alphamask") or strfind(Texture, "highlight") then
+						if (RemoveTextureFile[Texture] or strfind(Texture, "interface/characterframe") or (strfind(Texture, "interface/minimap") and not strfind(Texture, "interface/minimap/tracking")) or strfind(Texture, "border") or strfind(Texture, "background") or strfind(Texture, "alphamask") or strfind(Texture, "highlight")) then
 							Region:SetTexture(nil)
 							Region:SetAlpha(0)
 						else
@@ -137,7 +137,7 @@ function MinimapButtonBar:SkinButtons()
 							Region.UpdateCoord = UI.Noop
 							UI:KeepAspectRatio(Buttons, Region)
 					
-							if not (Buttons.MinimapButtonIsSkinned) then
+							if (not Buttons.MinimapButtonIsSkinned) then
 								Buttons.IconOverlay = CreateFrame("Frame", nil, Buttons)
 								Buttons.IconOverlay:SetInside(Region)
 								Buttons.IconOverlay:SetTemplate()
@@ -162,9 +162,9 @@ end
 
 function MinimapButtonBar:CreatePanel()
 	local Frame = CreateFrame("Frame", nil, _G.UIParent)
+	Frame:Point("TOPRIGHT", _G.Minimap, "BOTTOMRIGHT", 4, -8)
 	Frame:CreateBackdrop()
 	Frame:CreateShadow()
-	Frame:Point("TOPRIGHT", _G.Minimap, "BOTTOMRIGHT", 4, -8)
 	
 	self.Frame = Frame	
 end
@@ -195,9 +195,9 @@ function MinimapButtonBar:Update()
         if (i == 1) then
             Button:Point("TOPLEFT", self.Frame, 4, -4)
         elseif ((i - 1) % ButtonsPerRow == 0) then
-            Button:Point("TOPLEFT", self.Childs[i - ButtonsPerRow], "BOTTOMLEFT", 0, -Spacing)
+            Button:Point("TOPLEFT", self.Childs[i-ButtonsPerRow], "BOTTOMLEFT", 0, -Spacing)
         else
-            Button:Point("LEFT", self.Childs[i - 1], "RIGHT", Spacing, 0)
+            Button:Point("LEFT", self.Childs[i-1], "RIGHT", Spacing, 0)
         end
     end
 end

@@ -15,7 +15,6 @@ local GetNumAddOns = C_AddOns.GetNumAddOns
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local GetCVarBool = C_CVar.GetCVarBool
 local GetLocale = GetLocale
-local GetNumAddOns = GetNumAddOns
 local GetRealZoneText = GetRealZoneText
 local GetSpecialization = GetSpecialization
 local GetSpecializationInfo = GetSpecializationInfo
@@ -126,7 +125,6 @@ end
 function Status:UpdateStatusFrameZone()
     local ZoneText = GetRealZoneText() or _G.UNKNOWN
     local r, g, b = self:GetLocTextColor()
-
     self.Frame.Zone:SetFormattedText("Current Zone: |cff%02x%02x%02x%s", r * 255, g * 255, b * 255, ZoneText)
 end
 
@@ -146,11 +144,15 @@ function Status:GetDisplay()
 	return GetCVarBool("gxMaximize") and "Windowed" or "Fullscreen"
 end
 
+function Status:IsAddOnEnabled(AddOn)
+	return GetAddOnEnableState(UI.MyName, AddOn) == 2
+end
+
 function Status:AddonsCheck()
 	for i = 1, GetNumAddOns() do
 		local Name = GetAddOnInfo(i)
 		
-		if (Name ~= "FeelUI" and Name ~= "FeelUI_Options" and Status:IsAddOnEnabled(Name)) then
+		if (Name ~= "FeelUI" or Name ~= "FeelUI_Options" and Status:IsAddOnEnabled(Name)) then
 			return "|CFFFF3333No"
 		end
 	end
@@ -168,10 +170,6 @@ function Status:GetNumLoadedAddOns()
 	end
 	
 	return NumLoaded
-end
-
-function Status:IsAddOnEnabled(AddOn)
-	return GetAddOnEnableState(UI.MyName, AddOn) == 2
 end
 
 function Status:CreateCategories(Parent, Name, FontSize, ShadowOffsetX, ShadowOffsetY, InsertText, R, G, B, A, Anchor, OffsetX, OffsetY)

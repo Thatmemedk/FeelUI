@@ -28,7 +28,7 @@ end
 function CH:OnMouseUp()
 	local Frame = self.ChatFrame
 	
-	if Frame.IsCopyEnabled then
+	if (Frame.IsCopyEnabled) then
 		Frame:SetTextCopyable(false)
 		Frame:EnableMouse(false)
 		Frame:SetOnTextCopiedCallback(nil)
@@ -41,7 +41,7 @@ function CH:OnMouseUp()
 		Frame.IsCopyEnabled = true
 	end
 	
-	if Frame.isDocked then
+	if (Frame.isDocked) then
 		Panels.CopyHighlight:SetStatusBarColor(1, 1, 1, 0.05)
 	end
 	

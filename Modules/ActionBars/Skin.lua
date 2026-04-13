@@ -40,6 +40,7 @@ function AB:StyleActionButton(Button, Icon, Name)
     local AutoCastOverlay = Button.AutoCastOverlay
     local AutoCastable = Button.AutoCastable
     local LossControlCD = Button.lossOfControlCooldown
+    local Arrow = Button.Arrow
     
     -- HIDE TEXTURES
     AB:SafeHide(Normal)
@@ -49,6 +50,7 @@ function AB:StyleActionButton(Button, Icon, Name)
     AB:SafeHide(Divider)
     AB:SafeHide(Corners)
     AB:SafeHide(MacroName)
+    AB:SafeHide(Arrow)
 
     if (SpellHighlightTexture) then
         SpellHighlightTexture:SetInside(Button, 1, 1)
@@ -140,4 +142,56 @@ function AB:SkinStanceButtons()
         local Icon = Button.icon or _G["StanceButton"..i.."Icon"]
         AB:StyleActionButton(Button, Icon, Button:GetName())
     end
+end
+
+function AB:StyleFlyout()
+    local Index = 1
+    local Button = _G["SpellFlyoutPopupButton"..Index]
+
+    if (not Button) then 
+        return
+    end
+
+    if (not Button.FlyoutIsSkinned) then
+        local Parent = Button:GetParent()
+
+        Button.Backdrop = CreateFrame("Frame", nil, Parent)
+        Button.Backdrop:SetInside(Paret, 1, 1)
+        Button.Backdrop:SetFrameLevel(Parent:GetFrameLevel() - 1)
+        Button.Backdrop:CreateBackdrop()
+        Button.Backdrop:CreateShadow()
+
+        Button.FlyoutIsSkinned = true
+    end
+
+    while Button do
+        if (_G.SpellFlyout:IsShown()) then
+            if (not InCombatLockdown()) then
+                Button:Size(unpack(DB.Global.ActionBars.ButtonSize))
+            end
+        end
+
+        AB.SkinButton(Button)
+
+        if (not Button.isFlyout) then
+            Button.isFlyout = true
+        end
+
+        Index = Index + 1
+        Button = _G["SpellFlyoutPopupButton"..Index]
+    end
+end
+
+function AB:FlyoutOnToggle()
+    if (_G.SpellFlyoutHorizontalBackground) then _G.SpellFlyoutHorizontalBackground:Hide() end
+    if (_G.SpellFlyoutVerticalBackground) then _G.SpellFlyoutVerticalBackground:Hide() end
+    if (_G.SpellFlyout.Background) then _G.SpellFlyout.Background:Hide() end
+    if (_G.SpellFlyoutBackgroundEnd) then _G.SpellFlyoutBackgroundEnd:Hide() end
+    if (_G.LABFlyoutHandlerFrame) then _G.LABFlyoutHandlerFrame.Background:Hide() end
+end
+
+function AB:CreateFlyout()
+    hooksecurefunc(_G.SpellFlyout, "Show", AB.StyleFlyout)
+    hooksecurefunc(_G.SpellFlyout, "Hide", AB.StyleFlyout)
+    hooksecurefunc(_G.SpellFlyout, "Toggle", AB.FlyoutOnToggle)
 end

@@ -38,12 +38,18 @@ function UF:SetupGroupFrame(Frame, type)
         end
 
         if (self.unit) then
-            UF:QueueUpdate(self, self.unit, "NeedsAuras")
             UF:QueueUpdate(self, self.unit, "NeedsHealth")
             UF:QueueUpdate(self, self.unit, "NeedsHealthPred")
             UF:QueueUpdate(self, self.unit, "NeedsPower")
             UF:QueueUpdate(self, self.unit, "NeedsName")
-            UF:QueueUpdate(self, self.unit, "NeedsIcons")
+            UF:QueueUpdate(self, self.unit, "NeedsAuras")
+            UF:QueueUpdate(self, self.unit, "NeedsRaidIcons")
+            UF:QueueUpdate(self, self.unit, "NeedsLeaderIcons")
+            UF:QueueUpdate(self, self.unit, "NeedsReadyCheckIcons")
+            UF:QueueUpdate(self, self.unit, "NeedsRoleIcons")
+            UF:QueueUpdate(self, self.unit, "NeedsPhaseIcons")
+            UF:QueueUpdate(self, self.unit, "NeedsResurrectionIcons")
+            UF:QueueUpdate(self, self.unit, "NeedsSummonIcons")
             UF:QueueUpdate(self, self.unit, "NeedsThreat")
             UF:QueueUpdate(self, self.unit, "NeedsRange")
         end
@@ -114,6 +120,7 @@ function UF:SpawnGroupHeader(type)
 
         if (event == "PLAYER_REGEN_ENABLED" and self.NeedsRefresh) then
             self.NeedsRefresh = nil
+
             UF:FullRefreshGroup()
         end
 
@@ -130,6 +137,7 @@ function UF:SpawnGroupHeader(type)
 
             if (Frame.NeedsSetup) then
                 Frame.NeedsSetup = nil
+                
                 UF:SetupGroupFrame(Frame, type)
             end
 

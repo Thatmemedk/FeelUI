@@ -13,6 +13,10 @@ function UF:CreateOnEnterLeave(Frame)
 end
 
 function UF:CreatePanels(Frame)
+    if (Frame.Panel or Frame.InvisFrame or Frame.InvisFrameHigher) then
+        return
+    end
+
     local Panel = CreateFrame("Frame", nil, Frame)
     Panel:SetFrameLevel(Frame:GetFrameLevel() - 1)
     Panel:SetInside()
@@ -31,14 +35,18 @@ function UF:CreatePanels(Frame)
     Frame.InvisFrameHigher = InvisFrameHigher
 end
 
-function UF:CreateHightlight(Frame)
+function UF:CreateHighlight(Frame)
+    if (Frame.Highlight) then
+        return
+    end
+    
     local Highlight = CreateFrame("StatusBar", nil, Frame)
-    Highlight:SetFrameLevel(Frame:GetFrameLevel() + 10)
     Highlight:SetInside()
     Highlight:SetStatusBarTexture(Media.Global.Texture)
     Highlight:SetStatusBarColor(1, 1, 1, 0.05)
     Highlight:Hide()
     
+    -- On Enter / Leave
     Frame:HookScript("OnEnter", self.HighlightOnMouse)
     Frame:HookScript("OnLeave", self.HighlightOnMouse)
     

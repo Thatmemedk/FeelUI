@@ -8,6 +8,10 @@ local select = select
 local unpack = unpack
 
 function UF:CreatePlayerTexts(Frame)
+    if (Frame.HealthTextCur or Frame.HealthTextPer or Frame.PowerText or Frame.Name) then
+        return
+    end
+
     local HealthTextCur = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
     HealthTextCur:Point("RIGHT", Frame, -8, 0)
     HealthTextCur:SetFontTemplate("Default")
@@ -31,6 +35,10 @@ function UF:CreatePlayerTexts(Frame)
 end
 
 function UF:CreateTargetTexts(Frame)
+    if (Frame.HealthTextCur or Frame.HealthTextPer or Frame.PowerText or Frame.NameLevel) then
+        return
+    end
+
     local HealthTextCur = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
     HealthTextCur:Point("LEFT", Frame, 8, 0)
     HealthTextCur:SetFontTemplate("Default")
@@ -60,6 +68,10 @@ function UF:CreateTargetTexts(Frame)
 end
 
 function UF:CreatePartyTexts(Frame)
+    if (Frame.HealthTextCur or Frame.HealthTextPer or Frame.PowerText or Frame.Name) then
+        return
+    end
+
     local HealthTextCur = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
     HealthTextCur:Point("LEFT", Frame, 8, 0)
     HealthTextCur:SetFontTemplate("Default")
@@ -83,6 +95,10 @@ function UF:CreatePartyTexts(Frame)
 end
 
 function UF:CreateRaidTexts(Frame)
+    if (Frame.Name) then
+        return
+    end
+
     local Name = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
     Name:Point("CENTER", Frame, 0, 2)
     Name:SetFontTemplate("Default")
@@ -91,6 +107,10 @@ function UF:CreateRaidTexts(Frame)
 end
 
 function UF:CreateNameTextCenter(Frame)
+    if (Frame.Name) then
+        return
+    end
+    
     local Name = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
     Name:Width(110)
     Name:Point("CENTER", Frame, 0, 6)

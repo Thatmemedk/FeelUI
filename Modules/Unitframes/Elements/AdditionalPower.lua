@@ -8,6 +8,10 @@ local select = select
 local unpack = unpack
 
 function UF:CreateAdditionalPower(Frame)
+    if (Frame.AdditionalPower or Frame.AdditionalPowerText) then
+        return
+    end
+    
     if (not DB.Global.UnitFrames.AdditionalPower) then 
         return
     end

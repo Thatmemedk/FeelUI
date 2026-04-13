@@ -12,7 +12,6 @@ local pairs = pairs
 local gsub = string.gsub
 local find = string.find
 local sub = string.sub
-local issecretvalue = issecretvalue
 
 -- WoW Globals
 local GameTooltip = _G.GameTooltip
@@ -85,7 +84,7 @@ function TT:GetColor(Unit)
 end
 
 function TT:ApplyStatusBarColor(Unit, ClassFile, Reaction)
-    if (not GameTooltipStatusBar and Unit) then
+    if (not Unit or not GameTooltipStatusBar) then
         return
     end
 
@@ -224,7 +223,7 @@ function TT:OnTooltipSetUnit()
         end
     end
 
-    if (not Unit or issecretvalue(Unit) or not UnitExists(Unit)) then
+    if (not Unit or UI:IsSecretValue(Unit) or not UnitExists(Unit)) then
         TT:ApplyDefaultStatusBarColor()
         return
     end
@@ -267,7 +266,7 @@ function TT:SetBackdropStyle(tt)
     local Width = tt:GetWidth()
     local Height = tt:GetHeight()
 
-    if (Width and Height and not issecretvalue(Width) and not issecretvalue(Height)) then
+    if (Width and Height and not UI:HasAnySecretValues(Width, Height)) then
         local Frame = CreateFrame("Frame", nil, tt)
         Frame:SetFrameLevel(tt:GetFrameLevel() -1)
         Frame:SetInside(tt, 2, 2)

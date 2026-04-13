@@ -17,6 +17,7 @@ local UnitHealthMax = UnitHealthMax
 
 -- WoW Globals
 local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
+local GetSpecialization = C_SpecializationInfo.GetSpecialization()
 
 -- WoW Globals
 local STAGGER_YELLOW_TRANSITION =  _G.STAGGER_YELLOW_TRANSITION or 0.3
@@ -74,15 +75,13 @@ function PowerBar:PowerUpdate()
     	return
     end
 
-    local Spec = GetSpecialization()
-
     if (Class == "MAGE" or Class == "WARLOCK") then
         Bar:Hide()
-    elseif (Class == "PALADIN" and (Spec == 2 or Spec == 3)) then
+    elseif (Class == "PALADIN" and (GetSpecialization == 2 or GetSpecialization == SPEC_PALADIN_RETRIBUTION)) then
         Bar:Hide()
-    elseif (Class == "SHAMAN" and (Spec == 2)) then
+    elseif (Class == "SHAMAN" and (GetSpecialization == 2)) then
     	Bar:Hide()
-    elseif (Class == "EVOKER" and (Spec == 1 or Spec == 3)) then
+    elseif (Class == "EVOKER" and (GetSpecialization == SPEC_EVOKER_AUGMENTATION or GetSpecialization == 3)) then
     	Bar:Hide()
     else
         Bar:Show()
@@ -94,7 +93,7 @@ function PowerBar:PowerUpdate()
 	local PowerColor = UI.Colors.Power[PowerToken]
 
 	-- Set Values
-	Bar:SetMinMaxValues(0, Max, UI.SmoothBars)
+	Bar:SetMinMaxValues(0, Max)
 	Bar:SetValue(Min, UI.SmoothBars)
 
 	-- Set Text
@@ -119,9 +118,9 @@ function PowerBar:StaggerUpdate()
     	return
     end
 
-    local Spec = GetSpecialization()
-
-    if (Class ~= "MONK" or Spec ~= 1) then
+    if (GetSpecialization == 1) then
+    	Bar:Show()
+    else
         Bar:Hide()
         return
     end
@@ -130,7 +129,7 @@ function PowerBar:StaggerUpdate()
 	local Percent = Min/Max
 
 	-- Set Values
-	Bar:SetMinMaxValues(0, Max, UI.SmoothBars)
+	Bar:SetMinMaxValues(0, Max)
 	Bar:SetValue(Min, UI.SmoothBars)
 
 	-- Set Text
@@ -153,12 +152,11 @@ function PowerBar:SoulFragmentsUpdate()
     	return
     end
 
-    local Spec = GetSpecialization()
-
-    if (Class ~= "DEMONHUNTER" or Spec ~= 2) then
-        Bar:Show()
+    if (GetSpecialization == SPEC_DEMONHUNTER_DEVOURER) then
+    	Bar:Show()
     else
         Bar:Hide()
+        return
     end
 
     local Aura = GetPlayerAuraBySpellID(1225789) or GetPlayerAuraBySpellID(1227702)
@@ -166,7 +164,7 @@ function PowerBar:SoulFragmentsUpdate()
     local Max = 50
 
     -- Set Values
-    Bar:SetMinMaxValues(0, Max, UI.SmoothBars)
+    Bar:SetMinMaxValues(0, Max)
     Bar:SetValue(Min, UI.SmoothBars)
 
     -- Set Text
@@ -213,16 +211,15 @@ function PowerBar:GlidingState()
             if (IsGliding and not self.IsFlying) then
             	self.IsFlying = true
 
-                if Bar.FadeIn:IsPlaying() then
+                if (Bar.FadeIn:IsPlaying()) then
                     Bar.FadeIn:Stop()
                 end
 
                 Bar.FadeOut:Play()
-
             elseif (not IsGliding and self.IsFlying) then
             	self.IsFlying = false
 
-                if Bar.FadeOut:IsPlaying() then
+                if (Bar.FadeOut:IsPlaying()) then
                     Bar.FadeOut:Stop()
                 end
 

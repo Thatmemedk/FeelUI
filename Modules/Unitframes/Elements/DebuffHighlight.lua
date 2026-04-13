@@ -7,14 +7,6 @@ local UF = UI:CallModule("UnitFrames")
 local select = select
 local unpack = unpack
 
-function UF:CreateDebuffHighlight(Frame)
-    local DebuffHighlight = CreateFrame("Frame", nil, Frame)
-    DebuffHighlight:SetInside(Frame, 1, 1)
-    DebuffHighlight:CreateGlow(2.5, 3, 0, 0, 0, 0)
-
-    Frame.DebuffHighlight = DebuffHighlight
-end
-
 UF.DebuffIcons = {
     Magic = "RaidFrame-Icon-DebuffMagic",
     Curse = "RaidFrame-Icon-DebuffCurse",
@@ -23,7 +15,23 @@ UF.DebuffIcons = {
     Bleed = "RaidFrame-Icon-DebuffBleed",
 }
 
+function UF:CreateDebuffHighlight(Frame)
+    if (Frame.DebuffHighlight) then
+        return
+    end
+
+    local DebuffHighlight = CreateFrame("Frame", nil, Frame)
+    DebuffHighlight:SetInside(Frame, 1, 1)
+    DebuffHighlight:CreateGlow(2.5, 3, 0, 0, 0, 0)
+
+    Frame.DebuffHighlight = DebuffHighlight
+end
+
 function UF:CreateDebuffIcon(Frame)
+    if (Frame.DebuffIcon) then
+        return
+    end
+
     local DebuffIcon = CreateFrame("Frame", nil, Frame.InvisFrameHigher)
     DebuffIcon:Hide()
 

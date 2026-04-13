@@ -21,55 +21,62 @@ function SCT:Create()
     -- ANIMATION
     local Animation = Frame:CreateAnimationGroup()
 
-    -- MOVE DOWN
+    -- MOVE
     local Move = Animation:CreateAnimation("Translation")
-    Move:SetOffset(0, 0)
-    Move:SetDuration(1.5)
+    Move:SetDuration(2)
     Move:SetSmoothing("OUT")
 
     -- FADE IN
     local FadeIn = Animation:CreateAnimation("Alpha")
     FadeIn:SetFromAlpha(0)
     FadeIn:SetToAlpha(1)
-    FadeIn:SetDuration(0.35)
-    FadeIn:SetSmoothing("IN_OUT")
+    FadeIn:SetDuration(0.25)
 
     -- FADE OUT
     local FadeOut = Animation:CreateAnimation("Alpha")
     FadeOut:SetFromAlpha(1)
     FadeOut:SetToAlpha(0)
-    FadeOut:SetDuration(0.5)
     FadeOut:SetStartDelay(1)
-    FadeOut:SetSmoothing("OUT_IN")
+    FadeOut:SetDuration(0.5)
+    FadeOut:SetSmoothing("OUT")
 
     -- ON PLAY
     Animation:SetScript("OnPlay", function()
-        Frame:SetAlpha(0)
-        Frame:Point("CENTER", _G.UIParent, 0, 0)
+        self.LastDirection = -self.LastDirection
 
-        local Direction = math.random(0, 1) == 1 and 62 or -62
-        Move:SetOffset(0, Direction)
+        local X = math.random(25, 45) * self.LastDirection
+        local Y = math.random(70, 95)
+
+        Move:SetOffset(X, Y)
+        Move:SetDuration(math.random(120,150) / 100)
     end)
 
     -- CACHE
     self.Frame = Frame
     self.Text = Text
     self.Animation = Animation
+    self.LastDirection = 1
+end
+
+function SCT:EnteringCombat()
+    self.Text:SetText(_G.ENTERING_COMBAT)
+    self.Text:SetTextColor(1, 0.25, 0.25)
+    self.Animation:Stop()
+    self.Animation:Play()
+end
+
+function SCT:LeavingCombat()
+    self.Text:SetText(_G.LEAVING_COMBAT)
+    self.Text:SetTextColor(0.25, 1, 0.25)
+    self.Animation:Stop()
+    self.Animation:Play()
 end
 
 function SCT:OnEvent(event)
     if (event == "PLAYER_REGEN_DISABLED") then
-        self.Text:SetText("Entering Combat")
-        self.Text:SetTextColor(1, 0.25, 0.25)
-
-        self.Animation:Stop()
-        self.Animation:Play()
+        self:EnteringCombat()
     elseif (event == "PLAYER_REGEN_ENABLED") then
-        self.Text:SetText("Leaving Combat")
-        self.Text:SetTextColor(0.25, 1, 0.25)
-
-        self.Animation:Stop()
-        self.Animation:Play()
+        self:LeavingCombat()
     end
 end
 

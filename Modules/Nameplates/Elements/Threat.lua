@@ -12,6 +12,10 @@ local UnitThreatSituation = UnitThreatSituation
 local GetThreatStatusColor = GetThreatStatusColor
 
 function NP:CreateThreatHighlight(Frame)
+    if (Frame.Threat) then
+        return
+    end
+    
     local Threat = CreateFrame("Frame", nil, Frame)
     Threat:SetInside(Frame, 1, 1)
     Threat:CreateGlow(2.5, 3, 0, 0, 0, 0)

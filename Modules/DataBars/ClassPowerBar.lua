@@ -11,11 +11,11 @@ local unpack = unpack
 local UnitClass = UnitClass
 local UnitPower = UnitPower
 local UnitPowerMax = UnitPowerMax
-local GetSpecialization = GetSpecialization
 local UnitPowerType = UnitPowerType
 
 -- WoW Globals
 local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
+local GetSpecialization = C_SpecializationInfo.GetSpecialization()
 
 -- WoW Globals
 local SPELL_POWER_COMBO_POINTS = Enum.PowerType.ComboPoints
@@ -109,7 +109,6 @@ end
 
 function ClassPowerBar:Update()
     local Min, Max, BarCount
-    local Spec = GetSpecialization()
     local IsMaelstrom = (Class == "SHAMAN")
     local IsRuneBar = (Class == "DEATHKNIGHT")
 
@@ -129,7 +128,7 @@ function ClassPowerBar:Update()
             return
         end
 
-        if (Class == "WARLOCK" and Spec == 3) then
+        if (Class == "WARLOCK" and GetSpecialization == SPEC_WARLOCK_DESTRUCTION) then
             Min = UnitPower("player", self.ClassPowerType, true)
             BarCount = 5
         else
@@ -219,7 +218,7 @@ function ClassPowerBar:Update()
                 local Elapsed = GetTime() - Start
                 Segment.Duration = Elapsed
                 Segment.Max = Duration
-                Segment:SetMinMaxValues(0, Duration, UI.SmoothBars)
+                Segment:SetMinMaxValues(0, Duration)
 
                 if (RuneIsReady) then
                     Segment:SetValue(Duration, UI.SmoothBars)
@@ -275,7 +274,7 @@ function ClassPowerBar:Update()
                 local BarMin = (i - 1) * 10
                 local BarMax = i * 10
 
-                Segment:SetMinMaxValues(0, 10, UI.SmoothBars)
+                Segment:SetMinMaxValues(0, 10)
 
                 if (Min >= BarMax) then
                     Segment:SetValue(10, UI.SmoothBars)
@@ -301,17 +300,15 @@ function ClassPowerBar:Update()
 end
 
 function ClassPowerBar:UpdateSpec()
-    local Spec = GetSpecialization()
-
     if (Class == "ROGUE" or Class == "WARLOCK" or Class == "PALADIN" or Class == "EVOKER" or Class == "DEATHKNIGHT") then
         self.Bar:Show()
     elseif (Class == "DRUID" and UnitPowerType("player") == SPELL_POWER_ENERGY) then
         self.Bar:Show()
-    elseif (Class == "MONK" and Spec == 3) then
+    elseif (Class == "MONK" and GetSpecialization == 3) then
         self.Bar:Show()
-    elseif (Class == "MAGE" and Spec == 1) then
+    elseif (Class == "MAGE" and GetSpecialization == SPEC_MAGE_ARCANE) then
         self.Bar:Show()
-    elseif (Class == "SHAMAN" and Spec == 2) then
+    elseif (Class == "SHAMAN" and GetSpecialization == 2) then
         self.Bar:Show()
     else
         self.Bar:Hide()

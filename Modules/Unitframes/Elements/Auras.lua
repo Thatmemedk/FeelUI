@@ -194,13 +194,12 @@ end
 
 --]]
 
-function UF:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, AnchorPoint, OffsetX, OffsetY, Direction, InitialAnchor, NumAuras, Filter, ExtraBorder)
+function UF:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, AnchorPoint, OffsetX, OffsetY, Direction, NumAuras, Filter, ExtraBorder)
     local Container = CreateFrame("Frame", nil, Frame)
     Container.Width = ButtonWidth
     Container.Height = ButtonHeight
     Container.Spacing = Spacing
     Container.Direction = Direction
-    Container.InitialAnchor = InitialAnchor
     Container.NumAuras = NumAuras
     Container.Filter = Filter
     Container.Buttons = {}
@@ -243,7 +242,7 @@ function UF:CreateBuffsTarget(Frame)
         return
     end
 
-    Frame.Buffs = UF:CreateAuraContainer(Frame, 30, 18, 3, "TOPLEFT", 0, 32, "RIGHT", "RIGHT", 7, "HELPFUL", false)
+    Frame.Buffs = UF:CreateAuraContainer(Frame, 30, 18, 3, "TOPLEFT", 0, 32, "RIGHT", 7, "HELPFUL", false)
 end
 
 function UF:CreateDebuffsTarget(Frame)
@@ -251,7 +250,7 @@ function UF:CreateDebuffsTarget(Frame)
         return
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame, 30, 18, 3, "TOPRIGHT", 0, 56, "LEFT", "LEFT", 7, "HARMFUL", true)
+    Frame.Debuffs = UF:CreateAuraContainer(Frame, 30, 18, 3, "TOPRIGHT", 0, 56, "LEFT", 7, "HARMFUL", true)
 end
 
 function UF:CreatePartyDebuffs(Frame)
@@ -259,7 +258,7 @@ function UF:CreatePartyDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame, 32, 12, 3, "TOPRIGHT", 248, -12, "RIGHT", "RIGHT", 7, "HARMFUL|RAID", true)
+    Frame.Debuffs = UF:CreateAuraContainer(Frame, 32, 12, 3, "TOPRIGHT", 248, -12, "RIGHT", 7, "HARMFUL|RAID", true)
 end
 
 function UF:CreatePartyBuffs(Frame)
@@ -267,7 +266,7 @@ function UF:CreatePartyBuffs(Frame)
         return
     end
 
-    Frame.Buffs = UF:CreateAuraContainer(Frame, 32, 12, 3, "TOPLEFT", -248, -12, "TOPLEFT", "LEFT", 7, "HELPFUL|PLAYER|RAID", false)
+    Frame.Buffs = UF:CreateAuraContainer(Frame, 32, 12, 3, "TOPLEFT", -248, -12, "TOPLEFT", 7, "HELPFUL|PLAYER|RAID", false)
 end
 
 function UF:CreatePartyExternal(Frame)
@@ -275,7 +274,7 @@ function UF:CreatePartyExternal(Frame)
         return
     end
 
-    Frame.External = UF:CreateAuraContainer(Frame.InvisFrameHigher, 36, 12, 4, "CENTER", 0, 0, "CENTER", "RIGHT", 1, "HELPFUL|BIG_DEFENSIVE", false)
+    Frame.External = UF:CreateAuraContainer(Frame.InvisFrameHigher, 36, 12, 4, "CENTER", 0, 0, "CENTER", 1, "HELPFUL|BIG_DEFENSIVE", false)
 end
 
 function UF:CreateRaidDebuffs(Frame)
@@ -283,7 +282,7 @@ function UF:CreateRaidDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 26, 12, 4, "TOPLEFT", 12, -18, "RIGHT", "RIGHT", 2, "HARMFUL|RAID", true)
+    Frame.Debuffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 26, 12, 4, "TOPLEFT", 12, -18, "RIGHT", 2, "HARMFUL|RAID", true)
 end
 
 function UF:CreateRaidBuffs(Frame)
@@ -291,7 +290,7 @@ function UF:CreateRaidBuffs(Frame)
         return
     end
 
-    Frame.Buffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 18, 12, 3, "TOPLEFT", 0, 0, "RIGHT", "RIGHT", 4, "HELPFUL|PLAYER|RAID_IN_COMBAT", false)
+    Frame.Buffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 18, 12, 3, "TOPLEFT", 0, 0, "RIGHT", 4, "HELPFUL|PLAYER|RAID_IN_COMBAT", false)
 
     for i = 1, #Frame.Buffs.Buttons do
         local Button = Frame.Buffs.Buttons[i]
@@ -307,5 +306,5 @@ function UF:CreateRaidExternal(Frame)
         return
     end
 
-    Frame.External = UF:CreateAuraContainer(Frame.InvisFrameHigher, 28, 12, 4, "CENTER", 0, -18, "CENTER", "RIGHT", 1, "HELPFUL|BIG_DEFENSIVE", false)
+    Frame.External = UF:CreateAuraContainer(Frame.InvisFrameHigher, 28, 12, 4, "CENTER", 0, -18, "CENTER", 1, "HELPFUL|BIG_DEFENSIVE", false)
 end

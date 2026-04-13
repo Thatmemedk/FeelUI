@@ -95,7 +95,7 @@ function CDM:ApplyIconPositions(Viewer)
     local ShownIcons = {}
 
     for _, Icon in ipairs(Icons) do
-        if Icon:IsShown() then
+        if (Icon:IsShown()) then
             table.insert(ShownIcons, Icon)
         end
     end
@@ -149,14 +149,14 @@ function CDM:HookViewer(Viewer)
         self:RegisterEvent("SPELL_UPDATE_COOLDOWN")
         self:RegisterEvent("BAG_UPDATE_COOLDOWN")
         self:RegisterEvent("PET_BAR_UPDATE_COOLDOWN")
-        self:SetScript("OnEvent", function(_, Event, Unit)
-            if (Event == "UNIT_AURA" and Unit == "player") then
-                if BuffIconCooldownViewer:IsShown() then
+        self:SetScript("OnEvent", function(_, event, unit)
+            if (event == "UNIT_AURA" and unit == "player") then
+                if (BuffIconCooldownViewer:IsShown()) then
                     CDM:ApplyIconPositions(BuffIconCooldownViewer)
                 end
-            elseif (Event ~= "UNIT_AURA") then
+            elseif (event ~= "UNIT_AURA") then
                 for _, Frames in ipairs({ EssentialCooldownViewer, UtilityCooldownViewer }) do
-                    if Frames:IsShown() then
+                    if (Frames:IsShown()) then
                         CDM:ApplyIconPositions(Frames)
                     end
                 end

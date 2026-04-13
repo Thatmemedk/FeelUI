@@ -3,6 +3,11 @@ local UI, DB, Media = select(2, ...):Call()
 -- Call Modules
 local NPA = UI:RegisterModule("NoPetAlert")
 
+-- Lib Globals
+local _G = _G
+local unpack = unpack
+local select = select
+
 function NPA:Create()
     -- Frame
     local Frame = CreateFrame("Frame", "FeelUI_NoPetAlert", _G.UIParent)
@@ -58,7 +63,9 @@ function NPA:UpdatePetStatus()
     local ValidClassSpec = false
 
     if (Class == "DEATHKNIGHT") then
-        ValidClassSpec = true
+        if (Spec == 3) then
+            ValidClassSpec = true
+        end
     elseif (Class == "WARLOCK") then
         ValidClassSpec = true
     elseif (Class == "HUNTER") then
@@ -95,12 +102,8 @@ function NPA:UpdatePetStatus()
 end
 
 function NPA:OnEvent(event, unit)
-    if (event == "UNIT_PET" and unit ~= "player") then 
+    if (event == "UNIT_PET" or event == "UNIT_AURA" and unit ~= "player") then 
         return 
-    end
-
-    if (event == "UNIT_AURA" and unit ~= "player") then
-        return
     end
 
     self:UpdatePetStatus()

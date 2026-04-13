@@ -24,7 +24,7 @@ local GetGuildBankWithdrawMoney = GetGuildBankWithdrawMoney
 local GetMoney = GetMoney
 
 function Merchant:AutoSellJunk()
-	if not (DB.Global.Merchant.AutoSellJunk) then
+	if (not DB.Global.Merchant.AutoSellJunk) then
 		return
 	end
 

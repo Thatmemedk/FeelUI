@@ -4,7 +4,9 @@ local UI, DB, Media, Language = select(2, ...):Call()
 local NP = UI:CallModule("NamePlates")
 
 function NP:CreateFriendlyElements(Frame)
+    self:CreateStackingBounds(Frame)
     self:CreatePanels(Frame)
+    self:CreateHighlight(Frame)
     self:CreateNameMiddle(Frame)
     self:CreateRaidIcon(Frame)
 end

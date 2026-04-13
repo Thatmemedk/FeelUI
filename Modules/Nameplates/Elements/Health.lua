@@ -8,6 +8,10 @@ local select = select
 local unpack = unpack
 
 function NP:CreateHealth(Frame)
+    if (Frame.Health) then
+        return
+    end
+    
     local Health = CreateFrame("StatusBar", nil, Frame)
     Health:SetInside()
     Health:SetStatusBarTexture(Media.Global.Texture)

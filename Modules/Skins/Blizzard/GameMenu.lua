@@ -56,6 +56,8 @@ function GameMenu:Skin()
 
 				Button:GetFontString():SetFontTemplate("Default")
 				Button:GetFontString():SetTextColor(0.8, 0.8, 0.8)
+
+				Button.IsSkinned = true
 			end
 		end
 	end)

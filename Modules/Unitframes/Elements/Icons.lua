@@ -8,6 +8,10 @@ local select = select
 local unpack = unpack
 
 function UF:CreateCombatIcon(Frame)
+    if (Frame.CombatIcon) then
+        return
+    end
+
     local CombatIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
     CombatIcon:Size(24, 24)
     CombatIcon:Point("CENTER", Frame, 0, 0)
@@ -18,6 +22,10 @@ function UF:CreateCombatIcon(Frame)
 end
     
 function UF:CreateRestingIcon(Frame)
+    if (Frame.RestingIcon) then
+        return
+    end
+
     local RestingIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
     RestingIcon:Size(30, 30)
     RestingIcon:Point("TOP", Frame, 12, 22)
@@ -40,6 +48,10 @@ function UF:CreateRestingIcon(Frame)
 end
 
 function UF:CreateRaidIcon(Frame)
+    if (Frame.RaidIcon) then
+        return
+    end
+
     local RaidIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
     RaidIcon:Size(32, 32)
     RaidIcon:Point("TOP", Frame, 0, 18)
@@ -50,6 +62,10 @@ function UF:CreateRaidIcon(Frame)
 end
 
 function UF:CreateResurrectIcon(Frame)
+    if (Frame.ResurrectionIcon) then
+        return
+    end
+
     local ResurrectionIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
     ResurrectionIcon:Size(28, 28)
     ResurrectionIcon:Point("CENTER", Frame.Health, 0, 0)
@@ -60,6 +76,10 @@ function UF:CreateResurrectIcon(Frame)
 end
 
 function UF:CreateLeaderIcon(Frame)
+    if (Frame.LeaderIcon) then
+        return
+    end
+
     local LeaderIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
     LeaderIcon:Size(16, 16)
     LeaderIcon:Point("TOPLEFT", Frame.Health, -4, 0)
@@ -69,6 +89,10 @@ function UF:CreateLeaderIcon(Frame)
 end
 
 function UF:CreateAssistantIcon(Frame)
+    if (Frame.AssistantIcon) then
+        return
+    end
+
     local AssistantIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
     AssistantIcon:Size(14, 14)
     AssistantIcon:Point("TOPLEFT", Frame.Health, -4, 0)
@@ -79,6 +103,10 @@ function UF:CreateAssistantIcon(Frame)
 end
 
 function UF:CreateReadyCheckIcon(Frame)
+    if (Frame.ReadyCheckIcon) then
+        return
+    end
+
     local ReadyCheckIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
     ReadyCheckIcon:Size(24, 24)
     ReadyCheckIcon:Point("CENTER", Frame.Health, 0, 0)
@@ -100,6 +128,10 @@ function UF:CreateReadyCheckIcon(Frame)
 end
 
 function UF:CreateSummonIcon(Frame)
+    if (Frame.SummonIcon) then
+        return
+    end
+
     local SummonIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
     SummonIcon:Size(32, 32)
     SummonIcon:Point("CENTER", Frame.Health, 0, 0)
@@ -109,6 +141,10 @@ function UF:CreateSummonIcon(Frame)
 end
 
 function UF:CreatePhaseIcon(Frame)
+    if (Frame.PhaseIcon) then
+        return
+    end
+
     local PhaseIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
     PhaseIcon:Size(26, 26)
     PhaseIcon:Point("TOP", Frame.Health, 0, 12)
@@ -119,6 +155,10 @@ function UF:CreatePhaseIcon(Frame)
 end
 
 function UF:CreateRoleIcon(Frame)
+    if (Frame.RoleIcon) then
+        return
+    end
+
     if (not DB.Global.UnitFrames.RoleIcons) then 
         return
     end

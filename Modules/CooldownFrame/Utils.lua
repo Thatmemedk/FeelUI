@@ -17,7 +17,7 @@ function UI:GetCooldownFontScale(CD)
     local Width = CD:GetWidth()
     local Height = CD:GetHeight()
 
-    if (issecretvalue(Width) or issecretvalue(Height)) then
+    if (UI:IsSecretValue(Width) or UI:IsSecretValue(Height)) then
         return 12
     end
 
@@ -56,9 +56,7 @@ function UI:GetCooldownDuration(Button, IsAura)
     else
         local ActionID = Button.action
 
-        if (issecretvalue(ActionID)) then
-            return
-        elseif (ActionID and not issecretvalue(ActionID)) then
+        if (ActionID and not UI:IsSecretValue(ActionID)) then
             return GetActionCooldownDuration(ActionID)
         end
     end
@@ -85,13 +83,13 @@ function UI:UpdateCooldownTextColor(CD, Elapsed, IsAura)
 
     local Duration = UI:GetCooldownDuration(Button, IsAura)
 
-    if (not Duration or issecretvalue(Duration)) then 
+    if (not Duration) then 
         return 
     end
 
     local Evaluated = Duration:EvaluateRemainingDuration(UI.CooldownColorCurve)
     
-    if (not Evaluated or issecretvalue(Evaluated)) then 
+    if (not Evaluated) then 
         return 
     end
 
@@ -105,7 +103,7 @@ function UI:UpdateCooldownTextColor(CD, Elapsed, IsAura)
 end
 
 function UI:RegisterCooldown(CD, Parent, OffsetX, OffsetY, DynamicFontSize, IsAura)
-    if (not CD or CD.IsRegisteredCooldown) then
+    if (not CD or CD.IsRegisteredCooldown or UI:IsSecretValue(CD)) then
         return
     end
     
@@ -118,7 +116,6 @@ function UI:RegisterCooldown(CD, Parent, OffsetX, OffsetY, DynamicFontSize, IsAu
             Region:ClearAllPoints()
             Region:Point("CENTER", Parent, OffsetX or 0, OffsetY or 0)
             Region:SetFontTemplate("Default", FontSize or 12)
-            Region:SetTextColor(1, 1, 1)
         end
     end
 
@@ -127,4 +124,25 @@ function UI:RegisterCooldown(CD, Parent, OffsetX, OffsetY, DynamicFontSize, IsAu
     end)
 
     CD.IsRegisteredCooldown = true
+end
+
+function UI:UpdateCooldownText(CD, Parent, OffsetX, OffsetY, DynamicFontSize)
+    if (not CD or CD.CooldownTextIsUpdated or UI:IsSecretValue(CD)) then
+        return
+    end
+    
+    for i = 1, CD:GetNumRegions() do
+        local Region = select(i, CD:GetRegions())
+
+        if (Region and Region.GetText) then
+            local FontSize = DynamicFontSize and UI:GetCooldownFontScale(CD)
+
+            Region:ClearAllPoints()
+            Region:Point("CENTER", Parent, OffsetX or 0, OffsetY or 0)
+            Region:SetFontTemplate("Default", FontSize or 12)
+            Region:SetTextColor(1, 0.82, 0)
+        end
+    end
+
+    CD.CooldownTextIsUpdated = true
 end

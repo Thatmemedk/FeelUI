@@ -78,29 +78,56 @@ function PBM:CreateIcon(Type, Name, ID)
     return Frame
 end
 
+function PBM:ShouldRefreshCooldown(Frame, Start, Duration)
+    if (not Frame) then
+        return false
+    end
+
+    local OldStart, OldDuration = Frame:GetCooldownTimes()
+
+    OldStart = tonumber(OldStart) or 0
+    OldDuration = tonumber(OldDuration) or 0
+
+    if (Start and Duration and Start > 0 and Duration > 0) then
+        if (OldStart <= 0 or OldDuration <= 0) then
+            return true
+        end
+
+        local OldEnd = (OldStart + OldDuration) / 1000
+        local NewEnd = Start + Duration
+
+        return math.abs(OldEnd - NewEnd) > 0.01
+    end
+
+    return OldStart > 0 and OldDuration > 0
+end
+
 function PBM:GetItemList(Name)
     return self.ItemID[Name]
 end
 
 function PBM:UpdateButton(Button)
     local List = self:GetItemList(Button.ButtonName)
+    local ItemID
+    local Count = 0
+    local CurrentItem = Button.ItemID
 
     if (not List or #List == 0) then
         return
     end
 
-    local ItemID
-    local Count = 0
-
     for _, ID in ipairs(List) do
+        local ItemCount
+
         if (ID == 224464 or ID == 5512) then
-            Count = C_Item.GetItemCount(ID, false, true)
+            ItemCount = C_Item.GetItemCount(ID, false, true)
         else
-            Count = C_Item.GetItemCount(ID)
+            ItemCount = C_Item.GetItemCount(ID)
         end
 
-        if (Count > 0) then
+        if (ItemCount > 0) then
             ItemID = ID
+            Count = ItemCount
 
             break
         end
@@ -110,13 +137,32 @@ function PBM:UpdateButton(Button)
         ItemID = List[1]
     end
 
+    if (CurrentItem and CurrentItem ~= ItemID) then
+        local Start, Duration = C_Item.GetItemCooldown(CurrentItem)
+
+        if (Start and Duration and Start > 0 and Duration > 0) then
+            ItemID = CurrentItem
+        end
+    end
+
+    if (Button.ItemID ~= ItemID) then
+        Button.ItemID = ItemID
+    end
+
     local _, ItemLink = GetItemInfo(ItemID)
 
-    if not InCombatLockdown() then
-    	local _, ItemLink = GetItemInfo(ItemID)
-		Button:SetAttribute("type", "item")
-		Button:SetAttribute("item", ItemLink)
-	end
+    if (not ItemLink) then
+        C_Item.RequestLoadItemDataByID(ItemID)
+
+        return
+    end
+
+    if (not InCombatLockdown() and Button.CurrentItem ~= ItemLink) then
+        Button:SetAttribute("type", "item")
+        Button:SetAttribute("item", ItemLink)
+
+        Button.CurrentItem = ItemLink
+    end
 
     if (Button.Icon) then
         local Texture = C_Item.GetItemIconByID(ItemID)
@@ -140,36 +186,25 @@ function PBM:UpdateButton(Button)
     if (Button.Cooldown) then
         local Start, Duration = C_Item.GetItemCooldown(ItemID)
 
-        if (Start and Duration) then
-            local DurationObject = C_DurationUtil.CreateDuration()
-
-            if (DurationObject) then
+        if (Start and Duration and Start > 0 and Duration > 1) then
+            if (PBM:ShouldRefreshCooldown(Button.Cooldown, Start, Duration)) then
+                local DurationObject = C_DurationUtil.CreateDuration()
                 DurationObject:SetTimeFromStart(Start, Duration)
                 Button.Cooldown:SetCooldownFromDurationObject(DurationObject)
-
-                for i = 1, Button.Cooldown:GetNumRegions() do
-                    local Region = select(i, Button.Cooldown:GetRegions())
-
-                    if (Region.GetText) then
-                        if (Region and Region.GetText) then
-                            local FontSize = UI:GetCooldownFontScale(Button.Cooldown)
-
-                            Region:ClearAllPoints()
-                            Region:Point("CENTER", Button, 0, 0)
-                            Region:SetFontTemplate("Default", FontSize)
-                            Region:SetTextColor(1, 0.82, 0)
-                        end
-                    end
-                end
-
-                Button.Cooldown:Show()
             end
+
+            Button.Cooldown:Show()
+
+            -- Update The Text
+            UI:UpdateCooldownText(Button.Cooldown, Button, 0, 1, true)
         else
-            Button.Cooldown:Hide()
+            local OldStart = Button.Cooldown:GetCooldownTimes()
+
+            if (OldStart == 0) then
+                Button.Cooldown:Hide()
+            end
         end
     end
-
-    Button.ItemID = ItemID
 end
 
 function PBM:UpdateAll()
@@ -178,8 +213,25 @@ function PBM:UpdateAll()
     end
 end
 
-function PBM:OnEvent(event)
-    self:UpdateAll()
+function PBM:OnEvent(event, ...)
+    if (event == "GET_ITEM_INFO_RECEIVED") then
+        local ItemID, Success = ...
+
+        if (Success) then
+            for _, Button in pairs(self.Buttons) do
+                local List = self:GetItemList(Button.ButtonName)
+
+                for _, ID in ipairs(List) do
+                    if (ID == ItemID) then
+                        self:UpdateButton(Button)
+                        break
+                    end
+                end
+            end
+        end
+    else
+        self:UpdateAll()
+    end
 end
 
 function PBM:RegisterEvents()
@@ -188,6 +240,7 @@ function PBM:RegisterEvents()
     self:RegisterEvent("ITEM_COUNT_CHANGED")
     self:RegisterEvent("SPELL_UPDATE_COOLDOWN")
     self:RegisterEvent("SPELL_UPDATE_CHARGES")
+    self:RegisterEvent("GET_ITEM_INFO_RECEIVED")
     self:SetScript("OnEvent", self.OnEvent)
 end
 

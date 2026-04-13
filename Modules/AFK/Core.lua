@@ -84,14 +84,14 @@ function AFK:OnUpdate(Elapsed)
 end
 
 function AFK:UpdateAFKState(State)
-    if issecretvalue(State) or InCombatLockdown() or MovieFrame:IsShown() or CinematicFrame:IsShown() then 
-        return
-    end
-
     if (State) then
-        self.IsAFK = true
+        -- Fade In
+        UI:UIFrameFadeIn(self.Frame, 1, self.Frame:GetAlpha(), 1)
 
-        if IsInGuild() then
+        -- Hide UIParent
+        _G.UIParent:Hide()
+
+        if (IsInGuild()) then
             local GuildName, GuildRankName = GetGuildInfo("player")
 
             if (self.Guild) then
@@ -103,20 +103,26 @@ function AFK:UpdateAFKState(State)
             end
         end
 
-        UI:UIFrameFadeIn(self.Frame, 1, self.Frame:GetAlpha(), 1)
-        _G.UIParent:Hide()
-
+        -- Update
         self.Frame:SetScript("OnUpdate", function(_, Elapsed)
             AFK:OnUpdate(Elapsed)
         end)
-    elseif (self.IsAFK) then
-        self.IsAFK = false
-        self.Total = 0
 
+        -- Cache
+        self.IsAFK = true
+    elseif (self.IsAFK) then
+        -- Fade Out
         UI:UIFrameFadeOut(self.Frame, 1, self.Frame:GetAlpha(), 0)
+
+        -- Show UIParent
         _G.UIParent:Show()
 
+        -- Update
         self.Frame:SetScript("OnUpdate", nil)
+
+        -- Cache
+        self.IsAFK = false
+        self.Total = 0
     end
 end
 
@@ -213,77 +219,48 @@ function AFK:Create()
     self.PlayedThisLevelText = PlayedThisLevelText
 end
 
-function AFK:OnEvent(event, ...)
+function AFK:OnEvent(event, arg1)
     if (event == "TIME_PLAYED_MSG") then
         self.EventRequesting = false
-        TotalPlayTime, LevelPlayTime = ...
+        TotalPlayTime, LevelPlayTime = arg1
         LevelPlayTimeOffset = GetTime()
-
     elseif (event == "PLAYER_LEVEL_UP") then
-        if not (LevelPlayTime) then
+        if (not LevelPlayTime) then
             self.EventRequesting = true
             RequestTimePlayed()
         else
             LevelPlayTimeOffset = GetTime()
         end
-
-    elseif (event == "PLAYER_FLAGS_CHANGED") then
-        local unit = ...
-        if unit ~= "player" then return end
-
-        local isAFK = UnitIsAFK("player")
-
-        if isAFK == true then
-            self:UpdateAFKState(true)
-        else
-            self:UpdateAFKState(false)
-        end
-
-    elseif (event == "ZONE_CHANGED") then
-        local isAFK = UnitIsAFK("player")
-
-        if isAFK == true then
-            self:UpdateAFKState(true)
-        else
-            self:UpdateAFKState(false)
-        end
-
-    elseif (event == "PLAYER_REGEN_DISABLED") then
-        self:UpdateAFKState(false)
-        self:RegisterEvent("PLAYER_REGEN_ENABLED")
-
     elseif (event == "PLAYER_REGEN_ENABLED") then
-        self:UnregisterEvent("PLAYER_REGEN_ENABLED")
-
-    elseif (event == "UPDATE_BATTLEFIELD_STATUS") then
-        local Status = GetBattlefieldStatus(...)
-
-        if (Status == "confirm") then
+        self:UnregisterEvent(event)
+    elseif (event == "UPDATE_BATTLEFIELD_STATUS" or event == "PLAYER_REGEN_DISABLED" or event == "LFG_PROPOSAL_SHOW") then
+        if (event ~= "UPDATE_BATTLEFIELD_STATUS" or (GetBattlefieldStatus(arg1) == "confirm")) then
             self:UpdateAFKState(false)
         end
 
-    elseif (event == "LFG_PROPOSAL_SHOW") then
-        self:UpdateAFKState(false)
-
-    elseif (event == "LOADING_SCREEN_DISABLED" or event == "PLAYER_LOGOUT") then
-        if (not self.EventRequesting) then
-            self.EventRequesting = true
-            RequestTimePlayed()
+        if (event == "PLAYER_REGEN_DISABLED") then
+            self:RegisterEvent("PLAYER_REGEN_ENABLED")
         end
+
+        return
+    elseif (event == "PLAYER_FLAGS_CHANGED" and arg1 ~= "player") or InCombatLockdown() or CinematicFrame:IsShown() or MovieFrame:IsShown() then
+        return
+    end
+
+    local IsAFK = UnitIsAFK("player")
+
+    if (not UI:IsSecretValue(IsAFK)) then
+        self:UpdateAFKState(IsAFK)
     end
 end
 
 function AFK:RegisterEvents()
-    self:RegisterEvent("PLAYER_FLAGS_CHANGED")
-    self:RegisterEvent("PLAYER_REGEN_ENABLED")
-    self:RegisterEvent("PLAYER_REGEN_DISABLED")
-    self:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
-    self:RegisterEvent("LFG_PROPOSAL_SHOW")
-    self:RegisterEvent("ZONE_CHANGED")
     self:RegisterEvent("TIME_PLAYED_MSG")
     self:RegisterEvent("PLAYER_LEVEL_UP")
-    self:RegisterEvent("LOADING_SCREEN_DISABLED")
-    self:RegisterEvent("PLAYER_LOGOUT")
+    self:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
+    self:RegisterEvent("PLAYER_REGEN_DISABLED")
+    self:RegisterEvent("LFG_PROPOSAL_SHOW")
+    self:RegisterEvent("PLAYER_FLAGS_CHANGED")
     self:SetScript("OnEvent", self.OnEvent)
 end
 
@@ -292,6 +269,6 @@ function AFK:Initialize()
         return 
     end
 
-    --self:Create()
-    --self:RegisterEvents()
+    self:Create()
+    self:RegisterEvents()
 end

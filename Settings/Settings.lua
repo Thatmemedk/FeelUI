@@ -185,11 +185,12 @@ DB.Global = {
 		ClassColor = false,
 		AdditionalPower = false,
 		-- Castbar
+		CastBarDetached = true,
 		CastBarColor = { 0.45, 0.45, 0.45, 0.7 },
 		CastBarInterruptColor = { 0.67, 0, 0, 0.70 },
 		CastBarSucceededColor = { 0, 0.67, 0, 0.70 },
 		-- Portraits
-		Portraits = false,
+		Portraits = true,
 		RoleIcons = false,
 		-- Points Settings
 		PlayerPoint = { "BOTTOMLEFT", _G.UIParent, 482, 244 },

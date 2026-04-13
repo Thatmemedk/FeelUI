@@ -8,6 +8,10 @@ local select = select
 local unpack = unpack
 
 function NP:CreateRaidIcon(Frame)
+    if (Frame.RaidIcon) then
+        return
+    end
+    
     local RaidIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
     RaidIcon:Size(32, 32)
     RaidIcon:Point("TOP", Frame, 0, 22)

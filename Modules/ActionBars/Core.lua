@@ -244,4 +244,5 @@ function AB:Initialize()
 	self:CreateExtraActionButton()
 	self:CreateGlow()
 	self:CreateRange()
+	self:CreateFlyout()
 end
