@@ -21,10 +21,10 @@ Align.BoxSize = 32
 function Align:Toggle(msg)
 	msg = msg and tonumber(msg)
 	
-	if type(msg) == "number" and (msg <= 256 and msg >= 4) then
+	if (type(msg) == "number" and (msg <= 256 and msg >= 4)) then
 		Frame.BoxSize = msg
 		Align:Show()
-	elseif self.Frame and self.Frame:IsShown() then
+	elseif (self.Frame and self.Frame:IsShown()) then
 		Align:Hide()
 	else
 		Align:Show()
@@ -43,13 +43,13 @@ function Align:Show()
 end
 
 function Align:Hide()
-	if self.Frame then
+	if (self.Frame) then
 		self.Frame:Hide()
 	end
 end
 
 function Align:Create() 
-	Frame = CreateFrame("Frame", nil, _G.UIParent)	
+	local Frame = CreateFrame("Frame", nil, _G.UIParent)	
 	Frame:SetFrameStrata("FULLSCREEN")
 	Frame:SetAllPoints(_G.UIParent)
 	

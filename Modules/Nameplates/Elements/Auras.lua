@@ -12,30 +12,46 @@ local GetAuraDataByIndex = _G.C_UnitAuras.GetAuraDataByIndex
 local GetAuraApplicationDisplayCount = _G.C_UnitAuras.GetAuraApplicationDisplayCount
 local GetAuraDispelTypeColor = _G.C_UnitAuras.GetAuraDispelTypeColor
 
-function NP:UpdateAuras(Frame, Unit, IsDebuff, IsCrowdControl)
+function NP:UpdateAuras(Frame, Unit, IsDebuff, CrowdControl)
     if (not Frame or not Unit) then
         return
     end
 
-    local Auras = IsDebuff and Frame.Debuffs or IsCrowdControl and Frame.CrowdControl or Frame.Buffs
+    local Auras = IsDebuff and Frame.Debuffs or CrowdControl and Frame.CrowdControl
 
     if (not Auras or not Auras.Filter) then 
         return 
+    end
+
+    if (not UnitIsVisible(Unit)) then
+        return
     end
 
     local Buttons = Auras.Buttons
     local MaxAuras = Auras.NumAuras or 6
     local AuraMinCount = 2
     local AuraMaxCount = 99
-    local Active = 0
-    local Index = 1
     local IsFriendly = UnitCanCooperate("player", Unit)
 
-    while Active < MaxAuras do
+    for i = 1, #Buttons do
+        local Button = Buttons[i]
+
+        if (Button:IsShown()) then
+            Button:Hide()
+        end
+
+        Button.AuraInstanceID = nil
+        Button.Unit = nil
+    end
+
+    local Active = 0
+    local Index = 1
+
+    while true do
         local AuraData = GetAuraDataByIndex(Unit, Index, Auras.Filter)
         Index = Index + 1
 
-        if (not AuraData) then
+        if (not AuraData or Active >= MaxAuras) then
             break
         end
 
@@ -50,14 +66,29 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff, IsCrowdControl)
         local Duration = AuraData.duration
         local ExpirationTime = AuraData.expirationTime
         local AuraIsStealable = AuraData.isStealable
-
-        if (Button.AuraInstanceID ~= AuraInstanceID) then
+        
+        if (AuraInstanceID) then
             if (Button.Icon) then
                 Button.Icon:SetTexture(Icon)
                 UI:KeepAspectRatio(Button, Button.Icon)
             end
 
-            if (IsDebuff or IsCrowdControl) then
+            if (Button.Count) then
+                Button.Count:SetText(GetAuraApplicationDisplayCount(Unit, AuraInstanceID, AuraMinCount, AuraMaxCount))
+            end
+
+            if (Button.Cooldown) then
+                local CD = C_UnitAuras.GetAuraDuration(Unit, AuraInstanceID)
+
+                if (CD) then
+                    Button.Cooldown:SetCooldownFromDurationObject(CD)
+                    Button.Cooldown:Show()
+                else
+                    Button.Cooldown:Hide()
+                end
+            end
+
+            if (IsDebuff or CrowdControl) then
                 local Color = GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
 
                 if (Color) then
@@ -67,48 +98,43 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff, IsCrowdControl)
                 Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
             end
 
+            if (Button.Highlight) then
+                if (not IsFriendly) then
+                    Button.Highlight:SetAlphaFromBoolean(AuraIsStealable, 1, 0)
+                else
+                    Button.Highlight:SetAlpha(0)
+                end
+            end
+
+            -- CACHE
+            Button.Unit = Unit
+            Button.AuraFilter = Auras.Filter
+            Button.AuraIndex = Index -1
             Button.AuraInstanceID = AuraInstanceID
-        end
 
-        if (Button.Count) then
-            Button.Count:SetText(GetAuraApplicationDisplayCount(Unit, AuraInstanceID, AuraMinCount, AuraMaxCount))
-        end
+            Button:Show()
 
-        if (Button.Cooldown) then
-            local CD = C_UnitAuras.GetAuraDuration(Unit, AuraInstanceID)
-
-            if (CD) then
-                Button.Cooldown:SetCooldownFromDurationObject(CD)
-                Button.Cooldown:Show()
-            else
-                Button.Cooldown:Hide()
-            end
-        end
-
-        if (Button.Highlight) then
-            if (not IsFriendly) then
-                Button.Highlight:SetAlphaFromBoolean(AuraIsStealable, 1, 0)
-            else
-                Button.Highlight:SetAlpha(0)
-            end
-        end
-
-        Button.Unit = Unit
-        Button.AuraFilter = Auras.Filter
-        Button.AuraIndex = Index
-        Button:Show()
-
-        Active = Active + 1
-    end
-
-    for i = Active + 1, #Buttons do
-        local Button = Buttons[i]
-
-        if Button:IsShown() then
-            Button:Hide()
-            Button.AuraInstanceID = nil
+            -- CACHE
+            Active = Active + 1
         end
     end
+end
+
+function NP:OnEnter()
+    if _G.GameTooltip:IsForbidden() or not self:IsVisible() then
+        return
+    end
+
+    _G.GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+    _G.GameTooltip:SetUnitAuraByAuraInstanceID(self.Unit, self.AuraInstanceID)
+end
+
+function NP:OnLeave()
+    if _G.GameTooltip:IsForbidden() then
+        return
+    end
+
+    _G.GameTooltip_Hide()
 end
 
 function NP:CreateAuraButton(Frame, ExtraBorder)
@@ -118,6 +144,10 @@ function NP:CreateAuraButton(Frame, ExtraBorder)
     Button:StyleButton()
     Button:SetShadowOverlay()
 
+    -- Set Scripts
+    Button:SetScript("OnEnter", NP.OnEnter)
+    Button:SetScript("OnLeave", NP.OnLeave)
+
     local Overlay = CreateFrame("Frame", nil, Button)
     Overlay:SetFrameLevel(Button:GetFrameLevel() + 10)
     Overlay:SetInside()
@@ -126,7 +156,7 @@ function NP:CreateAuraButton(Frame, ExtraBorder)
     Icon:SetInside()
 
     local Count = Overlay:CreateFontString(nil, "OVERLAY")
-    Count:Point("TOPRIGHT", Button, 2, 2)
+    Count:Point("TOPRIGHT", Button, 2, 6)
     Count:SetFontTemplate("Default")
 
     local Highlight = CreateFrame("Frame", nil, Button)
@@ -221,7 +251,7 @@ function NP:CreateDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = NP:CreateAuraContainer(Frame, 28, 12, 4, "TOPRIGHT", -2, 30, "RIGHT", 6, "HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY", true)
+    Frame.Debuffs = NP:CreateAuraContainer(Frame, 28, 12, 4, "TOPRIGHT", -2, 16, "RIGHT", 6, "HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY", true)
 end
 
 function NP:CreateCrowdControlDebuffs(Frame)

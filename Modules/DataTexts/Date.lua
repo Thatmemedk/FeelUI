@@ -10,22 +10,6 @@ local unpack = unpack
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local LoadAddOn = C_AddOns.LoadAddOn
 
-function Date:OnClick()
-	if InCombatLockdown() then 
-		return 
-	end
-
-	if (not IsAddOnLoaded("Blizzard_Calendar")) then
-		LoadAddOn("Blizzard_Calendar")
-	end
-
-	_G.Calendar_Toggle()
-end
-
-function Date:UpdateDateText()
-	self.Text:SetFormattedText("%02d", tonumber(date("%d")))
-end
-
 function Date:Create()
 	local Frame = CreateFrame("Button", nil, _G.Minimap)
 	Frame:Size(20, 20)
@@ -41,6 +25,22 @@ function Date:Create()
 
 	self.Frame = Frame
 	self.Text = Text
+end
+
+function Date:OnClick()
+	if (InCombatLockdown()) then 
+		return 
+	end
+
+	if (not IsAddOnLoaded("Blizzard_Calendar")) then
+		LoadAddOn("Blizzard_Calendar")
+	end
+
+	_G.Calendar_Toggle()
+end
+
+function Date:UpdateDateText()
+	self.Text:SetFormattedText("%02d", tonumber(date("%d")))
 end
 
 function Date:Initialize()

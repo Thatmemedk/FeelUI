@@ -7,6 +7,9 @@ local Time = UI:RegisterModule("DataTextTime")
 local unpack = unpack
 local select = select
 
+-- Locals
+local UpdateTime = 5
+
 function Time:Create()
 	local Frame = CreateFrame("Frame", nil, _G.Minimap)
 	Frame:Size(160, 50)
@@ -22,17 +25,16 @@ function Time:Create()
 end
 
 function Time:Update(Elapsed)
-    self.Init = (self.Init or 0) - Elapsed
+    self.TimeElapsed = (self.TimeElapsed or 0) - Elapsed
 
-    if (self.Init > 0) then 
-    	return 
+    if (self.TimeElapsed > 0) then 
+        return 
     end
 
-    self.Init = 1
+    self.TimeElapsed = UpdateTime
 
-    if (self.Text) then
-		self.Text:SetFormattedText("%s", date( "|CFFFFFFFF%I|r:|CFFFFFFFF%M|r"))
-	end
+	-- Update Text
+	self.Text:SetText(date("|CFFFFFFFF%I|r:|CFFFFFFFF%M|r"))
 end
 
 function Time:OnUpdate()

@@ -29,10 +29,6 @@ NP.Modified = {}
 NP.UnitFrames = {}
 
 -- Tables
-NP.UpdateQueue = {}
-NP.UpdateScheduled = false
-
--- Tables
 NP.PlateTypes = {
     [true] = {
         Key = "FeelUINameplatesFriendly",
@@ -309,185 +305,140 @@ end
 
 -- FULL UPDATE
 
-function NP:ProcessFrame(Frame)
-    local Unit = Frame.Unit
-
-    if (not Unit or not UnitExists(Unit)) then 
+function NP:RefreshUnit(Frame, Unit)
+    if (not Frame or not Unit or not UnitExists(Unit)) then
         return 
     end
 
     -- HEALTH
-    if (Frame.NeedsHealth) then
-        if (Frame.Health) then self:UpdateHealth(Frame, Unit) end
-        if (Frame.HealthText) then self:UpdateHealthText(Frame, Unit) end
-
-        Frame.NeedsHealth = nil
-    end
-
-    -- HEALTH PRED
-    if (Frame.NeedsHealthPred) then
-        if (Frame.HealthPrediction) then self:UpdateHealthPred(Frame, Unit) end
-
-        Frame.NeedsHealthPred = nil
-    end
+    if (Frame.Health) then self:UpdateHealth(Frame, Unit) end
+    if (Frame.HealthText) then self:UpdateHealthText(Frame, Unit) end
+    if (Frame.HealthPrediction) then self:UpdateHealthPred(Frame, Unit) end
 
     -- NAME
-    if (Frame.NeedsName) then
-        if (Frame.Name) then self:UpdateName(Frame, Unit) end
-        if (Frame.Guild) then self:UpdateGuild(Frame, Unit) end
+    if (Frame.Name) then self:UpdateName(Frame, Unit) end
+    if (Frame.Guild) then self:UpdateGuild(Frame, Unit) end
 
-        Frame.NeedsName = nil
-    end
+    -- AURA
+    if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true, false) end
+    if (Frame.CrowdControl) then self:UpdateAuras(Frame, Unit, false, true) end
 
     -- ICONS
-    if (Frame.NeedsIcons) then
-        if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame, Unit) end
-
-        Frame.NeedsIcons = nil
-    end
+    if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame, Unit) end
 
     -- THREAT
-    if (Frame.NeedsThreat) then
-        if (Frame.Threat) then self:UpdateThreatHighlight(Frame, Unit) end
+    if (Frame.Threat) then self:UpdateThreatHighlight(Frame, Unit) end
 
-        Frame.NeedsThreat = nil
-    end
-
-    if (Frame.NeedsTargetIndicator) then
-        if (Frame.TargetIndicator) then self:UpdateTargetIndicator(Frame, Unit) end
-        if (Frame.Highlight) then self:UpdateHighlight(Frame, Unit) end
-
-        Frame.NeedsTargetIndicator = nil
-    end
-
-    if (Frame.NeedsHighlightOnMouseOver) then
-        if (Frame.HighlightMouseOver) then self:UpdateHighlightMouseOver(Frame, Unit) end
-
-        Frame.NeedsHighlightOnMouseOver = nil
-    end
-
-    -- AURAS
-    if (Frame.NeedsAuras) then 
-        --if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
-        if (Frame.CrowdControl) then self:UpdateAuras(Frame, Unit, false, true) end
-    
-        Frame.NeedsAuras = nil
-    end
-end
-
--- QUEUE UPDATES
-
-function NP:RunUpdateQueue()
-    for Frame in next, self.UpdateQueue do
-        if Frame:IsShown() then
-            self:ProcessFrame(Frame)
-        end
-
-        self.UpdateQueue[Frame] = nil
-    end
-
-    self.UpdateScheduled = false
-end
-
-function NP:QueueUpdate(Frame, Unit, Flag, Update)
-    if (type(Frame) ~= "table" or not Unit or not Frame:IsShown()) then
-        return
-    end
-
-    if (Flag) then
-        Frame[Flag] = true
-    end
-
-    self.UpdateQueue[Frame] = true
-
-    if (Update) then
-        self:RunUpdateQueue()
-
-        return
-    end
-
-    if (not self.UpdateScheduled) then
-        self.UpdateScheduled = true
-
-        C_Timer.After(0, function()
-            self:RunUpdateQueue()
-        end)
-    end
+    -- HIGHLIGHT
+    if (Frame.TargetIndicator) then self:UpdateTargetIndicator(Frame, Unit) end
+    if (Frame.Highlight) then self:UpdateHighlight(Frame, Unit) end
+    if (Frame.HighlightMouseOver) then self:UpdateHighlightMouseOver(Frame, Unit) end
 end
 
 -- EVENT UPDATES
 
 function NP:UnitHealth(Unit)
-    local Frame = NP.UnitFrames[Unit]
+    local Frame = self.UnitFrames[Unit]
 
-    if (not Frame) then
+    if (not Frame or not Unit or not UnitExists(Unit)) then
         return
     end
 
-    NP:QueueUpdate(Frame, Unit, "NeedsHealth")
+    if (Frame.Health) then 
+        self:UpdateHealth(Frame, Unit)
+    end
+
+    if (Frame.HealthText) then 
+        self:UpdateHealthText(Frame, Unit)
+    end
 end
 
 function NP:UnitHealthPred(Unit)
-    local Frame = NP.UnitFrames[Unit]
+    local Frame = self.UnitFrames[Unit]
 
-    if (not Frame) then
+    if (not Frame or not Unit or not UnitExists(Unit)) then
         return
     end
 
-    NP:QueueUpdate(Frame, Unit, "NeedsHealthPred")
+    if (Frame.HealthPrediction) then
+        self:UpdateHealthPred(Frame, Unit)
+    end
 end
 
 function NP:UnitAura(Unit)
-    local Frame = NP.UnitFrames[Unit]
+    local Frame = self.UnitFrames[Unit]
 
-    if (not Frame or not Frame:IsShown()) then
+    if (not Frame or not Unit or not UnitExists(Unit)) then
         return
     end
 
-    NP:QueueUpdate(Frame, Unit, "NeedsAuras")
+    if (Frame.Debuffs) then 
+        self:UpdateAuras(Frame, Unit, true) 
+    end
+
+    if (Frame.CrowdControl) then
+        self:UpdateAuras(Frame, Unit, false, true)
+    end
 end
 
 function NP:UnitName(Unit)
-    local Frame = NP.UnitFrames[Unit]
+    local Frame = self.UnitFrames[Unit]
 
-    if (not Frame) then
+    if (not Frame or not Unit or not UnitExists(Unit)) then
         return
     end
 
-    NP:QueueUpdate(Frame, Unit, "NeedsName")
+    if (Frame.Name) then
+        self:UpdateName(Frame, Unit)
+    end
+
+    if (Frame.Guild) then
+        self:UpdateGuild(Frame, Unit)
+    end
 end
 
 function NP:UnitThreat(Unit)
-    local Frame = NP.UnitFrames[Unit]
+    local Frame = self.UnitFrames[Unit]
 
-    if (not Frame) then
+    if (not Frame or not Unit or not UnitExists(Unit)) then
         return
     end
 
-    NP:QueueUpdate(Frame, Unit, "NeedsThreat")
+    if (Frame.Threat) then
+        self:UpdateThreatHighlight(Frame, Unit)
+    end
 end
 
 function NP:UnitTargetChanged()
-    for Unit, Frame in pairs(NP.UnitFrames) do
-        NP:QueueUpdate(Frame, Unit, "NeedsTargetIndicator")
-        NP:QueueUpdate(Frame, Unit, "NeedsThreat")
+    for Key, Frame in next, self.UnitFrames do
+        if (Frame.TargetIndicator) then 
+            self:UpdateTargetIndicator(Frame, Frame.unit) 
+        end
+
+        if (Frame.Highlight) then 
+            self:UpdateHighlight(Frame, Frame.unit) 
+        end
     end
 end
 
 function NP:UnitMouseOver()
-    for Unit, Frame in pairs(NP.UnitFrames) do
-        NP:QueueUpdate(Frame, Unit, "NeedsHighlightOnMouseOver")
+    for Key, Frame in next, self.UnitFrames do
+        if (Frame.HighlightMouseOver) then 
+            self:UpdateHighlightMouseOver(Frame, Frame.unit) 
+        end
     end
 end
 
 function NP:UnitRaidIcon()
-    for Unit, Frame in pairs(NP.UnitFrames) do
-        NP:QueueUpdate(Frame, Unit, "NeedsIcons")
+    for Key, Frame in next, self.UnitFrames do
+        if (Frame.RaidIcon) then 
+            self:UpdateRaidIcon(Frame, Frame.unit) 
+        end
     end
 end
 
 function NP:CastBarOnNamePlateUnitAdded(Unit)
-    local Frame = NP.UnitFrames[Unit]
+    local Frame = self.UnitFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
@@ -502,7 +453,7 @@ function NP:CastBarOnNamePlateUnitAdded(Unit)
 end
 
 function NP:CastBarOnNamePlateUnitRemoved(Unit)
-    local Frame = NP.UnitFrames[Unit]
+    local Frame = self.UnitFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
@@ -545,7 +496,7 @@ function NP:NameplateAdded(Unit)
         Plate[Type.Key] = Frame
     end
 
-    if (not Frame) then 
+    if (not Frame) then
         return
     end
 
@@ -557,30 +508,20 @@ function NP:NameplateAdded(Unit)
     end
 
     -- Show Unit
-    Frame.Unit = Unit
+    Frame.unit = Unit
     Frame:Show()
 
     -- Cache Units
     self.UnitFrames[Unit] = Frame
 
-    -- Batch Flags
-    Frame.NeedsHealth = true
-    Frame.NeedsHealthPred = true
-    Frame.NeedsName = true
-    Frame.NeedsIcons = true
-    Frame.NeedsThreat = true
-    Frame.NeedsTargetIndicator = true
-    Frame.NeedsHighlightOnMouseOver = true
-    Frame.NeedsAuras = true
-
-    -- Queue Updates
-    self:QueueUpdate(Frame, Unit)
+    -- Refresh
+    NP:RefreshUnit(Frame, Unit)
 end
 
 function NP:NameplateRemoved(Unit)
     local Plate = C_NamePlate.GetNamePlateForUnit(Unit)
 
-    if (not Plate or not Plate.UnitFrame) then 
+    if (not Plate or not Plate.UnitFrame) then
         return
     end
 
@@ -593,24 +534,11 @@ function NP:NameplateRemoved(Unit)
     end
 
     -- Hide Unit
-    Frame.Unit = nil
+    Frame.unit = nil
     Frame:Hide()
 
     -- Reset Unit Cache
     self.UnitFrames[Unit] = nil
-
-    -- Reset Flags
-    Frame.NeedsHealth = nil
-    Frame.NeedsHealthPred = nil
-    Frame.NeedsName = nil
-    Frame.NeedsIcons = nil
-    Frame.NeedsThreat = nil
-    Frame.NeedsTargetIndicator = nil
-    Frame.NeedsHighlightOnMouseOver = nil
-    Frame.NeedsAuras = nil
-
-    -- Remove Queued Updates
-    self.UpdateQueue[Frame] = nil
 end
 
 local function IsNameplateUnit(unit)

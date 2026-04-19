@@ -27,6 +27,9 @@ local GradientColorPaletDown = {
     1, 0, 0      -- Red
 }
 
+-- Locals
+local UpdateTime = 1
+
 function System:Create()
     local Frame = CreateFrame("Frame", nil, _G.UIParent)
     Frame:Size(160, 50)
@@ -42,27 +45,28 @@ function System:Create()
 end
 
 function System:Update(Elapsed)
-    self.Init = (self.Init or 0) - Elapsed
+    self.TimeElapsed = (self.TimeElapsed or 0) - Elapsed
 
-    if (self.Init > 0) then 
-    	return 
+    if (self.TimeElapsed > 0) then 
+        return 
     end
 
-    self.Init = 1
+    self.TimeElapsed = UpdateTime
 
-    local FrameRate = floor(GetFramerate())
-	local _, _, HomeMS, WorldMS = GetNetStats() 
-	local Latency = HomeMS and WorldMS
+    -- Locals
+    local FrameRate = GetFramerate()
+    local _, _, _, WorldMS = GetNetStats()
 
+    -- Color Gradient
     local F, P, S = UI:ColorGradient(FrameRate, 60, unpack(GradientColorPalet))
-    local HexFPS = UI:RGBToHex(F, P, S)
+    local L, T, Y = UI:ColorGradient(WorldMS, 500, unpack(GradientColorPaletDown))
 
-    local L, T, Y = UI:ColorGradient(Latency, 500, unpack(GradientColorPaletDown))
+    -- Convert to Hex
+    local HexFPS = UI:RGBToHex(F, P, S)
     local HexMS = UI:RGBToHex(L, T, Y)
 
-    if (self.Text) then
-    	self.Text:SetFormattedText("|cffffffffFPS|r: %s%d|r |cffffffffMS|r: %s%d|r", HexFPS, FrameRate, HexMS, Latency)
-    end
+    -- Update Text
+    self.Text:SetFormattedText("|cffffffffFPS|r: %s%d|r |cffffffffMS|r: %s%d|r", HexFPS, FrameRate, HexMS, WorldMS)
 end
 
 function System:OnUpdate()

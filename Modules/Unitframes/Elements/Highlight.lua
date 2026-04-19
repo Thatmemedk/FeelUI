@@ -7,6 +7,27 @@ local UF = UI:CallModule("UnitFrames")
 local select = select
 local unpack = unpack
 
+function UF:OnHide()
+    if (not self:IsShown()) then
+        self:SetAlpha(0)
+    end
+
+    UI:UIFrameFadeOut(self, UF.FadeInTime, self:GetAlpha(), 0)
+end
+
+function UF:OnShow()
+    if (not self:IsShown()) then
+        self:SetAlpha(0)
+    end
+
+    UI:UIFrameFadeIn(self, UF.FadeInTime, self:GetAlpha(), 1)
+end
+
+function UF:CreateFadeInOut(Frame)
+    Frame:SetScript("OnShow", UF.OnShow)
+    Frame:SetScript("OnHide", UF.OnHide)
+end
+
 function UF:CreateOnEnterLeave(Frame)
     Frame:SetScript("OnEnter", _G.UnitFrame_OnEnter)
     Frame:SetScript("OnLeave", _G.UnitFrame_OnLeave)
@@ -51,6 +72,22 @@ function UF:CreateHighlight(Frame)
     Frame:HookScript("OnLeave", self.HighlightOnMouse)
     
     Frame.Highlight = Highlight
+end
+
+function UF:CreateHighlightTarget(Frame)
+    if (Frame.HighlightTarget) then
+        return
+    end
+
+    local HighlightTarget = Frame.InvisFrame:CreateTexture(nil, "OVERLAY")
+    HighlightTarget:SetBlendMode("ADD")
+    HighlightTarget:SetInside()
+    HighlightTarget:SetTexture(Media.Global.Glow)
+    HighlightTarget:SetTexCoord(0, 1, 0.5, 1)
+    HighlightTarget:SetVertexColor(1, 0.82, 0, 0.25)
+    HighlightTarget:SetAlpha(0)
+
+    Frame.HighlightTarget = HighlightTarget
 end
 
 function UF:HighlightOnMouse()

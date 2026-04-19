@@ -59,7 +59,7 @@ DB.Global = {
 
 	PrivateAuras = {
 		Enable = true,
-		Point = { "TOPRIGHT", _G.UIParent, -182, -6 },
+		Point = { "CENTER", _G.UIParent, 0, 0 },
 	},
 
 	AFK = {
@@ -86,7 +86,7 @@ DB.Global = {
 	CooldownManager = {
 		Enable = true,
 		-- Size Settings
-		BuffViewerButtonSize = { 40 , 12 },
+		BuffViewerButtonSize = { 40, 12 },
 		EssentialViewerButtonSize = { 32, 12 },
 		UtilityViewerButtonSize = { 32, 12 },
 		ButtonSpacing = 2,
@@ -97,7 +97,7 @@ DB.Global = {
 	},
 
 	PotionButtonMenu = {
-		ButtonSize = { 36 , 18 },
+		ButtonSize = { 36, 18 },
 		ButtonSpacing = 2,
 		Point = { "BOTTOMLEFT", _G.UIParent, 482, 282 },
 	},
@@ -190,7 +190,7 @@ DB.Global = {
 		CastBarInterruptColor = { 0.67, 0, 0, 0.70 },
 		CastBarSucceededColor = { 0, 0.67, 0, 0.70 },
 		-- Portraits
-		Portraits = true,
+		Portraits = false,
 		RoleIcons = false,
 		-- Points Settings
 		PlayerPoint = { "BOTTOMLEFT", _G.UIParent, 482, 244 },

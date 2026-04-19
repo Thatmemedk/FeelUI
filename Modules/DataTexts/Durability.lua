@@ -38,6 +38,20 @@ local GradientColorPalet = {
 	0, 1, 0        -- Green
 }
 
+function Durability:Create()
+	local Frame = CreateFrame("Frame", nil, _G.UIParent)
+	Frame:Size(160, 50)
+	Frame:Point("RIGHT", Panels.DataTextHolder, 32, -2)
+
+	local Text = Frame:CreateFontString(nil, "OVERLAY")
+	Text:Point("CENTER", Frame, 0, 0)
+	Text:SetFontTemplate("Default", 12)
+	Text:SetTextColor(unpack(DB.Global.DataTexts.TextColor))
+
+	self.Frame = Frame
+	self.Text = Text
+end
+
 function Durability:OnEvent()
 	local TotalDurability = 100
 	local TotalRepairCost = 0
@@ -60,20 +74,6 @@ function Durability:OnEvent()
 	local Hex = UI:RGBToHex(R, G, B)
 
 	self.Text:SetFormattedText("|cffffffffDurability|r: %s%d%%|r", Hex, TotalDurability)
-end
-
-function Durability:Create()
-	local Frame = CreateFrame("Frame", nil, _G.UIParent)
-	Frame:Size(160, 50)
-	Frame:Point("RIGHT", Panels.DataTextHolder, 32, -2)
-
-	local Text = Frame:CreateFontString(nil, "OVERLAY")
-	Text:Point("CENTER", Frame, 0, 0)
-	Text:SetFontTemplate("Default", 12)
-	Text:SetTextColor(unpack(DB.Global.DataTexts.TextColor))
-
-	self.Frame = Frame
-	self.Text = Text
 end
 
 function Durability:RegisterEvents()

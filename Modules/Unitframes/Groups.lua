@@ -3,13 +3,14 @@ local UI, DB, Media, Language = select(2, ...):Call()
 -- Call Modules
 local UF = UI:CallModule("UnitFrames")
 
-function UF:SetupGroupFrame(Frame, type)
+function UF:SetupGroupFrame(Frame, Type)
     if (Frame.UnitIsCreated) then 
         return 
     end
 
-    if InCombatLockdown() then
+    if (InCombatLockdown()) then
         Frame.NeedsSetup = true
+        
         return
     end
 
@@ -19,10 +20,10 @@ function UF:SetupGroupFrame(Frame, type)
     Frame:SetAttribute("toggleForVehicle", true)
 
     -- TYPE
-    Frame.IsParty = (type == "party")
-    Frame.IsRaid  = (type == "raid")
+    Frame.IsParty = (Type == "party")
+    Frame.IsRaid  = (Type == "raid")
 
-    if (type == "party") then
+    if (Type == "party") then
         UF:CreateParty(Frame)
     else
         UF:CreateRaid(Frame)
@@ -37,31 +38,18 @@ function UF:SetupGroupFrame(Frame, type)
             return
         end
 
-        if (self.unit) then
-            UF:QueueUpdate(self, self.unit, "NeedsHealth")
-            UF:QueueUpdate(self, self.unit, "NeedsHealthPred")
-            UF:QueueUpdate(self, self.unit, "NeedsPower")
-            UF:QueueUpdate(self, self.unit, "NeedsName")
-            UF:QueueUpdate(self, self.unit, "NeedsAuras")
-            UF:QueueUpdate(self, self.unit, "NeedsRaidIcons")
-            UF:QueueUpdate(self, self.unit, "NeedsLeaderIcons")
-            UF:QueueUpdate(self, self.unit, "NeedsReadyCheckIcons")
-            UF:QueueUpdate(self, self.unit, "NeedsRoleIcons")
-            UF:QueueUpdate(self, self.unit, "NeedsPhaseIcons")
-            UF:QueueUpdate(self, self.unit, "NeedsResurrectionIcons")
-            UF:QueueUpdate(self, self.unit, "NeedsSummonIcons")
-            UF:QueueUpdate(self, self.unit, "NeedsThreat")
-            UF:QueueUpdate(self, self.unit, "NeedsRange")
-        end
-
         self.unit = value
+
+        if (value) then
+            UF:RefreshGroup(self, value)
+        end
     end)
 
     Frame.UnitIsCreated = true
 end
 
-function UF:SpawnGroupHeader(type)
-    local Name = (type == "party") and "FeelUI_Party" or "FeelUI_Raid"
+function UF:SpawnGroupHeader(Type)
+    local Name = (Type == "party") and "FeelUI_Party" or "FeelUI_Raid"
     local Header = CreateFrame("Frame", Name, UF.SecureFrame, "SecureGroupHeaderTemplate")
 
     Header:SetAttribute("template", "SecureUnitButtonTemplate, SecureHandlerStateTemplate, SecureHandlerEnterLeaveTemplate, PingableUnitFrameTemplate")
@@ -70,7 +58,7 @@ function UF:SpawnGroupHeader(type)
         self:SetHeight(self:GetParent():GetAttribute("initial-height"))
     ]])
 
-    if (type == "party") then
+    if (Type == "party") then
         -- PARTY SETTINGS
         Header:SetAttribute("showPlayer", false)
         Header:SetAttribute("showParty", true)
@@ -108,20 +96,11 @@ function UF:SpawnGroupHeader(type)
     -- EVENTS
     Header:RegisterEvent("PLAYER_ENTERING_WORLD")
     Header:RegisterEvent("GROUP_ROSTER_UPDATE")
-    Header:RegisterEvent("PLAYER_REGEN_ENABLED")
     Header:SetScript("OnEvent", function(self, event)
-        if InCombatLockdown() then
+        if (InCombatLockdown()) then
+            self.NeedsRefresh = true
+
             return
-        end
-
-        if (event == "GROUP_ROSTER_UPDATE") then
-            UF:FullRefreshGroup()
-        end
-
-        if (event == "PLAYER_REGEN_ENABLED" and self.NeedsRefresh) then
-            self.NeedsRefresh = nil
-
-            UF:FullRefreshGroup()
         end
 
         local Index = 1
@@ -133,16 +112,26 @@ function UF:SpawnGroupHeader(type)
                 break
             end
 
-            UF:SetupGroupFrame(Frame, type)
-
-            if (Frame.NeedsSetup) then
-                Frame.NeedsSetup = nil
-                
-                UF:SetupGroupFrame(Frame, type)
+            if (not Frame.UnitIsCreated) then
+                UF:SetupGroupFrame(Frame, Type)
             end
 
             Index = Index + 1
         end
+
+        if (event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_ENTERING_WORLD") then
+            UI:Delay("RefreshGroups", 0.05, function()
+                UF:FullRefreshGroup()
+            end)
+        end
+
+        if (event == "PLAYER_REGEN_ENABLED" and self.NeedsRefresh) then
+            self.NeedsRefresh = nil
+
+            UI:Delay("RefreshGroups", 0.05, function()
+                UF:FullRefreshGroup()
+            end)
+        end 
     end)
 
     return Header

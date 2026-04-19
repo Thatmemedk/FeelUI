@@ -10,8 +10,6 @@ local unpack = unpack
 local select = select
 local type = type
 local format = format
-local date = date
-local gsub = gsub
 local find = find
 
 -- WoW Globals
@@ -23,10 +21,28 @@ local ChatConfigFrameDefaultButton = _G.ChatConfigFrameDefaultButton
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
 
-function CH:AddMessage(msg, ...)
-	msg = BetterDate("|CFF909090%H:%M:%S|r ") .. msg
+function CH:GetTimestamp()
+	return "|cff909090" .. BetterDate("%H:%M:%S") .. "|r "
+end
 
-	return msg
+function CH:InjectTimestamp(msg)
+    if (type(msg) ~= "string" or UI:IsSecretValue(msg)) then
+        return msg
+    else
+		return self:GetTimestamp() .. msg
+	end
+end
+
+function CH:HookChatFrame(Frame)
+	local OrigAddMessage = Frame.AddMessage
+
+	Frame.AddMessage = function(self, msg, ...)
+		if (type(msg) ~= "string") or (UI:IsSecretValue(msg)) then
+			return OrigAddMessage(self, msg, ...)
+		end
+
+		return OrigAddMessage(self, CH:InjectTimestamp(msg), ...)
+	end
 end
 
 function CH:StyleFrames(Frame)
@@ -80,15 +96,7 @@ function CH:StyleFrames(Frame)
 	if (MinimizeButton) then MinimizeButton:Kill() end
 
 	if (ID ~= 2) then
-	    Frame.OldAddMessage = Frame.AddMessage
-
-	    Frame.AddMessage = function(self, msg, ...)
-	        if (not UI:IsSecretValue(msg)) then
-	            msg = CH:AddMessage(msg, ...)
-	        else
-	        	return self:OldAddMessage(msg, ...)
-	        end
-	    end
+		CH:HookChatFrame(Frame)
 	end
 
 	Frame.ChatIsSkinned = true
@@ -173,6 +181,6 @@ function CH:Initialize()
 	self:AddChatMenu()
 	self:AddHooks()
 	self:StyleCombatLog()
-	self:EnableURL()
-	--self:CreateCopyButton()
+	self:EnableCopyURL()
+	self:CreateChatCopy()
 end

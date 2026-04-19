@@ -61,9 +61,9 @@ local FindURL_Events = {
 	"CHAT_MSG_COMMUNITIES_CHANNEL",
 }
 
-function CH:EnableURL()
-	for _, event in pairs(FindURL_Events) do
-		_G.ChatFrame_AddMessageEventFilter(event, CH[event] or CH.FindURL)
+function CH:EnableCopyURL()
+	for _, Event in pairs(FindURL_Events) do
+		_G.ChatFrame_AddMessageEventFilter(Event, CH[Event] or CH.FindURL)
 	end
 
 	local CurrentLink = nil
@@ -81,6 +81,7 @@ function CH:EnableURL()
 
 			ChatFrameEditBox:Insert(CurrentLink)
 			ChatFrameEditBox:HighlightText()
+			
 			CurrentLink = nil
 		else
 			SetHyperlink(self, data, ...)

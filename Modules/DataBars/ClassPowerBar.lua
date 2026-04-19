@@ -41,11 +41,6 @@ local R4, G4, B4 = 0.45, 0.60, 0.33
 local R5, G5, B5 = 0.33, 0.59, 0.33
 local R6, G6, B6 = 0.33, 0.59, 0.33
 
--- Colors
-local BloodColor = { 1 * 2, 0, 0 }
-local FrostColor = { 0, 0.35 * 2.5, 1 * 2.5 }
-local UnholyColor = { 0.25 * 2.5, 0.55 * 2.5, 0.10 * 2.5 }
-
 function ClassPowerBar:CreateBar()
     local Bar = CreateFrame("Frame", "FeelUI_ClassPowerBar", _G.UIParent)
     Bar:Size(242, 8)
@@ -100,7 +95,7 @@ function ClassPowerBar:OnUpdate(Elapsed)
     if (self.Duration >= self.Max) then
         self.Duration = self.Max
         
-        self:SetValue(self.Max)
+        self:SetValue(self.Max, UI.SmoothBars)
         self:SetScript("OnUpdate", nil)
     else
         self:SetValue(self.Duration, UI.SmoothBars)
@@ -128,7 +123,7 @@ function ClassPowerBar:Update()
             return
         end
 
-        if (Class == "WARLOCK" and GetSpecialization == SPEC_WARLOCK_DESTRUCTION) then
+        if (Class == "WARLOCK" and GetSpecialization == 3) then
             Min = UnitPower("player", self.ClassPowerType, true)
             BarCount = 5
         else
@@ -201,16 +196,8 @@ function ClassPowerBar:Update()
         end
 
         if (IsRuneBar) then
-            if (i <= 2) then
-                Segment:SetStatusBarColor(unpack(BloodColor))
-                Backdrop:SetStatusBarColor(1 * 2.5, 0, 0, 0.5)
-            elseif (i <= 4) then
-                Segment:SetStatusBarColor(unpack(FrostColor))
-                Backdrop:SetStatusBarColor(0, 0.35 * 2.5, 1 * 2.5, 0.5)
-            else
-                Segment:SetStatusBarColor(unpack(UnholyColor))
-                Backdrop:SetStatusBarColor(0.25 * 2.5, 0.55 * 2.5, 0.10 * 2.5, 0.5)
-            end
+            Segment:SetStatusBarColor(R, G, B)
+            Backdrop:SetStatusBarColor(0, 0, 0, 0)
 
             local Start, Duration, RuneIsReady = GetRuneCooldown(i)
 
@@ -226,6 +213,8 @@ function ClassPowerBar:Update()
 
                     UI:UIFrameFadeIn(Segment, 0.25, Segment:GetAlpha(), 1)
                 else
+                    Segment:SetStatusBarColor(0.66, 0.66, 0.66)
+
                     Segment:SetValue(Elapsed, UI.SmoothBars)
                     Segment:SetScript("OnUpdate", self.OnUpdate)
 
@@ -234,7 +223,7 @@ function ClassPowerBar:Update()
             end
         elseif (IsMaelstrom) then
             Segment:SetStatusBarColor(R * 1.5, G * 1.5, B * 1.5)
-            Backdrop:SetStatusBarColor(R * 0.5, G * 0.5, B * 0.5, 0.5)
+            Backdrop:SetStatusBarColor(0, 0, 0, 0)
             
             if (i <= Min) then 
                 UI:UIFrameFadeIn(Segment, 0.25, Segment:GetAlpha(), 1) 
@@ -306,7 +295,7 @@ function ClassPowerBar:UpdateSpec()
         self.Bar:Show()
     elseif (Class == "MONK" and GetSpecialization == 3) then
         self.Bar:Show()
-    elseif (Class == "MAGE" and GetSpecialization == SPEC_MAGE_ARCANE) then
+    elseif (Class == "MAGE" and GetSpecialization == 1) then
         self.Bar:Show()
     elseif (Class == "SHAMAN" and GetSpecialization == 2) then
         self.Bar:Show()

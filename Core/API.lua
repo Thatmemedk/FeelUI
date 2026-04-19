@@ -37,6 +37,9 @@ local GetMouseFocus = GetMouseFocus
 local GetMouseFoci = GetMouseFoci
 local GameMenuFrame = _G.GameMenuFrame
 
+-- WoW Globals
+local C_TimerAfter = C_Timer.After
+
 -- HiddenParent
 UI.HiddenParent = CreateFrame("Frame", nil, _G.UIParent)
 UI.HiddenParent:SetAllPoints()
@@ -45,6 +48,7 @@ UI.HiddenParent:Hide()
 -- Tables
 UI.Texts = {}
 UI.Commands = {}
+UI.DelayedTimers = {}
 
 -- Functions
 UI.ClearTexture = 0
@@ -146,6 +150,28 @@ function UI:UTF8Sub(Text, Index, Dots)
     end
 end
 
+-- Delay
+function UI:Delay(Key, Delay, Func)
+    if (type(Delay) ~= "number" or type(Func) ~= "function") then
+        return false
+    end
+
+    if (self.DelayedTimers[Key]) then
+        return false
+    end
+
+    self.DelayedTimers[Key] = true
+
+    Delay = Delay < 0.01 and 0.01 or Delay
+
+    C_TimerAfter(Delay, function()
+        self.DelayedTimers[Key] = nil
+        Func()
+    end)
+
+    return true
+end
+
 -- Print
 function UI:Print(...)
 	print("|CFF00AAFF" .. "FeelUI" .. "|r:", ...)
@@ -197,10 +223,10 @@ function UI:RegisterChatCommand(Command, Func)
 end
 
 function UI:AddCommand(Name, Keys, Func)
-	if not SlashCmdList[Name] then
+	if (not SlashCmdList[Name]) then
 		SlashCmdList[Name] = Func
 
-		if type(Keys) == "table" then
+		if (type(Keys) == "table") then
 			for i, Key in next, Keys do
 				_G["SLASH_"..Name..i] = Key
 			end
@@ -214,6 +240,16 @@ end
 function FeelUI:LoadCommands()
 	-- Reload UI
 	UI:AddCommand("RELOADUI", {"/rl"}, _G.ReloadUI)
+
+	-- /Pull
+	UI:AddCommand("PULL", {"/pull", "/countdown"}, function(msg)
+		local Number = gsub(msg, "(%s*)(%d+)", "%2")
+		local ToNumber = tonumber(Number)
+
+		if (ToNumber and ToNumber <= Constants.PartyCountdownConstants.MaxCountdownSeconds) then
+			C_PartyInfo.DoCountdown(ToNumber)
+		end
+	end)
 
 	-- Dev Console
 	UI:AddCommand("DEVCON", "/devcon", function()
@@ -266,7 +302,7 @@ end
 
 -- Pulse Function
 function UI:CreatePulse(Frame)
-	if not (Frame) then
+	if (not Frame) then
 		return
 	end
 
@@ -311,13 +347,20 @@ end
 
 -- Update LibSharedMedia
 do
-	local function LSMCallback() FeelUI:UpdateMedia() end
+	local function LSMCallback() 
+		FeelUI:UpdateMedia() 
+	end
+
 	LSM.RegisterCallback(UI, "LibSharedMedia_Registered", LSMCallback)
 end
 
 -- FeelUI GameMenu
 function FeelUI:CreateGameMenu()
 	if (self.FeelUIGameMenuIsCreated) then
+		return
+	end
+
+	if (not GameMenuFrame) then
 		return
 	end
 

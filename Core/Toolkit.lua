@@ -714,8 +714,8 @@ local function HandleButton(self, Strip)
 	if self.SetPushedTexture then self:SetPushedTexture(UI.ClearTexture) end
 	if self.SetDisabledTexture then self:SetDisabledTexture(UI.ClearTexture) end
 
-	if (Strip) then 
-		self:StripTexture() 
+	if (Strip) then
+		self:StripTexture()
 	end
 	
 	self:ClearFrameRegions()
@@ -885,61 +885,164 @@ local function HandleArrowButton(self, Width, Height)
 	self.HandleArrowButtonIsSkinned = true
 end
 
-local function HandleScrollBar(self)
-	if (self.HandleScrollBarIsSkinned) then 
-		return 
+local function FindFrameChild(self, Element, UseParent)
+	if (UseParent) then 
+		self = self:GetParent() 
 	end
+
+	local Child = self[Element]
+
+	if (Child) then
+		return Child 
+	end
+
+	local Name = self:GetName()
+
+	if (Name) then
+		return _G[Name..Element]
+	end
+end
+
+local function FindButton(self, Buttons)
+	for _, Frame in ipairs(Buttons) do
+		if (type(Frame) == "string") then
+			local Found = FindFrameChild(self, Frame)
+
+			if (Found) then
+				return Found
+			end
+		else
+			local Found = FindFrameChild(self, Frame[1], Frame[2])
+
+			if (Found) then
+				return Found
+			end
+		end
+	end
+end
+
+local function UpdateThumbColors(self)
+	if (not self.Thumb) then
+		return
+	end
+
+	if (not self:IsEnabled()) then
+		self.Thumb.Overlay:SetStatusBarColor(0.3, 0.3, 0.3, 0.8)
+
+		return
+	end
+
+	local _, Max = self:GetMinMaxValues()
+
+	if (Max == 0) then
+		self.Thumb.Overlay:SetStatusBarColor(0.3, 0.3, 0.3, 0.8)
+	else
+		local R, G, B = unpack(UI.GetClassColors)
+		self.Thumb.Overlay:SetStatusBarColor(R, G, B, 0.8)
+	end
+end
+
+local function HookThumbState(Frame)
+	hooksecurefunc(Frame, "Enable", UpdateThumbColors)
+	hooksecurefunc(Frame, "Disable", UpdateThumbColors)
+	hooksecurefunc(Frame, "SetEnabled", UpdateThumbColors)
+	hooksecurefunc(Frame, "SetMinMaxValues", UpdateThumbColors)
+end
+
+local UpButtons = {
+	"UpButton",
+	"ScrollUp",
+	"ScrollUpButton",
+	"Back",
+	{"scrollUp", true},
+}
+
+local DownButtons = {
+	"DownButton",
+	"ScrollDown",
+	"ScrollDownButton",
+	"Forward",
+	{"scrollDown", true},
+}
+
+local ThumbButtons = {
+	"Thumb",
+	"ThumbTexture",
+	"thumbTexture",
+}
+
+function HandleScrollBar(self)
+	if (self.HandleScrollBarIsSkinned) then 
+		return
+	end
+
+	local Tex = Media.Global.Texture
+	local R, G, B = unpack(UI.GetClassColors)
+	local UpButtons, DownButtons = FindButton(self, UpButtons), FindButton(self, DownButtons)
+	local Thumb = FindButton(self, ThumbButtons) or (self.GetThumbTexture and self:GetThumbTexture())
 
 	self:StripTexture()
 
-	if (self.Forward) then
-		self.Forward:HandleArrowButton(16, 16)
-		self.Forward.Texture:SetAlpha(0)
+	if (self.Background) then 
+		self.Background:Hide() 
 	end
 
-	if (self.Back) then
-		self.Back:HandleArrowButton(16, 16)
-		self.Back.Texture:SetAlpha(0)
+	if (self.ScrollDownBorder) then 
+		self.ScrollDownBorder:Hide() 
 	end
 
-	if (self.Track) then
-		self.Track:DisableDrawLayer("ARTWORK")
+	if (self.ScrollUpBorder) then 
+		self.ScrollUpBorder:Hide() 
 	end
 
-	local Thumb = self:GetThumb()
+	if (UpButtons) then
+		UpButtons:HandleArrowButton()
+	end
+
+	if (DownButtons) then
+		DownButtons:HandleArrowButton()
+	end
 
 	if (Thumb) then
-		Thumb:Size(16, 16)
-		Thumb:DisableDrawLayer("ARTWORK")
-		Thumb:DisableDrawLayer("BACKGROUND")
+		Thumb:Size(18, 18)
+		Thumb:SetTexture()
 
-		local Tex = Media.Global.Texture
-		local R, G, B = unpack(UI.GetClassColors)
+		if (not self.Thumb) then
+			self.Thumb = Thumb
+		end
 
-		if (not Thumb.ThumbIsSkinned) then
-			self.ThumbFrame = CreateFrame("Frame", nil, self)
-			self.ThumbFrame:SetInside(Thumb, 0, 0)
-			self.ThumbFrame:CreateBackdrop()
-			self.ThumbFrame:CreateShadow()
-			self.ThumbFrame:SetBackdropColorTemplate(R, G, B, 0.8)
-			
-			self.ThumbHighlight = self:CreateTexture(nil, "OVERLAY")
-			self.ThumbHighlight:SetInside(Thumb)
-			self.ThumbHighlight:SetTexture(Tex)
-			self.ThumbHighlight:SetVertexColor(0, 0, 0, 0)
-			self.ThumbHighlight:Hide()
-			
-			self:HookScript("OnEnter", function(self) 
-				self.ThumbHighlight:SetVertexColor(unpack(DB.Global.ActionBars.HighlightColor))
-				self.ThumbHighlight:Show()
+		if (not self.ThumbIsSkinned) then
+			Thumb.Overlay = CreateFrame("Statusbar", nil, self)
+			Thumb.Overlay:SetInside(Thumb, 0, 0)
+			Thumb.Overlay:SetStatusBarTexture(Tex)
+			Thumb.Overlay:SetTemplate()
+			Thumb.Overlay:CreateShadow()
+
+			Thumb.Highlight = self:CreateTexture(nil, "OVERLAY")
+			Thumb.Highlight:SetInside(Thumb)
+			Thumb.Highlight:SetTexture(Tex)
+			Thumb.Highlight:SetVertexColor(0, 0, 0, 0)
+			Thumb.Highlight:Hide()
+
+			self:HookScript("OnEnter", function() 
+				Thumb.Highlight:SetVertexColor(unpack(DB.Global.ActionBars.HighlightColor))
+				Thumb.Highlight:Show()
 			end)
 			
-			self:HookScript("OnLeave", function(self) 
-				self.ThumbHighlight:SetVertexColor(0, 0, 0, 0)
-				self.ThumbHighlight:Hide()
+			self:HookScript("OnLeave", function() 
+				Thumb.Highlight:SetVertexColor(0, 0, 0, 0)
+				Thumb.Highlight:Hide()
 			end)
 
-			Thumb.ThumbIsSkinned = true
+			if (self.SetEnabled) then
+				HookThumbState(self)
+				UpdateThumbColors(self)
+			else
+				local R, G, B = unpack(UI.GetClassColors)
+				Thumb.Overlay:SetStatusBarColor(R, G, B, 0.8)
+			end
+
+			self.ThumbIsSkinned = true
 		end
 	end
 

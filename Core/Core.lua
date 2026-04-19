@@ -19,6 +19,8 @@ local SetCVar = C_CVar.SetCVar
 
 -- Tables
 UI.Modules = {}
+UI.ModuleQueue = {}
+UI.ModuleQueueIndex = 0
 
 -- LIBS
 do
@@ -42,16 +44,18 @@ end
 
 -- REGISTER MODULE
 function UI:RegisterModule(Name)
-	if (self.Modules[Name]) then
-		return self.Modules[Name]
+	local Module = self:CallModule(Name)
+
+	if (Module) then
+		return Module
 	end
 
-	local Module = CreateFrame("Frame", Name, _G.UIParent)
+	Module = CreateFrame("Frame", Name, _G.UIParent, "BackdropTemplate")
 	Module.Name = Name
-	Module.Initialized = false
 
 	self.Modules[Name] = Module
-	self.Modules[#self.Modules + 1] = Module
+	self.ModuleQueueIndex = self.ModuleQueueIndex + 1
+	self.ModuleQueue[self.ModuleQueueIndex] = Module
 
 	return Module
 end
@@ -65,10 +69,10 @@ end
 
 -- LOAD MODULE
 function UI:LoadModules()
-	for Index = 1, #self.Modules do
-		if (self.Modules[Index].Initialize and not self.Modules[Index].Initialized) then
-			self.Modules[Index]:Initialize()
-			self.Modules[Index].Initialized = true
+	for Index = 1, #self.ModuleQueue do
+		if (self.ModuleQueue[Index].Initialize and not self.ModuleQueue[Index].Initialized) then
+			self.ModuleQueue[Index]:Initialize()
+			self.ModuleQueue[Index].Initialized = true
 		end
 	end
 end
@@ -98,7 +102,7 @@ function UI:PLAYER_LOGIN(event)
 	elseif (GetAddOnEnableState(UI.MyName, "Tukui") == 2) then
 		UI:Print(Language.Tukui.Print)
 		StaticPopup_Show("TUKUI_INCOMPATIBLE")
-	elseif not (IsAddOnLoaded("Tukui") or IsAddOnLoaded("ElvUI") or IsAddOnLoaded("FeelUI_PowerSuite")) then
+	elseif (not IsAddOnLoaded("Tukui") or IsAddOnLoaded("ElvUI")) then
 		self:LoadModules()
 	end
 	

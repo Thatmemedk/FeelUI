@@ -14,47 +14,6 @@ local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local LoadAddOn = C_AddOns.LoadAddOn
 local SetCVar = C_CVar.SetCVar
 
--- Locals
-DamageMeter.Time = nil
-DamageMeter.LastUpdate = nil
-DamageMeter.IsActive = false
-DamageMeter.OnlyEncounters = false
-
-function DamageMeter:CreateCombatTimers()
-    local Frame = CreateFrame("Frame", nil, _G.UIParent)
-    Frame:Size(26, 26)
-    Frame:Point("RIGHT", DamageMeterSessionWindow1.DamageMeterTypeDropdown.TypeName, 38, 0)
-    Frame:SetAlpha(0)
-
-    Frame:SetScript("OnUpdate", function(_, Elapsed)
-        if (self.IsActive) then
-            self:CombatTimerOnUpdate(Elapsed)
-        end
-    end)
-
-    local Text = Frame:CreateFontString(nil, "OVERLAY")
-    Text:Point("CENTER", Frame, 0, 0)
-    Text:SetFontTemplate("Default", 12)
-
-    self.Frame = Frame
-    self.Text = Text
-end
-
-function DamageMeter:FormattedTime(Value)
-    local Minutes = math.floor(Value / 60)
-    local Seconds = math.floor(Value % 60)
-    return string.format("(%02d:%02d)", Minutes, Seconds)
-end
-
-function DamageMeter:CombatTimerOnUpdate()
-    local Elapsed = math.floor(GetTime() - self.Time)
-
-    if (Elapsed ~= self.LastUpdate) then
-        self.LastUpdate = Elapsed
-        self.Text:SetText(self:FormattedTime(Elapsed))
-    end
-end
-
 function DamageMeter:OnEnter(Window)
     if (not Window.OptionsButtons) then
     	return
@@ -156,7 +115,7 @@ function DamageMeter:UpdateScrollBoxBars(ScrollBox)
     end
 
     ScrollBox:ForEachFrame(function(Frame)
-        DamageMeter:UpdateBarSkin(Frame)
+        self:UpdateBarSkin(Frame)
     end)
 end
 
@@ -178,6 +137,10 @@ function DamageMeter:Skin()
 				hooksecurefunc(Window.ScrollBox, "Update", function(ScrollBox)
 					DamageMeter:UpdateScrollBoxBars(ScrollBox)
 				end)
+			end
+
+			if (Window.LocalPlayerEntry) then
+				self:UpdateBarSkin(Window.LocalPlayerEntry)
 			end
 
 			if (Window.Background) then
@@ -244,9 +207,6 @@ function DamageMeter:Skin()
 				Window.SourceWindow.ResizeButton:Hide()
 			end
 
-			-- SESSION TIMER
-			Window.SessionTimer:Hide()
-
 			-- NAME
 			Window.DamageMeterTypeDropdown.TypeName:SetParent(Window)
 			Window.DamageMeterTypeDropdown.TypeName:ClearAllPoints()
@@ -256,13 +216,18 @@ function DamageMeter:Skin()
 
 			-- SETTINGS BUTTONS
 			Window.SettingsDropdown:ClearAllPoints()
-			Window.SettingsDropdown:Point("TOPRIGHT", Window, 16, -4)
+			Window.SettingsDropdown:Point("TOPRIGHT", Window, -32, -4)
 
 			Window.SessionDropdown:ClearAllPoints()
 			Window.SessionDropdown:Point("LEFT", Window.SettingsDropdown, -32, 0)
 
 			Window.DamageMeterTypeDropdown:ClearAllPoints()
 			Window.DamageMeterTypeDropdown:Point("LEFT", Window.SessionDropdown, -32, 0)
+
+			-- SESSION TIMER
+			Window.SessionTimer:ClearAllPoints()
+			Window.SessionTimer:Point("RIGHT", Window.DamageMeterTypeDropdown.TypeName, 52, 0)
+			Window.SessionTimer:SetFontTemplate("Default")
 
 			-- SKIN BUTTONS
 			self:SkinButtons(Window.SettingsDropdown, 26, Media.Global.Cogwheel)
@@ -300,50 +265,6 @@ function DamageMeter:Skin()
 	self.IsSkinned = true
 end
 
-function DamageMeter:OnEvent(event)
-	if (self.OnlyEncounters) then
-		if (event == "ENCOUNTER_START") then
-		    self.IsActive = true
-		    self.Time = GetTime()
-		    self.LastUpdate = -1
-
-			UI:UIFrameFadeIn(self.Frame, 0.5, self.Frame:GetAlpha(), 1)
-		elseif (event == "ENCOUNTER_END") then
-		    self.IsActive = false
-		    self.Time = nil
-		    self.LastUpdate = nil
-
-		    UI:UIFrameFadeOut(self.Frame, 0.5, self.Frame:GetAlpha(), 0)
-		end
-	else
-	    if (event == "PLAYER_REGEN_DISABLED") then
-	        self.IsActive = true
-	        self.Time = GetTime()
-	        self.LastUpdate = -1
-
-	    	UI:UIFrameFadeIn(self.Frame, 0.5, self.Frame:GetAlpha(), 1)
-	    elseif (event == "PLAYER_REGEN_ENABLED") then
-	        self.IsActive = false
-	        self.Time = nil
-	        self.LastUpdate = nil
-
-	        UI:UIFrameFadeOut(self.Frame, 0.5, self.Frame:GetAlpha(), 0)
-	    end
-	end
-end
-
-function DamageMeter:RegisterEvents()
-   	self:RegisterEvent("PLAYER_LOGIN")
-    self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:RegisterEvent("PLAYER_REGEN_DISABLED")
-    self:RegisterEvent("PLAYER_REGEN_ENABLED")
-    self:RegisterEvent("ENCOUNTER_START")
-    self:RegisterEvent("ENCOUNTER_END")
-    self:SetScript("OnEvent", function(_, event)
-        self:OnEvent(event)
-    end)
-end
-
 function DamageMeter:SetCVarOnLogin()
 	SetCVar("damageMeterEnabled", "1")
 end
@@ -358,7 +279,5 @@ function DamageMeter:Initialize()
     end
 
     self:SetCVarOnLogin()
-    self:CreateCombatTimers()
-    self:RegisterEvents()
     self:Skin()
 end

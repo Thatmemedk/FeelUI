@@ -11,7 +11,7 @@ function NP:DisableBlizzard()
             return
         end
 
-        local BlizzNP = C_NamePlate.GetNamePlateForUnit(Unit, issecure())
+        local BlizzNP = C_NamePlate.GetNamePlateForUnit(Unit)
 
         if (not BlizzNP and Unit) then
             return

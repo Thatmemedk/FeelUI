@@ -77,11 +77,11 @@ function PowerBar:PowerUpdate()
 
     if (Class == "MAGE" or Class == "WARLOCK") then
         Bar:Hide()
-    elseif (Class == "PALADIN" and (GetSpecialization == 2 or GetSpecialization == SPEC_PALADIN_RETRIBUTION)) then
+    elseif (Class == "PALADIN" and (GetSpecialization == 2 or GetSpecialization == 3)) then
         Bar:Hide()
     elseif (Class == "SHAMAN" and (GetSpecialization == 2)) then
     	Bar:Hide()
-    elseif (Class == "EVOKER" and (GetSpecialization == SPEC_EVOKER_AUGMENTATION or GetSpecialization == 3)) then
+    elseif (Class == "EVOKER" and (GetSpecialization == 1 or GetSpecialization == 3)) then
     	Bar:Hide()
     else
         Bar:Show()
@@ -122,7 +122,6 @@ function PowerBar:StaggerUpdate()
     	Bar:Show()
     else
         Bar:Hide()
-        return
     end
 
 	local Min, Max = UnitStagger("player"), UnitHealthMax("player")
@@ -152,11 +151,10 @@ function PowerBar:SoulFragmentsUpdate()
     	return
     end
 
-    if (GetSpecialization == SPEC_DEMONHUNTER_DEVOURER) then
+    if (GetSpecialization == 3) then
     	Bar:Show()
     else
         Bar:Hide()
-        return
     end
 
     local Aura = GetPlayerAuraBySpellID(1225789) or GetPlayerAuraBySpellID(1227702)
@@ -200,32 +198,58 @@ end
 function PowerBar:GlidingState()
     local IsGliding = C_PlayerInfo.GetGlidingInfo()
 
-    local Bars = {
-        self.Power,
-        self.Stagger,
-        self.SoulFragments
-    }
+    if (IsGliding and not self.IsFlying) then
+    	self.IsFlying = true
 
-    for _, Bar in ipairs(Bars) do
-        if (Bar) then
-            if (IsGliding and not self.IsFlying) then
-            	self.IsFlying = true
+    	if (self.Power) then
+	        if (self.Power.FadeIn:IsPlaying()) then
+	            self.Power.FadeIn:Stop()
+	        end
 
-                if (Bar.FadeIn:IsPlaying()) then
-                    Bar.FadeIn:Stop()
-                end
+	        self.Power.FadeOut:Play()
+	    end
 
-                Bar.FadeOut:Play()
-            elseif (not IsGliding and self.IsFlying) then
-            	self.IsFlying = false
+        if (self.Stagger) then
+	        if (self.Stagger.FadeIn:IsPlaying()) then
+	            self.Stagger.FadeIn:Stop()
+	        end
 
-                if (Bar.FadeOut:IsPlaying()) then
-                    Bar.FadeOut:Stop()
-                end
+	        self.Stagger.FadeOut:Play()
+	    end
 
-                Bar.FadeIn:Play()
-            end
-        end
+        if (self.SoulFragments) then
+	        if (self.SoulFragments.FadeIn:IsPlaying()) then
+	            self.SoulFragments.FadeIn:Stop()
+	        end
+
+	        self.SoulFragments.FadeOut:Play()
+	    end
+    elseif (not IsGliding and self.IsFlying) then
+    	self.IsFlying = false
+
+    	if (self.Power) then
+	        if (self.Power.FadeOut:IsPlaying()) then
+	            self.Power.FadeOut:Stop()
+	        end
+
+	        self.Power.FadeIn:Play()
+	    end
+
+        if (self.Stagger) then
+	        if (self.Stagger.FadeOut:IsPlaying()) then
+	            self.Stagger.FadeOut:Stop()
+	        end
+
+	        self.Stagger.FadeIn:Play()
+	    end
+
+        if (self.SoulFragments) then
+	        if (self.SoulFragments.FadeOut:IsPlaying()) then
+	            self.SoulFragments.FadeOut:Stop()
+	        end
+
+	        self.SoulFragments.FadeIn:Play()
+	    end
     end
 end
 

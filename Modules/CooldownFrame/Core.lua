@@ -17,7 +17,7 @@ function Cooldown:IsActionBarParent(CD)
 end
 
 function Cooldown.UpdateCooldownFrameSet(CD, Start, Duration, Enable, ForceShowDrawEdge, ModRate)
-    if (not CD) then
+    if (not CD or UI:IsSecretValue(CD)) then
         return
     end
 
@@ -29,8 +29,8 @@ function Cooldown.UpdateCooldownFrameSet(CD, Start, Duration, Enable, ForceShowD
         return
     end
 
-    for i = 1, #Regions do
-        local Region = Regions[i]
+    for i = 1, CD:GetNumRegions() do
+        local Region = select(i, CD:GetRegions())
 
         if (Region and Region.GetText) then
             local FontSize = UI:GetCooldownFontScale(CD)

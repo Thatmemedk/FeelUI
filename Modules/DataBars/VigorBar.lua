@@ -99,6 +99,48 @@ function VB:CreateSegmentBars(Frame, Index)
     return SegmentBar
 end
 
+function VB:CreateCooldownIcon(Frame, Index, SpellID)
+    local Icon = CreateFrame("Frame", nil, Frame)
+    Icon:Size(42, 12)
+    Icon:SetTemplate()
+    Icon:CreateShadow()
+    Icon:StyleButton()
+    Icon:SetShadowOverlay()
+
+    local IconSize = 42
+    local TotalWidth = (IconSize * #self.CooldownSpells) + (self.Spacing * (#self.CooldownSpells - 1))
+    local StartX = -(TotalWidth / 2) + (IconSize / 2)
+
+    Icon:ClearAllPoints()
+    Icon:Point("CENTER", Frame, "CENTER", StartX + ((Index - 1) * (IconSize + self.Spacing)), 44)
+
+    -- ICON
+    Icon.Texture = Icon:CreateTexture(nil, "ARTWORK")
+    Icon.Texture:SetInside()
+    UI:KeepAspectRatio(Icon, Icon.Texture)
+
+    -- COOLDOWN
+    Icon.Cooldown = CreateFrame("Cooldown", nil, Icon, "CooldownFrameTemplate")
+    Icon.Cooldown:SetInside()
+    Icon.Cooldown:SetDrawEdge(false)
+    Icon.Cooldown:SetDrawBling(false)
+    Icon.Cooldown:SetReverse(true)
+    Icon.Cooldown:Hide()
+
+    local InvisFrame = CreateFrame("Frame", nil, Icon)
+    InvisFrame:SetFrameLevel(Icon:GetFrameLevel() + 10)
+    InvisFrame:SetInside()
+
+    -- COUNT
+    Icon.Text = InvisFrame:CreateFontString(nil, "OVERLAY")
+    Icon.Text:Point("TOPRIGHT", Icon, 2, 2)
+    Icon.Text:SetFontTemplate("Default")
+
+    Frame[Index] = Icon
+
+    return Icon
+end
+
 function VB:ResizeBars(Frame, Num)
     local MaxWidth = math.floor(Frame:GetWidth())
     local BarWidth = math.floor((MaxWidth / Num) - self.Spacing + (self.Spacing / Num))
@@ -122,47 +164,57 @@ function VB:ResizeBars(Frame, Num)
 end
 
 function VB:UpdateCooldowns()
-    self.NeedsResize = false
-
     for i, SpellID in ipairs(self.CooldownSpells) do
-        local SegmentBar = self.CooldownsBars[i]
+        local Icon = self.CooldownsBars[i]
 
-        if (not SegmentBar) then
-            SegmentBar = self:CreateSegmentBars(self.CooldownsBars, i)
-
-            self.NeedsResize = true
+        if (not Icon) then
+            Icon = self:CreateCooldownIcon(self.CooldownsBars, i, SpellID)
         end
 
-        SegmentBar:SetStatusBarColor(R, G, B)
-        self.CooldownsBars.Backdrop[i]:SetStatusBarColor(R * 0.5, G * 0.5, B * 0.5, 0.5)
+        local Texture = C_Spell.GetSpellTexture(SpellID)
+
+        if (Texture) then
+            Icon.Texture:SetTexture(Texture)
+        end
 
         local Charges = GetSpellCharges(SpellID)
-        local CurCharges = Charges and Charges.currentCharges or 0
 
         if (Charges) then
-            SegmentBar.Text:SetText(CurCharges)
-        end
+            local CurCharges = Charges.currentCharges or 0
+            local MaxCharges = Charges.maxCharges or 0
 
-        if (Charges and CurCharges > 0) then
-            self.Duration = GetSpellChargeDuration(SpellID)
+            if (MaxCharges > 1) then
+                Icon.Text:SetText(CurCharges)
+            else
+                Icon.Text:SetText("")
+            end
 
-            UI:UIFrameFadeIn(SegmentBar, 0.25, SegmentBar:GetAlpha(), 1)
+            if (CurCharges < MaxCharges) then
+                local Start = Charges.cooldownStartTime
+                local Duration = Charges.cooldownDuration
+
+                if (Start and Duration and Duration > 0) then
+                    Icon.Cooldown:SetCooldown(Start, Duration)
+                    UI:UpdateCooldownText(Icon.Cooldown, Icon, 0, -6, true)
+                    Icon.Cooldown:Show()
+                else
+                    Icon.Cooldown:Hide()
+                end
+            else
+                Icon.Cooldown:Hide()
+            end
+
         else
-            self.Duration = GetSpellCooldownDuration(SpellID)
+            local CooldownInfo = C_Spell.GetSpellCooldown(SpellID)
 
-            UI:UIFrameFadeOut(SegmentBar, 1, SegmentBar:GetAlpha(), 0.5)
+            if (CooldownInfo and CooldownInfo.duration and CooldownInfo.duration > 0) then
+                Icon.Cooldown:SetCooldown(CooldownInfo.startTime, CooldownInfo.duration)
+                UI:UpdateCooldownText(Icon.Cooldown, Icon, 0, -6, true)
+                Icon.Cooldown:Show()
+            else
+                Icon.Cooldown:Hide()
+            end
         end
-
-        if (self.Duration and not self.Duration:IsZero()) then
-            SegmentBar:SetTimerDuration(self.Duration)
-        else
-            SegmentBar:SetMinMaxValues(0, 1)
-            SegmentBar:SetValue(1, UI.SmoothBars)
-        end
-    end
-
-    if (self.NeedsResize) then
-        self:ResizeBars(self.CooldownsBars, #self.CooldownSpells)
     end
 end
 

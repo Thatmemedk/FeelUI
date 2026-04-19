@@ -73,10 +73,6 @@ UF.Frames.Raid = {}
 UF.Frames.Hidden = {}
 UF.Frames.Range = {}
 
--- Tables
-UF.UpdateQueue = {}
-UF.UpdateScheduled = false
-
 -- Locals
 UF.FadeInTime = 0.5
 UF.CastHoldTime = 2
@@ -110,7 +106,7 @@ function UF:UpdateHealth(Frame, Unit)
                 local _, Class = UnitClass(Unit)
                 local Color = UI.Colors.Class[Class]
 
-                Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
+                Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b)
             else
                 local Reaction = UnitReaction(Unit, "player")
                 local Color = UI.Colors.Reaction[Reaction]
@@ -318,7 +314,7 @@ end
 --- UPDATE NAME
 
 function UF:UpdateName(Frame, Unit, TypeFrame)
-    if (not Frame or not Frame.unit or not Frame.Name) then
+    if (not Frame or not Unit or not Frame.Name) then
         return
     end
 
@@ -443,7 +439,7 @@ end
 function UF:UpdatePlayerPortrait()
     local Frame = self.Frames["player"]
 
-    if (Frame and Frame.Portrait) then
+    if (Frame) then
         self:UpdatePortrait(Frame, "player")
     end
 end
@@ -451,7 +447,7 @@ end
 function UF:UpdateTargetPortrait()
     local Frame = self.Frames["target"]
 
-    if (Frame and Frame.Portrait) then
+    if (Frame) then
         self:UpdatePortrait(Frame, "target")
     end
 end
@@ -508,20 +504,6 @@ function UF:UpdateRaidIcon(Frame)
     end
 end
 
-function UF:UpdateResurrectionIcon(Frame, Unit)
-    if (not Frame or not Frame.unit or not Frame.ResurrectionIcon) then
-        return
-    end
-
-    local UnitHasIncomingResurrection = UnitHasIncomingResurrection(Unit)
-
-    if (UnitHasIncomingResurrection) then
-        Frame.ResurrectionIcon:Show()
-    else
-        Frame.ResurrectionIcon:Hide()
-    end
-end
-
 function UF:UpdateAssistantIcon(Frame)
     if (not Frame or not Frame.unit or not Frame.AssistantIcon) then
         return
@@ -565,8 +547,22 @@ function UF:UpdateLeaderIcon(Frame)
     end
 end
 
+function UF:UpdateResurrectionIcon(Frame, Unit)
+    if (not Frame or not Unit or not Frame.ResurrectionIcon) then
+        return
+    end
+
+    local UnitHasIncomingResurrection = UnitHasIncomingResurrection(Unit)
+
+    if (UnitHasIncomingResurrection) then
+        Frame.ResurrectionIcon:Show()
+    else
+        Frame.ResurrectionIcon:Hide()
+    end
+end
+
 function UF:UpdateSummonIcon(Frame, Unit)
-    if (not Frame or not Frame.unit or not Frame.SummonIcon) then
+    if (not Frame or not Unit or not Frame.SummonIcon) then
         return
     end
 
@@ -587,7 +583,7 @@ function UF:UpdateSummonIcon(Frame, Unit)
     end
 end
 
-function UF:UpdatePhaseIcon(Frame, Unit)
+function UF:UpdatePhaseIcon(Frame)
     if (not Frame or not Frame.unit or not Frame.PhaseIcon) then
         return
     end
@@ -635,7 +631,7 @@ function UF:UpdateReadyCheckIcon(Frame, Event)
     end
 end
 
-function UF:UpdateRoleIcon(Frame, Unit)
+function UF:UpdateRoleIcon(Frame)
     if (not Frame or not Frame.unit or not Frame.RoleIcon) then
         return
     end
@@ -725,6 +721,11 @@ function UF:UpdateDebuffHighlight(Frame, Unit)
 
         Index = Index + 1
     end
+end
+
+function UF:UpdateTargetIndicator(Frame, Unit)
+    local IsTarget = UnitIsUnit("target", Unit)
+    Frame.HighlightTarget:SetAlphaFromBoolean(IsTarget, 0.20, 0)
 end
 
 -- RANGE
@@ -829,23 +830,22 @@ function UF:UpdateRange(Frame, Unit)
         return
     end
 
-    if (Frame.Range.Ticker) then
-        return
-    end
-
     local Range = Frame.Range
 
+    if (Range.Ticker) then
+        Range.Ticker:Cancel()
+        Range.Ticker = nil
+    end
+
     Range.Ticker = C_Timer.NewTicker(0.2, function()
-        UF:UpdateRangeState(Frame, Unit)
+        UF:UpdateRangeState(Frame, Frame.unit or Unit)
     end)
 
     if (not Range.OnHideHooked) then
         Frame:HookScript("OnHide", function(self)
-            local Range = self.Range
-
-            if (Range and Range.Ticker) then
-                Range.Ticker:Cancel()
-                Range.Ticker = nil
+            if (self.Range and self.Range.Ticker) then
+                self.Range.Ticker:Cancel()
+                self.Range.Ticker = nil
             end
         end)
 
@@ -855,389 +855,325 @@ end
 
 --- UPDATE FRAMES
 
-function UF:ProcessFrame(Frame)
-    if (not Frame or not Frame.unit) then
+function UF:RefreshUnit(Unit)
+    local Frame = self.Frames[Unit]
+
+    if (not Frame or not Unit or not UnitExists(Unit)) then
         return
     end
 
     local Unit = Frame.unit
 
-    if (not Unit or not UnitExists(Unit)) then
-        return
-    end
-
     -- HEALTH
-    if (Frame.NeedsHealth) then
-        if (Frame.Health) then self:UpdateHealth(Frame, Unit) end
-        if (Frame.HealthTextCur) then self:UpdateHealthTextCur(Frame, Unit) end
-        if (Frame.HealthTextPer) then self:UpdateHealthTextPer(Frame, Unit) end
-
-        Frame.NeedsHealth = nil
-    end
-
-    -- HEALTH PRED
-    if (Frame.NeedsHealthPred) then
-        if (Frame.HealthPrediction) then self:UpdateHealthPred(Frame, Unit) end
-
-        Frame.NeedsHealthPred = nil
-    end
+    if (Frame.Health) then self:UpdateHealth(Frame, Unit) end
+    if (Frame.HealthTextCur) then self:UpdateHealthTextCur(Frame, Unit) end
+    if (Frame.HealthTextPer) then self:UpdateHealthTextPer(Frame, Unit) end
+    if (Frame.HealthPrediction) then self:UpdateHealthPred(Frame, Unit) end
 
     -- POWER
-    if (Frame.NeedsPower) then
-        if (Frame.PowerText) then self:UpdatePower(Frame, Unit) end
-        if (Frame.AdditionalPower) then self:UpdateAdditionalPower(Frame) end
-
-        Frame.NeedsPower = nil
-    end
-
-    -- AURAS 
-    if (Frame.NeedsAuras) then
-        if (Frame.Buffs) then self:UpdateAuras(Frame, Unit, false) end
-        if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
-        if (Frame.External) then self:UpdateAuras(Frame, Unit, false, true) end
-
-        Frame.NeedsAuras = nil 
-    end
+    if (Frame.PowerText) then self:UpdatePower(Frame, Unit) end
+    if (Frame.AdditionalPower) then self:UpdateAdditionalPower(Frame) end
 
     -- NAME
-    if (Frame.NeedsName) then
-        if (Frame.Name) then self:UpdateName(Frame, Unit, Frame.IsParty and "Party" or Frame.IsRaid and "Raid") end
-        if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame, Unit) end
+    if (Frame.Name) then self:UpdateName(Frame, Unit) end
+    if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame, Unit) end
 
-        Frame.NeedsName = nil
-    end
+    -- AURAS
+    if (Frame.Buffs) then self:UpdateAuras(Frame, Unit, false) end
+    if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
 
     -- ICONS
-    if (Frame.NeedsCombatIcons) then
-        if (Frame.CombatIcon) then self:UpdateCombatIcon(Frame) end
-
-        Frame.NeedsCombatIcons = nil
-    end
-
-    if (Frame.NeedsRestingIcons) then    
-        if (Frame.RestingIcon) then self:UpdateRestingIcon(Frame) end
-
-        Frame.NeedsRestingIcons = nil
-    end
-
-    if (Frame.NeedsRaidIcons) then
-        if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame) end
-
-        Frame.NeedsRaidIcons = nil
-    end
-
-    if (Frame.NeedsLeaderIcons) then
-        if (Frame.LeaderIcon) then self:UpdateLeaderIcon(Frame) end
-        if (Frame.AssistantIcon) then self:UpdateAssistantIcon(Frame) end
-
-        Frame.NeedsLeaderIcons = nil
-    end
-
-    if (Frame.NeedsReadyCheckIcons) then
-        if (Frame.ReadyCheckIcon) then self:UpdateReadyCheckIcon(Frame) end
-
-        Frame.NeedsReadyCheckIcons = nil
-    end
-
-    if (Frame.NeedsRoleIcons) then
-        if (Frame.RoleIcon) then self:UpdateRoleIcon(Frame, Unit) end
-
-        Frame.NeedsRoleIcons = nil
-    end
-
-    if (Frame.NeedsPhaseIcons) then
-        if (Frame.PhaseIcon) then self:UpdatePhaseIcon(Frame, Unit) end
-
-        Frame.NeedsPhaseIcons = nil
-    end
-
-    if (Frame.NeedsResurrectionIcons) then
-        if (Frame.ResurrectionIcon) then self:UpdateResurrectionIcon(Frame, Unit) end
-
-        Frame.NeedsResurrectionIcons = nil
-    end
-
-    if (Frame.NeedsSummonIcons) then
-        if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame, Unit) end
-
-        Frame.NeedsSummonIcons = nil
-    end
+    if (Frame.CombatIcon) then self:UpdateCombatIcon(Frame) end
+    if (Frame.RestingIcon) then self:UpdateRestingIcon(Frame) end
+    if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame) end
+    if (Frame.LeaderIcon) then self:UpdateLeaderIcon(Frame) end
+    if (Frame.AssistantIcon) then self:UpdateAssistantIcon(Frame) end
+    if (Frame.ReadyCheckIcon) then self:UpdateReadyCheckIcon(Frame) end
+    if (Frame.RoleIcon) then self:UpdateRoleIcon(Frame) end
+    if (Frame.PhaseIcon) then self:UpdatePhaseIcon(Frame) end
+    if (Frame.ResurrectionIcon) then self:UpdateResurrectionIcon(Frame, Unit) end
+    if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame, Unit) end
 
     -- THREAT
-    if (Frame.NeedsThreat) then
-        if (Frame.Threat) then
-            if (Frame.IsRaid) then
-                self:UpdateThreatHighlightRaid(Frame, Unit)
-            else
-                self:UpdateThreatHighlight(Frame, Unit)
-            end
-        end
+    if (Frame.Threat) then self:UpdateThreatHighlight(Frame, Unit) end
 
-        Frame.NeedsThreat = nil
-    end
+    -- HIGHLIGHT
+    if (Frame.HighlightTarget) then self:UpdateTargetIndicator(Frame, Unit) end
 
     -- RANGE
-    if (Frame.NeedsRange) then
-        if (Frame.Range) then self:UpdateRange(Frame, Unit) end
+    if (Frame.Range) then self:UpdateRange(Frame, Unit) end
 
-        Frame.NeedsRange = nil
-    end
-
-    -- PORTRAIT
-    if (Frame.NeedsPortrait) then
-        if (Frame.Portrait) then self:UpdatePortrait(Frame, Unit) end
-
-        Frame.NeedsPortrait = nil
-    end
 end
 
--- QUEUE UPDATES
-
-function UF:RunUpdateQueue()
-    for Frame in next, self.UpdateQueue do
-        if Frame:IsShown() then
-            self:ProcessFrame(Frame)
-        end
-
-        self.UpdateQueue[Frame] = nil
-    end
-
-    self.UpdateScheduled = false
-end
-
-function UF:QueueUpdate(Frame, Unit, Flag, Update)
-    if (type(Frame) ~= "table" or not Unit or not Frame:IsShown()) then
+function UF:RefreshGroup(Frame, Unit)
+    if (not Frame or not Unit or not UnitExists(Unit)) then
         return
     end
 
-    if (Flag) then
-        Frame[Flag] = true
-    end
+    local Unit = Frame.unit
 
-    self.UpdateQueue[Frame] = true
+    -- HEALTH
+    if (Frame.Health) then self:UpdateHealth(Frame, Unit) end
+    if (Frame.HealthTextCur) then self:UpdateHealthTextCur(Frame, Unit) end
+    if (Frame.HealthTextPer) then self:UpdateHealthTextPer(Frame, Unit) end
+    if (Frame.HealthPrediction) then self:UpdateHealthPred(Frame, Unit) end
 
-    if (Update) then
-        self:RunUpdateQueue()
+    -- POWER
+    if (Frame.PowerText) then self:UpdatePower(Frame, Unit) end
 
-        return
-    end
+    -- NAME
+    if (Frame.Name) then self:UpdateName(Frame, Unit, Frame.IsParty and "Party" or Frame.IsRaid and "Raid") end
+    if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame, Unit) end
 
-    if (not self.UpdateScheduled) then
-        self.UpdateScheduled = true
+    -- AURAS
+    if (Frame.Buffs) then self:UpdateAuras(Frame, Unit, false) end
+    if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
+    if (Frame.External) then self:UpdateAuras(Frame, Unit, false, true) end
 
-        C_Timer.After(0, function()
-            self:RunUpdateQueue()
-        end)
-    end
-end
+    -- ICONS
+    if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame) end
+    if (Frame.LeaderIcon) then self:UpdateLeaderIcon(Frame) end
+    if (Frame.AssistantIcon) then self:UpdateAssistantIcon(Frame) end
+    if (Frame.ReadyCheckIcon) then self:UpdateReadyCheckIcon(Frame) end
+    if (Frame.RoleIcon) then self:UpdateRoleIcon(Frame) end
+    if (Frame.PhaseIcon) then self:UpdatePhaseIcon(Frame) end
+    if (Frame.ResurrectionIcon) then self:UpdateResurrectionIcon(Frame, Unit) end
+    if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame, Unit) end
 
-local RefreshFlags = {
-    "NeedsHealth",
-    "NeedsHealthPred",
-    "NeedsPower",
-    "NeedsName",
-    "NeedsAuras",
-    "NeedsCombatIcons",
-    "NeedsRestingIcons",
-    "NeedsRaidIcons",
-    "NeedsLeaderIcons",
-    "NeedsReadyCheckIcons",
-    "NeedsRoleIcons",
-    "NeedsPhaseIcons",
-    "NeedsResurrectionIcons",
-    "NeedsSummonIcons",
-    "NeedsThreat",
-    "NeedsRange",
-}
+    -- THREAT
+    if (Frame.Threat) then self:UpdateThreatHighlightRaid(Frame, Unit) end
 
-function UF:RefreshUnit(Unit, Update)
-    local Frame = self.Frames[Unit]
+    -- HIGHLIGHT
+    if (Frame.HighlightTarget) then self:UpdateTargetIndicator(Frame, Unit) end
 
-    if (not Frame) then
-        return
-    end
-
-    Frame.NeedsHealth = true
-    Frame.NeedsHealthPred = true
-    Frame.NeedsPower = true
-    Frame.NeedsName = true
-    Frame.NeedsAuras = true
-    Frame.NeedsCombatIcons = true
-    Frame.NeedsRestingIcons = true
-    Frame.NeedsRaidIcons = true
-    Frame.NeedsLeaderIcons = true
-    Frame.NeedsReadyCheckIcons = true
-    Frame.NeedsRoleIcons = true
-    Frame.NeedsPhaseIcons = true
-    Frame.NeedsResurrectionIcons = true
-    Frame.NeedsSummonIcons = true
-    Frame.NeedsThreat = true
-    Frame.NeedsRange = true
-
-    self:QueueUpdate(Frame, Unit, nil, Update)
+    -- RANGE
+    if (Frame.Range) then self:UpdateRange(Frame, Unit) end
 end
 
 function UF:FullRefresh()
-    for Unit, Frame in next, self.Frames do
+    for Key, Frame in next, self.Frames do
         if (Frame and Frame.unit) then
-            self:RefreshUnit(Unit, true)
+            self:RefreshUnit(Key)
         end
     end
 end
 
 function UF:FullRefreshGroup()
-    for Group, Flags in next, RefreshFlags do
-        local Frames = self.Frames[Group]
-
-        if (Frames) then
-            for Unit, Frame in next, Frames do
-                for i = 1, #Flags do
-                    local Flag = Flags[i]
-                    self:QueueUpdate(Frame, Unit, Flag, true)
-                end
-            end
+    for _, Frame in next, self.Frames.Party do
+        if (type(Frame) == "table" and Frame.unit) then
+            self:RefreshGroup(Frame, Frame.unit)
         end
+    end
+
+    for _, Frame in next, self.Frames.Raid do
+        if (type(Frame) == "table" and Frame.unit) then
+            self:RefreshGroup(Frame, Frame.unit)
+        end
+    end
+end
+
+-- EVENT UPDATES
+
+function UF:UnitHealth(Unit)
+    local Frame = self.Frames[Unit]
+
+    if (not Frame or not Unit or not UnitExists(Unit)) then
+        return
+    end
+
+    if (Frame.Health) then
+        self:UpdateHealth(Frame, Unit)
+    end
+
+    if (Frame.HealthTextCur) then
+        self:UpdateHealthTextCur(Frame, Unit)
+    end
+
+    if (Frame.HealthTextPer) then
+        self:UpdateHealthTextPer(Frame, Unit)
+    end
+end
+
+function UF:UnitHealthPred(Unit)
+    local Frame = self.Frames[Unit]
+
+    if (not Frame or not Unit or not UnitExists(Unit)) then
+        return
+    end
+
+    if (Frame.HealthPrediction) then
+        self:UpdateHealthPred(Frame, Unit)
+    end
+end
+
+function UF:UnitPower(Unit)
+    local Frame = self.Frames[Unit]
+
+    if (not Frame or not Unit or not UnitExists(Unit)) then
+        return
+    end
+
+    if (Frame.Power) then
+        self:UpdatePower(Frame, Unit)
+    end
+
+    if (Frame.AdditionalPower) then
+        self:UpdateAdditionalPower(Frame)
+    end
+end
+
+function UF:UnitName(Unit)
+    local Frame = self.Frames[Unit]
+
+    if (not Frame or not Unit or not UnitExists(Unit)) then
+        return
+    end
+
+    if (Frame.Name) then
+        self:UpdateName(Frame, Unit, Frame.IsParty and "Party" or Frame.IsRaid and "Raid")
+    end
+
+    if (Frame.NameLevel) then
+        self:UpdateTargetNameLevel(Frame, Unit)
     end
 end
 
 function UF:UnitAura(Unit)
     local Frame = self.Frames[Unit]
 
-    if (not Frame) then
+    if (not Frame or not Unit or not UnitExists(Unit)) then
         return
     end
 
-    UF:QueueUpdate(Frame, Unit, "NeedsAuras")
-end
-
-function UF:UnitHealth(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame) then
-        return
+    if (Frame.Buffs) then
+        self:UpdateAuras(Frame, Unit, false)
     end
 
-    UF:QueueUpdate(Frame, Unit, "NeedsHealth")
-end
-
-function UF:UnitHealthPred(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame) then
-        return
+    if (Frame.Debuffs) then
+        self:UpdateAuras(Frame, Unit, true)
     end
 
-    UF:QueueUpdate(Frame, Unit, "NeedsHealthPred")
-end
-
-function UF:UnitPower(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame) then
-        return
+    if (Frame.External) then
+        self:UpdateAuras(Frame, Unit, false, true)
     end
-
-    UF:QueueUpdate(Frame, Unit, "NeedsPower")
-end
-
-function UF:UnitName(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame) then
-        return
-    end
-
-    UF:QueueUpdate(Frame, Unit, "NeedsName")
 end
 
 function UF:UnitThreat(Unit)
     local Frame = self.Frames[Unit]
 
-    if (not Frame) then
+    if (not Frame or not Unit or not UnitExists(Unit)) then
         return
     end
 
-    UF:QueueUpdate(Frame, Unit, "NeedsThreat")
+    if (Frame.Threat) then
+        if (Frame.IsRaid) then
+            self:UpdateThreatHighlightRaid(Frame, Unit)
+        else
+            self:UpdateThreatHighlight(Frame, Unit)
+        end
+    end
 end
 
 function UF:UnitPortrait(Unit)
     local Frame = self.Frames[Unit]
 
-    if (not Frame) then
+    if (not Frame or not Unit or not UnitExists(Unit)) then
         return
     end
 
-    UF:QueueUpdate(Frame, Unit, "NeedsPortrait")
+    if (Frame.Portrait) then
+        self:UpdatePortrait(Frame, Unit)
+    end
 end
 
-function UF:UnitCombatIcon(Unit)
-    for Unit, Frame in next, self.Frames do
-        if (Frame and Frame.unit) then
-            UF:QueueUpdate(Frame, Frame.unit, "NeedsCombatIcons")
+function UF:UnitCombatIcon()
+    for Key, Frame in next, self.Frames do
+        if (Frame.CombatIcon) then
+            self:UpdateCombatIcon(Frame)
         end
     end
 end
 
-function UF:UnitRestingIcon(Unit)
-    for Unit, Frame in next, self.Frames do
-        if (Frame and Frame.unit) then
-            UF:QueueUpdate(Frame, Frame.unit, "NeedsRestingIcons")
+function UF:UnitRestingIcon()
+    for Key, Frame in next, self.Frames do
+        if (Frame.RestingIcon) then
+            self:UpdateRestingIcon(Frame)
         end
     end
 end
 
-function UF:UnitRaidIcon(Unit)
-    for Unit, Frame in next, self.Frames do
-        if (Frame and Frame.unit) then
-            UF:QueueUpdate(Frame, Frame.unit, "NeedsRaidIcons")
+function UF:UnitRaidIcon()
+    for Key, Frame in next, self.Frames do
+        if (Frame.RaidIcon) then
+            self:UpdateRaidIcon(Frame)
         end
     end
 end
 
-function UF:UnitLeaderIcon(Unit)
-    for Unit, Frame in next, self.Frames do
-        if (Frame and Frame.unit) then
-            UF:QueueUpdate(Frame, Frame.unit, "NeedsLeaderIcons")
+function UF:UnitLeaderIcon()
+    for Key, Frame in next, self.Frames do
+        if (Frame.LeaderIcon) then
+            self:UpdateLeaderIcon(Frame)
+        end
+
+        if (Frame.AssistantIcon) then
+            self:UpdateAssistantIcon(Frame)
         end
     end
 end
 
-function UF:UnitReadyCheckIcon(Unit)
-    for Unit, Frame in next, self.Frames do
-        if (Frame and Frame.unit) then
-            UF:QueueUpdate(Frame, Frame.unit, "NeedsReadyCheckIcons")
+function UF:UnitReadyCheckIcon()
+    for Key, Frame in next, self.Frames do
+        if (Frame.ReadyCheckIcon) then
+            self:UpdateReadyCheckIcon(Frame)
         end
     end
 end
 
-function UF:UnitRoleIcons(Unit)
-    for Unit, Frame in next, self.Frames do
-        if (Frame and Frame.unit) then
-            UF:QueueUpdate(Frame, Frame.unit, "NeedsRoleIcons")
+function UF:UnitRoleIcons()
+    for Key, Frame in next, self.Frames do
+        if (Frame.RoleIcon) then
+            self:UpdateRoleIcon(Frame)
         end
     end
 end
 
-function UF:UnitPhaseIcon(Unit)
-    for Unit, Frame in next, self.Frames do
-        if (Frame and Frame.unit) then
-            UF:QueueUpdate(Frame, Frame.unit, "NeedsPhaseIcons")
+function UF:UnitPhaseIcon()
+    for Key, Frame in next, self.Frames do
+        if (Frame.PhaseIcon) then
+            self:UpdatePhaseIcon(Frame)
         end
     end
 end
 
 function UF:UnitSummonIcon(Unit)
-    for Unit, Frame in next, self.Frames do
-        if (Frame and Frame.unit) then
-            UF:QueueUpdate(Frame, Frame.unit, "NeedsSummonIcons")
-        end
+    local Frame = self.Frames[Unit]
+
+    if (not Frame or not Unit or not UnitExists(Unit)) then
+        return
     end
+
+    if (Frame.SummonIcon) then
+        self:UpdateSummonIcon(Frame, Unit)
+    end    
 end
 
 function UF:UnitResurrectionIcon(Unit)
-    for Unit, Frame in next, self.Frames do
-        if (Frame and Frame.unit) then
-            UF:QueueUpdate(Frame, Frame.unit, "NeedsResurrectionIcons")
+    local Frame = self.Frames[Unit]
+
+    if (not Frame or not Unit or not UnitExists(Unit)) then
+        return
+    end
+
+    if (Frame.ResurrectionIcon) then
+        self:UpdateResurrectionIcon(Frame, Unit)
+    end
+end
+
+function UF:UnitTargetChanged()
+    for Key, Frame in next, self.Frames do
+        if (Frame.HighlightTarget) then
+            self:UpdateTargetIndicator(Frame, Frame.unit)
         end
     end
 end
@@ -1245,42 +1181,60 @@ end
 -- ON EVENTS
 
 function UF:OnEvent(event, unit, ...)
-    local FramesUF = unit and UF.Frames[unit]
-
     if (event == "PLAYER_ENTERING_WORLD") then
-        C_Timer.After(0.03, function()
+        UI:Delay("FullRefreshPEW", 0.05, function()
             UF:FullRefresh()
         end)
-
-        UF:UpdatePlayerPortrait()
     elseif (event == "PLAYER_TARGET_CHANGED") then
-        C_Timer.After(0.03, function()
-            UF:RefreshUnit("player", true)
-            UF:RefreshUnit("target", true)
-        end)
-
+        UF:RefreshUnit("target")
         UF:UpdateTargetPortrait()
         UF:CheckUnitCasting("target")
+        UF:UnitTargetChanged()
     elseif (event == "UNIT_TARGET" and unit == "target") then
-        C_Timer.After(0.03, function()
-            UF:RefreshUnit("targettarget", true)
-        end)
+        UF:RefreshUnit("targettarget")
     elseif (event == "UNIT_PET") then
-        C_Timer.After(0.03, function()
-            UF:RefreshUnit("pet", true)
-        end)
+        UF:RefreshUnit("pet")
     elseif (event == "PLAYER_FOCUS_CHANGED") then
-        C_Timer.After(0.03, function()
-            UF:RefreshUnit("focus", true)
-        end)
-
+        UF:RefreshUnit("focus")
         UF:CheckUnitCasting("focus")
     elseif (event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" or event == "UNIT_TARGETABLE_CHANGED") then
         for i = 1, 5 do
-            C_Timer.After(0.03, function()
-                UF:RefreshUnit("boss"..i, true)
-            end)
+            UF:RefreshUnit("boss"..i)
         end
+    end
+
+    if (event == "UNIT_AURA") then
+        UF:UnitAura(unit)
+    elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
+        UF:UnitHealth(unit)
+    elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
+        UF:UnitHealthPred(unit)
+    elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER") then
+        UF:UnitPower(unit)
+    elseif (event == "UNIT_NAME_UPDATE" or event == "UNIT_LEVEL" or event == "PLAYER_LEVEL_UP") then
+        UF:UnitName(unit)
+    elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
+        UF:UnitThreat(unit)
+    elseif (event == "UNIT_MODEL_CHANGED" or event == "UNIT_PORTRAIT_UPDATE" or event == "PORTRAITS_UPDATED") then
+        UF:UnitPortrait(unit)
+    elseif (event == "UNIT_FLAGS") then
+        UF:UnitCombatIcon()
+    elseif (event == "PLAYER_UPDATE_RESTING") then
+        UF:UnitRestingIcon()
+    elseif (event == "RAID_TARGET_UPDATE") then
+        UF:UnitRaidIcon()
+    elseif (event == "PARTY_LEADER_CHANGED" or event == "GROUP_ROSTER_UPDATE") then
+        UF:UnitLeaderIcon()
+    elseif (event == "READY_CHECK" or event == "READY_CHECK_CONFIRM" or event == "READY_CHECK_FINISHED") then
+        UF:UnitReadyCheckIcon()
+    elseif (event == "PLAYER_ROLES_ASSIGNED") then
+        UF:UnitRoleIcons()
+    elseif (event == "UNIT_PHASE") then
+        UF:UnitPhaseIcon()
+    elseif (event == "INCOMING_RESURRECT_CHANGED") then
+        UF:UnitResurrectionIcon(unit)
+    elseif (event == "INCOMING_SUMMON_CHANGED") then
+        UF:UnitSummonIcon(unit)
     end
 
     if (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then
@@ -1297,45 +1251,6 @@ function UF:OnEvent(event, unit, ...)
         UF:CastUpdated(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE") then
         UF:CastNonInterruptable(event, unit)
-    end
-
-    if (not FramesUF) then
-        return
-    end
-
-    if (event == "UNIT_AURA") then
-        UF:UnitAura(unit)
-    elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
-        UF:UnitHealth(unit)
-        UF:RefreshUnit("targettarget", true)
-    elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
-        UF:UnitHealthPred(unit)
-    elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER") then
-        UF:UnitPower(unit)
-    elseif (event == "UNIT_NAME_UPDATE" or event == "UNIT_LEVEL" or event == "PLAYER_LEVEL_UP") then
-        UF:UnitName(unit)
-    elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
-        UF:UnitThreat(unit)
-    elseif (event == "UNIT_MODEL_CHANGED" or event == "UNIT_PORTRAIT_UPDATE" or event == "PORTRAITS_UPDATED") then
-        UF:UnitPortrait(unit)
-    elseif (event == "UNIT_FLAGS") then
-        UF:UnitCombatIcon(unit)
-    elseif (event == "PLAYER_UPDATE_RESTING") then
-        UF:UnitRestingIcon(unit)
-    elseif (event == "RAID_TARGET_UPDATE") then
-        UF:UnitRaidIcon(unit)
-    elseif (event == "PARTY_LEADER_CHANGED" or event == "GROUP_ROSTER_UPDATE" or event == "UNIT_FLAGS") then
-        UF:UnitLeaderIcon(unit)
-    elseif (event == "READY_CHECK" or event == "READY_CHECK_CONFIRM" or event == "READY_CHECK_FINISHED") then
-        UF:UnitReadyCheckIcon(unit)
-    elseif (event == "PLAYER_ROLES_ASSIGNED") then
-        UF:UnitRoleIcons(unit)
-    elseif (event == "UNIT_PHASE") then
-        UF:UnitPhaseIcon(unit)
-    elseif (event == "INCOMING_RESURRECT_CHANGED") then
-        UF:UnitResurrectionIcon(unit)
-    elseif (event == "INCOMING_SUMMON_CHANGED") then
-        UF:UnitSummonIcon(unit)
     end
 end
 

@@ -23,19 +23,35 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
         return 
     end
 
+    if (not UnitIsVisible(Unit)) then
+        return
+    end
+
     local Buttons = Auras.Buttons
     local MaxAuras = Auras.NumAuras or 6
     local AuraMinCount = 2
     local AuraMaxCount = 99
-    local Active = 0
-    local Index = 1
     local IsFriendly = UnitCanCooperate("player", Unit)
 
-    while Active < MaxAuras do
+    for i = 1, #Buttons do
+        local Button = Buttons[i]
+
+        if (Button:IsShown()) then
+            Button:Hide()
+        end
+
+        Button.AuraInstanceID = nil
+        Button.Unit = nil
+    end
+
+    local Active = 0
+    local Index = 1
+
+    while true do
         local AuraData = GetAuraDataByIndex(Unit, Index, Auras.Filter)
         Index = Index + 1
 
-        if (not AuraData) then
+        if (not AuraData or Active >= MaxAuras) then
             break
         end
 
@@ -50,11 +66,26 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
         local Duration = AuraData.duration
         local ExpirationTime = AuraData.expirationTime
         local AuraIsStealable = AuraData.isStealable
-
-        if (Button.AuraInstanceID ~= AuraInstanceID) then
+        
+        if (AuraInstanceID) then
             if (Button.Icon) then
                 Button.Icon:SetTexture(Icon)
                 UI:KeepAspectRatio(Button, Button.Icon)
+            end
+
+            if (Button.Count) then
+                Button.Count:SetText(GetAuraApplicationDisplayCount(Unit, AuraInstanceID, AuraMinCount, AuraMaxCount))
+            end
+
+            if (Button.Cooldown) then
+                local CD = C_UnitAuras.GetAuraDuration(Unit, AuraInstanceID)
+
+                if (CD) then
+                    Button.Cooldown:SetCooldownFromDurationObject(CD)
+                    Button.Cooldown:Show()
+                else
+                    Button.Cooldown:Hide()
+                end
             end
 
             if (IsDebuff) then
@@ -67,46 +98,24 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
                 Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
             end
 
+            if (Button.Highlight) then
+                if (not IsFriendly) then
+                    Button.Highlight:SetAlphaFromBoolean(AuraIsStealable, 1, 0)
+                else
+                    Button.Highlight:SetAlpha(0)
+                end
+            end
+
+            -- CACHE
+            Button.Unit = Unit
+            Button.AuraFilter = Auras.Filter
+            Button.AuraIndex = Index -1
             Button.AuraInstanceID = AuraInstanceID
-        end
 
-        if (Button.Count) then
-            Button.Count:SetText(GetAuraApplicationDisplayCount(Unit, AuraInstanceID, AuraMinCount, AuraMaxCount))
-        end
+            Button:Show()
 
-        if (Button.Cooldown) then
-            local CD = C_UnitAuras.GetAuraDuration(Unit, AuraInstanceID)
-
-            if (CD) then
-                Button.Cooldown:SetCooldownFromDurationObject(CD)
-                Button.Cooldown:Show()
-            else
-                Button.Cooldown:Hide()
-            end
-        end
-
-        if (Button.Highlight) then
-            if (not IsFriendly) then
-                Button.Highlight:SetAlphaFromBoolean(AuraIsStealable, 1, 0)
-            else
-                Button.Highlight:SetAlpha(0)
-            end
-        end
-
-        Button.Unit = Unit
-        Button.AuraFilter = Auras.Filter
-        Button.AuraIndex = Index
-        Button:Show()
-
-        Active = Active + 1
-    end
-
-    for i = Active + 1, #Buttons do
-        local Button = Buttons[i]
-
-        if Button:IsShown() then
-            Button:Hide()
-            Button.AuraInstanceID = nil
+            -- CACHE
+            Active = Active + 1
         end
     end
 end
