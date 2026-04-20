@@ -5,12 +5,10 @@ local AB = UI:CallModule("ActionBars")
 	
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 function AB:CreateBar4()
-	if InCombatLockdown() then return end
-
 	local Bar = AB.ActionBar4
 	local Spacing = DB.Global.ActionBars.ButtonSpacing
 	
@@ -25,7 +23,7 @@ function AB:CreateBar4()
 		
 		AB.SkinButton(Button)
 	
-		if not InCombatLockdown() then
+		if (not InCombatLockdown()) then
 			Button:SetAttribute("flyoutDirection", "RIGHT")
 		end
 

@@ -5,12 +5,10 @@ local AB = UI:CallModule("ActionBars")
 	
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 function AB:UpdateMainBarButtons()
-    if InCombatLockdown() then return end
-
 	local Bar = AB.ActionBar1
 	local Spacing = DB.Global.ActionBars.ButtonSpacing
 

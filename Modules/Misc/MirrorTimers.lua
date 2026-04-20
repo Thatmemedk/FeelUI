@@ -5,8 +5,8 @@ local MirrorTimers = UI:RegisterModule("MirrorTimers")
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local MirrorTimerContainer = _G.MirrorTimerContainer
@@ -14,11 +14,11 @@ local MirrorTimerContainer = _G.MirrorTimerContainer
 function MirrorTimers:Update(Timer)
 	local Bar = self:GetAvailableTimer(Timer)
 	
-	if not (Bar) then 
+	if (not Bar) then 
 		return 
 	end
 
-	if not (Bar.AtlasHolder) then
+	if (not Bar.AtlasHolder) then
 		Bar.AtlasHolder = CreateFrame("Frame", nil, Bar)
 		Bar.AtlasHolder:SetClipsChildren(true)
 		Bar.AtlasHolder:SetInside(Bar, 1, 1)
@@ -37,7 +37,7 @@ function MirrorTimers:Update(Timer)
 		Bar:StripTexture()
 		Bar:Size(302, 28)
 
-		if not (Bar.MirrorTimerIsSkinned) then
+		if (not Bar.MirrorTimerIsSkinned) then
 			local BarOverlay = CreateFrame("Frame", nil, Bar)
 			BarOverlay:SetFrameLevel(Bar:GetFrameLevel() - 1)
 			BarOverlay:SetInside(Bar, 1, 1)

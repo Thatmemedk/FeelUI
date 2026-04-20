@@ -5,8 +5,8 @@ local GhostFrameBlizz = UI:RegisterModule("GhostFrame")
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local GhostFrame = _G.GhostFrame

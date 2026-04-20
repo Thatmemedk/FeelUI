@@ -5,8 +5,8 @@ local StaticPopups = UI:RegisterModule("StaticPopups")
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)

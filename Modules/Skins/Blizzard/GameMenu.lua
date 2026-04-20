@@ -5,8 +5,8 @@ local GameMenu = UI:RegisterModule("GameMenu")
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 -- Locals
 local GameMenuFrame = _G.GameMenuFrame

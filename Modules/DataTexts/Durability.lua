@@ -5,7 +5,9 @@ local Durability = UI:RegisterModule("DataTextDurability")
 local Panels = UI:CallModule("Panels")
 
 -- Lib Globals
+local _G = _G
 local unpack = unpack
+local select = select
 local wipe = wipe
 local floor = math.floor
 

@@ -2,11 +2,11 @@ local UI, DB, Media, Language = select(2, ...):Call()
 
 -- Call Modules
 local CH = UI:CallModule("Chat")
-local Panels = UI:CallModule("Panels")
 
 -- Lib Globals
 local _G = _G
 local unpack = unpack
+local select = select
 
 function CH:CreateChatCopyFrame()
 	local CopyFrame = CreateFrame("Frame", "FeelUI_CopyChatFrame", _G.UIParent)
@@ -62,7 +62,7 @@ function CH:OnMouseUp()
 	for i = 1, Frame:GetNumMessages() do
 		local msg = Frame:GetMessageInfo(i)
 
-		if msg then
+		if (msg) then
 			Text = Text .. msg .. "\n"
 		end
 	end
@@ -71,11 +71,17 @@ function CH:OnMouseUp()
 end
 
 function CH:OnEnter()
-	UI:UIFrameFadeIn(self, 1, self:GetAlpha(), 1)
+	UI:UIFrameFadeIn(self, 0.8, self:GetAlpha(), 1)
+
+	self.Highlight:SetVertexColor(1, 1, 1, 0.25)
+	self.Highlight:Show()
 end
 
 function CH:OnLeave()
-	UI:UIFrameFadeOut(self, 1, self:GetAlpha(), 0.25)
+	UI:UIFrameFadeOut(self, 0.8, self:GetAlpha(), 0.25)
+
+	self.Highlight:SetVertexColor(0, 0, 0, 0)
+	self.Highlight:Hide()
 end
 
 function CH:CreateChatCopyButton()
@@ -89,10 +95,16 @@ function CH:CreateChatCopyButton()
 		Button:CreateBackdrop()
 		Button:CreateShadow()
 
-		local Texture = Button:CreateTexture(nil, "OVERLAY")
-		Texture:SetInside(Button, 2, 2)
-		Texture:SetTexture(Media.Global.ChatCopy)
-		Texture:SetVertexColor(0.55, 0.55, 0.55)
+		Button.Texture = Button:CreateTexture(nil, "OVERLAY")
+		Button.Texture:SetInside(Button, 2, 2)
+		Button.Texture:SetTexture(Media.Global.ChatCopy)
+		Button.Texture:SetVertexColor(0.55, 0.55, 0.55)
+
+		Button.Highlight = Button:CreateTexture(nil, "BACKGROUND")
+		Button.Highlight:SetInside()
+		Button.Highlight:SetTexture(Media.Global.Texture)
+		Button.Highlight:SetVertexColor(0, 0, 0, 0)
+		Button.Highlight:Hide()
 
 		Button:SetScript("OnMouseUp", self.OnMouseUp)
 		Button:SetScript("OnEnter", self.OnEnter)

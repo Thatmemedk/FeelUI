@@ -5,8 +5,8 @@ local Status = UI:RegisterModule("Status")
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local GetAddOnEnableState = C_AddOns.GetAddOnEnableState

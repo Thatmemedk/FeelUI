@@ -5,8 +5,8 @@ local TalkingHead = UI:RegisterModule("TalkingHead")
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local TalkingHeadFrame = _G.TalkingHeadFrame

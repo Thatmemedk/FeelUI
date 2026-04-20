@@ -4,8 +4,9 @@ local UI, DB, Media, Language = select(2, ...):Call()
 local NP = UI:CallModule("NamePlates")
 
 -- Lib Globals
-local select = select
+local _G = _G
 local unpack = unpack
+local select = select
 
 function NP:CreateOverflowBorder(Frame)
     if (Frame.IsSkinned) then

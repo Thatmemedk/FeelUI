@@ -5,7 +5,9 @@ local System = UI:RegisterModule("DataTextSystem")
 local Panels = UI:CallModule("Panels")
 
 -- Lib Globals
+local _G = _G
 local unpack = unpack
+local select = select
 local floor = math.floor
 
 -- WoW Globals

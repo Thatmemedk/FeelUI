@@ -3,6 +3,11 @@ local UI, DB, Media, Language = select(2, ...):Call()
 -- Call Module
 local NP = UI:CallModule("NamePlates")
 
+-- Lib Globals
+local _G = _G
+local unpack = unpack
+local select = select
+
 function NP:CreateEnemyElements(Frame)
     self:CreateStackingBounds(Frame)
     self:CreatePanels(Frame)

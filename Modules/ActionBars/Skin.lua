@@ -6,6 +6,7 @@ local AB = UI:CallModule("ActionBars")
 -- Lib Globals
 local _G = _G
 local unpack = unpack
+local select = select
 
 function AB:SafeHide(Frame)
     if (Frame) then

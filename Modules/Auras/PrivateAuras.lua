@@ -3,10 +3,17 @@ local UI, DB, Media = select(2, ...):Call()
 -- Call Modules
 local PA = UI:RegisterModule("PrivateAuras")
 
+-- Lib Globals
+local _G = _G
+local unpack = unpack
+local select = select
+
+-- WoW Globals
 local MAX_PRIVATE_AURAS = 5
 local AddPrivateAuraAnchor = _G.C_UnitAuras.AddPrivateAuraAnchor
 local RemovePrivateAuraAnchor = _G.C_UnitAuras.RemovePrivateAuraAnchor
 
+-- Locals
 PA.Icons = {}
 
 function PA:Create()

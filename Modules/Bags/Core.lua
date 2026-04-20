@@ -3,7 +3,7 @@ local UI, DB, Media, Language = select(2, ...):Call()
 -- Call Modules
 local B = UI:RegisterModule("Bags")
 
--- Libs Globals
+-- Lib Globals
 local _G = _G
 local unpack = unpack
 local select = select
@@ -72,7 +72,7 @@ function B:GetCachedItemName(ItemID)
         return "" 
     end
 
-    if not B.ItemNameCache[ItemID] then
+    if (not B.ItemNameCache[ItemID]) then
         B.ItemNameCache[ItemID] = C_Item.GetItemNameByID(ItemID) or ""
     end
 

@@ -3,6 +3,11 @@ local UI, DB, Media, Language = select(2, ...):Call()
 -- Call Modules
 local UF = UI:CallModule("UnitFrames")
 
+-- Lib Globals
+local _G = _G
+local unpack = unpack
+local select = select
+
 function UF:CreateParty(Frame)
     self:CreatePanels(Frame)
     self:CreateHighlight(Frame)

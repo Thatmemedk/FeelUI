@@ -4,8 +4,9 @@ local UI, DB, Media, Language = select(2, ...):Call()
 local UF = UI:CallModule("UnitFrames")
 
 -- Lib Globals
-local select = select
+local _G = _G
 local unpack = unpack
+local select = select
 
 function UF:CreateRange(Frame)
     if (Frame.Range) then

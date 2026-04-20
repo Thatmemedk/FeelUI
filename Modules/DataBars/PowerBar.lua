@@ -4,8 +4,9 @@ local UI, DB, Media, Language = select(2, ...):Call()
 local PowerBar = UI:RegisterModule("PowerBar")
 
 -- Lib Globals
-local select = select
+local _G = _G
 local unpack = unpack
+local select = select
 local floor = math.floor
 
 -- WoW Globals

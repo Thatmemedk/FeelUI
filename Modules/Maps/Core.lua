@@ -5,8 +5,8 @@ local Maps = UI:RegisterModule("Minimap")
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local Minimap = _G.Minimap

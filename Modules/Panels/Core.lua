@@ -29,18 +29,6 @@ function Panels:Initialize()
 	ChatPanelRight:Point("BOTTOMRIGHT", _G.UIParent, -6, 6)
 	ChatPanelRight:CreateBackdrop()
 	ChatPanelRight:CreateShadow()
-	
-	-- CopyChat Highlight
-	local CopyHighlight = CreateFrame("StatusBar", nil, ChatPanelLeft)
-	CopyHighlight:SetFrameLevel(ChatPanelLeft:GetFrameLevel() + 5)
-	CopyHighlight:SetInside()
-	CopyHighlight:SetStatusBarTexture(Media.Global.Texture)
-	CopyHighlight:SetStatusBarColor(0, 0, 0, 0)
-	
-	-- DataTextHolder
-	local DataTextHolder = CreateFrame("Frame", nil, _G.UIParent)
-	DataTextHolder:Size(392, 22)
-	DataTextHolder:Point("BOTTOM", _G.UIParent, 0, 6)
 
 	-- Bottom Panel
 	local BottomPanel = CreateFrame("Frame", nil, _G.UIParent)
@@ -51,10 +39,14 @@ function Panels:Initialize()
 	BottomPanel:CreateBackdrop()
 	BottomPanel:CreateShadow()
 
+	-- DataTextHolder
+	local DataTextHolder = CreateFrame("Frame", nil, _G.UIParent)
+	DataTextHolder:Size(392, 22)
+	DataTextHolder:Point("BOTTOM", _G.UIParent, 0, 6)
+
 	-- Register Panels
 	self.ChatPanelLeft = ChatPanelLeft
 	self.ChatPanelRight = ChatPanelRight
-	self.CopyHighlight = CopyHighlight
-	self.DataTextHolder = DataTextHolder
 	self.BottomPanel = BottomPanel
+	self.DataTextHolder = DataTextHolder
 end

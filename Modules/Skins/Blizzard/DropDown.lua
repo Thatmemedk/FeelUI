@@ -5,8 +5,8 @@ local DropDownMenu = UI:RegisterModule("DropDownMenu")
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded

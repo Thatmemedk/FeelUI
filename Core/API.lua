@@ -12,8 +12,8 @@ local LSM = UI.Libs.LSM
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 local pcall = pcall
 local print = print
 local type = type

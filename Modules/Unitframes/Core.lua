@@ -86,7 +86,7 @@ RegisterStateDriver(UF.SecureFrame, "visibility", "[petbattle] hide; show")
 --- UPDATE HEALTH
 
 function UF:UpdateHealth(Frame, Unit)
-    if (not Frame or not Frame.unit or not Frame.Health) then
+    if (not Frame or not Unit or not Frame.Health) then
         return
     end
 
@@ -125,7 +125,7 @@ function UF:UpdateHealth(Frame, Unit)
 end
 
 function UF:UpdateHealthTextCur(Frame, Unit)
-    if (not Frame or not Frame.unit or not Frame.HealthTextCur) then
+    if (not Frame or not Unit or not Frame.HealthTextCur) then
         return
     end
 
@@ -147,7 +147,7 @@ function UF:UpdateHealthTextCur(Frame, Unit)
 end
 
 function UF:UpdateHealthTextPer(Frame, Unit)
-    if (not Frame or not Frame.unit or not Frame.HealthTextPer) then
+    if (not Frame or not Unit or not Frame.HealthTextPer) then
         return
     end
 
@@ -158,7 +158,7 @@ end
 -- HEAL PRED
 
 function UF:UpdateHealthPred(Frame, Unit)
-    if (not Frame or not Frame.unit or not Frame.HealthPrediction) then
+    if (not Frame or not Unit or not Frame.HealthPrediction) then
         return
     end
 
@@ -258,7 +258,7 @@ end
 --- UPDATE POWER
 
 function UF:UpdatePower(Frame, Unit)
-    if (not Frame or not Frame.unit or not Frame.PowerText) then
+    if (not Frame or not Unit or not Frame.PowerText) then
         return
     end
 
@@ -368,7 +368,7 @@ local function NameAbbrev(Text)
 end
 
 function UF:UpdateTargetNameLevel(Frame, Unit)
-    if (not Frame or not Frame.unit or not Frame.NameLevel) then
+    if (not Frame or not Unit or not Frame.NameLevel) then
         return
     end
 
@@ -415,7 +415,7 @@ end
 -- UPDATE PORTRAITS
 
 function UF:UpdatePortrait(Frame, Unit)
-    if (not Frame or not Frame.Portrait or not UnitExists(Unit)) then
+    if (not Frame or not Unit or not Frame.Portrait) then
         return
     end
 
@@ -455,7 +455,7 @@ end
 -- ICONS
 
 function UF:UpdateRestingIcon(Frame)
-    if (not Frame or not Frame.unit or not Frame.RestingIcon) then
+    if (not Frame or not Frame.RestingIcon) then
         return
     end
 
@@ -475,7 +475,7 @@ function UF:UpdateRestingIcon(Frame)
 end
 
 function UF:UpdateCombatIcon(Frame)
-    if (not Frame or not Frame.unit or not Frame.CombatIcon) then
+    if (not Frame or not Frame.CombatIcon) then
         return
     end
 
@@ -489,7 +489,7 @@ function UF:UpdateCombatIcon(Frame)
 end
 
 function UF:UpdateRaidIcon(Frame)
-    if (not Frame or not Frame.unit or not Frame.RaidIcon) then
+    if (not Frame or not Frame.RaidIcon) then
         return
     end
 
@@ -505,7 +505,7 @@ function UF:UpdateRaidIcon(Frame)
 end
 
 function UF:UpdateAssistantIcon(Frame)
-    if (not Frame or not Frame.unit or not Frame.AssistantIcon) then
+    if (not Frame or not Frame.AssistantIcon) then
         return
     end
 
@@ -520,7 +520,7 @@ function UF:UpdateAssistantIcon(Frame)
 end
 
 function UF:UpdateLeaderIcon(Frame)
-    if (not Frame or not Frame.unit or not Frame.LeaderIcon) then
+    if (not Frame or not Frame.LeaderIcon) then
         return
     end
 
@@ -584,7 +584,7 @@ function UF:UpdateSummonIcon(Frame, Unit)
 end
 
 function UF:UpdatePhaseIcon(Frame)
-    if (not Frame or not Frame.unit or not Frame.PhaseIcon) then
+    if (not Frame or not Frame.PhaseIcon) then
         return
     end
 
@@ -599,7 +599,7 @@ function UF:UpdatePhaseIcon(Frame)
 end
 
 function UF:UpdateReadyCheckIcon(Frame, Event)
-    if (not Frame or not Frame.unit or not Frame.ReadyCheckIcon) then
+    if (not Frame or not Frame.ReadyCheckIcon) then
         return
     end
 
@@ -656,7 +656,7 @@ end
 -- THREAT
 
 function UF:UpdateThreatHighlight(Frame, Unit)
-    if (not Frame or not Frame.unit or not Frame.Threat) then
+    if (not Frame or not Unit or not Frame.Threat) then
         return
     end
 
@@ -673,7 +673,7 @@ function UF:UpdateThreatHighlight(Frame, Unit)
 end
 
 function UF:UpdateThreatHighlightRaid(Frame, Unit)
-    if (not Frame or not Frame.unit or not Frame.Threat) then
+    if (not Frame or not Unit or not Frame.Threat) then
         return
     end
 
@@ -698,7 +698,7 @@ end
 -- DEBUFF HIGHLIGHT
 
 function UF:UpdateDebuffHighlight(Frame, Unit)
-    if (not Frame or not Frame.unit or not Frame.DebuffHighlight) then
+    if (not Frame or not Unit or not Frame.DebuffHighlight) then
         return
     end
 
@@ -800,7 +800,7 @@ function UF:IsFriendlyUnitReachable(Unit)
 end
 
 function UF:UpdateRangeState(Frame, Unit)
-    if (not Frame or not Frame.unit or not Frame.Range) then
+    if (not Frame or not Unit or not Frame.Range) then
         return
     end
 
@@ -826,7 +826,7 @@ function UF:UpdateRangeState(Frame, Unit)
 end
 
 function UF:UpdateRange(Frame, Unit)
-    if (not Frame or not Frame.Range) then
+    if (not Frame or not Unit or not Frame.Range) then
         return
     end
 

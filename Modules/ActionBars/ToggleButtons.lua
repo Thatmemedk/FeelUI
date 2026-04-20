@@ -5,8 +5,8 @@ local AB = UI:CallModule("ActionBars")
 	
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local InCombatLockdown = InCombatLockdown
@@ -15,7 +15,7 @@ local InCombatLockdown = InCombatLockdown
 local R, G, B = unpack(UI.GetClassColors)
 
 function AB:ToggleButtonOnClick()
-	if InCombatLockdown() then
+	if (InCombatLockdown()) then
 		return UI:Print(ERR_NOT_IN_COMBAT)
 	end
 

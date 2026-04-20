@@ -5,8 +5,8 @@ local AB = UI:CallModule("ActionBars")
 	
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local ActionButtonSpellAlertManager = _G.ActionButtonSpellAlertManager

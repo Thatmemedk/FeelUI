@@ -5,8 +5,8 @@ local PBM = UI:RegisterModule("PotionButtonMenu")
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 -- Tables
 PBM.ItemID = {
@@ -224,6 +224,7 @@ function PBM:OnEvent(event, ...)
                 for _, ID in ipairs(List) do
                     if (ID == ItemID) then
                         self:UpdateButton(Button)
+
                         break
                     end
                 end

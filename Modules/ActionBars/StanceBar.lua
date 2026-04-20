@@ -6,6 +6,7 @@ local AB = UI:CallModule("ActionBars")
 -- Lib Globals
 local _G = _G
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local NUM_STANCE_SLOTS = _G.NUM_STANCE_SLOTS or 10

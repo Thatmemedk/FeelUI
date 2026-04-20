@@ -2,8 +2,8 @@ local UI, DB, Media, Language = select(2, ...):Call()
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 local function SetFont(self, FontSize, FontStyle, ShadowOffsetX, ShadowOffsetY, R, G, B)
 	if (not self or self:IsForbidden()) then 

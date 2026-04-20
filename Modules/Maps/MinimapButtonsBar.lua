@@ -5,8 +5,8 @@ local MinimapButtonBar = UI:RegisterModule("MinimapButtonBar")
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 local tostring = tostring
 local lower = string.lower
 local find = string.find

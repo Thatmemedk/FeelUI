@@ -5,7 +5,9 @@ local AM = UI:RegisterModule("DataTextMemory")
 local Panels = UI:CallModule("Panels")
 
 -- Lib Globals
+local _G = _G
 local unpack = unpack
+local select = select
 local sort = table.sort
 local wipe = table.wipe
 

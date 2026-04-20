@@ -6,8 +6,8 @@ local Panels = UI:CallModule("Panels")
 	
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 function AB:DisableBlizzard()
     local UntaintedFrames = {

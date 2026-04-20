@@ -5,8 +5,8 @@ local Loot = UI:RegisterModule("Loot")
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local LootFrame = _G.LootFrame

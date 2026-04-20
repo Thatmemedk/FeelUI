@@ -4,8 +4,9 @@ local UI, DB, Media, Language = select(2, ...):Call()
 local UF = UI:CallModule("UnitFrames")
 
 -- Lib Globals
-local select = select
+local _G = _G
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local GetAuraDataByIndex = _G.C_UnitAuras.GetAuraDataByIndex
@@ -92,7 +93,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
                 local Color = GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
 
                 if (Color) then
-                    Button:SetColorTemplate(Color.r, Color.g, Color.b)
+                    Button:SetColorTemplate(Color:GetRGB())
                 end
             else
                 Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))

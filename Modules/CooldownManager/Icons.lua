@@ -5,13 +5,14 @@ local CDM = UI:CallModule("CooldownManager")
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local EssentialCooldownViewer = _G.EssentialCooldownViewer
 local UtilityCooldownViewer = _G.UtilityCooldownViewer
 local BuffIconCooldownViewer = _G.BuffIconCooldownViewer
+local GetAuraDispelTypeColor = _G.C_UnitAuras.GetAuraDispelTypeColor
 
 function CDM:StripTextureMasks(Frame)
 	if (not Frame or not Frame.GetMaskTexture) then 
@@ -25,6 +26,16 @@ function CDM:StripTextureMasks(Frame)
 		Frame:RemoveMaskTexture(Mask)
 		Index = Index + 1
 		Mask = Frame:GetMaskTexture(Index)
+	end
+end
+
+function CDM:UpdateBorderColor(Frame, Data)
+	local Color = Data and GetAuraDispelTypeColor(Frame.CDMParent.auraDataUnit, Data.auraInstanceID, UI.AuraColorCurve)
+
+	if (Color) then
+		Frame.CDMParent:SetColorTemplate(Color:GetRGB())
+	else
+		Frame.CDMParent:SetColorTemplate(0, 0, 0, 0)
 	end
 end
 
@@ -70,6 +81,11 @@ function CDM:SkinIcons(Button, ButtonSize)
 
    	if (Border) then
 		Border:SetAlpha(0)
+		Border.CDMParent = Button
+
+		hooksecurefunc(Border, "UpdateFromAuraData", function(self, Data)
+			CDM:UpdateBorderColor(self, Data)
+		end)
 	end
 
 	if (Icon) then

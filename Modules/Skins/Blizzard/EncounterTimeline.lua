@@ -3,6 +3,11 @@ local UI, DB, Media, Language = select(2, ...):Call()
 -- Call Modules
 local ET = UI:RegisterModule("EncounterTimeline")
 
+-- Lib Globals
+local _G = _G
+local unpack = unpack
+local select = select
+
 -- WoW Globals
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local LoadAddOn = C_AddOns.LoadAddOn

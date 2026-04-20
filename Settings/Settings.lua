@@ -1,11 +1,16 @@
 local UI, DB, Media, Language = select(2, ...):Call()
 
---------------------------------
--- Default Settings of FeelUI --
---------------------------------
+-- Lib Globals
+local _G = _G
+local unpack = unpack
+local select = select
 
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
+
+--------------------------------
+-- Default Settings of FeelUI --
+--------------------------------
 
 DB.Global = {
 	General = {
@@ -92,8 +97,8 @@ DB.Global = {
 		ButtonSpacing = 2,
 		-- Points Settings
 		BuffViewerPoint = { "CENTER", _G.UIParent, 0, -162 },
-		EssentialViewerPoint = { "CENTER", _G.UIParent, 0, -188 },
-		UtilityViewerPoint = { "CENTER", _G.UIParent, 0, -248 },
+		EssentialViewerPoint = { "CENTER", _G.UIParent, 0, -190 },
+		UtilityViewerPoint = { "CENTER", _G.UIParent, 0, -246 },
 	},
 
 	PotionButtonMenu = {

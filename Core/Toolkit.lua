@@ -6,8 +6,8 @@ local UI, DB, Media, Language = select(2, ...):Call()
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 local type = type
 local assert = assert
 local getmetatable = getmetatable

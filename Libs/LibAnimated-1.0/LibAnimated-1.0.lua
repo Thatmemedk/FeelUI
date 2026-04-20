@@ -4,6 +4,9 @@ local UI, DB, Media, Language = select(2, ...):Call()
 local LibAnimated = CreateFrame("Frame")
 
 -- Lib Global
+local _G = _G
+local unpack = unpack
+local select = select
 local Pi = math.pi
 local Cos = math.cos
 local Sin = math.sin

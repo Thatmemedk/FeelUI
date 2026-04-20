@@ -5,8 +5,8 @@ local DamageMeter = UI:RegisterModule("DamageMeter")
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local GetTime = GetTime

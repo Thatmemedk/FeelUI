@@ -128,7 +128,7 @@ function TT:FormatUnitName(Unit, Player)
         end
 
         if (Realm and Realm ~= "") then
-            if IsShiftKeyDown() then
+            if (IsShiftKeyDown()) then
                 Name = Name .. "-" .. Realm
             elseif (Relationship == LE_REALM_RELATION_COALESCED) then
                 Name = Name .. FOREIGN_SERVER_LABEL
@@ -306,11 +306,20 @@ function TT:StyleTooltips()
         end
     end
 
-    _G.AutoCompleteBox.NineSlice:SetAlpha(0)
-    _G.AutoCompleteBox:StripTexture()
-    _G.AutoCompleteBox:CreateBackdrop()
-    _G.AutoCompleteBox:CreateShadow()
+    if (_G.AutoCompleteBox) then
+        _G.AutoCompleteBox.NineSlice:SetAlpha(0)
+        _G.AutoCompleteBox:StripTexture()
+        _G.AutoCompleteBox:CreateBackdrop()
+        _G.AutoCompleteBox:CreateShadow()
+    end
     
+    if (_G.QueueStatusFrame) then
+        _G.QueueStatusFrame.NineSlice:SetAlpha(0)
+        _G.QueueStatusFrame:StripTexture()
+        _G.QueueStatusFrame:CreateBackdrop()
+        _G.QueueStatusFrame:CreateShadow()
+    end
+
     hooksecurefunc("SharedTooltip_SetBackdropStyle", self.SetBackdropStyle) 
 end
 

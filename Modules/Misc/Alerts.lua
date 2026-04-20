@@ -4,13 +4,14 @@ local UI, DB, Media, Language = select(2, ...):Call()
 local AF = UI:RegisterModule("AlertFrame")
 
 -- Lib Globals
-local select = select
+local _G = _G
 local unpack = unpack
+local select = select
 
 function AF.AdjustQueuedAnchors(System, Frame)
     for Alert in System.alertFramePool:EnumerateActive() do
         Alert:ClearAllPoints()
-        Alert:Point("TOP", Frame, "BOTTOM", 0, -6)
+        Alert:Point("TOP", Frame, "BOTTOM", 0, 0)
 
         Frame = Alert
     end
@@ -23,7 +24,7 @@ function AF.AdjustAnchors(System, Frame)
 
     if (Alert and Alert:IsShown()) then
         Alert:ClearAllPoints()
-        Alert:Point("TOP", Frame, "BOTTOM", 0, -6)
+        Alert:Point("TOP", Frame, "BOTTOM", 0, 0)
 
         return Alert
     end
@@ -36,7 +37,7 @@ function AF.AdjustAnchorsNonAlert(System, Frame)
     
     if (AnchorFrame and AnchorFrame:IsShown()) then
         AnchorFrame:ClearAllPoints()
-        AnchorFrame:Point("TOP", Frame, "BOTTOM", 0, -6)
+        AnchorFrame:Point("TOP", Frame, "BOTTOM", 0, 0)
 
         return AnchorFrame
     end
@@ -57,7 +58,7 @@ end
 function AF:Create()
     local Frame = CreateFrame("Frame", "FeelUI_AlertFrameHolder", _G.UIParent)
     Frame:Size(180, 20)
-    Frame:Point("TOP", _G.UIParent, "TOP", 0, -32)
+    Frame:Point("TOP", _G.UIParent, "TOP", 0, -52)
 
     self.Frame = Frame
 end

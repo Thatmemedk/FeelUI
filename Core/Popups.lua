@@ -1,5 +1,10 @@
 local UI, DB, Media, Language = select(2, ...):Call()
 
+-- Lib Globals
+local _G = _G
+local unpack = unpack
+local select = select
+
 StaticPopupDialogs["ELVUI_INCOMPATIBLE"] = {
 	text = Language.ElvUI.Enabled,
 	OnAccept = function() DisableAddOn("ElvUI") DisableAddOn("ElvUI_Options") DisableAddOn("ElvUI_Libraries") ReloadUI() end,

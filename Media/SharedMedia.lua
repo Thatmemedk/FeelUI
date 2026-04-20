@@ -3,6 +3,11 @@
 -- Call Libs
 local LSM = UI.Libs.LSM
 
+-- Lib Globals
+local _G = _G
+local unpack = unpack
+local select = select
+
 -- Locals
 local M = [[Interface\AddOns\FeelUI\Media\]]
 

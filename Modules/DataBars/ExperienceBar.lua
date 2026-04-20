@@ -5,8 +5,8 @@ local ExperienceBar = UI:RegisterModule("ExperienceBar")
 
 -- Lib Globals
 local _G = _G
-local select = select
 local unpack = unpack
+local select = select
 local floor = math.floor
 
 -- WoW Globals

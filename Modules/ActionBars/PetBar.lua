@@ -6,6 +6,7 @@ local AB = UI:CallModule("ActionBars")
 -- Lib Globals
 local _G = _G
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local NUM_PET_ACTION_SLOTS = _G.NUM_PET_ACTION_SLOTS

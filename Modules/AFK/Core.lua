@@ -4,23 +4,20 @@ local UI, DB, Media, Language = select(2, ...):Call()
 local AFK = UI:RegisterModule("AFK")
 
 -- Lib Globals
-local select = select
+local _G = _G
 local unpack = unpack
+local select = select
 local floor = math.floor
 local format = format
 
 -- WoW Globals
+local GetTime = GetTime
+local UnitClass = UnitClass
+local UnitIsAFK = UnitIsAFK
 local IsInGuild = IsInGuild
 local GetGuildInfo = GetGuildInfo
-local ChatFrame_TimeBreakDown = ChatFrame_TimeBreakDown
-local UnitIsAFK = UnitIsAFK
-local UnitClass = UnitClass
-local GetTime = GetTime
 local RequestTimePlayed = RequestTimePlayed
-local InCombatLockdown = InCombatLockdown
-local WorldMapFrame = _G.WorldMapFrame
-local MovieFrame = _G.MovieFrame
-local CinematicFrame = _G.CinematicFrame
+local ChatFrameTimeBreakDown = ChatFrame_TimeBreakDown
 
 -- Locals
 AFK.EventRequesting = false
@@ -69,7 +66,7 @@ function AFK:OnUpdate(Elapsed)
     end
 
     if (TotalPlayTime and LevelPlayTime) then
-        local Days, Hours, Minutes, Seconds = ChatFrame_TimeBreakDown(TotalPlayTime + (GetTime() - LevelPlayTimeOffset))
+        local Days, Hours, Minutes, Seconds = ChatFrameTimeBreakDown(TotalPlayTime + (GetTime() - LevelPlayTimeOffset))
 
         if (self.TotalPlayedText) then
             self.TotalPlayedText:SetFormattedText("|cffffffff%02d|r Days |cffffffff%02d|r Hours |cffffffff%02d|r Mins |cffffffff%02d|r Secs", Days, Hours, Minutes, Seconds)

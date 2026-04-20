@@ -4,7 +4,9 @@ local UI, DB, Media, Language = select(2, ...):Call()
 local Date = UI:RegisterModule("DataTextDate")
 
 -- Lib Globals
+local _G = _G
 local unpack = unpack
+local select = select
 
 -- WoW Globals
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
