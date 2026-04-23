@@ -90,7 +90,7 @@ function NP:SetupEmpowerPips(Castbar, StagePercentages)
 end
 
 function NP:CastStarted(Event, Unit)
-    local Frame = NP.UnitFrames[Unit]
+    local Frame = self.Frames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
@@ -161,7 +161,7 @@ function NP:CastStarted(Event, Unit)
 end
 
 function NP:CastSucceeded(Event, Unit)
-    local Frame = NP.UnitFrames[Unit]
+    local Frame = self.Frames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
@@ -172,7 +172,7 @@ function NP:CastSucceeded(Event, Unit)
 end
 
 function NP:CastStopped(Event, Unit, _, _, ...)
-    local Frame = NP.UnitFrames[Unit]
+    local Frame = self.Frames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
@@ -211,7 +211,7 @@ function NP:CastStopped(Event, Unit, _, _, ...)
 end
 
 function NP:CastFailed(Event, Unit, _, _, ...)
-    local Frame = NP.UnitFrames[Unit]
+    local Frame = self.Frames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
@@ -244,7 +244,7 @@ function NP:CastFailed(Event, Unit, _, _, ...)
 end
 
 function NP:CastInterrupted(Event, Unit, _, _, ...)
-    local Frame = NP.UnitFrames[Unit]
+    local Frame = self.Frames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
@@ -277,7 +277,7 @@ function NP:CastInterrupted(Event, Unit, _, _, ...)
 end
 
 function NP:CastUpdated(Event, Unit, _, _, CastID)
-    local Frame = NP.UnitFrames[Unit]
+    local Frame = self.Frames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
@@ -332,7 +332,7 @@ function NP:CastUpdated(Event, Unit, _, _, CastID)
 end
 
 function NP:CastNonInterruptable(Event, Unit)
-    local Frame = NP.UnitFrames[Unit]
+    local Frame = self.Frames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then   

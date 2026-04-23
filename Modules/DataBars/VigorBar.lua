@@ -27,7 +27,7 @@ local R, G, B = unpack(UI.GetClassColors)
 function VB:CreateBar()
     local VigorBars = CreateFrame("Frame", nil, _G.UIParent)
     VigorBars:Size(242, 8)
-    VigorBars:Point("CENTER", _G.UIParent, 0, -212)
+    VigorBars:Point("CENTER", _G.UIParent, 0, -204)
     VigorBars:SetAlpha(0)
 
     local CooldownsBars = CreateFrame("Frame", nil, VigorBars)

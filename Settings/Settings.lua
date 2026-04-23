@@ -77,6 +77,7 @@ DB.Global = {
 
 	Chat = {
 		Enable = true,
+		TimeStamps = true,
 	},
 
 	CooldownFrame = {
@@ -96,8 +97,8 @@ DB.Global = {
 		UtilityViewerButtonSize = { 32, 12 },
 		ButtonSpacing = 2,
 		-- Points Settings
-		BuffViewerPoint = { "CENTER", _G.UIParent, 0, -162 },
-		EssentialViewerPoint = { "CENTER", _G.UIParent, 0, -190 },
+		BuffViewerPoint = { "CENTER", _G.UIParent, 0, -170 },
+		EssentialViewerPoint = { "CENTER", _G.UIParent, 0, -222 },
 		UtilityViewerPoint = { "CENTER", _G.UIParent, 0, -246 },
 	},
 
@@ -116,10 +117,10 @@ DB.Global = {
 		ReputationBar = false,
 		ClassPowerBar = true,
 		PowerBar = true,
-		TotemBar = true,
+		TotemBar = false,
 		-- Points Settings
-		PowerBarPoint = { "BOTTOM", _G.UIParent, 0, 250 },
-		ClassPowerPoint = { "BOTTOM", _G.UIParent, 0, 266 },
+		PowerBarPoint = { "CENTER", _G.UIParent, 0, -204 },
+		ClassPowerPoint = { "CENTER", _G.UIParent, 0, -192 },
 	},
 
 	DataTexts = {
@@ -195,7 +196,8 @@ DB.Global = {
 		CastBarInterruptColor = { 0.67, 0, 0, 0.70 },
 		CastBarSucceededColor = { 0, 0.67, 0, 0.70 },
 		-- Portraits
-		Portraits = false,
+		Portraits = true,
+		-- Icons
 		RoleIcons = false,
 		-- Points Settings
 		PlayerPoint = { "BOTTOMLEFT", _G.UIParent, 482, 244 },

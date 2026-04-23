@@ -31,7 +31,7 @@ NP.Hooked = {}
 NP.Modified = {}
 
 -- Tables
-NP.UnitFrames = {}
+NP.Frames = {}
 
 -- Tables
 NP.PlateTypes = {
@@ -54,8 +54,8 @@ NP.CastHoldTime = 2
 -- HEALTH UPDATE
 
 function NP:UpdateHealth(Frame, Unit)
-    if (not Frame or not Unit or not Frame.Health) then 
-        return 
+    if (not Frame or not Unit or not Frame.Health) then
+        return
     end
 
     local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
@@ -93,7 +93,7 @@ function NP:UpdateHealth(Frame, Unit)
 end
 
 function NP:UpdateHealthText(Frame, Unit)
-    if (not Frame or not Unit or not Frame.HealthText) then 
+    if (not Frame or not Unit or not Frame.HealthText) then
         return
     end
 
@@ -204,8 +204,8 @@ end
 -- NAME UPDATE
 
 function NP:UpdateName(Frame, Unit)
-    if (not Frame or not Unit or not Frame.Name) then 
-        return 
+    if (not Frame or not Unit or not Frame.Name) then
+        return
     end
 
     local Name = UnitName(Unit) or ""
@@ -225,14 +225,14 @@ function NP:UpdateName(Frame, Unit)
 end
 
 function NP:UpdateGuild(Frame, Unit)
-    if (not Frame or not Unit or not Frame.Guild) then 
-        return 
+    if (not Frame or not Unit or not Frame.Guild) then
+        return
     end
 
     local GuildName, GuildRankName = GetGuildInfo(Unit)
 
-    if (not GuildName) then 
-        return 
+    if (not GuildName) then
+        return
     end
 
     local SameGuild = IsInGuild() and GetGuildInfo("player") == GuildName
@@ -244,8 +244,8 @@ end
 -- ICONS
 
 function NP:UpdateRaidIcon(Frame, Unit)
-    if (not Frame or not Unit or not Frame.RaidIcon) then 
-        return 
+    if (not Frame or not Unit or not Frame.RaidIcon) then
+        return
     end
 
     local Index = GetRaidTargetIndex(Unit)
@@ -261,8 +261,8 @@ end
 -- THREAT
 
 function NP:UpdateThreatHighlight(Frame, Unit)
-    if (not Frame or not Unit or not Frame.Threat) then 
-        return 
+    if (not Frame or not Unit or not Frame.Threat) then
+        return
     end
 
     local Threat = UnitThreatSituation("player", Unit)
@@ -311,8 +311,8 @@ end
 -- FULL UPDATE
 
 function NP:RefreshUnit(Frame, Unit)
-    if (not Frame or not Unit or not UnitExists(Unit)) then
-        return 
+    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
+        return
     end
 
     -- HEALTH
@@ -343,9 +343,9 @@ end
 -- EVENT UPDATES
 
 function NP:UnitHealth(Unit)
-    local Frame = self.UnitFrames[Unit]
+    local Frame = self.Frames[Unit]
 
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
         return
     end
 
@@ -359,9 +359,9 @@ function NP:UnitHealth(Unit)
 end
 
 function NP:UnitHealthPred(Unit)
-    local Frame = self.UnitFrames[Unit]
+    local Frame = self.Frames[Unit]
 
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
         return
     end
 
@@ -371,9 +371,9 @@ function NP:UnitHealthPred(Unit)
 end
 
 function NP:UnitAura(Unit)
-    local Frame = self.UnitFrames[Unit]
+    local Frame = self.Frames[Unit]
 
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
         return
     end
 
@@ -387,9 +387,9 @@ function NP:UnitAura(Unit)
 end
 
 function NP:UnitName(Unit)
-    local Frame = self.UnitFrames[Unit]
+    local Frame = self.Frames[Unit]
 
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
         return
     end
 
@@ -403,9 +403,9 @@ function NP:UnitName(Unit)
 end
 
 function NP:UnitThreat(Unit)
-    local Frame = self.UnitFrames[Unit]
+    local Frame = self.Frames[Unit]
 
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
         return
     end
 
@@ -415,8 +415,8 @@ function NP:UnitThreat(Unit)
 end
 
 function NP:UnitTargetChanged()
-    for Key, Frame in next, self.UnitFrames do
-        if (Frame.TargetIndicator) then 
+    for Key, Frame in next, self.Frames do
+        if (Frame.TargetIndicator) then
             self:UpdateTargetIndicator(Frame, Frame.unit) 
         end
 
@@ -427,58 +427,47 @@ function NP:UnitTargetChanged()
 end
 
 function NP:UnitMouseOver()
-    for Key, Frame in next, self.UnitFrames do
-        if (Frame.HighlightMouseOver) then 
+    for Key, Frame in next, self.Frames do
+        if (Frame.HighlightMouseOver) then
             self:UpdateHighlightMouseOver(Frame, Frame.unit) 
         end
     end
 end
 
 function NP:UnitRaidIcon()
-    for Key, Frame in next, self.UnitFrames do
-        if (Frame.RaidIcon) then 
+    for Key, Frame in next, self.Frames do
+        if (Frame.RaidIcon) then
             self:UpdateRaidIcon(Frame, Frame.unit) 
         end
     end
 end
 
 function NP:CastBarOnNamePlateUnitAdded(Unit)
-    local Frame = self.UnitFrames[Unit]
-    local Castbar = Frame and Frame.Castbar
-
-    if (not Castbar) then
-        return
-    end
-
-    -- Reset CastBar
-    NP:ResetCastBar(Frame.Castbar)
-
-    -- Call Fade
-    UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
-end
-
-function NP:CastBarOnNamePlateUnitRemoved(Unit)
-    local Frame = self.UnitFrames[Unit]
-    local Castbar = Frame and Frame.Castbar
-
-    if (not Castbar) then
-        return
-    end
-
-    -- Reset CastBar
-    NP:ResetCastBar(Frame.Castbar)
-
-    -- Call Fade
-    UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
-end
-
-function NP:CheckUnitCasting(Unit)
     local Casting = UnitCastingInfo(Unit)
     local Channeling = UnitChannelInfo(Unit)
+
+    if (not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
+        return
+    end
 
     if (Casting or Channeling) then
         NP:CastStarted("UNIT_SPELLCAST_START", Unit)
     end
+end
+
+function NP:CastBarOnNamePlateUnitRemoved(Unit)
+    local Frame = self.Frames[Unit]
+    local Castbar = Frame and Frame.Castbar
+
+    if (not Castbar) then
+        return
+    end
+
+    -- Reset CastBar
+    NP:ResetCastBar(Frame.Castbar)
+
+    -- Call Fade
+    UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
 end
 
 -- EVENT HANDLER
@@ -517,7 +506,7 @@ function NP:NameplateAdded(Unit)
     Frame:Show()
 
     -- Cache Units
-    self.UnitFrames[Unit] = Frame
+    self.Frames[Unit] = Frame
 
     -- Refresh
     NP:RefreshUnit(Frame, Unit)
@@ -532,7 +521,7 @@ function NP:NameplateRemoved(Unit)
 
     Plate.UnitFrame:SetAttribute("unit", nil)
 
-    local Frame = self.UnitFrames[Unit]
+    local Frame = self.Frames[Unit]
 
     if (not Frame) then
         return
@@ -543,7 +532,7 @@ function NP:NameplateRemoved(Unit)
     Frame:Hide()
 
     -- Reset Unit Cache
-    self.UnitFrames[Unit] = nil
+    self.Frames[Unit] = nil
 end
 
 local function IsNameplateUnit(unit)
@@ -551,7 +540,7 @@ local function IsNameplateUnit(unit)
 end
 
 function NP:OnEvent(event, unit, ...)
-    if (unit and not IsNameplateUnit(unit)) then
+    if (unit and not unit:match("^nameplate%d+$")) then
         return
     end
 

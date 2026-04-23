@@ -450,6 +450,10 @@ function UF:CheckUnitCasting(Unit)
     local Casting = UnitCastingInfo(Unit)
     local Channeling = UnitChannelInfo(Unit)
 
+    if (not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
+        return
+    end
+
     if (Casting or Channeling) then
         UF:CastStarted("UNIT_SPELLCAST_START", Unit)
     else

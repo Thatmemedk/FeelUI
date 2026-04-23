@@ -21,28 +21,17 @@ local ChatConfigFrameDefaultButton = _G.ChatConfigFrameDefaultButton
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
 
-function CH:GetTimestamp()
-	return "|cff909090" .. BetterDate("%H:%M:%S") .. "|r "
-end
+function CH:UpdateChannelNames(msg, r, g, b, ...)
+    if (not msg or UI:IsSecretValue(msg)) then
+        return self.oldAddMsg(self, msg, r, g, b, ...)
+    end
 
-function CH:InjectTimestamp(msg)
-    if (type(msg) ~= "string" or UI:IsSecretValue(msg)) then
-        return msg
-    else
-		return self:GetTimestamp() .. msg
-	end
-end
+    if (DB.Global.Chat.TimeStamps) then
+        local TimeStamp = "|cff909090" .. BetterDate("[%H:%M:%S]") .. "|r "
+        msg = TimeStamp .. msg
+    end
 
-function CH:HookChatFrame(Frame)
-	local OrigAddMessage = Frame.AddMessage
-
-	Frame.AddMessage = function(self, msg, ...)
-		if (type(msg) ~= "string") or (UI:IsSecretValue(msg)) then
-			return OrigAddMessage(self, msg, ...)
-		end
-
-		return OrigAddMessage(self, CH:InjectTimestamp(msg), ...)
-	end
+    return self.oldAddMsg(self, msg, r, g, b, ...)
 end
 
 function CH:StyleFrames(Frame)
@@ -96,7 +85,8 @@ function CH:StyleFrames(Frame)
 	if (MinimizeButton) then MinimizeButton:Kill() end
 
 	if (ID ~= 2) then
-		CH:HookChatFrame(Frame)
+		Frame.oldAddMsg = Frame.AddMessage
+		Frame.AddMessage = CH.UpdateChannelNames
 	end
 
 	Frame.ChatIsSkinned = true

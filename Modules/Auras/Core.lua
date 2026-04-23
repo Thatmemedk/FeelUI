@@ -102,7 +102,7 @@ function Auras:UpdateAura(Index)
 		local Color = C_UnitAuras.GetAuraDispelTypeColor(Unit, AuraData.auraInstanceID, UI.DispelColorCurve)
 
 		if (Color) then
-			self:SetColorTemplate(Color.r, Color.g, Color.b)
+			self:SetColorTemplate(Color:GetRGB())
 		else
 			self:SetColorTemplate(unpack(DB.Global.General.BorderColor))
 		end

@@ -42,5 +42,4 @@ function CDM:Initialize()
 	self:UpdateLayout()
 	self:UpdateIcons()
 	self:SetCVarOnLogin()
-	self:CheckDragonflying()
 end

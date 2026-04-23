@@ -2,6 +2,7 @@ local UI, DB, Media, Language = select(2, ...):Call()
 
 -- Call Modules
 local PowerBar = UI:RegisterModule("PowerBar")
+local PP = UI:CallModule("PowerPrediction")
 
 -- Lib Globals
 local _G = _G
@@ -32,7 +33,7 @@ local R, G, B = unpack(UI.GetClassColors)
 
 function PowerBar:CreateBar(Name)
 	local Bar = CreateFrame("StatusBar", "FeelUI_" .. Name, _G.UIParent)
-	Bar:Size(242, 8)
+	Bar:Size(263, 8)
 
 	if (Name == "PowerBar") then
 		Bar:Point(unpack(DB.Global.DataBars.PowerBarPoint))
@@ -122,7 +123,7 @@ function PowerBar:StaggerUpdate()
     if (GetSpecialization == 1) then
     	Bar:Show()
     else
-        Bar:Hide()
+       	return
     end
 
 	local Min, Max = UnitStagger("player"), UnitHealthMax("player")
@@ -155,7 +156,7 @@ function PowerBar:SoulFragmentsUpdate()
     if (GetSpecialization == 3) then
     	Bar:Show()
     else
-        Bar:Hide()
+    	return
     end
 
     local Aura = GetPlayerAuraBySpellID(1225789) or GetPlayerAuraBySpellID(1227702)

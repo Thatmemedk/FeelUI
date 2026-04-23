@@ -38,16 +38,21 @@ function Cooldown:Initialize()
             local Region = select(i, self:GetRegions())
 
             if (Region and Region.GetText) then
-                local FontSize = UI:GetCooldownFontScale(self)
+                local InvisFrame = CreateFrame("Frame", nil, self)
+                InvisFrame:SetFrameStrata("HIGH")
+                InvisFrame:SetFrameLevel(self:GetFrameLevel() + 10)
+                InvisFrame:SetInside()
 
+                Region:SetParent(InvisFrame)
                 Region:ClearAllPoints()
 
                 if (Cooldown:IsActionBarParent(self)) then
-                    Region:Point("CENTER", self, 0, 0)
+                    Region:Point("CENTER", InvisFrame, 0, 0)
                 else
-                    Region:Point("CENTER", self, 0, -6)
+                    Region:Point("CENTER", InvisFrame, 0, -6)
                 end
 
+                local FontSize = UI:GetCooldownFontScale(self)
                 Region:SetFontTemplate("Default", FontSize)
                 Region:SetTextColor(1, 0.82, 0)
             end

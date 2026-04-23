@@ -44,7 +44,7 @@ local R6, G6, B6 = 0.33, 0.59, 0.33
 
 function ClassPowerBar:CreateBar()
     local Bar = CreateFrame("Frame", "FeelUI_ClassPowerBar", _G.UIParent)
-    Bar:Size(242, 8)
+    Bar:Size(263, 8)
     Bar:Point(unpack(DB.Global.DataBars.ClassPowerPoint))
     Bar:Hide()
 
@@ -146,9 +146,9 @@ function ClassPowerBar:Update()
         self.Backdrops = {}
     end
 
-    local BarWidth = 242
+    local BarWidth = 263
     local SegmentSpacing = 2
-    local TotalSpacing = (BarCount - 1) * SegmentSpacing
+    local TotalSpacing = (BarCount -1) * SegmentSpacing
 
     for i = 1, BarCount do
         local Segment = self.Segment[i]

@@ -38,37 +38,38 @@ function PA:Create()
 end
 
 function PA:CreateAnchor(IconFrame, Index)
-	local Anchor = {
-		unitToken = "player",
-		auraIndex = Index,
-		parent = IconFrame,
-		showCountdownFrame = true,
-		showCountdownNumbers = true,
+    local Anchor = {
+    	isContainer = false,
+        unitToken = "player",
+        auraIndex = Index,
+        parent = IconFrame,
+        showCountdownFrame = true,
+        showCountdownNumbers = true,
 
-		iconInfo = {
-			iconWidth = IconFrame:GetWidth(),
-			iconHeight = IconFrame:GetHeight(),
-			borderScale = 1,
+        iconInfo = {
+            iconWidth = IconFrame:GetWidth(),
+            iconHeight = IconFrame:GetHeight(),
+            borderScale = 1,
 
-			iconAnchor = {
-				point = "CENTER",
-				relativeTo = IconFrame,
-				relativePoint = "CENTER",
-				offsetX = 0,
-				offsetY = 0,
-			},
-		},
+            iconAnchor = {
+                point = "CENTER",
+                relativeTo = IconFrame,
+                relativePoint = "CENTER",
+                offsetX = 0,
+                offsetY = 0,
+            },
+        },
 
-		durationAnchor = {
-			point = "CENTER",
-			relativeTo = IconFrame,
-			relativePoint = "CENTER",
-			offsetX = 0,
-			offsetY = -8,
-		},
-	}
+        durationAnchor = {
+            point = "CENTER",
+            relativeTo = IconFrame,
+            relativePoint = "CENTER",
+            offsetX = 0,
+            offsetY = -8,
+        },
+    }
 
-	return AddPrivateAuraAnchor(Anchor)
+    return AddPrivateAuraAnchor(Anchor)
 end
 
 function PA:CreateAnchors()

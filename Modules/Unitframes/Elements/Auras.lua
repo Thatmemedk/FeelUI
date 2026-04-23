@@ -14,7 +14,7 @@ local GetAuraApplicationDisplayCount = _G.C_UnitAuras.GetAuraApplicationDisplayC
 local GetAuraDispelTypeColor = _G.C_UnitAuras.GetAuraDispelTypeColor
 
 function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
-    if (not Frame or not Frame.unit) then
+    if (not Frame or not Unit or not UnitIsVisible(Unit)) then
         return
     end
 
@@ -22,10 +22,6 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
 
     if (not Auras or not Auras.Filter) then 
         return 
-    end
-
-    if (not UnitIsVisible(Unit)) then
-        return
     end
 
     local Buttons = Auras.Buttons

@@ -68,5 +68,7 @@ function NP:GetUnitColor(Unit, IsCaster)
         end
     elseif (Classif == "normal" or Classif == "trivial") then
         return UI.Colors.Reaction[Reaction]
+    else
+        return UI.Colors.Reaction[Reaction]
     end
 end

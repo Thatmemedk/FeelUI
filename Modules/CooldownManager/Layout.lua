@@ -22,19 +22,6 @@ function CDM:CreateContainers(Frame, Point, Anchor, X, Y, IconSpacing)
     AnchorFrame:Size(36, 18)
     AnchorFrame:Point(Point, Anchor, X or 0, Y or 0)
 
-    -- ANIMATION
-    AnchorFrame.Fade = UI:CreateAnimationGroup(AnchorFrame)
-
-    AnchorFrame.FadeIn = UI:CreateAnimation(AnchorFrame.Fade, "Fade")
-    AnchorFrame.FadeIn:SetDuration(0.25)
-    AnchorFrame.FadeIn:SetChange(1)
-    AnchorFrame.FadeIn:SetEasing("In-SineEase")
-
-    AnchorFrame.FadeOut = UI:CreateAnimation(AnchorFrame.Fade, "Fade")
-    AnchorFrame.FadeOut:SetDuration(0.25)
-    AnchorFrame.FadeOut:SetChange(0)
-    AnchorFrame.FadeOut:SetEasing("Out-SineEase")
-
     self.Anchors[Frame] = {
         Frame = AnchorFrame,
         IconSpacing = IconSpacing
@@ -203,44 +190,4 @@ function CDM:UpdateLayout()
     self:PositionContainers()
     self:UpdateAnchors()
     self:UpdateHooks()
-end
-
-function CDM:GlidingState()
-    local IsGliding = C_PlayerInfo.GetGlidingInfo()
-
-    if (IsGliding and not self.IsFlying) then
-        self.IsFlying = true
-
-        for _, Data in pairs(self.Anchors) do
-            local Frames = Data.Frame
-
-            if (Frames and Frames.Fade) then
-                if (Frames.FadeIn:IsPlaying()) then
-                    Frames.FadeIn:Stop()
-                end
-
-                Frames.FadeOut:Play()
-            end
-        end
-    elseif (not IsGliding and self.IsFlying) then
-        self.IsFlying = false
-
-        for _, Data in pairs(self.Anchors) do
-            local Frames = Data.Frame
-
-            if (Frames and Frames.Fade) then
-                if (Frames.FadeOut:IsPlaying()) then
-                    Frames.FadeOut:Stop()
-                end
-
-                Frames.FadeIn:Play()
-            end
-        end
-    end
-end
-
-function CDM:CheckDragonflying()
-    C_Timer.NewTicker(0.2, function()
-        self:GlidingState()
-    end)
 end

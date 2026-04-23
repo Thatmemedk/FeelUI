@@ -150,6 +150,25 @@ function UI:UTF8Sub(Text, Index, Dots)
     end
 end
 
+-- NameAbbrev
+function UI:NameAbbrev(Text)
+    local Letters, LastWord = "", strmatch(Text, ".+%s(.+)$")
+    
+    if (LastWord) then
+        for Words in gmatch(Text, ".-%s") do
+            local FirstLetter = strsub(gsub(Words, "^[%s%p]*", ""), 1, 1)
+            
+            if (FirstLetter ~= strlower(FirstLetter)) then
+                Letters = format("%s%s. ", Letters, FirstLetter)
+            end
+        end
+        
+        Text = format("%s%s", Letters, LastWord)
+    end
+    
+    return Text
+end
+
 -- Delay
 function UI:Delay(Key, Delay, Func)
     if (type(Delay) ~= "number" or type(Func) ~= "function") then

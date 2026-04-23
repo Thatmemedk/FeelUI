@@ -17,6 +17,8 @@ local sub = string.sub
 local GameTooltip = _G.GameTooltip
 local GameTooltipStatusBar = _G.GameTooltipStatusBar
 local AddTooltipPostCall = TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall
+local TooltipDataType = Enum.TooltipDataType
+local UnitTokenFromGUID = UnitTokenFromGUID
 
 -- WoW Globals
 local UnitRace = UnitRace
@@ -62,7 +64,7 @@ local ClassificationText = {
 }
 
 function TT:GetColor(Unit)
-    if (not Unit) then
+    if (not Unit or UI:IsSecretUnit(Unit)) then
         return
     end
 
@@ -83,8 +85,17 @@ function TT:GetColor(Unit)
     return UI:RGBToHex(Color.r, Color.g, Color.b), Color.r, Color.g, Color.b
 end
 
+function TT:ApplyDefaultStatusBarColor()
+    if (not GameTooltipStatusBar) then
+        return
+    end
+
+    GameTooltipStatusBar:SetStatusBarColor(0.80, 0.30, 0.22) 
+    GameTooltipStatusBar:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor)) 
+end
+
 function TT:ApplyStatusBarColor(Unit, ClassFile, Reaction)
-    if (not Unit or not GameTooltipStatusBar) then
+    if (not Unit or UI:IsSecretUnit(Unit)) then
         return
     end
 
@@ -106,23 +117,13 @@ function TT:ApplyStatusBarColor(Unit, ClassFile, Reaction)
     GameTooltipStatusBar:SetBackdropColorTemplate(R * 0.5, G * 0.5, B * 0.5, 0.7)
 end
 
-function TT:ApplyDefaultStatusBarColor()
-    if (not GameTooltipStatusBar) then
-        return
-    end
-
-    GameTooltipStatusBar:SetStatusBarColor(0.80, 0.30, 0.22)
-    GameTooltipStatusBar:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
-end
-
 function TT:FormatUnitName(Unit, Player)
-    if (Player and not UI:IsSecretUnit(Unit)) then
-        local Name, Realm = UnitName(Unit)
-        local Title = UnitPVPName(Unit)
-        local Relationship = UnitRealmRelationship(Unit)
-        local Color = TT:GetColor(Unit) or "|CFFFFFFFF"
-        local StatusText = ""
+    local Name, Realm = UnitName(Unit)
+    local Title = UnitPVPName(Unit)
+    local Relationship = UnitRealmRelationship(Unit)
+    local Color = TT:GetColor(Unit) or "|CFFFFFFFF"
 
+    if (Player and not UI:IsSecretUnit(Unit)) then
         if (Title) then
             Name = Title
         end
@@ -137,22 +138,14 @@ function TT:FormatUnitName(Unit, Player)
             end
         end
 
-        --[[
-        if (UnitIsAFK(Unit)) then
-            StatusText = " |CFF559655" .. CHAT_FLAG_AFK .. "|r"
-        elseif (UnitIsDND(Unit)) then
-            StatusText = " |CFF559655" .. CHAT_FLAG_DND .. "|r"
-        end
-        --]]
-
-        _G.GameTooltipTextLeft1:SetFormattedText("%s%s%s%s", Color, Name, "|r", StatusText)
+        _G.GameTooltipTextLeft1:SetFormattedText("%s%s%s", Color, Name, "|r")
     end
 end
 
 function TT:FormatGuildInfo(Unit, Player)
-    if (Player and not UI:IsSecretUnit(Unit)) then
-        local GuildName, GuildRankName = GetGuildInfo(Unit)
+    local GuildName, GuildRankName = GetGuildInfo(Unit)
 
+    if (Player and not UI:IsSecretUnit(Unit)) then
         if (not GuildName) then 
             return 
         end
@@ -207,16 +200,34 @@ function TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Ra
     end
 end
 
+function TT:GetDisplayedUnit(tt)
+    if (not tt.GetPrimaryTooltipData) then
+        return
+    end
+
+    if (not tt:IsTooltipType(TooltipDataType.Unit)) then
+        return
+    end
+
+    local Data = tt:GetPrimaryTooltipData()
+
+    if (not Data or not Data.guid) then
+        return
+    end
+
+    return UnitTokenFromGUID(Data.guid)
+end
+
 function TT:OnTooltipSetUnit()
     if (self ~= GameTooltip or self:IsForbidden()) then
         return
     end
 
-    local Unit = select(2, self:GetUnit())
+    local Unit = TT:GetDisplayedUnit(self)
 
-    if (not Unit) then
-        local GMF = UI:GetMouseFocus()
-        local FocusUnit = GMF and GMF.GetAttribute and GMF:GetAttribute("unit")
+    if (not Unit or UI:IsSecretValue(Unit) or not UnitExists(Unit)) then
+        local Focus = UI:GetMouseFocus()
+        local FocusUnit = Focus and Focus.GetAttribute and Focus:GetAttribute("unit")
 
         if (FocusUnit) then
             Unit = FocusUnit
@@ -225,6 +236,7 @@ function TT:OnTooltipSetUnit()
 
     if (not Unit or UI:IsSecretValue(Unit) or not UnitExists(Unit)) then
         TT:ApplyDefaultStatusBarColor()
+
         return
     end
 

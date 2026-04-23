@@ -131,80 +131,84 @@ function DamageMeter:Skin()
 			-- SESSION WINDOW
 			Window:StripTexture()
 
-			if (Window.ScrollBox) then
-				self:UpdateScrollBoxBars(Window.ScrollBox)
+			if (Window.MinimizeContainer.ScrollBox) then
+				self:UpdateScrollBoxBars(Window.MinimizeContainer.ScrollBox)
 
-				hooksecurefunc(Window.ScrollBox, "Update", function(ScrollBox)
-					DamageMeter:UpdateScrollBoxBars(ScrollBox)
+				hooksecurefunc(Window.MinimizeContainer.ScrollBox, "Update", function(Frame)
+					DamageMeter:UpdateScrollBoxBars(Frame)
 				end)
 			end
 
-			if (Window.LocalPlayerEntry) then
-				self:UpdateBarSkin(Window.LocalPlayerEntry)
+			if (Window.MinimizeContainer.LocalPlayerEntry) then
+				self:UpdateBarSkin(Window.MinimizeContainer.LocalPlayerEntry)
 			end
 
-			if (Window.Background) then
-				Window.Background:Hide()
+			if (Window.MinimizeContainer.Background) then
+				Window.MinimizeContainer.Background:Hide()
 			end
 
-			if (Window.ScrollBar.Track.Middle) then
-				Window.ScrollBar.Track.Middle:SetAlpha(0)
+			if (Window.MinimizeContainer.ScrollBar.Track.Middle) then
+				Window.MinimizeContainer.ScrollBar.Track.Middle:SetAlpha(0)
 			end
 
-			if (Window.ScrollBar.Track) then
-				Window.ScrollBar.Track:SetAlpha(0)
+			if (Window.MinimizeContainer.ScrollBar.Track) then
+				Window.MinimizeContainer.ScrollBar.Track:SetAlpha(0)
 			end
 
-			if (Window.ScrollBar.Back) then
-				Window.ScrollBar.Back:SetAlpha(0)
+			if (Window.MinimizeContainer.ScrollBar.Back) then
+				Window.MinimizeContainer.ScrollBar.Back:SetAlpha(0)
 			end
 
-			if (Window.ScrollBar.Forward) then
-				Window.ScrollBar.Forward:SetAlpha(0)
+			if (Window.MinimizeContainer.ScrollBar.Forward) then
+				Window.MinimizeContainer.ScrollBar.Forward:SetAlpha(0)
 			end
 
 			-- SOURCE WINDOW
-			Window.SourceWindow:StripTexture()
+			Window.MinimizeContainer.SourceWindow:StripTexture()
 
-			if (Window.SourceWindow.ScrollBox) then
-				self:UpdateScrollBoxBars(Window.SourceWindow.ScrollBox)
+			if (Window.MinimizeContainer.SourceWindow.ScrollBox) then
+				self:UpdateScrollBoxBars(Window.MinimizeContainer.SourceWindow.ScrollBox)
 
-				hooksecurefunc(Window.SourceWindow.ScrollBox, "Update", function(ScrollBox)
-					DamageMeter:UpdateScrollBoxBars(ScrollBox)
+				hooksecurefunc(Window.MinimizeContainer.SourceWindow.ScrollBox, "Update", function(Frame)
+					DamageMeter:UpdateScrollBoxBars(Frame)
 				end)
 			end
-
-			if (not Window.SourceWindow.NewBackdrop) then
-				Window.SourceWindow.NewBackdrop = CreateFrame("Frame", nil, Window.SourceWindow)
-		        Window.SourceWindow.NewBackdrop:SetFrameLevel(Window.SourceWindow:GetFrameLevel() -1)
-		        Window.SourceWindow.NewBackdrop:Size(348, 148)
-		        Window.SourceWindow.NewBackdrop:Point("CENTER", Window.SourceWindow, -11, 1)
-		        Window.SourceWindow.NewBackdrop:CreateBackdrop()
-		        Window.SourceWindow.NewBackdrop:CreateShadow()
+			
+			if (not Window.MinimizeContainer.SourceWindow.NewBackdrop) then
+				Window.MinimizeContainer.SourceWindow.NewBackdrop = CreateFrame("Frame", nil, Window.MinimizeContainer.SourceWindow)
+		        Window.MinimizeContainer.SourceWindow.NewBackdrop:SetFrameLevel(Window.MinimizeContainer.SourceWindow:GetFrameLevel() -1)
+		        Window.MinimizeContainer.SourceWindow.NewBackdrop:Size(348, 148)
+		        Window.MinimizeContainer.SourceWindow.NewBackdrop:Point("CENTER", Window.MinimizeContainer.SourceWindow, -11, 1)
+		        Window.MinimizeContainer.SourceWindow.NewBackdrop:CreateBackdrop()
+		        Window.MinimizeContainer.SourceWindow.NewBackdrop:CreateShadow()
 		    end
 
-			if (Window.SourceWindow.Background) then
-				Window.SourceWindow.Background:Hide()
+			if (Window.MinimizeContainer.SourceWindow.Background) then
+				Window.MinimizeContainer.SourceWindow.Background:Hide()
 			end
 
-			if (Window.SourceWindow.ScrollBar.Track.Middle) then
-				Window.SourceWindow.ScrollBar.Track.Middle:SetAlpha(0)
+			if (Window.MinimizeContainer.SourceWindow.ScrollBar.Track.Middle) then
+				Window.MinimizeContainer.SourceWindow.ScrollBar.Track.Middle:SetAlpha(0)
 			end
 
-			if (Window.SourceWindow.ScrollBar.Track) then
-				Window.SourceWindow.ScrollBar.Track:SetAlpha(0)
+			if (Window.MinimizeContainer.SourceWindow.ScrollBar.Track) then
+				Window.MinimizeContainer.SourceWindow.ScrollBar.Track:SetAlpha(0)
 			end
 
-			if (Window.SourceWindow.ScrollBar.Back) then
-				Window.SourceWindow.ScrollBar.Back:SetAlpha(0)
+			if (Window.MinimizeContainer.SourceWindow.ScrollBar.Back) then
+				Window.MinimizeContainer.SourceWindow.ScrollBar.Back:SetAlpha(0)
 			end
 
-			if (Window.SourceWindow.ScrollBar.Forward) then
-				Window.SourceWindow.ScrollBar.Forward:SetAlpha(0)
+			if (Window.MinimizeContainer.SourceWindow.ScrollBar.Forward) then
+				Window.MinimizeContainer.SourceWindow.ScrollBar.Forward:SetAlpha(0)
 			end
 
-			if (Window.SourceWindow.ResizeButton) then
-				Window.SourceWindow.ResizeButton:Hide()
+			if (Window.MinimizeContainer.SourceWindow.ResizeButton) then
+				Window.MinimizeContainer.SourceWindow.ResizeButton:Hide()
+			end
+
+			if (Window.MinimizeButton) then
+				Window.MinimizeButton:Hide()
 			end
 
 			-- NAME
@@ -279,5 +283,5 @@ function DamageMeter:Initialize()
     end
 
     self:SetCVarOnLogin()
-    self:Skin()
+   	self:Skin()
 end

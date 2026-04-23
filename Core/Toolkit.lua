@@ -172,9 +172,7 @@ local function SetFontTemplate(self, FontTemplate, FontSize, ShadowOffsetX, Shad
 
 	if (FontTemplate == "Default") then
 		self:SetFont(Media.Global.Font, UI:Scale(FontSize or 12), "THINOUTLINE")
-	end
-
-	if (FontTemplate == "CombatText") then
+	elseif (FontTemplate == "CombatText") then
 		self:SetFont(Media.Global.CombatFont, UI:Scale(FontSize or 12), "THINOUTLINE")
 	end
 

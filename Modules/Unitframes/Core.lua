@@ -66,6 +66,10 @@ local READY_CHECK_READY_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Ready"
 local READY_CHECK_NOT_READY_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-NotReady"
 local READY_CHECK_WAITING_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Waiting"
 
+-- Locals
+UF.FadeInTime = 0.5
+UF.CastHoldTime = 2
+
 -- Tables
 UF.Frames = {}
 UF.Frames.Party = {}
@@ -73,9 +77,19 @@ UF.Frames.Raid = {}
 UF.Frames.Hidden = {}
 UF.Frames.Range = {}
 
--- Locals
-UF.FadeInTime = 0.5
-UF.CastHoldTime = 2
+-- Tables
+UF.ValidUnits = {
+    player = true,
+    target = true,
+    targettarget = true,
+    focus = true,
+    pet = true,
+    boss1 = true,
+    boss2 = true,
+    boss3 = true,
+    boss4 = true,
+    boss5 = true,
+}
 
 -- SecureFrame
 UF.SecureFrame = CreateFrame("Frame", "UF_SecureFrame", _G.UIParent, "SecureHandlerStateTemplate")
@@ -279,7 +293,7 @@ function UF:UpdatePower(Frame, Unit)
 end
 
 function UF:UpdateAdditionalPower(Frame)
-    if (not Frame or not Frame.unit or not Frame.AdditionalPower) then
+    if (not Frame or not Frame.AdditionalPower) then
         return
     end
 
@@ -348,24 +362,6 @@ function UF:UpdateName(Frame, Unit, TypeFrame)
 end
 
 --- UPDATE NAME & LEVEL
-
-local function NameAbbrev(Text)
-    local Letters, LastWord = "", strmatch(Text, ".+%s(.+)$")
-    
-    if (LastWord) then
-        for Words in gmatch(Text, ".-%s") do
-            local FirstLetter = strsub(gsub(Words, "^[%s%p]*", ""), 1, 1)
-            
-            if (FirstLetter ~= strlower(FirstLetter)) then
-                Letters = format("%s%s. ", Letters, FirstLetter)
-            end
-        end
-        
-        Text = format("%s%s", Letters, LastWord)
-    end
-    
-    return Text
-end
 
 function UF:UpdateTargetNameLevel(Frame, Unit)
     if (not Frame or not Unit or not Frame.NameLevel) then
@@ -632,7 +628,7 @@ function UF:UpdateReadyCheckIcon(Frame, Event)
 end
 
 function UF:UpdateRoleIcon(Frame)
-    if (not Frame or not Frame.unit or not Frame.RoleIcon) then
+    if (not Frame or not Frame.RoleIcon) then
         return
     end
 
@@ -1041,7 +1037,7 @@ end
 function UF:UnitAura(Unit)
     local Frame = self.Frames[Unit]
 
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
         return
     end
 
@@ -1181,10 +1177,12 @@ end
 -- ON EVENTS
 
 function UF:OnEvent(event, unit, ...)
+    if (unit and not UF.ValidUnits[unit]) then
+        return
+    end
+
     if (event == "PLAYER_ENTERING_WORLD") then
-        UI:Delay("FullRefreshPEW", 0.05, function()
-            UF:FullRefresh()
-        end)
+        UF:FullRefresh()
     elseif (event == "PLAYER_TARGET_CHANGED") then
         UF:RefreshUnit("target")
         UF:UpdateTargetPortrait()
