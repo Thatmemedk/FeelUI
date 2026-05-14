@@ -68,7 +68,7 @@ function Align:Create()
 		TextureFrame:SetColorTexture(0, 0, 0, 1)
 		
 		if (i == Align.BoxSize / 2) then
-			TextureFrame:SetColorTexture(R, G, B)
+			TextureFrame:SetColorTexture(0, 0, 0, 1)
 		else
 			TextureFrame:SetColorTexture(0, 0, 0, 1)
 		end
@@ -83,7 +83,7 @@ function Align:Create()
 		local TextureFrame = Frame:CreateTexture(nil, "OVERLAY")
 		TextureFrame:Point("TOPLEFT", Frame, "TOPLEFT", 0, -(Height/2) + (Size/2))
 		TextureFrame:Point("BOTTOMRIGHT", Frame, "TOPRIGHT", 0, -(Height/2 + Size/2))
-		TextureFrame:SetColorTexture(R, G, B)
+		TextureFrame:SetColorTexture(0, 0, 0, 1)
 	end
 
 	for i = 1, floor((Height/2)/HeightStep) do

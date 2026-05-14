@@ -557,11 +557,12 @@ function UF:UpdateResurrectionIcon(Frame, Unit)
     end
 end
 
-function UF:UpdateSummonIcon(Frame, Unit)
-    if (not Frame or not Unit or not Frame.SummonIcon) then
+function UF:UpdateSummonIcon(Frame)
+    if (not Frame or not Frame.SummonIcon) then
         return
     end
 
+    local Unit = Frame.unit
     local IncomingSummon = C_IncomingSummon.IncomingSummonStatus(Unit)
 
     if (IncomingSummon ~= SUMMON_STATUS_NONE) then
@@ -642,8 +643,7 @@ function UF:UpdateRoleIcon(Frame)
         Frame.RoleIcon:SetAtlas("roleicon-tiny-healer")
         Frame.RoleIcon:Show()
     elseif (Role == Enum.LFGRole.Damage) then
-        Frame.RoleIcon:SetAtlas("roleicon-tiny-dps")
-        Frame.RoleIcon:Show()
+        Frame.RoleIcon:Hide()
     else
         Frame.RoleIcon:Hide()
     end
@@ -858,8 +858,6 @@ function UF:RefreshUnit(Unit)
         return
     end
 
-    local Unit = Frame.unit
-
     -- HEALTH
     if (Frame.Health) then self:UpdateHealth(Frame, Unit) end
     if (Frame.HealthTextCur) then self:UpdateHealthTextCur(Frame, Unit) end
@@ -875,8 +873,7 @@ function UF:RefreshUnit(Unit)
     if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame, Unit) end
 
     -- AURAS
-    if (Frame.Buffs) then self:UpdateAuras(Frame, Unit, false) end
-    if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
+    if (Frame.Buffs or Frame.Debuffs or Frame.External or Frame.CrowdControl) then self:UpdateAuras(Frame, Unit) end
 
     -- ICONS
     if (Frame.CombatIcon) then self:UpdateCombatIcon(Frame) end
@@ -888,7 +885,7 @@ function UF:RefreshUnit(Unit)
     if (Frame.RoleIcon) then self:UpdateRoleIcon(Frame) end
     if (Frame.PhaseIcon) then self:UpdatePhaseIcon(Frame) end
     if (Frame.ResurrectionIcon) then self:UpdateResurrectionIcon(Frame, Unit) end
-    if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame, Unit) end
+    if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame) end
 
     -- THREAT
     if (Frame.Threat) then self:UpdateThreatHighlight(Frame, Unit) end
@@ -906,8 +903,6 @@ function UF:RefreshGroup(Frame, Unit)
         return
     end
 
-    local Unit = Frame.unit
-
     -- HEALTH
     if (Frame.Health) then self:UpdateHealth(Frame, Unit) end
     if (Frame.HealthTextCur) then self:UpdateHealthTextCur(Frame, Unit) end
@@ -922,9 +917,7 @@ function UF:RefreshGroup(Frame, Unit)
     if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame, Unit) end
 
     -- AURAS
-    if (Frame.Buffs) then self:UpdateAuras(Frame, Unit, false) end
-    if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true) end
-    if (Frame.External) then self:UpdateAuras(Frame, Unit, false, true) end
+    if (Frame.Buffs or Frame.Debuffs or Frame.External or Frame.CrowdControl) then self:UpdateAuras(Frame, Unit) end
 
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame) end
@@ -934,7 +927,7 @@ function UF:RefreshGroup(Frame, Unit)
     if (Frame.RoleIcon) then self:UpdateRoleIcon(Frame) end
     if (Frame.PhaseIcon) then self:UpdatePhaseIcon(Frame) end
     if (Frame.ResurrectionIcon) then self:UpdateResurrectionIcon(Frame, Unit) end
-    if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame, Unit) end
+    if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame) end
 
     -- THREAT
     if (Frame.Threat) then self:UpdateThreatHighlightRaid(Frame, Unit) end
@@ -948,9 +941,7 @@ end
 
 function UF:FullRefresh()
     for Key, Frame in next, self.Frames do
-        if (Frame and Frame.unit) then
-            self:RefreshUnit(Key)
-        end
+        self:RefreshUnit(Key)
     end
 end
 
@@ -1026,7 +1017,7 @@ function UF:UnitName(Unit)
     end
 
     if (Frame.Name) then
-        self:UpdateName(Frame, Unit, Frame.IsParty and "Party" or Frame.IsRaid and "Raid")
+        self:UpdateName(Frame, Unit)
     end
 
     if (Frame.NameLevel) then
@@ -1041,16 +1032,8 @@ function UF:UnitAura(Unit)
         return
     end
 
-    if (Frame.Buffs) then
-        self:UpdateAuras(Frame, Unit, false)
-    end
-
-    if (Frame.Debuffs) then
-        self:UpdateAuras(Frame, Unit, true)
-    end
-
-    if (Frame.External) then
-        self:UpdateAuras(Frame, Unit, false, true)
+    if (Frame.Buffs or Frame.Debuffs or Frame.External or Frame.CrowdControl) then
+        self:UpdateAuras(Frame, Unit)
     end
 end
 
@@ -1118,10 +1101,10 @@ function UF:UnitLeaderIcon()
     end
 end
 
-function UF:UnitReadyCheckIcon()
+function UF:UnitReadyCheckIcon(Event)
     for Key, Frame in next, self.Frames do
         if (Frame.ReadyCheckIcon) then
-            self:UpdateReadyCheckIcon(Frame)
+            self:UpdateReadyCheckIcon(Frame, Event)
         end
     end
 end
@@ -1142,16 +1125,12 @@ function UF:UnitPhaseIcon()
     end
 end
 
-function UF:UnitSummonIcon(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit)) then
-        return
+function UF:UnitSummonIcon()
+    for Key, Frame in next, self.Frames do
+        if (Frame.SummonIcon) then
+            self:UpdateSummonIcon(Frame)
+        end
     end
-
-    if (Frame.SummonIcon) then
-        self:UpdateSummonIcon(Frame, Unit)
-    end    
 end
 
 function UF:UnitResurrectionIcon(Unit)
@@ -1224,7 +1203,7 @@ function UF:OnEvent(event, unit, ...)
     elseif (event == "PARTY_LEADER_CHANGED" or event == "GROUP_ROSTER_UPDATE") then
         UF:UnitLeaderIcon()
     elseif (event == "READY_CHECK" or event == "READY_CHECK_CONFIRM" or event == "READY_CHECK_FINISHED") then
-        UF:UnitReadyCheckIcon()
+        UF:UnitReadyCheckIcon(event)
     elseif (event == "PLAYER_ROLES_ASSIGNED") then
         UF:UnitRoleIcons()
     elseif (event == "UNIT_PHASE") then
@@ -1232,7 +1211,7 @@ function UF:OnEvent(event, unit, ...)
     elseif (event == "INCOMING_RESURRECT_CHANGED") then
         UF:UnitResurrectionIcon(unit)
     elseif (event == "INCOMING_SUMMON_CHANGED") then
-        UF:UnitSummonIcon(unit)
+        UF:UnitSummonIcon()
     end
 
     if (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then
@@ -1335,4 +1314,5 @@ function UF:Initialize()
     self:DisableBlizzard()
     self:CreateUF()
     self:RegisterEvents()
+    self:FullRefresh()
 end

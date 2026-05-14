@@ -10,7 +10,6 @@ local select = select
 
 UF.RangeSpells = {
     FRIENDLY = {
-
         HUNTER = {
             [34477] = "Misdirection", -- 40 yards
         },
@@ -76,7 +75,6 @@ UF.RangeSpells = {
     },
 
     ENEMY = {
-
         HUNTER = {
             [75] = "Auto Shot", -- 40 yards
         },
@@ -139,7 +137,6 @@ UF.RangeSpells = {
     },
 
     RESURRECT = {
-
         HUNTER = {},
 
         WARLOCK = {
@@ -184,7 +181,6 @@ UF.RangeSpells = {
     },
 
     PET = {
-
         HUNTER = {
             [136] = "Mend Pet", -- 45 yards
         },

@@ -92,8 +92,8 @@ DB.Global = {
 	CooldownManager = {
 		Enable = true,
 		-- Size Settings
-		BuffViewerButtonSize = { 40, 12 },
-		EssentialViewerButtonSize = { 32, 12 },
+		BuffViewerButtonSize = { 42, 12 },
+		EssentialViewerButtonSize = { 38, 12 },
 		UtilityViewerButtonSize = { 32, 12 },
 		ButtonSpacing = 2,
 		-- Points Settings
@@ -196,7 +196,7 @@ DB.Global = {
 		CastBarInterruptColor = { 0.67, 0, 0, 0.70 },
 		CastBarSucceededColor = { 0, 0.67, 0, 0.70 },
 		-- Portraits
-		Portraits = true,
+		Portraits = false,
 		-- Icons
 		RoleIcons = false,
 		-- Points Settings

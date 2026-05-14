@@ -13,15 +13,9 @@ local GetAuraDataByIndex = _G.C_UnitAuras.GetAuraDataByIndex
 local GetAuraApplicationDisplayCount = _G.C_UnitAuras.GetAuraApplicationDisplayCount
 local GetAuraDispelTypeColor = _G.C_UnitAuras.GetAuraDispelTypeColor
 
-function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
-    if (not Frame or not Unit or not UnitIsVisible(Unit)) then
+function UF:UpdateAuraContainer(Unit, Auras)
+    if (not Unit or not Auras) then
         return
-    end
-
-    local Auras = IsDebuff and Frame.Debuffs or IsExternal and Frame.External or Frame.Buffs
-
-    if (not Auras or not Auras.Filter) then 
-        return 
     end
 
     local Buttons = Auras.Buttons
@@ -29,44 +23,33 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
     local AuraMinCount = 2
     local AuraMaxCount = 99
     local IsFriendly = UnitCanCooperate("player", Unit)
-
-    for i = 1, #Buttons do
-        local Button = Buttons[i]
-
-        if (Button:IsShown()) then
-            Button:Hide()
-        end
-
-        Button.AuraInstanceID = nil
-        Button.Unit = nil
-    end
-
     local Active = 0
     local Index = 1
 
     while true do
         local AuraData = GetAuraDataByIndex(Unit, Index, Auras.Filter)
-        Index = Index + 1
 
         if (not AuraData or Active >= MaxAuras) then
             break
         end
 
-        local Button = Buttons[Active + 1]
+        Index = Index + 1
 
-        if (not Button) then
-            break
-        end
-
-        local AuraInstanceID = AuraData.auraInstanceID
         local Icon = AuraData.icon
-        local Duration = AuraData.duration
-        local ExpirationTime = AuraData.expirationTime
+        local AuraInstanceID = AuraData.auraInstanceID
         local AuraIsStealable = AuraData.isStealable
-        
+
         if (AuraInstanceID) then
-            if (Button.Icon) then
-                Button.Icon:SetTexture(Icon)
+            Active = Active + 1
+
+            local Button = Buttons[Active]
+
+            if (not Button) then
+                break
+            end
+
+            if (Icon) then
+                Button.Icon:SetTexture(AuraData.icon)
                 UI:KeepAspectRatio(Button, Button.Icon)
             end
 
@@ -85,7 +68,7 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
                 end
             end
 
-            if (IsDebuff) then
+            if (AuraData.isHarmful) then
                 local Color = GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
 
                 if (Color) then
@@ -103,22 +86,80 @@ function UF:UpdateAuras(Frame, Unit, IsDebuff, IsExternal)
                 end
             end
 
-            -- CACHE
+            -- Cache
             Button.Unit = Unit
             Button.AuraFilter = Auras.Filter
-            Button.AuraIndex = Index -1
+            Button.AuraIndex = Index - 1
             Button.AuraInstanceID = AuraInstanceID
 
-            Button:Show()
+            if (not Button:IsShown()) then
+                Button:Show()
+            end
+        end
+    end
 
-            -- CACHE
-            Active = Active + 1
+    for i = Active + 1, #Buttons do
+        local Button = Buttons[i]
+
+        if (Button:IsShown()) then
+            Button:Hide()
+        end
+
+        Button.AuraInstanceID = nil
+        Button.Unit = nil
+    end
+end
+
+function UF:HideAuraContainer(Container)
+    if (not Container or not Container.Buttons) then
+        return
+    end
+
+    for i = 1, #Container.Buttons do
+        local Button = Container.Buttons[i]
+
+        if (Button) then
+            Button:Hide()
+
+            Button.AuraInstanceID = nil
+            Button.Unit = nil
+            Button.AuraFilter = nil
+            Button.AuraIndex = nil
         end
     end
 end
 
+function UF:UpdateAuras(Frame, Unit)
+    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
+        if (Frame) then
+            UF:HideAuraContainer(Frame.Buffs)
+            UF:HideAuraContainer(Frame.Debuffs)
+            UF:HideAuraContainer(Frame.External)
+            UF:HideAuraContainer(Frame.CrowdControl)
+        end
+
+        return
+    end
+
+    if (Frame.Buffs and Frame.Buffs.Filter) then
+        UF:UpdateAuraContainer(Unit, Frame.Buffs)
+    end
+
+    if (Frame.Debuffs and Frame.Debuffs.Filter) then
+        UF:UpdateAuraContainer(Unit, Frame.Debuffs)
+    end
+
+    if (Frame.External and Frame.External.Filter) then
+        UF:UpdateAuraContainer(Unit, Frame.External)
+    end
+
+    if (Frame.CrowdControl and Frame.CrowdControl.Filter) then
+        UF:UpdateAuraContainer(Unit, Frame.CrowdControl)
+    end
+end
+
 function UF:OnEnter()
-    if _G.GameTooltip:IsForbidden() or not self:IsVisible() then
+    if (_G.GameTooltip:IsForbidden() or not self:IsVisible()) then
         return
     end
 
@@ -127,7 +168,7 @@ function UF:OnEnter()
 end
 
 function UF:OnLeave()
-    if _G.GameTooltip:IsForbidden() then
+    if (_G.GameTooltip:IsForbidden()) then
         return
     end
 
@@ -135,6 +176,10 @@ function UF:OnLeave()
 end
 
 function UF:CreateAuraButton(Frame, ExtraBorder, HideNumbers)
+    if (not Frame) then
+        return
+    end
+
     local Button = CreateFrame("Button", nil, Frame)
     Button:SetTemplate(ExtraBorder)
     Button:CreateShadow()
@@ -201,6 +246,10 @@ end
 --]]
 
 function UF:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, AnchorPoint, OffsetX, OffsetY, Direction, NumAuras, Filter, ExtraBorder)
+    if (not Frame) then
+        return
+    end
+
     local Container = CreateFrame("Frame", nil, Frame)
     Container.Width = ButtonWidth
     Container.Height = ButtonHeight
@@ -208,14 +257,13 @@ function UF:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, Ancho
     Container.Direction = Direction
     Container.NumAuras = NumAuras
     Container.Filter = Filter
-    Container.Buttons = {}
+    Container.Buttons = Container
 
+    local Previous
     local TotalWidth = (ButtonWidth * NumAuras) + (Spacing * (NumAuras - 1))
 
     Container:Size(TotalWidth, ButtonHeight)
     Container:Point(AnchorPoint, Frame, AnchorPoint, OffsetX or 0, OffsetY or 0)
-
-    local Previous
 
     for i = 1, NumAuras do
         local Button = UF:CreateAuraButton(Container, ExtraBorder)
@@ -236,7 +284,10 @@ function UF:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, Ancho
             end
         end
 
-        Container.Buttons[i] = Button
+        -- Direct indexing instead of Container.Buttons table
+        Container[i] = Button
+
+        -- Cache
         Previous = Button
     end
 
@@ -256,7 +307,7 @@ function UF:CreateDebuffsTarget(Frame)
         return
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame, 30, 18, 3, "TOPRIGHT", 0, 56, "LEFT", 7, "HARMFUL", true)
+    Frame.Debuffs = UF:CreateAuraContainer(Frame, 30, 18, 3, "TOPRIGHT", 0, 56, "LEFT", 7, "HARMFUL|PLAYER", true)
 end
 
 function UF:CreatePartyDebuffs(Frame)
@@ -264,7 +315,7 @@ function UF:CreatePartyDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame, 32, 12, 3, "TOPRIGHT", 248, -12, "RIGHT", 7, "HARMFUL|RAID", true)
+    Frame.Debuffs = UF:CreateAuraContainer(Frame, 32, 12, 3, "TOPRIGHT", 248, -12, "RIGHT", 7, "HARMFUL|RAID_PLAYER_DISPELLABLE", true)
 end
 
 function UF:CreatePartyBuffs(Frame)
@@ -288,7 +339,7 @@ function UF:CreateRaidDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 26, 12, 4, "TOPLEFT", 12, -18, "RIGHT", 2, "HARMFUL|RAID", true)
+    Frame.Debuffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 26, 12, 4, "TOPLEFT", 12, -18, "RIGHT", 2, "HARMFUL|RAID_PLAYER_DISPELLABLE", true)
 end
 
 function UF:CreateRaidBuffs(Frame)

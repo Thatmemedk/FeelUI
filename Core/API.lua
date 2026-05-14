@@ -257,11 +257,18 @@ end
 
 -- Load Commands
 function FeelUI:LoadCommands()
-	-- Reload UI
-	UI:AddCommand("RELOADUI", {"/rl"}, _G.ReloadUI)
+	-- Dev Console
+	UI:AddCommand("DEVCON", "/devcon", function()
+		if (_G.DeveloperConsole) then
+			_G.DeveloperConsole:Toggle()
+		end
+	end)
 
-	-- /Pull
-	UI:AddCommand("PULL", {"/pull", "/countdown"}, function(msg)
+	-- Reload UI
+	UI:AddCommand("RELOADUI", "/rl", _G.ReloadUI)
+
+	-- Pull
+	UI:AddCommand("PULL", "/pull", "/countdown", function(msg)
 		local Number = gsub(msg, "(%s*)(%d+)", "%2")
 		local ToNumber = tonumber(Number)
 
@@ -270,10 +277,10 @@ function FeelUI:LoadCommands()
 		end
 	end)
 
-	-- Dev Console
-	UI:AddCommand("DEVCON", "/devcon", function()
-		if (_G.DeveloperConsole) then
-			_G.DeveloperConsole:Toggle()
+	-- ReadyCheck
+	UI:AddCommand("READYCHECK", "/rc", "/readycheck", function(msg)
+		if (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") and not InCombatLockdown()) then
+			DoReadyCheck()
 		end
 	end)
 

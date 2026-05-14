@@ -13,15 +13,9 @@ local GetAuraDataByIndex = _G.C_UnitAuras.GetAuraDataByIndex
 local GetAuraApplicationDisplayCount = _G.C_UnitAuras.GetAuraApplicationDisplayCount
 local GetAuraDispelTypeColor = _G.C_UnitAuras.GetAuraDispelTypeColor
 
-function NP:UpdateAuras(Frame, Unit, IsDebuff, CrowdControl)
-    if (not Frame or not Unit or not UnitIsVisible(Unit)) then
+function NP:UpdateAuraContainer(Unit, Auras)
+    if (not Unit or not Auras) then
         return
-    end
-
-    local Auras = IsDebuff and Frame.Debuffs or CrowdControl and Frame.CrowdControl
-
-    if (not Auras or not Auras.Filter) then 
-        return 
     end
 
     local Buttons = Auras.Buttons
@@ -29,44 +23,33 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff, CrowdControl)
     local AuraMinCount = 2
     local AuraMaxCount = 99
     local IsFriendly = UnitCanCooperate("player", Unit)
-
-    for i = 1, #Buttons do
-        local Button = Buttons[i]
-
-        if (Button:IsShown()) then
-            Button:Hide()
-        end
-
-        Button.AuraInstanceID = nil
-        Button.Unit = nil
-    end
-
     local Active = 0
     local Index = 1
 
     while true do
         local AuraData = GetAuraDataByIndex(Unit, Index, Auras.Filter)
-        Index = Index + 1
 
         if (not AuraData or Active >= MaxAuras) then
             break
         end
 
-        local Button = Buttons[Active + 1]
+        Index = Index + 1
 
-        if (not Button) then
-            break
-        end
-
-        local AuraInstanceID = AuraData.auraInstanceID
         local Icon = AuraData.icon
-        local Duration = AuraData.duration
-        local ExpirationTime = AuraData.expirationTime
+        local AuraInstanceID = AuraData.auraInstanceID
         local AuraIsStealable = AuraData.isStealable
-        
+
         if (AuraInstanceID) then
-            if (Button.Icon) then
-                Button.Icon:SetTexture(Icon)
+            Active = Active + 1
+
+            local Button = Buttons[Active]
+
+            if (not Button) then
+                break
+            end
+
+            if (Icon) then
+                Button.Icon:SetTexture(AuraData.icon)
                 UI:KeepAspectRatio(Button, Button.Icon)
             end
 
@@ -85,7 +68,7 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff, CrowdControl)
                 end
             end
 
-            if (IsDebuff or CrowdControl) then
+            if (AuraData.isHarmful) then
                 local Color = GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
 
                 if (Color) then
@@ -103,22 +86,80 @@ function NP:UpdateAuras(Frame, Unit, IsDebuff, CrowdControl)
                 end
             end
 
-            -- CACHE
+            -- Cache
             Button.Unit = Unit
             Button.AuraFilter = Auras.Filter
             Button.AuraIndex = Index -1
             Button.AuraInstanceID = AuraInstanceID
 
-            Button:Show()
+            if (not Button:IsShown()) then
+                Button:Show()
+            end
+        end
+    end
 
-            -- CACHE
-            Active = Active + 1
+    for i = Active + 1, #Buttons do
+        local Button = Buttons[i]
+
+        if (Button:IsShown()) then
+            Button:Hide()
+        end
+
+        Button.AuraInstanceID = nil
+        Button.Unit = nil
+    end
+end
+
+function NP:HideAuraContainer(Container)
+    if (not Container or not Container.Buttons) then
+        return
+    end
+
+    for i = 1, #Container.Buttons do
+        local Button = Container.Buttons[i]
+
+        if (Button) then
+            Button:Hide()
+
+            Button.AuraInstanceID = nil
+            Button.Unit = nil
+            Button.AuraFilter = nil
+            Button.AuraIndex = nil
         end
     end
 end
 
+function NP:UpdateAuras(Frame, Unit)
+    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
+        if (Frame) then
+            NP:HideAuraContainer(Frame.Buffs)
+            NP:HideAuraContainer(Frame.Debuffs)
+            NP:HideAuraContainer(Frame.External)
+            NP:HideAuraContainer(Frame.CrowdControl)
+        end
+
+        return
+    end
+
+    if (Frame.Buffs and Frame.Buffs.Filter) then
+        NP:UpdateAuraContainer(Unit, Frame.Buffs)
+    end
+
+    if (Frame.Debuffs and Frame.Debuffs.Filter) then
+        NP:UpdateAuraContainer(Unit, Frame.Debuffs)
+    end
+
+    if (Frame.External and Frame.External.Filter) then
+        NP:UpdateAuraContainer(Unit, Frame.External)
+    end
+
+    if (Frame.CrowdControl and Frame.CrowdControl.Filter) then
+        NP:UpdateAuraContainer(Unit, Frame.CrowdControl)
+    end
+end
+
 function NP:OnEnter()
-    if _G.GameTooltip:IsForbidden() or not self:IsVisible() then
+    if (_G.GameTooltip:IsForbidden() or not self:IsVisible()) then
         return
     end
 
@@ -127,14 +168,18 @@ function NP:OnEnter()
 end
 
 function NP:OnLeave()
-    if _G.GameTooltip:IsForbidden() then
+    if (_G.GameTooltip:IsForbidden()) then
         return
     end
 
     _G.GameTooltip_Hide()
 end
 
-function NP:CreateAuraButton(Frame, ExtraBorder)
+function NP:CreateAuraButton(Frame, ExtraBorder, CooldownStyle)
+    if (not Frame) then
+        return
+    end
+    
     local Button = CreateFrame("Button", nil, Frame)
     Button:SetTemplate(ExtraBorder)
     Button:CreateShadow()
@@ -168,7 +213,11 @@ function NP:CreateAuraButton(Frame, ExtraBorder)
     Cooldown:SetReverse(true)
     Cooldown:Hide()
 
-    UI:RegisterCooldown(Cooldown, Overlay, 0, -8, false, true)
+    if (CooldownStyle == "BOTTOM") then
+        UI:RegisterCooldown(Cooldown, Overlay, 0, -6, true, true)
+    elseif (CooldownStyle == "CENTER") then
+        UI:RegisterCooldown(Cooldown, Overlay, 0, 0, false, true)
+    end
 
     -- Cache
     Button.Overlay = Overlay
@@ -200,7 +249,11 @@ end
 
 --]]
 
-function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, AnchorPoint, OffsetX, OffsetY, Direction, NumAuras, Filter, ExtraBorder)
+function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, AnchorPoint, OffsetX, OffsetY, Direction, NumAuras, Filter, ExtraBorder, CooldownStyle)
+    if (not Frame) then
+        return
+    end
+
     local Container = CreateFrame("Frame", nil, Frame)
     Container.Width = ButtonWidth
     Container.Height = ButtonHeight
@@ -208,17 +261,16 @@ function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, Ancho
     Container.Direction = Direction
     Container.NumAuras = NumAuras
     Container.Filter = Filter
-    Container.Buttons = {}
+    Container.Buttons = Container
 
+    local Previous
     local TotalWidth = (ButtonWidth * NumAuras) + (Spacing * (NumAuras - 1))
 
     Container:Size(TotalWidth, ButtonHeight)
     Container:Point(AnchorPoint, Frame, AnchorPoint, OffsetX or 0, OffsetY or 0)
 
-    local Previous
-
     for i = 1, NumAuras do
-        local Button = NP:CreateAuraButton(Container, ExtraBorder)
+        local Button = NP:CreateAuraButton(Container, ExtraBorder, CooldownStyle)
         Button:Size(ButtonWidth, ButtonHeight)
         Button:Hide()
 
@@ -236,7 +288,10 @@ function NP:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, Ancho
             end
         end
 
-        Container.Buttons[i] = Button
+        -- Direct indexing instead of Container.Buttons table
+        Container[i] = Button
+
+        -- Cache
         Previous = Button
     end
 
@@ -248,7 +303,7 @@ function NP:CreateDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = NP:CreateAuraContainer(Frame, 28, 12, 4, "TOPRIGHT", -2, 16, "RIGHT", 6, "HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY", true)
+    Frame.Debuffs = NP:CreateAuraContainer(Frame, 28, 12, 2, "TOPRIGHT", -2, 24, "RIGHT", 2, "HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY", true, "CENTER")
 end
 
 function NP:CreateCrowdControlDebuffs(Frame)
@@ -256,5 +311,5 @@ function NP:CreateCrowdControlDebuffs(Frame)
         return
     end
 
-    Frame.CrowdControl = NP:CreateAuraContainer(Frame, 36, 12, 4, "TOPLEFT", -240, 0, "LEFT", 6, "HARMFUL|CROWD_CONTROL", true)
+    Frame.CrowdControl = NP:CreateAuraContainer(Frame, 36, 12, 4, "TOPLEFT", -240, 0, "LEFT", 6, "HARMFUL|CROWD_CONTROL", true, "BOTTOM")
 end

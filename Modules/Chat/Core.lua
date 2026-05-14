@@ -23,7 +23,7 @@ local R, G, B = unpack(UI.GetClassColors)
 
 function CH:UpdateChannelNames(msg, r, g, b, ...)
     if (not msg or UI:IsSecretValue(msg)) then
-        return self.oldAddMsg(self, msg, r, g, b, ...)
+        return self:oldAddMsg(msg, r, g, b, ...)
     end
 
     if (DB.Global.Chat.TimeStamps) then
@@ -31,7 +31,7 @@ function CH:UpdateChannelNames(msg, r, g, b, ...)
         msg = TimeStamp .. msg
     end
 
-    return self.oldAddMsg(self, msg, r, g, b, ...)
+    return self:oldAddMsg(msg, r, g, b, ...)
 end
 
 function CH:StyleFrames(Frame)

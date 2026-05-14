@@ -41,5 +41,6 @@ function CDM:Initialize()
 
 	self:UpdateLayout()
 	self:UpdateIcons()
+	--self:UpdateTracker()
 	self:SetCVarOnLogin()
 end

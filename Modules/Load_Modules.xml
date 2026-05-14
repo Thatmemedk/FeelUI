@@ -33,6 +33,7 @@
 	<Script file="CooldownManager\Core.lua"/>
 	<Script file="CooldownManager\Icons.lua"/>
 	<Script file="CooldownManager\Layout.lua"/>
+	<Script file="CooldownManager\Tracker.lua"/>
 	<!-- DataBars -->
 	<Script file="DataBars\ClassPowerBar.lua"/>
 	<Script file="DataBars\ExperienceBar.lua"/>

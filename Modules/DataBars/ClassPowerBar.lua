@@ -223,7 +223,7 @@ function ClassPowerBar:Update()
                 end
             end
         elseif (IsMaelstrom) then
-            Segment:SetStatusBarColor(R * 1.5, G * 1.5, B * 1.5)
+            Segment:SetStatusBarColor(R, G, B)
             Backdrop:SetStatusBarColor(0, 0, 0, 0)
             
             if (i <= Min) then 

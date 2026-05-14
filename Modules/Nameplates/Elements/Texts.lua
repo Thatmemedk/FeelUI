@@ -14,7 +14,7 @@ function NP:CreateHealthText(Frame)
     end
 
     local HealthText = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
-    HealthText:Point("LEFT", Frame.Health, 4, 10)
+    HealthText:Point("LEFT", Frame.Health, 6, 10)
     HealthText:SetFontTemplate("Default", 14)
 
     Frame.HealthText = HealthText
@@ -27,7 +27,7 @@ function NP:CreateName(Frame)
 
     local Name = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
     Name:Width(125)
-    Name:Point("RIGHT", Frame.Health, -4, 10)
+    Name:Point("RIGHT", Frame.Health, -6, 10)
     Name:SetJustifyH("RIGHT")
     Name:SetJustifyV("MIDDLE")
     Name:SetWordWrap(false)

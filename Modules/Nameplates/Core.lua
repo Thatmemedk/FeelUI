@@ -237,7 +237,6 @@ function NP:UpdateGuild(Frame, Unit)
 
     local SameGuild = IsInGuild() and GetGuildInfo("player") == GuildName
     local ColorFormat = SameGuild and "|CFFFF66CC[%s]|r" or "|CFFFFFFFF[%s]|r"
-
     Frame.Guild:SetText(string.format(ColorFormat, GuildName))
 end
 
@@ -377,12 +376,8 @@ function NP:UnitAura(Unit)
         return
     end
 
-    if (Frame.Debuffs) then 
-        self:UpdateAuras(Frame, Unit, true) 
-    end
-
-    if (Frame.CrowdControl) then
-        self:UpdateAuras(Frame, Unit, false, true)
+    if (Frame.Buffs or Frame.Debuffs or Frame.External or Frame.CrowdControl) then 
+        self:UpdateAuras(Frame, Unit) 
     end
 end
 
@@ -533,10 +528,6 @@ function NP:NameplateRemoved(Unit)
 
     -- Reset Unit Cache
     self.Frames[Unit] = nil
-end
-
-local function IsNameplateUnit(unit)
-    return unit and unit:match("^nameplate%d+$")
 end
 
 function NP:OnEvent(event, unit, ...)
