@@ -40,8 +40,9 @@ function UF:CreatePanels(Frame)
     end
 
     local Panel = CreateFrame("Frame", nil, Frame)
-    Panel:SetFrameLevel(Frame:GetFrameLevel() - 1)
+    Panel:SetFrameLevel(Frame:GetFrameLevel() + 1)
     Panel:SetInside()
+    Panel:CreateBackdrop()
     Panel:CreateShadow()
     
     local InvisFrame = CreateFrame("Frame", nil, Frame)

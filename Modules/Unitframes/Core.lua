@@ -120,7 +120,7 @@ function UF:UpdateHealth(Frame, Unit)
                 local _, Class = UnitClass(Unit)
                 local Color = UI.Colors.Class[Class]
 
-                Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b)
+                Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
             else
                 local Reaction = UnitReaction(Unit, "player")
                 local Color = UI.Colors.Reaction[Reaction]
@@ -272,6 +272,24 @@ end
 --- UPDATE POWER
 
 function UF:UpdatePower(Frame, Unit)
+    if (not Frame or not Unit or not Frame.Power) then
+        return
+    end
+
+    local PowerType, PowerToken = UnitPowerType(Unit)
+    local Min, Max = UnitPower(Unit, PowerType), UnitPowerMax(Unit, PowerType)
+    local PowerColor = UI.Colors.Power[PowerToken]
+
+    Frame.Power:SetMinMaxValues(0, Max)
+    Frame.Power:SetValue(Min, UI.SmoothBars)
+
+    if (PowerColor) then
+        Frame.Power:SetStatusBarColor(unpack(PowerColor))
+        Frame.Power.Backdrop:SetStatusBarColor(PowerColor[1] * 0.5, PowerColor[2] * 0.5, PowerColor[3] * 0.5, 0.7)
+    end
+end
+
+function UF:UpdatePowerText(Frame, Unit)
     if (not Frame or not Unit or not Frame.PowerText) then
         return
     end
@@ -333,32 +351,50 @@ function UF:UpdateName(Frame, Unit, TypeFrame)
     end
 
     local Name = UnitName(Unit) or ""
-
-    if (TypeFrame == "Raid") then
-        Frame.Name:SetText(UI:UTF8Sub(Name, 8))
-    elseif (TypeFrame == "Party") then
-        Frame.Name:SetText(UI:UTF8Sub(Name, 12))
-    else
-        Frame.Name:SetText(Name)
-    end
+    local Text
+    local R, G, B
 
     if (DB.Global.UnitFrames.ClassColor) then
-        Frame.Name:SetTextColor(1, 1, 1)
+        R, G, B = 1, 1, 1
     else
         if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
             local _, Class = UnitClass(Unit)
             local Color = UI.Colors.Class[Class]
 
             if (Color) then
-                Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+                R, G, B = Color.r, Color.g, Color.b
             end
         else
             local Reaction = UnitReaction(Unit, "player") or 5
             local Color = UI.Colors.Reaction[Reaction]
 
-            Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+            if (Color) then
+                R, G, B = Color.r, Color.g, Color.b
+            end
         end
     end
+
+    if (TypeFrame == "Raid") then
+        if (not UnitIsConnected(Unit)) then
+            Text = PLAYER_OFFLINE
+            R, G, B = 0.35, 0.35, 0.35
+        elseif (UnitIsGhost(Unit)) then
+            Text = GHOST
+            R, G, B = 0.35, 0.35, 0.35
+        elseif (UnitIsDead(Unit)) then
+            Text = DEAD
+            R, G, B = 0.35, 0.35, 0.35
+        else
+            Text = UI:UTF8Sub(Name, 8)
+        end
+    elseif (TypeFrame == "Party") then
+        Text = UI:UTF8Sub(Name, 12)
+    else
+        Text = Name
+    end 
+
+    Frame.Name:SetText(Text)
+    Frame.Name:SetTextColor(R, G, B)
 end
 
 --- UPDATE NAME & LEVEL
@@ -428,6 +464,12 @@ function UF:UpdatePortrait(Frame, Unit)
             Frame.Portrait:SetPortraitZoom(1)
             Frame.Portrait:SetPosition(0, 0, 0)
             Frame.Portrait:SetUnit(Unit)
+        end
+    else
+        if (not UnitIsVisible(Unit) or not UnitIsConnected(Unit)) then
+            Frame.Portrait:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+        else
+            SetPortraitTexture(Frame.Portrait, Unit)
         end
     end
 end
@@ -865,7 +907,8 @@ function UF:RefreshUnit(Unit)
     if (Frame.HealthPrediction) then self:UpdateHealthPred(Frame, Unit) end
 
     -- POWER
-    if (Frame.PowerText) then self:UpdatePower(Frame, Unit) end
+    if (Frame.Power) then self:UpdatePower(Frame, Unit) end
+    if (Frame.PowerText) then self:UpdatePowerText(Frame, Unit) end
     if (Frame.AdditionalPower) then self:UpdateAdditionalPower(Frame) end
 
     -- NAME
@@ -910,7 +953,8 @@ function UF:RefreshGroup(Frame, Unit)
     if (Frame.HealthPrediction) then self:UpdateHealthPred(Frame, Unit) end
 
     -- POWER
-    if (Frame.PowerText) then self:UpdatePower(Frame, Unit) end
+    if (Frame.Power) then self:UpdatePower(Frame, Unit) end
+    if (Frame.PowerText) then self:UpdatePowerText(Frame, Unit) end
 
     -- NAME
     if (Frame.Name) then self:UpdateName(Frame, Unit, Frame.IsParty and "Party" or Frame.IsRaid and "Raid") end
@@ -1000,8 +1044,12 @@ function UF:UnitPower(Unit)
         return
     end
 
-    if (Frame.Power) then
-        self:UpdatePower(Frame, Unit)
+    if (Frame.Power) then 
+        self:UpdatePower(Frame, Unit) 
+    end
+
+    if (Frame.PowerText) then
+        self:UpdatePowerText(Frame, Unit)
     end
 
     if (Frame.AdditionalPower) then
@@ -1164,6 +1212,7 @@ function UF:OnEvent(event, unit, ...)
         UF:FullRefresh()
     elseif (event == "PLAYER_TARGET_CHANGED") then
         UF:RefreshUnit("target")
+        UF:RefreshUnit("targettarget")
         UF:UpdateTargetPortrait()
         UF:CheckUnitCasting("target")
         UF:UnitTargetChanged()

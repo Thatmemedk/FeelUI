@@ -84,11 +84,6 @@ function CH:StyleFrames(Frame)
 	if (ScrollBottom) then ScrollBottom:Kill() end
 	if (MinimizeButton) then MinimizeButton:Kill() end
 
-	if (ID ~= 2) then
-		Frame.oldAddMsg = Frame.AddMessage
-		Frame.AddMessage = CH.UpdateChannelNames
-	end
-
 	Frame.ChatIsSkinned = true
 end
 
@@ -152,6 +147,11 @@ function CH:SetupChat()
 		end
 
 		self.SetChatFramePosition(Frame)
+
+		if (i ~= 2) then
+			Frame.oldAddMsg = Frame.AddMessage
+			Frame.AddMessage = self.UpdateChannelNames
+		end
 	end
 end
 

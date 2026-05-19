@@ -101,13 +101,13 @@ end
 
 function VB:CreateCooldownIcon(Frame, Index, SpellID)
     local Icon = CreateFrame("Frame", nil, Frame)
-    Icon:Size(42, 12)
+    Icon:Size(38, 18)
     Icon:SetTemplate()
     Icon:CreateShadow()
     Icon:StyleButton()
     Icon:SetShadowOverlay()
 
-    local IconSize = 42
+    local IconSize = 38
     local TotalWidth = (IconSize * #self.CooldownSpells) + (self.Spacing * (#self.CooldownSpells - 1))
     local StartX = -(TotalWidth / 2) + (IconSize / 2)
 
@@ -133,7 +133,7 @@ function VB:CreateCooldownIcon(Frame, Index, SpellID)
 
     -- COUNT
     Icon.Text = InvisFrame:CreateFontString(nil, "OVERLAY")
-    Icon.Text:Point("TOPRIGHT", Icon, 2, 2)
+    Icon.Text:Point("CENTER", Icon, 0, 8)
     Icon.Text:SetFontTemplate("Default")
 
     Frame[Index] = Icon

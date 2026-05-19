@@ -42,10 +42,17 @@ function PowerBar:CreateBar(Name)
 	end
 
 	Bar:SetStatusBarTexture(Media.Global.Texture)
-	Bar:CreateBackdrop()
-	Bar:CreateShadow()
 	Bar:Hide()
 	
+    Bar.Backdrop = CreateFrame("StatusBar", nil, Bar)
+    Bar.Backdrop:SetFrameStrata(Bar:GetFrameStrata())
+    Bar.Backdrop:SetFrameLevel(Bar:GetFrameLevel() - 1)
+    Bar.Backdrop:Size(263, 8)
+    Bar.Backdrop:Point("CENTER", Bar, 0, 0)
+    Bar.Backdrop:SetStatusBarTexture(Media.Global.Texture)
+    Bar.Backdrop:SetTemplate()
+	Bar.Backdrop:CreateShadow()
+
 	Bar.InvisFrame = CreateFrame("Frame", nil, Bar)
 	Bar.InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
 	Bar.InvisFrame:SetInside()
@@ -110,6 +117,7 @@ function PowerBar:PowerUpdate()
 	-- Set Color
 	if (PowerColor) then
 		Bar:SetStatusBarColor(unpack(PowerColor))
+		Bar.Backdrop:SetStatusBarColor(PowerColor[1] * 0.5, PowerColor[2] * 0.5, PowerColor[3] * 0.5, 0.7)
 	end
 end
 
@@ -123,7 +131,7 @@ function PowerBar:StaggerUpdate()
     if (GetSpecialization == 1) then
     	Bar:Show()
     else
-       	return
+       	Bar:Hide()
     end
 
 	local Min, Max = UnitStagger("player"), UnitHealthMax("player")
@@ -139,10 +147,13 @@ function PowerBar:StaggerUpdate()
 	-- Set Colors
 	if (Percent >= STAGGER_RED_TRANSITION) then
 		Bar:SetStatusBarColor(1, 0.52, 0.52)
+		Bar.Backdrop:SetStatusBarColor(1 * 0.5, 0.52 * 0.5, 0.52 * 0.5, 0.7)
 	elseif (Percent > STAGGER_YELLOW_TRANSITION) then
 		Bar:SetStatusBarColor(1, 0.82, 0.52)
+		Bar.Backdrop:SetStatusBarColor(1 * 0.5, 0.82 * 0.5, 0.52 * 0.5, 0.7)
 	else
 		Bar:SetStatusBarColor(0.52, 1, 0.52)
+		Bar.Backdrop:SetStatusBarColor(0.52 * 0.5, 1 * 0.5, 0.52 * 0.5, 0.7)
 	end
 end
 
@@ -156,7 +167,7 @@ function PowerBar:SoulFragmentsUpdate()
     if (GetSpecialization == 3) then
     	Bar:Show()
     else
-    	return
+    	Bar:Hide()
     end
 
     local Aura = GetPlayerAuraBySpellID(1225789) or GetPlayerAuraBySpellID(1227702)
@@ -171,7 +182,8 @@ function PowerBar:SoulFragmentsUpdate()
     Bar.Text:SetText(Min)
 
     -- Set Colors
-    Bar:SetStatusBarColor(0.55, 0.25, 1 * 2)
+    Bar:SetStatusBarColor(0.55, 0.25, 1)
+    Bar.Backdrop:SetStatusBarColor(0.55 * 0.5, 0.25 * 0.5, 1 * 0.5, 0.5)
 end
 function PowerBar:OnEvent(event)
    	self:PowerUpdate()

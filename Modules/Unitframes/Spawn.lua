@@ -37,9 +37,17 @@ function UF:Spawn(Unit, Width, Height, Orientation)
     self.Frames[Unit] = Frame
 
     if (Unit == "player") then
-        UF:CreatePlayer(Frame, Height, Orientation)
+        if (DB.Global.UnitFrames.PowerBar) then
+            UF:CreatePlayer(Frame, 32, Orientation)
+        else
+            UF:CreatePlayer(Frame, Height, Orientation)
+        end
     elseif (Unit == "target") then
-        UF:CreateTarget(Frame, Height, Orientation)
+        if (DB.Global.UnitFrames.PowerBar) then
+            UF:CreateTarget(Frame, 32, Orientation)
+        else
+            UF:CreateTarget(Frame, Height, Orientation)
+        end
     elseif (Unit == "targettarget") then
         UF:CreateTargetTarget(Frame, Height, Orientation)
     elseif (Unit == "pet") then

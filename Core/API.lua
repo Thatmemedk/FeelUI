@@ -303,7 +303,7 @@ function FeelUI:LoadCommands()
 end
 
 -- Keep Aspect Ratio
-function UI:KeepAspectRatio(Button, Icon)
+function UI:KeepAspectRatio(Button, Icon, Zoom)
 	if (not Button or not Icon) then
 		return
 	end
@@ -311,19 +311,33 @@ function UI:KeepAspectRatio(Button, Icon)
 	local BaseLeft, BaseRight, BaseTop, BaseBottom = unpack(UI.TexCoords)
 	local Width, Height = Button:GetWidth(), Button:GetHeight()
 	local Aspect = Width / Height
+	local Left, Right = BaseLeft, BaseRight
+	local Top, Bottom = BaseTop, BaseBottom
 	local Trim = 0
 
 	if (Aspect > 1) then
 		Trim = (1 - (1 / Aspect)) * 0.5
-		BaseTop = BaseTop + Trim
-		BaseBottom = BaseBottom - Trim
+		Top = Top + Trim
+		Bottom = Bottom - Trim
 	elseif (Aspect < 1) then
 		Trim = (1 - Aspect) * 0.5
-		BaseLeft = BaseLeft + Trim
-		BaseRight = BaseRight - Trim
+		Left = Left + Trim
+		Right = Right - Trim
 	end
 
-	Icon:SetTexCoord(BaseLeft, BaseRight, BaseTop, BaseBottom)
+	Zoom = Zoom or 0.20
+
+	if (Zoom > 0) then
+		local HorizontalZoom = (Right - Left) * Zoom * 0.5
+		local VerticalZoom = (Bottom - Top) * Zoom * 0.5
+
+		Left = Left + HorizontalZoom
+		Right = Right - HorizontalZoom
+		Top = Top + VerticalZoom
+		Bottom = Bottom - VerticalZoom
+	end
+
+	Icon:SetTexCoord(Left, Right, Top, Bottom)
 end
 
 -- Pulse Function

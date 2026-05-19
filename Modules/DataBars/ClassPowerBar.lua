@@ -164,7 +164,7 @@ function ClassPowerBar:Update()
         if (not Backdrop) then
             Backdrop = CreateFrame("StatusBar", nil, self.Bar)
             Backdrop:SetStatusBarTexture(Media.Global.Texture)
-            Backdrop:CreateBackdrop()
+            Backdrop:SetTemplate()
             Backdrop:CreateShadow()
 
             self.Backdrops[i] = Backdrop
@@ -198,7 +198,7 @@ function ClassPowerBar:Update()
 
         if (IsRuneBar) then
             Segment:SetStatusBarColor(R, G, B)
-            Backdrop:SetStatusBarColor(0, 0, 0, 0)
+            Backdrop:SetStatusBarColor(R * 0.5, G * 0.5, B * 0.5, 0.7)
 
             local Start, Duration, RuneIsReady = GetRuneCooldown(i)
 
@@ -215,11 +215,12 @@ function ClassPowerBar:Update()
                     UI:UIFrameFadeIn(Segment, 0.25, Segment:GetAlpha(), 1)
                 else
                     Segment:SetStatusBarColor(0.66, 0.66, 0.66)
+                    Backdrop:SetStatusBarColor(0.66 * 0.5, 0.66 * 0.5, 0.66 * 0.5, 0.7)
 
                     Segment:SetValue(Elapsed, UI.SmoothBars)
                     Segment:SetScript("OnUpdate", self.OnUpdate)
 
-                    UI:UIFrameFadeOut(Segment, 0.25, Segment:GetAlpha(), 0.5)
+                    UI:UIFrameFadeOut(Segment, 0.25, Segment:GetAlpha(), 0.7)
                 end
             end
         elseif (IsMaelstrom) then
@@ -234,30 +235,30 @@ function ClassPowerBar:Update()
         else
             if (i == 1) then
                 Segment:SetStatusBarColor(R1, G1, B1)
-                Backdrop:SetStatusBarColor(R1 * 0.5, G1 * 0.5, B1 * 0.5, 0.5)
+                Backdrop:SetStatusBarColor(R1 * 0.5, G1 * 0.5, B1 * 0.5, 0.7)
             elseif (i == 2) then
                 Segment:SetStatusBarColor(R2, G2, B2)
-                Backdrop:SetStatusBarColor(R2 * 0.5, G2 * 0.5, B2 * 0.5, 0.5)
+                Backdrop:SetStatusBarColor(R2 * 0.5, G2 * 0.5, B2 * 0.5, 0.7)
             elseif (i == 3) then
                 Segment:SetStatusBarColor(R3, G3, B3)
-                Backdrop:SetStatusBarColor(R3 * 0.5, G3 * 0.5, B3 * 0.5, 0.5)
+                Backdrop:SetStatusBarColor(R3 * 0.5, G3 * 0.5, B3 * 0.5, 0.7)
             elseif (i == 4) then
                 Segment:SetStatusBarColor(R4, G4, B4)
-                Backdrop:SetStatusBarColor(R4 * 0.5, G4 * 0.5, B4 * 0.5, 0.5)
+                Backdrop:SetStatusBarColor(R4 * 0.5, G4 * 0.5, B4 * 0.5, 0.7)
             elseif (i == 5) then
                 Segment:SetStatusBarColor(R5, G5, B5)
-                Backdrop:SetStatusBarColor(R5 * 0.5, G5 * 0.5, B5 * 0.5, 0.5)
+                Backdrop:SetStatusBarColor(R5 * 0.5, G5 * 0.5, B5 * 0.5, 0.7)
             elseif (i == 6 or i == 7) then
                 Segment:SetStatusBarColor(R6, G6, B6)
-                Backdrop:SetStatusBarColor(R6 * 0.5, G6 * 0.5, B6 * 0.5, 0.5)
+                Backdrop:SetStatusBarColor(R6 * 0.5, G6 * 0.5, B6 * 0.5, 0.7)
             end
 
             if (Class == "MAGE" or Class == "WARLOCK" or Class == "MONK" or Class == "EVOKER") then
                 Segment:SetStatusBarColor(R, G, B)
-                Backdrop:SetStatusBarColor(R * 0.5, G * 0.5, B * 0.5, 0.5)
+                Backdrop:SetStatusBarColor(R * 0.5, G * 0.5, B * 0.5, 0.7)
             elseif (Class == "PALADIN") then
                 Segment:SetStatusBarColor(1, 0.82, 0)
-                Backdrop:SetStatusBarColor(1 * 0.5, 0.82 * 0.5, 0 * 0.5, 0.5)
+                Backdrop:SetStatusBarColor(1 * 0.5, 0.82 * 0.5, 0 * 0.5, 0.7)
             end
 
             if (Class == "WARLOCK" and Spec == 3) then

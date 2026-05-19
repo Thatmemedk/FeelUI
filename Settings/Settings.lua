@@ -92,9 +92,9 @@ DB.Global = {
 	CooldownManager = {
 		Enable = true,
 		-- Size Settings
-		BuffViewerButtonSize = { 42, 12 },
-		EssentialViewerButtonSize = { 38, 12 },
-		UtilityViewerButtonSize = { 32, 12 },
+		BuffViewerButtonSize = { 38, 18 },
+		EssentialViewerButtonSize = { 32, 18 },
+		UtilityViewerButtonSize = { 32, 18 },
 		ButtonSpacing = 2,
 		-- Points Settings
 		BuffViewerPoint = { "CENTER", _G.UIParent, 0, -170 },
@@ -152,7 +152,7 @@ DB.Global = {
 	MinimapButtonBar = {
 		Enable = true,
 		-- Size Settings
-		ButtonSize = { 26, 16 },
+		ButtonSize = { 26, 12 },
 		ButtonSpacing = 2,
 		ButtonsPerRow = 6,
 	},
@@ -189,6 +189,7 @@ DB.Global = {
 		-- Health / Power
 		HealthBarColor = { 0.1, 0.1, 0.1, 0.7 },
 		ClassColor = false,
+		PowerBar = false,
 		AdditionalPower = false,
 		-- Castbar
 		CastBarDetached = true,

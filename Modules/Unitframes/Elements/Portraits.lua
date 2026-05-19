@@ -17,10 +17,10 @@ function UF:CreatePortrait(Frame)
         return
     end
 
-    local Portrait = CreateFrame("PlayerModel", nil, Frame)
+    local Portrait = CreateFrame("PlayerModel", nil, Frame.Health)
     Portrait:SetFrameStrata(Frame:GetFrameStrata())
     Portrait:SetFrameLevel(Frame:GetFrameLevel() + 1)
-    Portrait:SetInside(Frame, 1, 1)
+    Portrait:SetInside(Frame.Health, 0, 0)
     Portrait:SetAlpha(0.20)
 
     Frame.Portrait = Portrait
