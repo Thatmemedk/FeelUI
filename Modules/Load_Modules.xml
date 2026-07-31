@@ -23,7 +23,6 @@
 	<Script file="Auras\Auras.lua"/>
 	<!-- Chat -->
 	<Script file="Chat\Core.lua"/>
-	<Script file="Chat\ChatFilter.lua"/>
 	<Script file="Chat\CopyChat.lua"/>
 	<Script file="Chat\CopyURL.lua"/>
 	<Script file="Chat\CombatLog.lua"/>

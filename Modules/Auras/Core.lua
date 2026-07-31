@@ -10,75 +10,17 @@ function UI:BuildRuleDurationFormatter()
         return nil
     end
 
-    local Down = Enum.NumericRuleFormatRounding.Down
     local Formatter = C_StringUtil.CreateNumericRuleFormatter()
+    local Down = Enum.NumericRuleFormatRounding.Down
 
-    local Success = pcall(Formatter.SetBreakpoints, Formatter, {
-        -- Below 10 seconds: decimal precision
-        {
-            threshold = 0,
-            format = "%.1f",
-            step = 0.1,
-            rounding = Down,
-        },
-
-        -- 10 - 59 seconds
-        {
-            threshold = 10,
-            format = "%d",
-            step = 1,
-            rounding = Down,
-        },
-
-        -- 1:00 - 1:59
-        {
-            threshold = 60,
-            format = "%d:%02d",
-            step = 1,
-            rounding = Down,
-            components = {
-                { div = 60 },
-                { div = 1 },
-            },
-        },
-
-        -- 2 minutes - 59 minutes
-        {
-            threshold = 120,
-            format = "%dm",
-            step = 1,
-            rounding = Down,
-            components = {
-                { div = 60 },
-            },
-        },
-
-        -- Hours
-        {
-            threshold = 3600,
-            format = "%dh",
-            step = 1,
-            rounding = Down,
-            components = {
-                { div = 3600 },
-            },
-        },
-
-        -- Days
-        {
-            threshold = 86400,
-            format = "%dd",
-            step = 1,
-            rounding = Down,
-            components = {
-                { div = 86400 },
-            },
-        },
+    Formatter:SetBreakpoints({
+        { threshold = 0, format = "%.1f", step = 0.1, rounding = Down },
+        { threshold = 10, format = "%d", step = 1, rounding = Down },
+        { threshold = 60, format = "%d:%02d", step = 1, rounding = Down, components = { { div = 60 }, { div = 1 } } },
+        { threshold = 120, format = "%dm", step = 1, rounding = Down, components = { { div = 60 } } },
+        { threshold = 3600, format = "%dh", step = 1, rounding = Down, components = { { div = 3600 } } },
+        { threshold = 86400, format = "%dd", step = 1, rounding = Down, components = { { div = 86400 } } },
     })
-
-    if (not Success) then
-        return nil
-    end
 
     return Formatter
 end
@@ -98,6 +40,7 @@ function UI:InitializeAuraButton(Button, Options)
     Button:StyleButton()
     Button:SetShadowOverlay()
 
+    -- Icon
     local Icon = Button:CreateTexture(nil, "ARTWORK")
     Icon:SetInside()
 
@@ -138,7 +81,7 @@ function UI:InitializeAuraButton(Button, Options)
         local Time = Overlay:CreateFontString(nil, "OVERLAY")
         Time:Point("CENTER", Options.TimeX or 0, Options.TimeY or -8)
         Time:SetFontTemplate("Default")
-
+        
         Button:SetDurationText(Time, {
 			--binding = nil,
 			textFormatter = UI:GetDurationFormatter(),
@@ -220,6 +163,10 @@ function UI:InitializeAuraButton(Button, Options)
         Button:AddDispelTypeTexture(BorderBottom, BorderStyle)
         Button:AddDispelTypeTexture(BorderLeft, BorderStyle)
         Button:AddDispelTypeTexture(BorderRight, BorderStyle)
+
+        Button.Shadow:SetOutside(Button, 3, 3)
+    elseif (Options.Border == false) then
+        Button.Shadow:SetOutside(Button, 2, 2)
     end
 
     -- Debuff Icon
@@ -234,6 +181,8 @@ function UI:InitializeAuraButton(Button, Options)
             showWhenHelpful = false,
         })
     end
+
+    Button:SetCancelAuraButtons("RightButtonUp, RightButtonDown")
 end
 
 function UI:AddAura(Container, Options)
@@ -242,11 +191,11 @@ function UI:AddAura(Container, Options)
     end
 
     if (Options.MaxAuras == 1) then
-        Container:AddAuraSlot("Aura", Options.Filter, {
+        Container:AddAuraSlot(Container:GetDebugName(), Options.Filter, {
             initializeFrame = InitializeAura,
         })
     else
-        Container:AddAuraGroup("Aura", Options.Filter, {
+        Container:AddAuraGroup(Container:GetDebugName(), Options.Filter, {
             maxFrameCount = Options.MaxAuras,
             initializeFrame = InitializeAura,
 
@@ -266,7 +215,10 @@ end
 function UI:CreateAuraContainer(Frame, Options)
     local Container = CreateFrame("AuraContainer", nil, Frame, "CustomAuraContainerTemplate")
     Container:Point(Options.Anchor, Frame, Options.RelativeAnchor or Options.Anchor, Options.X, Options.Y)
-    Container:SetFlowLayoutAnchorPoint("TOPLEFT")
+    Container:SetFlowLayoutAnchorPoint(Options.SetFlowLayoutAnchorPoint or "TOPLEFT")
+    Container:SetFlowLayoutAxis(AnchorUtil.FlowLayoutAxis.Horizontal)
+    Container:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Right, AnchorUtil.FlowDirection.Down)
+    --Container:SetFlowLayoutMaximumLineSize(255)
     Container:SetUnit(Frame.unit or Options.Unit)
 
     if (Options.Direction == "LEFT") then

@@ -60,6 +60,7 @@ function Auras:CreatePlayerAuras()
         Filter = "HARMFUL",
         MaxAuras = 12,
         Unit = "player",
+        TimeY = -10,
     })
 end
 

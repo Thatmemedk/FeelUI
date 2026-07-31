@@ -1,91 +1,96 @@
 local UI, DB, Media, Language = select(2, ...):Call()
 
 -- Lib Globals
-local _G = _G
-local unpack = unpack
 local select = select
+local unpack = unpack
+local next = next
 
 -- Locals
-UI.FadeUpdater = CreateFrame("Frame")
-UI.ActiveFades = {}
-UI.TickDelay = 0
+UI.FadeFrames = {}
+UI.FadeManager = {}
+UI.FadeManager.Frame = CreateFrame("Frame")
+UI.FadeManager.Delay = 0
 
-function UI:EaseInOutCubic(Time)
-    if (Time < 0.5) then
-        return 4 * Time * Time * Time
-    else
-        local AdjustedTime = (2 * Time) - 2
-        return 0.5 * AdjustedTime * AdjustedTime * AdjustedTime + 1
-    end
-end
+function UI:UIFrameFadeOnUpdate(Elapsed)
+    UI.FadeManager.Timer = (UI.FadeManager.Timer or 0) + Elapsed
 
-function UI:FadeOnUpdate(Elapsed)
-    UI.FadeUpdater.Timer = (UI.FadeUpdater.Timer or 0) + Elapsed
+    if (UI.FadeManager.Timer > UI.FadeManager.Delay) then
+        UI.FadeManager.Timer = 0
 
-    if (UI.FadeUpdater.Timer > UI.TickDelay) then
-        UI.FadeUpdater.Timer = 0
-
-        for Frame, Data in next, UI.ActiveFades do
+        for Frame, Info in next, UI.FadeFrames do
             if (Frame:IsVisible()) then
-                Data.FadeTimer = (Data.FadeTimer or 0) + (Elapsed + UI.TickDelay)
+                Info.FadeTimer = (Info.FadeTimer or 0) + (Elapsed + UI.FadeManager.Delay)
             else
-                Data.FadeTimer = (Data.TimeToFade or 0.3) + 1
+                Info.FadeTimer = Info.TimeToFade + 1
             end
 
-            local Progress = math.min((Data.FadeTimer or 0) / (Data.TimeToFade or 0.3), 1)
-            local Ease = UI:EaseInOutCubic(Progress)
-
-            if (Progress < 1) then
-                if (Data.Mode == "IN") then
-                    Frame:SetAlpha(Data.StartAlpha + Data.DiffAlpha * Ease)
+            if (Info.FadeTimer < Info.TimeToFade) then
+                if (Info.Mode == "IN") then
+                    Frame:SetAlpha((Info.FadeTimer / Info.TimeToFade) * Info.DiffAlpha + Info.StartAlpha)
                 else
-                    Frame:SetAlpha(Data.EndAlpha + Data.DiffAlpha * (1 - Ease))
+                    Frame:SetAlpha(((Info.TimeToFade - Info.FadeTimer) / Info.TimeToFade) * Info.DiffAlpha + Info.EndAlpha)
                 end
             else
-                Frame:SetAlpha(Data.EndAlpha)
-                UI:UIFrameFadeRemove(Frame)
+                Frame:SetAlpha(Info.EndAlpha)
+
+                if (Info.FadeHoldTime and Info.FadeHoldTime > 0) then
+                    Info.FadeHoldTime = Info.FadeHoldTime - Elapsed
+                else
+                    UI:UIFrameFadeRemoveFrame(Frame)
+
+                    if (Info.FinishedFunc) then
+                        if (Info.FinishedArgs) then
+                            Info.FinishedFunc(unpack(Info.FinishedArgs))
+                        else
+                            Info.FinishedFunc(
+                                Info.FinishedArg1,
+                                Info.FinishedArg2,
+                                Info.FinishedArg3,
+                                Info.FinishedArg4,
+                                Info.FinishedArg5
+                            )
+                        end
+
+                        if (not Info.FinishedFuncKeep) then
+                            Info.FinishedFunc = nil
+                        end
+                    end
+                end
             end
         end
 
-        if (not next(UI.ActiveFades)) then
-            UI.FadeUpdater:SetScript("OnUpdate", nil)
+        if (not next(UI.FadeFrames)) then
+            UI.FadeManager.Frame:SetScript("OnUpdate", nil)
         end
     end
 end
 
-function UI:UIFrameFade(Frame, Data)
+function UI:UIFrameFade(Frame, Info)
     if (not Frame or Frame:IsForbidden()) then
         return
     end
 
-    Frame.Fader = Data
+    Frame.FadeInfo = Info
+    Info.Mode = Info.Mode or "IN"
 
-    if (not Data.Mode) then
-        Data.Mode = "IN"
-    end
-
-    if (Data.Mode == "IN") then
-        Data.StartAlpha = (Data.StartAlpha == nil and 0 or Data.StartAlpha)
-        Data.EndAlpha = (Data.EndAlpha == nil and 1 or Data.EndAlpha)
-        Data.DiffAlpha = (Data.DiffAlpha == nil and (Data.EndAlpha - Data.StartAlpha) or Data.DiffAlpha)
+    if (Info.Mode == "IN") then
+        Info.StartAlpha = Info.StartAlpha or 0
+        Info.EndAlpha = Info.EndAlpha or 1
+        Info.DiffAlpha = Info.DiffAlpha or Info.EndAlpha - Info.StartAlpha
     else
-        Data.StartAlpha = (Data.StartAlpha == nil and 1 or Data.StartAlpha)
-        Data.EndAlpha = (Data.EndAlpha == nil and 0 or Data.EndAlpha)
-        Data.DiffAlpha = (Data.DiffAlpha == nil and (Data.StartAlpha - Data.EndAlpha) or Data.DiffAlpha)
+        Info.StartAlpha = Info.StartAlpha or 1
+        Info.EndAlpha = Info.EndAlpha or 0
+        Info.DiffAlpha = Info.DiffAlpha or Info.StartAlpha - Info.EndAlpha
     end
 
-    Frame:SetAlpha(Data.StartAlpha)
+    Frame:SetAlpha(Info.StartAlpha)
 
     if (not Frame:IsProtected()) then
         Frame:Show()
     end
 
-    if (not UI.ActiveFades[Frame]) then
-        UI.ActiveFades[Frame] = Data
-        UI.FadeUpdater:SetScript("OnUpdate", UI.FadeOnUpdate)
-    else
-        UI.ActiveFades[Frame] = Data
-    end
+    UI.FadeFrames[Frame] = Info
+    UI.FadeManager.Frame:SetScript("OnUpdate", UI.UIFrameFadeOnUpdate)
 end
 
 function UI:UIFrameFadeIn(Frame, TimeToFade, StartAlpha, EndAlpha)
@@ -93,19 +98,16 @@ function UI:UIFrameFadeIn(Frame, TimeToFade, StartAlpha, EndAlpha)
         return
     end
 
-    if (Frame.Fader) then
-        Frame.Fader.FadeTimer = nil
-    else
-        Frame.Fader = {}
-    end
+    Frame.FadeObject = Frame.FadeObject or {}
+    Frame.FadeObject.FadeTimer = nil
 
-    Frame.Fader.Mode = "IN"
-    Frame.Fader.TimeToFade = TimeToFade
-    Frame.Fader.StartAlpha = StartAlpha
-    Frame.Fader.EndAlpha = EndAlpha
-    Frame.Fader.DiffAlpha = EndAlpha - StartAlpha
+    Frame.FadeObject.Mode = "IN"
+    Frame.FadeObject.TimeToFade = TimeToFade
+    Frame.FadeObject.StartAlpha = StartAlpha
+    Frame.FadeObject.EndAlpha = EndAlpha
+    Frame.FadeObject.DiffAlpha = EndAlpha - StartAlpha
 
-    UI:UIFrameFade(Frame, Frame.Fader)
+    UI:UIFrameFade(Frame, Frame.FadeObject)
 end
 
 function UI:UIFrameFadeOut(Frame, TimeToFade, StartAlpha, EndAlpha)
@@ -113,27 +115,24 @@ function UI:UIFrameFadeOut(Frame, TimeToFade, StartAlpha, EndAlpha)
         return
     end
 
-    if (Frame.Fader) then
-        Frame.Fader.FadeTimer = nil
-    else
-        Frame.Fader = {}
-    end
+    Frame.FadeObject = Frame.FadeObject or {}
+    Frame.FadeObject.FadeTimer = nil
 
-    Frame.Fader.Mode = "OUT"
-    Frame.Fader.TimeToFade = TimeToFade
-    Frame.Fader.StartAlpha = StartAlpha
-    Frame.Fader.EndAlpha = EndAlpha
-    Frame.Fader.DiffAlpha = StartAlpha - EndAlpha
+    Frame.FadeObject.Mode = "OUT"
+    Frame.FadeObject.TimeToFade = TimeToFade
+    Frame.FadeObject.StartAlpha = StartAlpha
+    Frame.FadeObject.EndAlpha = EndAlpha
+    Frame.FadeObject.DiffAlpha = StartAlpha - EndAlpha
 
-    UI:UIFrameFade(Frame, Frame.Fader)
+    UI:UIFrameFade(Frame, Frame.FadeObject)
 end
 
-function UI:UIFrameFadeRemove(Frame)
-    if (Frame and UI.ActiveFades[Frame]) then
-        if (Frame.Fader) then
-            Frame.Fader.FadeTimer = nil
+function UI:UIFrameFadeRemoveFrame(Frame)
+    if (Frame and UI.FadeFrames[Frame]) then
+        if (Frame.FadeObject) then
+            Frame.FadeObject.FadeTimer = nil
         end
 
-        UI.ActiveFades[Frame] = nil
+        UI.FadeFrames[Frame] = nil
     end
 end

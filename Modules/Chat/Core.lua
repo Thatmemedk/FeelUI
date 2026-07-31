@@ -156,5 +156,4 @@ function CH:Initialize()
 	self:StyleCombatLog()
 	self:EnableCopyURL()
 	self:CreateChatCopy()
-	self:AddChatFilter()
 end

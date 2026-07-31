@@ -736,8 +736,6 @@ function UF:UpdateThreatHighlightRaid(Frame, Unit)
     end
 end
 
--- TARGET HIGHLIGHT
-
 function UF:UpdateTargetIndicator(Frame, Unit)
     local IsTarget = UnitIsUnit("target", Unit)
     Frame.HighlightTarget:SetAlphaFromBoolean(IsTarget, 0.20, 0)
@@ -902,6 +900,9 @@ function UF:RefreshUnit(Unit)
     if (Frame.Name) then self:UpdateName(Frame, Unit) end
     if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame, Unit) end
 
+    -- AURAS
+    --if (Frame.Buffs or Frame.Debuffs or Frame.External or Frame.CrowdControl) then self:UpdateAuras(Frame, Unit) end
+
     -- ICONS
     if (Frame.CombatIcon) then self:UpdateCombatIcon(Frame) end
     if (Frame.RestingIcon) then self:UpdateRestingIcon(Frame) end
@@ -943,6 +944,9 @@ function UF:RefreshGroup(Frame, Unit)
     -- NAME
     if (Frame.Name) then self:UpdateName(Frame, Unit, Frame.IsParty and "Party" or Frame.IsRaid and "Raid") end
     if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame, Unit) end
+
+    -- AURAS
+    --if (Frame.Buffs or Frame.Debuffs or Frame.External or Frame.CrowdControl) then self:UpdateAuras(Frame, Unit) end
 
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame) end
@@ -1052,6 +1056,18 @@ function UF:UnitName(Unit)
 
     if (Frame.NameLevel) then
         self:UpdateTargetNameLevel(Frame, Unit)
+    end
+end
+
+function UF:UnitAura(Unit)
+    local Frame = self.Frames[Unit]
+
+    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
+        return
+    end
+
+    if (Frame.Buffs or Frame.Debuffs or Frame.External or Frame.CrowdControl) then
+        self:UpdateAuras(Frame, Unit)
     end
 end
 
@@ -1211,6 +1227,8 @@ function UF:OnEvent(event, unit, ...)
         end
     end
 
+    --if (event == "UNIT_AURA") then
+        --UF:UnitAura(unit)
     if (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
         UF:UnitHealth(unit)
         UF:UnitStatusIcons(unit)
@@ -1290,6 +1308,8 @@ function UF:RegisterEvents()
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE")
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
+    -- BUFFS / DEBUFFS
+    --SecureEventFrame:RegisterEvent("UNIT_AURA")
     -- HEALTH
     SecureEventFrame:RegisterEvent("UNIT_HEALTH")
     SecureEventFrame:RegisterEvent("UNIT_MAXHEALTH")
