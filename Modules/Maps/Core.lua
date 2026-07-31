@@ -14,12 +14,10 @@ local MapsCluster = _G.MinimapCluster
 local MinimapBackdrop = _G.MinimapBackdrop
 local QueueStatusButton = _G.QueueStatusButton
 local MapsInstanceDifficulty = _G.MinimapCluster.InstanceDifficulty
-local GameTimeFrame = _G.GameTimeFrame
 local MinimapZoneText = _G.MinimapZoneText
 local MinimapZoneTextButton = _G.MinimapZoneTextButton
 local MapsZoomIn = _G.Minimap.ZoomIn
 local MapsZoomOut = _G.Minimap.ZoomOut
-local MinimapNorthTag = _G.MinimapNorthTag
 local TimeManagerClockButton = _G.TimeManagerClockButton
 local ExpansionMinimapButton = _G.ExpansionLandingPageMinimapButton
 
@@ -79,30 +77,50 @@ end
 
 function Maps:Disable()
 	local HiddenFrames = {
-		"MinimapBorder",
-		"MinimapBorderTop",
-		"MinimapNorthTag",
-		"MiniMapWorldMapButton",
-		"MinimapBackdrop",
+		"MinimapCompassTexture",
+		"TimeManagerClockButton",
 		"TimeManagerClockTicker",
 		"AddonCompartmentFrame",
+		"MinimapZoneText",
+		"GameTimeFrame",
 	}
-
-	local DisableFrames = {
-        GameTimeFrame,
-        MinimapZoneText,
-        MapsCluster and MapsCluster.BorderTop,
-        MapsZoomIn,
-        MapsZoomOut,
-        ExpansionMinimapButton,
-        TimeManagerClockButton,
-    }
 
     local DisableBG = {
         MapsInstanceDifficulty.Default,
         MapsInstanceDifficulty.ChallengeMode,
         MapsInstanceDifficulty.Guild,
     }
+
+	if (MapsZoomIn) then
+		MapsZoomIn:Kill()
+	end
+
+ 	if (MapsZoomOut) then
+ 		MapsZoomOut:Kill()
+ 	end
+
+    if (MinimapZoneTextButton) then
+        MinimapZoneTextButton:EnableMouse(false)
+    end
+
+    if (MapsCluster and MapsCluster.ZoneTextButton) then
+        MapsCluster.ZoneTextButton:EnableMouse(false)
+    end
+
+	if (MapsCluster.BorderTop) then
+		MapsCluster.BorderTop:Hide()
+	end
+
+    if (MapsCluster.Tracking) then
+        MapsCluster.Tracking:SetAlpha(0)
+        MapsCluster.Tracking:SetScale(0.0001)
+        MapsCluster.Tracking:ClearAllPoints()
+        MapsCluster.Tracking:Point("BOTTOMLEFT", Minimap, 0, 0)
+    end
+
+	if (ExpansionMinimapButton) then
+		ExpansionMinimapButton:Kill()
+	end
 
 	for i, FrameName in pairs(HiddenFrames) do
 		local Frame = _G[FrameName]
@@ -116,12 +134,6 @@ function Maps:Disable()
 		end
 	end
 
-    for _, Frames in ipairs(DisableFrames) do
-        if (Frames) then 
-        	Frames:Kill() 
-        end
-    end
-
     for _, Frames in ipairs(DisableBG) do
         if (Frames) then
             if (Frames.Background) then 
@@ -132,25 +144,6 @@ function Maps:Disable()
             	Frames.Border:Hide() 
             end
         end
-    end
-
-    if (MapsCluster and MapsCluster.Tracking) then
-        MapsCluster.Tracking:SetAlpha(0)
-        MapsCluster.Tracking:SetScale(0.0001)
-        MapsCluster.Tracking:ClearAllPoints()
-        MapsCluster.Tracking:Point("BOTTOMLEFT", Minimap, 0, 0)
-    end
-
-    if (MinimapZoneTextButton) then
-        MinimapZoneTextButton:EnableMouse(false)
-    end
-
-    if (MapsCluster and MapsCluster.ZoneTextButton) then
-        MapsCluster.ZoneTextButton:EnableMouse(false)
-    end
-    
-    if (MinimapNorthTag) then
-        MinimapNorthTag:SetTexture(nil)
     end
 end
 

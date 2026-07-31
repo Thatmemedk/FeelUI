@@ -700,6 +700,49 @@ local function DisableBackdrops(self)
 	end
 end
 
+function HandleInsetFrame(self)
+	if self.Bg then self.Bg:Hide() end
+	if self.InsetBorderTop then self.InsetBorderTop:Hide() end
+	if self.InsetBorderBottom then self.InsetBorderBottom:Hide() end
+	if self.InsetBorderLeft then self.InsetBorderLeft:Hide() end
+	if self.InsetBorderRight then self.InsetBorderRight:Hide() end
+	if self.InsetBorderTopLeft then self.InsetBorderTopLeft:Hide() end
+	if self.InsetBorderTopRight then self.InsetBorderTopRight:Hide() end
+	if self.InsetBorderBottomLeft then self.InsetBorderBottomLeft:Hide() end
+	if self.InsetBorderBottomRight then self.InsetBorderBottomRight:Hide() end
+end
+
+function HandleFrame(self)
+	local Name = self and self.GetName and self:GetName()
+	local InsetFrame = Name and _G[Name.."Inset"] or self.Inset
+	local CloseButton = self.CloseButton or Name and _G[Name.."CloseButton"]
+	local PortraitFrame = Name and _G[Name.."Portrait"] or self.Portrait or self.portrait
+	local PortraitFrameOverlay = name and _G[Name.."PortraitOverlay"] or self.PortraitOverlay
+	local ArtFrameOverlay = Name and _G[Name.."ArtOverlayFrame"] or self.ArtOverlayFrame
+
+	self:StripTexture()
+
+	if (CloseButton) then
+		closeButton:HandleCloseButton()
+	end
+
+	if (InsetFrame) then
+		insetFrame:HandleInsetFrame()
+	end
+
+	if (PortraitFrame) then 
+		PortraitFrame:SetAlpha(0) 
+	end
+
+	if (PortraitFrameOverlay) then 
+		PortraitFrameOverlay:SetAlpha(0) 
+	end
+
+	if (ArtFrameOverlay) then 
+		ArtFrameOverlay:SetAlpha(0) 
+	end
+end
+
 local function HandleButton(self, Strip)
 	if (self.HandleButtonIsSkinned) then
 		return 
@@ -1101,6 +1144,8 @@ local function AddAPI(object)
 	-- Skining
 	if not object.ClearFrameRegions then mt.ClearFrameRegions = ClearFrameRegions end
 	if not object.DisableBackdrops then mt.DisableBackdrops = DisableBackdrops end
+	if not object.HandleInsetFrame then mt.HandleInsetFrame = HandleInsetFrame end
+	if not object.HandleFrame then mt.HandleFrame = HandleFrame end
 	if not object.HandleButton then mt.HandleButton = HandleButton end
 	if not object.HandleCloseButton then mt.HandleCloseButton = HandleCloseButton end
 	if not object.HandleSplitButton then mt.HandleSplitButton = HandleSplitButton end

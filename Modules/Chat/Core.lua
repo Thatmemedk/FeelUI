@@ -8,30 +8,22 @@ local Panels = UI:CallModule("Panels")
 local _G = _G
 local unpack = unpack
 local select = select
-local type = type
 local format = format
-local find = find
 
 -- WoW Globals
 local ChatFrame1Tab = _G.ChatFrame1Tab
 local ChatMenu = _G.ChatMenu
+local QuickJoinToastButton = _G.QuickJoinToastButton
 local ChatFrameMenuButton = _G.ChatFrameMenuButton
 local ChatConfigFrameDefaultButton = _G.ChatConfigFrameDefaultButton
 
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
 
-function CH:UpdateChannelNames(msg, r, g, b, ...)
-    if (not msg or UI:IsSecretValue(msg)) then
-        return self:oldAddMsg(msg, r, g, b, ...)
+function CH:SafeHide(Frame)
+    if (Frame) then
+        Frame:Kill()
     end
-
-    if (DB.Global.Chat.TimeStamps) then
-        local TimeStamp = "|cff909090" .. BetterDate("[%H:%M:%S]") .. "|r "
-        msg = TimeStamp .. msg
-    end
-
-    return self:oldAddMsg(msg, r, g, b, ...)
 end
 
 function CH:StyleFrames(Frame)
@@ -50,27 +42,21 @@ function CH:StyleFrames(Frame)
 	local ScrollBottom = Frame.ScrollToBottomButton
 	local MinimizeButton = _G[FrameName.."ButtonFrameMinimizeButton"]
 
-	Chat:SetClampRectInsets(0, 0, 0, 0)
-	Chat:SetClampedToScreen(false)
-	
-	EditBox:Size(Panels.ChatPanelLeft:GetWidth(), 22)
-	EditBox:ClearAllPoints()
-	EditBox:Point("TOPLEFT", Panels.ChatPanelLeft, 0, 26)
-	EditBox:CreateBackdrop()
-	EditBox:SetBackdropColorTemplate(0.1, 0.1, 0.1, 0.90)
-	EditBox:CreateShadow()
+	-- Hide Buttons
+	CH:SafeHide(Scroll)
+	CH:SafeHide(ScrollBottom)
+	CH:SafeHide(MinimizeButton)
+	CH:SafeHide(ChatFrameMenuButton)
+	CH:SafeHide(QuickJoinToastButton)
+	CH:SafeHide(ChatConfigFrameDefaultButton)
 
-	Chat:SetFontTemplate("Default")
-	EditBox:SetFontTemplate("Default")
-	EditBoxHeader:SetFontTemplate("Default")
-	TabText:SetFontTemplate("Default")
+	-- Hide Textures
+	Chat:StripTexture()
+	Tab:StripTexture()
 
 	for i = 1, #CHAT_FRAME_TEXTURES do
 		_G[FrameName..CHAT_FRAME_TEXTURES[i]]:SetTexture(nil)
 	end
-
-	Chat:StripTexture()
-	Tab:StripTexture()
 	
 	_G[format("ChatFrame%sButtonFrame", ID)]:Kill()
 	_G[format("ChatFrame%sEditBoxFocusLeft", ID)]:SetAlpha(0)
@@ -80,20 +66,29 @@ function CH:StyleFrames(Frame)
 	_G[format("ChatFrame%sEditBoxMid", ID)]:SetAlpha(0)
 	_G[format("ChatFrame%sEditBoxRight", ID)]:SetAlpha(0)
 
-	if (Scroll) then Scroll:Kill() end
-	if (ScrollBottom) then ScrollBottom:Kill() end
-	if (MinimizeButton) then MinimizeButton:Kill() end
+	-- Remove Clamped
+	Chat:SetClampRectInsets(0, 0, 0, 0)
+	Chat:SetClampedToScreen(false)
+	
+	-- Skin EditBox
+	EditBox:Size(Panels.ChatPanelLeft:GetWidth(), 22)
+	EditBox:ClearAllPoints()
+	EditBox:Point("TOPLEFT", Panels.ChatPanelLeft, 0, 26)
+	EditBox:CreateBackdrop()
+	EditBox:SetBackdropColorTemplate(0.1, 0.1, 0.1, 0.90)
+	EditBox:CreateShadow()
+
+	-- Set Fonts
+	Chat:SetFontTemplate("Default")
+	TabText:SetFontTemplate("Default")
+	EditBox:SetFontTemplate("Default")
+	EditBoxHeader:SetFontTemplate("Default")
 
 	Frame.ChatIsSkinned = true
 end
 
 function CH:StyleTempFrame()
-	local Frame = FCF_GetCurrentChatFrame()
-
-	if (Frame.ChatIsSkinned) then
-		return
-	end
-
+	local Frame = _G.FCF_GetCurrentChatFrame()
 	CH:StyleFrames(Frame)
 end
 
@@ -103,15 +98,6 @@ function CH:UpdateTabColors(Selected)
 	else
 		self:GetFontString():SetTextColor(1, 1, 1)
 	end
-end
-
-function CH:AddChatMenu()
-	ChatFrame1Tab:RegisterForClicks("AnyUp")
-	ChatFrame1Tab:HookScript("OnClick", function(self, Button)
-		if (Button == "MiddleButton") then
-			ChatMenu:Show()
-		end
-	end)
 end
 
 function CH:SetChatFrame1Position()
@@ -143,22 +129,20 @@ function CH:SetupChat()
 		self:StyleFrames(Frame)
 		
 		if (not Frame.isLocked) then
-			FCF_SetLocked(Frame, 1)
+			_G.FCF_SetLocked(Frame, 1)
 		end
 
 		self.SetChatFramePosition(Frame)
-
-		if (i ~= 2) then
-			Frame.oldAddMsg = Frame.AddMessage
-			Frame.AddMessage = self.UpdateChannelNames
-		end
 	end
 end
 
-function CH:HideButtons()
-	ChatFrameMenuButton:Kill()
-	ChatConfigFrameDefaultButton:Kill()
-	QuickJoinToastButton:Kill()
+function CH:AddChatMenu()
+	ChatFrame1Tab:RegisterForClicks("AnyUp")
+	ChatFrame1Tab:HookScript("OnClick", function(self, Button)
+		if (Button == "MiddleButton") then
+			ChatMenu:Show()
+		end
+	end)
 end
 
 function CH:Initialize()
@@ -166,11 +150,11 @@ function CH:Initialize()
 		return
 	end
 
-	self:HideButtons()
 	self:SetupChat()
 	self:AddChatMenu()
 	self:AddHooks()
 	self:StyleCombatLog()
 	self:EnableCopyURL()
 	self:CreateChatCopy()
+	self:AddChatFilter()
 end

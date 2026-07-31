@@ -84,7 +84,7 @@ function NP:CreateHighlightMouseOver(Frame)
         self.Elapsed = (self.Elapsed or 0) + Elapsed
 
         if (self.Elapsed > 0.1) then
-            if (not UnitIsUnit("mouseover", self.unit)) then
+            if (not UI:UnitIsUnit("mouseover", self.unit)) then
                 self.HighlightMouseOver:Hide()
             end
 

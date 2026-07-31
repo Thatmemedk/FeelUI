@@ -170,40 +170,40 @@ function MinimapButtonBar:CreatePanel()
 end
 
 function MinimapButtonBar:Update()
-	local ButtonWidth, ButtonHeight = unpack(DB.Global.MinimapButtonBar.ButtonSize) 
-    local Spacing = DB.Global.MinimapButtonBar.ButtonSpacing
-    local ButtonsPerRow = DB.Global.MinimapButtonBar.ButtonsPerRow
-    local Total = #self.Childs
+	local ButtonWidth, ButtonHeight = unpack(DB.Global.MinimapButtonBar.ButtonSize)
+	local Spacing = DB.Global.MinimapButtonBar.ButtonSpacing
+	local ButtonsPerRow = DB.Global.MinimapButtonBar.ButtonsPerRow
+	local Total = #self.Childs
 
-    if (Total < ButtonsPerRow) then
-        ButtonsPerRow = Total
-    end
+	if (Total < ButtonsPerRow) then
+		ButtonsPerRow = Total
+	end
 
-    local Columns = math.ceil(Total / ButtonsPerRow)
+	local Columns = math.ceil(Total / ButtonsPerRow)
 
-    if (Columns < 1) then 
-    	Columns = 1 
-    end
+	if (Columns < 1) then
+		Columns = 1
+	end
 
-    self.Frame:Size((ButtonWidth * ButtonsPerRow) + (Spacing * (ButtonsPerRow - 1)) + 8, (ButtonHeight * Columns) + (Spacing * (Columns - 1)) + 7)
+	local Padding = 3
+	local GridWidth = (ButtonWidth * ButtonsPerRow) + (Spacing * (ButtonsPerRow -1))
+	local GridHeight = (ButtonHeight * Columns) + (Spacing * (Columns -1))
 
-    for i = 1, Total do
-        local Button = self.Childs[i]
-        Button:SetParent(self.Frame)
-        Button:ClearAllPoints()
+	self.Frame:Size(GridWidth + (Padding * 2), GridHeight + (Padding * 2))
 
-        if (i == 1) then
-            Button:Point("TOPLEFT", self.Frame, 4, -4)
-        elseif ((i - 1) % ButtonsPerRow == 0) then
-            Button:Point("TOPLEFT", self.Childs[i-ButtonsPerRow], "BOTTOMLEFT", 0, -Spacing)
-        else
-            Button:Point("LEFT", self.Childs[i-1], "RIGHT", Spacing, 0)
-        end
-    end
+	for i = 1, Total do
+		local Row = math.floor((i - 1) / ButtonsPerRow)
+		local Col = (i - 1) % ButtonsPerRow
+		local Button = self.Childs[i]
+		
+		Button:SetParent(self.Frame)
+		Button:ClearAllPoints()
+		Button:Point("TOPLEFT", self.Frame, Padding + (Col * (ButtonWidth + Spacing)), -(Padding + (Row * (ButtonHeight + Spacing))))
+	end
 end
 
 function MinimapButtonBar:Initialize()
-	if not (DB.Global.MinimapButtonBar.Enable) then
+	if (not DB.Global.MinimapButtonBar.Enable) then
 		return
 	end
 

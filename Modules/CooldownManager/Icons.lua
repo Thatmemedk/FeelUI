@@ -81,11 +81,13 @@ function CDM:SkinIcons(Button, ButtonSize)
 
    	if (Border) then
 		Border:SetAlpha(0)
-		Border.CDMParent = Button
+		--Border.CDMParent = Button
 
+		--[[
 		hooksecurefunc(Border, "UpdateFromAuraData", function(self, Data)
 			CDM:UpdateBorderColor(self, Data)
 		end)
+		--]]
 	end
 
 	if (Icon) then

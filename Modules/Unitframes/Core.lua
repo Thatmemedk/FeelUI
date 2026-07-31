@@ -108,12 +108,9 @@ function UF:UpdateHealth(Frame, Unit)
     Frame.Health:SetMinMaxValues(0, Max)
     Frame.Health:SetValue(Min, UI.SmoothBars)
 
-    if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit)) then
+    if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsDead(Unit) or UnitIsGhost(Unit)) then
         Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
         Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
-    elseif (UnitIsDead(Unit)) then
-        Frame.Health:SetStatusBarColor(0.25, 0, 0)
-        Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
     else
         if (DB.Global.UnitFrames.ClassColor) then
             if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
@@ -167,6 +164,16 @@ function UF:UpdateHealthTextPer(Frame, Unit)
 
     local Percent = UnitHealthPercent(Unit, false, UI.CurvePercent)
     Frame.HealthTextPer:SetFormattedText("%d%%", Percent or 0)
+end
+
+function UF:UpdateStatusIcon(Frame, Unit)
+    if (UnitIsGhost(Unit) or UnitIsDead(Unit)) then
+        Frame.StatusIcon:Size(32, 32)
+        Frame.StatusIcon:SetAtlas("GM-icon-difficulty-normal-hover")
+        Frame.StatusIcon:Show()
+    else
+        Frame.StatusIcon:Hide()
+    end
 end
 
 -- HEAL PRED
@@ -352,17 +359,20 @@ function UF:UpdateName(Frame, Unit, TypeFrame)
 
     local Name = UnitName(Unit) or ""
     local Text
-    local R, G, B
+    local R, G, B = 1, 1, 1
 
     if (DB.Global.UnitFrames.ClassColor) then
         R, G, B = 1, 1, 1
     else
         if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
             local _, Class = UnitClass(Unit)
-            local Color = UI.Colors.Class[Class]
 
-            if (Color) then
-                R, G, B = Color.r, Color.g, Color.b
+            if (Class) then
+                local Color = UI.Colors.Class[Class]
+
+                if (Color) then
+                    R, G, B = Color.r, Color.g, Color.b
+                end
             end
         else
             local Reaction = UnitReaction(Unit, "player") or 5
@@ -375,18 +385,11 @@ function UF:UpdateName(Frame, Unit, TypeFrame)
     end
 
     if (TypeFrame == "Raid") then
-        if (not UnitIsConnected(Unit)) then
-            Text = PLAYER_OFFLINE
-            R, G, B = 0.35, 0.35, 0.35
-        elseif (UnitIsGhost(Unit)) then
-            Text = GHOST
-            R, G, B = 0.35, 0.35, 0.35
-        elseif (UnitIsDead(Unit)) then
-            Text = DEAD
-            R, G, B = 0.35, 0.35, 0.35
-        else
-            Text = UI:UTF8Sub(Name, 8)
+        if (not UnitIsConnected(Unit) or UnitIsGhost(Unit) or UnitIsDead(Unit)) then
+            R, G, B = 0.25, 0.25, 0.25
         end
+
+        Text = UI:UTF8Sub(Name, 8)
     elseif (TypeFrame == "Party") then
         Text = UI:UTF8Sub(Name, 12)
     else
@@ -605,15 +608,15 @@ function UF:UpdateSummonIcon(Frame)
     end
 
     local Unit = Frame.unit
-    local IncomingSummon = C_IncomingSummon.IncomingSummonStatus(Unit)
+    local UnitHasIncomingSummon = C_IncomingSummon.IncomingSummonStatus(Unit)
 
-    if (IncomingSummon ~= SUMMON_STATUS_NONE) then
-        if (IncomingSummon == SUMMON_STATUS_PENDING) then
-            Frame.SummonIcon:SetAtlas("Raid-Icon-SummonPending")
-        elseif (IncomingSummon == SUMMON_STATUS_ACCEPTED) then
-            Frame.SummonIcon:SetAtlas("Raid-Icon-SummonAccepted")
-        elseif (IncomingSummon == SUMMON_STATUS_DECLINED) then
-            Frame.SummonIcon:SetAtlas("Raid-Icon-SummonDeclined")
+    if (UnitHasIncomingSummon ~= SUMMON_STATUS_NONE) then
+        if (UnitHasIncomingSummon == SUMMON_STATUS_PENDING) then
+            Frame.SummonIcon:SetAtlas("Raid-Icon-SummonPending", true)
+        elseif (UnitHasIncomingSummon == SUMMON_STATUS_ACCEPTED) then
+            Frame.SummonIcon:SetAtlas("Raid-Icon-SummonAccepted", true)
+        elseif (UnitHasIncomingSummon == SUMMON_STATUS_DECLINED) then
+            Frame.SummonIcon:SetAtlas("Raid-Icon-SummonDeclined", true)
         end
 
         Frame.SummonIcon:Show()
@@ -733,33 +736,7 @@ function UF:UpdateThreatHighlightRaid(Frame, Unit)
     end
 end
 
--- DEBUFF HIGHLIGHT
-
-function UF:UpdateDebuffHighlight(Frame, Unit)
-    if (not Frame or not Unit or not Frame.DebuffHighlight) then
-        return
-    end
-
-    local Index = 1
-
-    while true do
-        local AuraData = GetAuraDataByIndex(Unit, Index, "HARMFUL")
-
-        if (not AuraData or not AuraData.name) then
-            break
-        end
-
-        local Color = GetAuraDispelTypeColor(Unit, AuraData.auraInstanceID, UI.DispelHighlightColorCurve)
-
-        if (Color) then
-            Frame.DebuffHighlight.Glow:SetBackdropBorderColor(Color.r * 0.55, Color.g * 0.55, Color.b * 0.55, 0.8)
-        else
-            Frame.DebuffHighlight.Glow:SetBackdropBorderColor(0, 0, 0, 0)
-        end
-
-        Index = Index + 1
-    end
-end
+-- TARGET HIGHLIGHT
 
 function UF:UpdateTargetIndicator(Frame, Unit)
     local IsTarget = UnitIsUnit("target", Unit)
@@ -828,13 +805,18 @@ function UF:IsFriendlyUnitReachable(Unit)
         return false
     end
 
-    local Range = UF:CheckUnitCategoryRange(Unit, "FRIENDLY")
+    local InRange, WasChecked = UnitInRange(Unit)
 
-    if (Range == nil) then
-        return true
+    if (UI:IsSecretValue(WasChecked)) then
+        if (UF.Frames.Range[Unit] and (UnitInParty(Unit) or UnitInRaid(Unit))) then
+            UF.Frames.Range.IsInRange, UF.Frames.Range.CheckedRange = InRange, WasChecked
+            return
+        end
+    elseif (WasChecked and not InRange) then
+        return false
     end
 
-    return Range
+    return UF:CheckUnitCategoryRange(Unit, "FRIENDLY")
 end
 
 function UF:UpdateRangeState(Frame, Unit)
@@ -843,23 +825,28 @@ function UF:UpdateRangeState(Frame, Unit)
     end
 
     local Range = UF.Frames.Range[Unit]
+    local RangeExists = UI:UnitExists(Unit)
 
-    if (UnitIsDeadOrGhost(Unit)) then
-        return
-    elseif (UnitCanAttack("player", Unit)) then
-        Range = UF:CheckUnitCategoryRange(Unit, "ENEMY")
-    --elseif UnitIsUnit("pet", Unit) then
-    --    Range = UF:CheckUnitCategoryRange(Unit, "PET")
-    elseif (UnitIsConnected(Unit)) then
-        Range = UF:IsFriendlyUnitReachable(Unit)
-    else
-        Range = false
-    end
+    UF.Frames.Range.IsInRange, UF.Frames.Range.CheckedRange = nil, nil
 
-    if (Range == true) then
-        UI:UIFrameFadeIn(Frame, Frame.Range.FadeTime, Frame:GetAlpha(), Frame.Range.InRangeAlpha)
-    elseif (Range == false) then
-        UI:UIFrameFadeOut(Frame, Frame.Range.FadeTime, Frame:GetAlpha(), Frame.Range.OutOfRangeAlpha)
+    if (RangeExists) then
+        if (UnitIsDeadOrGhost(Unit)) then
+            Range = UF:CheckUnitCategoryRange(Unit, "FRIENDLY")
+        elseif (UnitCanAttack("player", Unit)) then
+            Range = UF:CheckUnitCategoryRange(Unit, "ENEMY")
+        elseif UI:UnitIsUnit("pet", Unit) then
+            Range = UF:CheckUnitCategoryRange(Unit, "PET")
+        elseif (UnitIsConnected(Unit)) then
+            Range = UF:IsFriendlyUnitReachable(Unit)
+        else
+            Range = false
+        end
+
+        if (Range == true) then
+            UI:UIFrameFadeIn(Frame, Frame.Range.FadeTime, Frame:GetAlpha(), Frame.Range.InRangeAlpha)
+        elseif (Range == false) then
+            UI:UIFrameFadeOut(Frame, Frame.Range.FadeTime, Frame:GetAlpha(), Frame.Range.OutOfRangeAlpha)
+        end
     end
 end
 
@@ -915,9 +902,6 @@ function UF:RefreshUnit(Unit)
     if (Frame.Name) then self:UpdateName(Frame, Unit) end
     if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame, Unit) end
 
-    -- AURAS
-    if (Frame.Buffs or Frame.Debuffs or Frame.External or Frame.CrowdControl) then self:UpdateAuras(Frame, Unit) end
-
     -- ICONS
     if (Frame.CombatIcon) then self:UpdateCombatIcon(Frame) end
     if (Frame.RestingIcon) then self:UpdateRestingIcon(Frame) end
@@ -960,9 +944,6 @@ function UF:RefreshGroup(Frame, Unit)
     if (Frame.Name) then self:UpdateName(Frame, Unit, Frame.IsParty and "Party" or Frame.IsRaid and "Raid") end
     if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame, Unit) end
 
-    -- AURAS
-    if (Frame.Buffs or Frame.Debuffs or Frame.External or Frame.CrowdControl) then self:UpdateAuras(Frame, Unit) end
-
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame) end
     if (Frame.LeaderIcon) then self:UpdateLeaderIcon(Frame) end
@@ -972,6 +953,7 @@ function UF:RefreshGroup(Frame, Unit)
     if (Frame.PhaseIcon) then self:UpdatePhaseIcon(Frame) end
     if (Frame.ResurrectionIcon) then self:UpdateResurrectionIcon(Frame, Unit) end
     if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame) end
+    if (Frame.StatusIcon) then self:UpdateStatusIcon(Frame, Unit) end
 
     -- THREAT
     if (Frame.Threat) then self:UpdateThreatHighlightRaid(Frame, Unit) end
@@ -1073,18 +1055,6 @@ function UF:UnitName(Unit)
     end
 end
 
-function UF:UnitAura(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
-        return
-    end
-
-    if (Frame.Buffs or Frame.Debuffs or Frame.External or Frame.CrowdControl) then
-        self:UpdateAuras(Frame, Unit)
-    end
-end
-
 function UF:UnitThreat(Unit)
     local Frame = self.Frames[Unit]
 
@@ -1110,6 +1080,18 @@ function UF:UnitPortrait(Unit)
 
     if (Frame.Portrait) then
         self:UpdatePortrait(Frame, Unit)
+    end
+end
+
+function UF:UnitStatusIcons(Unit)
+    local Frame = self.Frames[Unit]
+
+    if (not Frame or not Unit or not UnitExists(Unit)) then
+        return
+    end
+
+    if (Frame.StatusIcon) then
+        self:UpdateStatusIcon(Frame, Unit)
     end
 end
 
@@ -1173,9 +1155,9 @@ function UF:UnitPhaseIcon()
     end
 end
 
-function UF:UnitSummonIcon()
+function UF:UnitSummonIcon(Unit)
     for Key, Frame in next, self.Frames do
-        if (Frame.SummonIcon) then
+        if (Frame.PhaseIcon) then
             self:UpdateSummonIcon(Frame)
         end
     end
@@ -1229,10 +1211,9 @@ function UF:OnEvent(event, unit, ...)
         end
     end
 
-    if (event == "UNIT_AURA") then
-        UF:UnitAura(unit)
-    elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
+    if (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
         UF:UnitHealth(unit)
+        UF:UnitStatusIcons(unit)
     elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
         UF:UnitHealthPred(unit)
     elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER") then
@@ -1260,7 +1241,7 @@ function UF:OnEvent(event, unit, ...)
     elseif (event == "INCOMING_RESURRECT_CHANGED") then
         UF:UnitResurrectionIcon(unit)
     elseif (event == "INCOMING_SUMMON_CHANGED") then
-        UF:UnitSummonIcon()
+        UF:UnitSummonIcon(Unit)
     end
 
     if (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then
@@ -1309,8 +1290,6 @@ function UF:RegisterEvents()
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE")
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
-    -- BUFFS / DEBUFFS
-    SecureEventFrame:RegisterEvent("UNIT_AURA")
     -- HEALTH
     SecureEventFrame:RegisterEvent("UNIT_HEALTH")
     SecureEventFrame:RegisterEvent("UNIT_MAXHEALTH")

@@ -8,13 +8,13 @@ local select = select
 -- DISPELL CURVE
 
 local DEBUFF_DISPLAY_COLOR_INFO = {
-    [0] = DEBUFF_TYPE_NONE_COLOR,
-    [1] = DEBUFF_TYPE_MAGIC_COLOR,
-    [2] = DEBUFF_TYPE_CURSE_COLOR,
-    [3] = DEBUFF_TYPE_DISEASE_COLOR,
-    [4] = DEBUFF_TYPE_POISON_COLOR,
+    [0] = _G.DEBUFF_TYPE_NONE_COLOR,
+    [1] = _G.DEBUFF_TYPE_MAGIC_COLOR,
+    [2] = _G.DEBUFF_TYPE_CURSE_COLOR,
+    [3] = _G.DEBUFF_TYPE_DISEASE_COLOR,
+    [4] = _G.DEBUFF_TYPE_POISON_COLOR,
+    [11] = _G.DEBUFF_TYPE_BLEED_COLOR, -- Bleed Color
     [9] = CreateColor(243, 95, 245), -- Enrage Color
-    [11] = DEBUFF_TYPE_BLEED_COLOR, -- Bleed Color
 }
 
 UI.DispelColorCurve = C_CurveUtil.CreateColorCurve()
@@ -23,26 +23,6 @@ UI.DispelColorCurve:SetType(Enum.LuaCurveType.Step)
 for DebuffType, ColorInfo in pairs(DEBUFF_DISPLAY_COLOR_INFO) do
     UI.DispelColorCurve:AddPoint(DebuffType, ColorInfo)
 end
-
--- AURA CURVE
-
-local AURA_DISPLAY_COLOR_INFO = {
-    [0] = CreateColor(0, 0, 0),
-    [1] = DEBUFF_TYPE_MAGIC_COLOR,
-    [2] = DEBUFF_TYPE_CURSE_COLOR,
-    [3] = DEBUFF_TYPE_DISEASE_COLOR,
-    [4] = DEBUFF_TYPE_POISON_COLOR,
-    [9] = CreateColor(243, 95, 245), -- Enrage Color
-    [11] = DEBUFF_TYPE_BLEED_COLOR, -- Bleed Color
-}
-
-UI.AuraColorCurve = C_CurveUtil.CreateColorCurve()
-UI.AuraColorCurve:SetType(Enum.LuaCurveType.Step)
-
-for DebuffType, ColorInfo in pairs(AURA_DISPLAY_COLOR_INFO) do
-    UI.AuraColorCurve:AddPoint(DebuffType, ColorInfo)
-end
-
 
 -- HEALTH CURVE
 

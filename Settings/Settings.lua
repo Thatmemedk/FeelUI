@@ -23,6 +23,7 @@ DB.Global = {
 		BackdropColor = { 0.1, 0.1, 0.1, 0.70 },
 		PanelColor = { 0.2, 0.2, 0.2, 0.70 },
 		ShadowColor = { 0.05, 0.05, 0.05, 0.5 },
+		IconZoom = { 0.20 },
 	},
 
 	ActionBars = {

@@ -19,10 +19,11 @@
 	<Script file="ActionBars\Range.lua"/>
 	<Script file="ActionBars\Glow.lua"/>
 	<!-- Auras -->
-	<Include file="Auras\SecureAuraTemplate.xml"/>
-	<Script file="Auras\PrivateAuras.lua"/>
+	<Script file="Auras\Core.lua"/>
+	<Script file="Auras\Auras.lua"/>
 	<!-- Chat -->
 	<Script file="Chat\Core.lua"/>
+	<Script file="Chat\ChatFilter.lua"/>
 	<Script file="Chat\CopyChat.lua"/>
 	<Script file="Chat\CopyURL.lua"/>
 	<Script file="Chat\CombatLog.lua"/>
@@ -74,6 +75,7 @@
 	<Script file="Skins\Blizzard\EncounterTimeline.lua"/>
 	<Script file="Skins\Blizzard\GameMenu.lua"/>
 	<Script file="Skins\Blizzard\GhostFrame.lua"/>
+	<Script file="Skins\Blizzard\ReadyCheck.lua"/>
 	<Script file="Skins\Blizzard\StackSplitFrame.lua"/>
 	<Script file="Skins\Blizzard\StaticPopups.lua"/>
 	<Script file="Skins\Blizzard\TalkingHead.lua"/>

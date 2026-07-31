@@ -25,7 +25,6 @@ function UF:Spawn(Unit, Width, Height, Orientation)
 
     Frame:Size(Width or 228, Height or 36)
     Frame:SetAttribute("unit", Unit)
-
     Frame:RegisterForClicks("AnyUp")
     Frame:SetAttribute("type1", "target")
     Frame:SetAttribute("type2", "togglemenu")

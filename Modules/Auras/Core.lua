@@ -1,306 +1,335 @@
 local UI, DB, Media, Language = select(2, ...):Call()
 
--- Call Modules
-local Auras = UI:RegisterModule("Auras")
-
 -- Lib Globals
 local _G = _G
 local unpack = unpack
 local select = select
 
--- WoW Globals
-local GetWeaponEnchantInfo = GetWeaponEnchantInfo
-local GetInventoryItemTexture = GetInventoryItemTexture
-local GetAuraDataByIndex = _G.C_UnitAuras.GetAuraDataByIndex
-local GetAuraApplicationDisplayCount = _G.C_UnitAuras.GetAuraApplicationDisplayCount
+function UI:BuildRuleDurationFormatter()
+    if (not (C_StringUtil and C_StringUtil.CreateNumericRuleFormatter and Enum.NumericRuleFormatRounding)) then
+        return nil
+    end
 
--- Locals
-Auras.SortMethod = "TIME"
-Auras.SortDirection = "+"
-Auras.Headers = {}
-Auras.HeadersName = ""
+    local Down = Enum.NumericRuleFormatRounding.Down
+    local Formatter = C_StringUtil.CreateNumericRuleFormatter()
 
-function Auras:DisableBlizzardAuras()
-	_G.BuffFrame:Kill()
-	_G.BuffFrame.numHideableBuffs = 0
+    local Success = pcall(Formatter.SetBreakpoints, Formatter, {
+        -- Below 10 seconds: decimal precision
+        {
+            threshold = 0,
+            format = "%.1f",
+            step = 0.1,
+            rounding = Down,
+        },
 
-	if (_G.DebuffFrame) then
-		_G.DebuffFrame:Kill()
-	end
+        -- 10 - 59 seconds
+        {
+            threshold = 10,
+            format = "%d",
+            step = 1,
+            rounding = Down,
+        },
+
+        -- 1:00 - 1:59
+        {
+            threshold = 60,
+            format = "%d:%02d",
+            step = 1,
+            rounding = Down,
+            components = {
+                { div = 60 },
+                { div = 1 },
+            },
+        },
+
+        -- 2 minutes - 59 minutes
+        {
+            threshold = 120,
+            format = "%dm",
+            step = 1,
+            rounding = Down,
+            components = {
+                { div = 60 },
+            },
+        },
+
+        -- Hours
+        {
+            threshold = 3600,
+            format = "%dh",
+            step = 1,
+            rounding = Down,
+            components = {
+                { div = 3600 },
+            },
+        },
+
+        -- Days
+        {
+            threshold = 86400,
+            format = "%dd",
+            step = 1,
+            rounding = Down,
+            components = {
+                { div = 86400 },
+            },
+        },
+    })
+
+    if (not Success) then
+        return nil
+    end
+
+    return Formatter
 end
 
-function Auras:OnUpdate(elapsed)
-	local TimeLeft
+function UI:GetDurationFormatter()
+    if (not UI.DurationFormatter) then
+        UI.DurationFormatter = UI:BuildRuleDurationFormatter()
+    end
 
-	if (self.Enchant) then	
-		local Expiration = select(self.Enchant, GetWeaponEnchantInfo())
+    return UI.DurationFormatter
+end
 
-		if (Expiration) then
-			TimeLeft = Expiration / 1e3
-		else
-			TimeLeft = 0
-		end
-	else
-		TimeLeft = self.TimeLeft - elapsed
-	end
+function UI:InitializeAuraButton(Button, Options)
+    Button:Size(Options.Width, Options.Height)
+    Button:SetTemplate()
+    Button:CreateShadow()
+    Button:StyleButton()
+    Button:SetShadowOverlay()
 
-	self.TimeLeft = TimeLeft
+    local Icon = Button:CreateTexture(nil, "ARTWORK")
+    Icon:SetInside()
 
-	if (TimeLeft <= 0) then
-		self.TimeLeft = nil
-		self.Duration:SetText("")
+    -- Setup Aspect Ratio
+    UI:KeepAspectRatio(Button, Icon)
 
-		return self:SetScript("OnUpdate", nil)
-	else		
-		if (10 > self.TimeLeft) then
-			self.Duration:SetVertexColor(unpack(DB.Global.CooldownFrame.ExpireColor))
-		elseif (30 > self.TimeLeft) then	
-			self.Duration:SetVertexColor(unpack(DB.Global.CooldownFrame.SecondsColor))
-		elseif (60 > self.TimeLeft) then
-			self.Duration:SetVertexColor(unpack(DB.Global.CooldownFrame.SecondsColor2))
-		else 
-			self.Duration:SetVertexColor(unpack(DB.Global.CooldownFrame.NormalColor))
+    -- Set Icon
+    Button:SetIcon(Icon)
+
+    -- Overlay
+    local Overlay = CreateFrame("Frame", nil, Button)
+    Overlay:SetFrameLevel(Button:GetFrameLevel() + 10)
+    Overlay:SetInside()
+
+    -- Cooldown
+    if (Options.Cooldown) then
+        local Cooldown = CreateFrame("Cooldown", nil, Button, "CooldownFrameTemplate")
+        Cooldown:SetInside()
+        Cooldown:SetDrawEdge(false)
+        Cooldown:SetDrawBling(false)
+        Cooldown:SetReverse(true)
+        Cooldown:SetHideCountdownNumbers(true)
+
+        Button:SetDurationCooldown(Cooldown)
+    end
+
+    -- Count
+    if (Options.Count) then
+        local Count = Overlay:CreateFontString(nil, "OVERLAY")
+        Count:Point("TOPRIGHT", Button, Options.CountX or 2, Options.CountY or 2)
+        Count:SetFontTemplate("Default")
+
+        Button:SetApplicationCount(Count)
+    end
+
+    -- Duration
+    if (Options.Duration) then
+        local Time = Overlay:CreateFontString(nil, "OVERLAY")
+        Time:Point("CENTER", Options.TimeX or 0, Options.TimeY or -8)
+        Time:SetFontTemplate("Default")
+
+        Button:SetDurationText(Time, {
+			--binding = nil,
+			textFormatter = UI:GetDurationFormatter(),
+			--textFormat = nil,
+			textColor = {
+			    curve = UI.CooldownColorCurve,
+			    property = Enum.DurationTextBindingProperty.RemainingDuration,
+			},
+		})
+    end
+
+    -- Debuff Border
+    if (Options.Border) then
+        local BorderStyle = {
+            style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
+            showWhenHarmful = true,
+            showWhenHelpful = false,
+            showWithoutDispelType = true,
+            customDispelColorMap = UI.Colors.Dispel,
+        }
+
+        local BorderTop = Overlay:CreateTexture(nil, "BORDER")
+        BorderTop:Height(1)
+        BorderTop:Point("TOPLEFT", Button, 0, 0)
+        BorderTop:Point("TOPRIGHT", Button, 0, 0)
+        BorderTop:SetTexture(Media.Global.Blank)
+
+        local BorderBottom = Overlay:CreateTexture(nil, "BORDER")
+        BorderBottom:Height(1)
+        BorderBottom:Point("BOTTOMLEFT", 0, 0)
+        BorderBottom:Point("BOTTOMRIGHT", 0, 0)
+        BorderBottom:SetTexture(Media.Global.Blank)
+
+        local BorderLeft = Overlay:CreateTexture(nil, "BORDER")
+        BorderLeft:Width(1)
+        BorderLeft:Point("TOPLEFT", Button, 0, 0)
+        BorderLeft:Point("BOTTOMLEFT", Button, 0, 0)
+        BorderLeft:SetTexture(Media.Global.Blank)
+
+        local BorderRight = Overlay:CreateTexture(nil, "BORDER")
+        BorderRight:Width(1)
+        BorderRight:Point("TOPRIGHT", Button, 0, 0)
+        BorderRight:Point("BOTTOMRIGHT", Button, 0, 0)
+        BorderRight:SetTexture(Media.Global.Blank)
+
+		Button.BorderThick = {}
+	
+		for i = 1, 8 do
+			Button.BorderThick[i] = Overlay:CreateTexture(nil, "OVERLAY")
+			Button.BorderThick[i]:Size(1, 1)
+			Button.BorderThick[i]:SetColorTexture(0, 0, 0, 1)
 		end
 		
-		local Text = UI:FormatTimeShort(self.TimeLeft)
-		self.Duration:SetText(Text)
-	end
+		Button.BorderThick[1]:Point("TOPLEFT", Button, "TOPLEFT", -1, 1)
+		Button.BorderThick[1]:Point("TOPRIGHT", Button, "TOPRIGHT", 1, -1)
+
+		Button.BorderThick[2]:Point("BOTTOMLEFT", Button, "BOTTOMLEFT", -1, -1)
+		Button.BorderThick[2]:Point("BOTTOMRIGHT", Button, "BOTTOMRIGHT", 1, -1)
+
+		Button.BorderThick[3]:Point("TOPLEFT", Button, "TOPLEFT", -1, 1)
+		Button.BorderThick[3]:Point("BOTTOMLEFT", Button, "BOTTOMLEFT", 1, -1)
+
+		Button.BorderThick[4]:Point("TOPRIGHT", Button, "TOPRIGHT", 1, 1)
+		Button.BorderThick[4]:Point("BOTTOMRIGHT", Button, "BOTTOMRIGHT", -1, -1)
+
+		Button.BorderThick[5]:Point("TOPLEFT", Button, "TOPLEFT", 1, -1)
+		Button.BorderThick[5]:Point("TOPRIGHT", Button, "TOPRIGHT", -1, 1)
+
+		Button.BorderThick[6]:Point("BOTTOMLEFT", Button, "BOTTOMLEFT", 1, 1)
+		Button.BorderThick[6]:Point("BOTTOMRIGHT", Button, "BOTTOMRIGHT", -1, 1)
+
+		Button.BorderThick[7]:Point("TOPLEFT", Button, "TOPLEFT", 1, -1)
+		Button.BorderThick[7]:Point("BOTTOMLEFT", Button, "BOTTOMLEFT", -1, 1)
+
+		Button.BorderThick[8]:Point("TOPRIGHT", Button, "TOPRIGHT", -1, -1)
+		Button.BorderThick[8]:Point("BOTTOMRIGHT", Button, "BOTTOMRIGHT", 1, 1)
+
+        Button:AddDispelTypeTexture(BorderTop, BorderStyle)
+        Button:AddDispelTypeTexture(BorderBottom, BorderStyle)
+        Button:AddDispelTypeTexture(BorderLeft, BorderStyle)
+        Button:AddDispelTypeTexture(BorderRight, BorderStyle)
+    end
+
+    -- Debuff Icon
+    if (Options.DebuffIndicator) then
+        local DispelIndicator = Overlay:CreateTexture(nil, "OVERLAY")
+        DispelIndicator:Size(16, 16)
+        DispelIndicator:Point("CENTER", Button, 0, 10)
+
+        Button:AddDispelTypeTexture(DispelIndicator, {
+            style = Enum.CustomAuraButtonDispelTypeTextureStyle.Icon,
+            showWhenHarmful = true,
+            showWhenHelpful = false,
+        })
+    end
 end
 
-function Auras:UpdateAura(Index)
-	local Unit = self:GetParent():GetAttribute("unit")
-	local AuraData = GetAuraDataByIndex(Unit, Index, self.Filter)
-	
-	if (not AuraData or not AuraData.name) then 
-		return 
-	end
+function UI:AddAura(Container, Options)
+    local InitializeAura = function(Button)
+        UI:InitializeAuraButton(Button, Options)
+    end
 
-    local AuraMinCount = 2
-    local AuraMaxCount = 99
+    if (Options.MaxAuras == 1) then
+        Container:AddAuraSlot("Aura", Options.Filter, {
+            initializeFrame = InitializeAura,
+        })
+    else
+        Container:AddAuraGroup("Aura", Options.Filter, {
+            maxFrameCount = Options.MaxAuras,
+            initializeFrame = InitializeAura,
 
-	if (self.Count) then
-        self.Count:SetText(GetAuraApplicationDisplayCount(Unit, AuraData.auraInstanceID, AuraMinCount, AuraMaxCount))
-   	end
-
-   	if (self.Icon) then
-		self.Icon:SetTexture(AuraData.icon)
-		UI:KeepAspectRatio(self, self.Icon)
-	end
-
-	if (self.Cooldown) then
-        local CD = C_UnitAuras.GetAuraDuration(Unit, AuraData.auraInstanceID)
-
-        if (CD) then
-            self.Cooldown:SetCooldownFromDurationObject(CD)
-            self.Cooldown:Show()
-        else
-            self.Cooldown:Hide()
-        end
-	end
-
-	if (self.Filter == "HARMFUL") then
-		local Color = C_UnitAuras.GetAuraDispelTypeColor(Unit, AuraData.auraInstanceID, UI.DispelColorCurve)
-
-		if (Color) then
-			self:SetColorTemplate(Color:GetRGB())
-		else
-			self:SetColorTemplate(unpack(DB.Global.General.BorderColor))
-		end
-	end
-
-	self.Unit = Unit
-	self.AuraInstanceID = AuraData.auraInstanceID
+            layout = {
+                elementSpacing = Options.Spacing or UI:Scale(3),
+                lineSpacing = Options.LineSpacing or 0,
+				groupSpacing = Options.GroupSpacing or 0,
+				groupLineSpacing = Options.GroupLineSpacing or 0,
+				forceNewLine = true,
+				sortMethod = AuraContainerSortMethod.ExpirationOnly,
+				sortDirection = AuraContainerSortDirection.Normal,
+            },
+        })
+    end
 end
 
-function Auras:UpdateTempEnchant(Index)
-	local Enchant = (Index == 16 and 2) or 6
-	local Expiration = select(Enchant, GetWeaponEnchantInfo())
-	local Icon = GetInventoryItemTexture("player", Index)
+function UI:CreateAuraContainer(Frame, Options)
+    local Container = CreateFrame("AuraContainer", nil, Frame, "CustomAuraContainerTemplate")
+    Container:Point(Options.Anchor, Frame, Options.RelativeAnchor or Options.Anchor, Options.X, Options.Y)
+    Container:SetFlowLayoutAnchorPoint("TOPLEFT")
+    Container:SetUnit(Frame.unit or Options.Unit)
 
-	if (Expiration) then
-		self.Enchant = Enchant
-		self:SetScript("OnUpdate", Auras.OnUpdate)
-	else
-		self.Enchant = nil
-		self.TimeLeft = nil
-		self:SetScript("OnUpdate", nil)
-	end
+    if (Options.Direction == "LEFT") then
+        Container:SetFlowLayoutGrowthDirection(-1, 1)
+    elseif (Options.Direction == "RIGHT") then
+        Container:SetFlowLayoutGrowthDirection(1, 1)
+    elseif (Options.Direction == "UP") then
+        Container:SetFlowLayoutGrowthDirection(1, 1)
+    elseif (Options.Direction == "DOWN") then
+        Container:SetFlowLayoutGrowthDirection(1, -1)
+    end
 
-	if (Icon) then
-		self:SetAlpha(1)
+    self:AddAura(Container, Options)
 
-		if (self.Icon) then
-			self.Icon:SetTexture(Icon)
-			UI:KeepAspectRatio(self, self.Icon)
-		end
-
-		self.TempEnchHighlight:Show()
-	else
-		self:SetAlpha(0)
-		self.TempEnchHighlight:Hide()
-	end
+    return Container
 end
 
-function Auras:OnAttributeChanged(Attribute, Value)
-	if (Attribute == "index") then
-		Auras.UpdateAura(self, Value)
-	elseif (Attribute == "target-slot") then
-		Auras.UpdateTempEnchant(self, Value)
-	end
+function UI:InitializeAuraHighlight(Button)
+    local DispelGradient = Button:CreateTexture(nil, "OVERLAY")
+    DispelGradient:SetInside()
+    DispelGradient:SetAtlas("_RaidFrame-Dispel-Highlight-Horizontal", false, nil, nil, "REPEAT", "CLAMP")
+    DispelGradient:SetTexCoord(0, 1, 0, 1)
+
+    local DispelBorder = Button:CreateTexture(nil, "OVERLAY")
+    DispelBorder:SetInside()
+    DispelBorder:SetAtlas("RaidFrame-DispelHighlight")
+
+    local DispelIcon = Button:CreateTexture(nil, "OVERLAY")
+    DispelIcon:Size(24, 24)
+    DispelIcon:Point("CENTER", Button, "TOPRIGHT", -1, -1)
+
+    Button:AddDispelTypeTexture(DispelGradient, {
+        style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
+        customDispelColorMap = UI.Colors.Dispel,
+    })
+
+    Button:AddDispelTypeTexture(DispelBorder, {
+        style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
+        customDispelColorMap = UI.Colors.Dispel,
+    })
+
+    Button:AddDispelTypeTexture(DispelIcon, {
+        style = Enum.CustomAuraButtonDispelTypeTextureStyle.Icon,
+    })
 end
 
-function Auras:OnEnter()
-	_G.GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 6, -6)
+function UI:AddAuraHighlight(Container, Options)
+    local InitializeHighlight = function(Button)
+        UI:InitializeAuraHighlight(Button)
+    end
 
-	if (self:GetAttribute("index")) then
-		_G.GameTooltip:SetUnitAuraByAuraInstanceID(self.Unit, self.AuraInstanceID)
-	elseif (self:GetAttribute("target-slot")) then
-		_G.GameTooltip:SetInventoryItem("player", self:GetID())
-	end
+    Container:AddAuraSlot("Aura", Options.Filter, {
+        initializeFrame = InitializeHighlight,
+    })
 end
 
-function Auras:OnLeave()
-    _G.GameTooltip_Hide()
-end
+function UI:CreateAuraHighlight(Frame, Options)
+    local Container = CreateFrame("AuraContainer", nil, Frame, "CustomAuraContainerTemplate")
+	Container:SetInside()
+    Container:SetUnit(Frame.unit or Options.Unit)
+    Container:EnableMouse(false)
 
-function Auras:Skin()
-	local InvisFrame = CreateFrame("Frame", nil, self)
-	InvisFrame:SetFrameLevel(self:GetFrameLevel() + 10)
-	InvisFrame:SetInside()
+    self:AddAuraHighlight(Container, Options)
 
-	local Icon = self:CreateTexture(nil, "BORDER")
-	Icon:SetInside()
-
-	local Duration = InvisFrame:CreateFontString(nil, "OVERLAY")
-	Duration:Point("BOTTOM", self, 2, -4)
-	Duration:SetFontTemplate("Default")
-
-	local Count = InvisFrame:CreateFontString(nil, "OVERLAY")
-	Count:Point("TOPRIGHT", self, 2, 2)
-	Count:SetFontTemplate("Default")
-
-	local Cooldown = CreateFrame("Cooldown", nil, self, "CooldownFrameTemplate")
-	Cooldown:SetInside()
-	Cooldown:SetDrawEdge(false)
-	Cooldown:SetSwipeColor(0, 0, 0, 0)
-	Cooldown:Hide()
-
-	UI:RegisterCooldown(Cooldown, InvisFrame, 0, -8, false, true)
-
-	local TempEnchHighlight = self:CreateTexture(nil, "OVERLAY")
-	TempEnchHighlight:SetBlendMode("ADD")
-	TempEnchHighlight:SetInside(self, 1, 1)
-	TempEnchHighlight:SetTexture(Media.Global.Blank)
-	TempEnchHighlight:SetVertexColor(0.64, 0.19, 0.79, 0.5)
-	TempEnchHighlight:Hide()
-
-	-- Style Buttons
-	if (self:GetParent():GetAttribute("filter") == "HARMFUL") then
-		self:SetTemplate(true)
-	else
-		self:SetTemplate()
-	end
-
-	self:CreateShadow()
-	self:SetShadowOverlay()
-	self:StyleButton()
-
-	-- Set Scripts
-	self:SetScript("OnAttributeChanged", Auras.OnAttributeChanged)
-	self:SetScript("OnEnter", Auras.OnEnter)
-	self:SetScript("OnLeave", Auras.OnLeave)
-
-	-- Cache
-	self.InvisFrame = InvisFrame
-	self.Icon = Icon
-	self.Duration = Duration
-	self.Count = Count
-	self.Cooldown = Cooldown
-	self.TempEnchHighlight = TempEnchHighlight
-	self.Filter = self:GetParent():GetAttribute("filter")
-end
-
-function Auras:UpdateHeader(Header)
-	local ButtonWidth, ButtonHeight = unpack(DB.Global.Auras.ButtonSize)
-
-	Header:SetAttribute("template", "FeelUIAuraTemplate")
-	Header:SetAttribute("weaponTemplate", Header.Filter == "HELPFUL" and "FeelUIAuraTemplate" or nil)
-	Header:SetAttribute("minHeight", UI:Scale(ButtonHeight))
-	Header:SetAttribute("minWidth", UI:Scale(DB.Global.Auras.ButtonPerRow * ButtonWidth))
-	Header:SetAttribute("xOffset", -UI:Scale(ButtonWidth + DB.Global.Auras.ButtonSpacing))
-	Header:SetAttribute("yOffset", 0)
-	Header:SetAttribute("wrapXOffset", 0)
-	Header:SetAttribute("wrapYOffset", -UI:Scale(28))
-	Header:SetAttribute("maxWraps", 3)
-	Header:SetAttribute("wrapAfter", DB.Global.Auras.ButtonPerRow)
-	Header:SetAttribute("sortMethod", Auras.SortMethod)
-	Header:SetAttribute("sortDirection", Auras.SortDirection)
-	Header:SetAttribute("point", "TOPRIGHT")
-	Header:Show()
-end
-
-function Auras:CreateAuraHeader(Filter)
-	local Name = Filter == "HELPFUL" and "FeelUIPlayerBuffs" or "FeelUIPlayerDebuffs"
-	local ButtonWidth, ButtonHeight = unpack(DB.Global.Auras.ButtonSize)
-
-	local Header = CreateFrame("Frame", Name, _G.UIParent, "SecureAuraHeaderTemplate")
-	Header:UnregisterEvent("UNIT_AURA")
-	Header:RegisterUnitEvent("UNIT_AURA", "player", "vehicle")
-	Header:SetAttribute("unit", "player")
-	Header:SetAttribute("filter", Filter)
-	Header.Filter = Filter
-
-    Header:SetAttribute("config-width", UI:Scale(ButtonWidth))
-    Header:SetAttribute("config-height", UI:Scale(ButtonHeight))
-    Header:SetAttribute("initialConfigFunction", [[
-        local button = self
-        local width = button:GetParent():GetAttribute("config-width")
-        local height = button:GetParent():GetAttribute("config-height")
-        button:SetWidth(width)
-        button:SetHeight(height)
-    ]])
-
-	RegisterStateDriver(Header, "visibility", "[petbattle] hide; show")
-	RegisterAttributeDriver(Header, "unit", "[vehicleui] vehicle; player")
-
-	if (Filter == "HELPFUL") then
-		Header:SetAttribute("consolidateDuration", -1)
-		Header:SetAttribute("includeWeapons", 1)
-	end
-
-	-- Update Header
-	self:UpdateHeader(Header)
-
-	return Header
-end
-
-function Auras:CreateAuras()
-	self.BuffFrame = self:CreateAuraHeader("HELPFUL")
-	self.BuffFrame:Point(unpack(DB.Global.Auras.Point))
-
-	self.DebuffFrame = self:CreateAuraHeader("HARMFUL")
-	self.DebuffFrame:Point("TOPRIGHT", self.BuffFrame, 0, -42*3)
-end
-
-function Auras:HeadersUpdate()
-	for _, Header in next, Auras.Headers do
-		local Child = Header:GetAttribute("child1")
-		local i = 1
-
-		while Child do
-			Auras.UpdateAura(Child, Child:GetID())
-			i = i + 1
-			Child = Header:GetAttribute("child"..i)
-		end
-	end
-end
-
-function Auras:Initialize()
-	if (not DB.Global.Auras.Enable) then 
-		return 
-	end
-
-	self:DisableBlizzardAuras()
-	self:CreateAuras()
-	self:HeadersUpdate()
+    return Container
 end

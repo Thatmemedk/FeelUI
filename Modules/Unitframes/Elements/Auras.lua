@@ -8,224 +8,6 @@ local _G = _G
 local unpack = unpack
 local select = select
 
--- WoW Globals
-local GetAuraDataByIndex = _G.C_UnitAuras.GetAuraDataByIndex
-local GetAuraApplicationDisplayCount = _G.C_UnitAuras.GetAuraApplicationDisplayCount
-local GetAuraDispelTypeColor = _G.C_UnitAuras.GetAuraDispelTypeColor
-
-function UF:UpdateAuraContainer(Unit, Auras)
-    if (not Unit or not Auras) then
-        return
-    end
-
-    local Buttons = Auras.Buttons
-    local MaxAuras = Auras.NumAuras or 6
-    local AuraMinCount = 2
-    local AuraMaxCount = 99
-    local IsFriendly = UnitCanCooperate("player", Unit)
-    local Active = 0
-    local Index = 1
-
-    while true do
-        local AuraData = GetAuraDataByIndex(Unit, Index, Auras.Filter)
-
-        if (not AuraData or Active >= MaxAuras) then
-            break
-        end
-
-        Index = Index + 1
-
-        local Icon = AuraData.icon
-        local AuraInstanceID = AuraData.auraInstanceID
-        local AuraIsStealable = AuraData.isStealable
-
-        if (AuraInstanceID) then
-            Active = Active + 1
-
-            local Button = Buttons[Active]
-
-            if (not Button) then
-                break
-            end
-
-            if (Icon) then
-                Button.Icon:SetTexture(AuraData.icon)
-                UI:KeepAspectRatio(Button, Button.Icon)
-            end
-
-            if (Button.Count) then
-                Button.Count:SetText(GetAuraApplicationDisplayCount(Unit, AuraInstanceID, AuraMinCount, AuraMaxCount))
-            end
-
-            if (Button.Cooldown) then
-                local CD = C_UnitAuras.GetAuraDuration(Unit, AuraInstanceID)
-
-                if (CD) then
-                    Button.Cooldown:SetCooldownFromDurationObject(CD)
-                    Button.Cooldown:Show()
-                else
-                    Button.Cooldown:Hide()
-                end
-            end
-
-            if (AuraData.isHarmful) then
-                local Color = GetAuraDispelTypeColor(Unit, AuraInstanceID, UI.DispelColorCurve)
-
-                if (Color) then
-                    Button:SetColorTemplate(Color:GetRGB())
-                end
-            else
-                Button:SetColorTemplate(unpack(DB.Global.General.BorderColor))
-            end
-
-            if (Button.Highlight) then
-                if (not IsFriendly) then
-                    Button.Highlight:SetAlphaFromBoolean(AuraIsStealable, 1, 0)
-                else
-                    Button.Highlight:SetAlpha(0)
-                end
-            end
-
-            -- Cache
-            Button.Unit = Unit
-            Button.AuraFilter = Auras.Filter
-            Button.AuraIndex = Index - 1
-            Button.AuraInstanceID = AuraInstanceID
-
-            if (not Button:IsShown()) then
-                Button:Show()
-            end
-        end
-    end
-
-    for i = Active + 1, #Buttons do
-        local Button = Buttons[i]
-
-        if (Button:IsShown()) then
-            Button:Hide()
-        end
-
-        Button.AuraInstanceID = nil
-        Button.Unit = nil
-    end
-end
-
-function UF:HideAuraContainer(Container)
-    if (not Container or not Container.Buttons) then
-        return
-    end
-
-    for i = 1, #Container.Buttons do
-        local Button = Container.Buttons[i]
-
-        if (Button) then
-            Button:Hide()
-
-            Button.AuraInstanceID = nil
-            Button.Unit = nil
-            Button.AuraFilter = nil
-            Button.AuraIndex = nil
-        end
-    end
-end
-
-function UF:UpdateAuras(Frame, Unit)
-    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
-        if (Frame) then
-            UF:HideAuraContainer(Frame.Buffs)
-            UF:HideAuraContainer(Frame.Debuffs)
-            UF:HideAuraContainer(Frame.External)
-            UF:HideAuraContainer(Frame.CrowdControl)
-        end
-
-        return
-    end
-
-    if (Frame.Buffs and Frame.Buffs.Filter) then
-        UF:UpdateAuraContainer(Unit, Frame.Buffs)
-    end
-
-    if (Frame.Debuffs and Frame.Debuffs.Filter) then
-        UF:UpdateAuraContainer(Unit, Frame.Debuffs)
-    end
-
-    if (Frame.External and Frame.External.Filter) then
-        UF:UpdateAuraContainer(Unit, Frame.External)
-    end
-
-    if (Frame.CrowdControl and Frame.CrowdControl.Filter) then
-        UF:UpdateAuraContainer(Unit, Frame.CrowdControl)
-    end
-end
-
-function UF:OnEnter()
-    if (_G.GameTooltip:IsForbidden() or not self:IsVisible()) then
-        return
-    end
-
-    _G.GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
-    _G.GameTooltip:SetUnitAuraByAuraInstanceID(self.Unit, self.AuraInstanceID)
-end
-
-function UF:OnLeave()
-    if (_G.GameTooltip:IsForbidden()) then
-        return
-    end
-
-    _G.GameTooltip_Hide()
-end
-
-function UF:CreateAuraButton(Frame, ExtraBorder, HideNumbers)
-    if (not Frame) then
-        return
-    end
-
-    local Button = CreateFrame("Button", nil, Frame)
-    Button:SetTemplate(ExtraBorder)
-    Button:CreateShadow()
-    Button:StyleButton()
-    Button:SetShadowOverlay()
-
-    -- Set Scripts
-    Button:SetScript("OnEnter", UF.OnEnter)
-    Button:SetScript("OnLeave", UF.OnLeave)
-
-    local Overlay = CreateFrame("Frame", nil, Button)
-    Overlay:SetFrameLevel(Button:GetFrameLevel() + 10)
-    Overlay:SetInside()
-
-    local Icon = Button:CreateTexture(nil, "ARTWORK")
-    Icon:SetInside()
-
-    local Count = Overlay:CreateFontString(nil, "OVERLAY")
-    Count:Point("TOPRIGHT", Button, 2, 2)
-    Count:SetFontTemplate("Default")
-
-    local Highlight = CreateFrame("Frame", nil, Button)
-    Highlight:SetFrameLevel(Button:GetFrameLevel() -1)
-    Highlight:SetInside(Button, 4, 4)
-    Highlight:CreateGlow(3, 3, 1, 0, 1, 1)
-    Highlight:SetAlpha(0)
-
-    local Cooldown = CreateFrame("Cooldown", nil, Button, "CooldownFrameTemplate")
-    Cooldown:SetInside()
-    Cooldown:SetDrawEdge(false)
-    Cooldown:SetDrawBling(false)
-    Cooldown:SetReverse(true)
-    Cooldown:Hide()
-
-    UI:RegisterCooldown(Cooldown, Overlay, 0, -8, false, true)
-
-    -- Cache
-    Button.Overlay = Overlay
-    Button.Icon = Icon
-    Button.Count = Count
-    Button.Highlight = Highlight
-    Button.Cooldown = Cooldown
-
-    return Button
-end
-
 --[[
 
 "HELPFUL"; Displays helpeful Buffs no filtering
@@ -245,61 +27,24 @@ end
 
 --]]
 
-function UF:CreateAuraContainer(Frame, ButtonWidth, ButtonHeight, Spacing, AnchorPoint, OffsetX, OffsetY, Direction, NumAuras, Filter, ExtraBorder)
-    if (not Frame) then
-        return
-    end
-
-    local Container = CreateFrame("Frame", nil, Frame)
-    Container.Width = ButtonWidth
-    Container.Height = ButtonHeight
-    Container.Spacing = Spacing
-    Container.Direction = Direction
-    Container.NumAuras = NumAuras
-    Container.Filter = Filter
-    Container.Buttons = Container
-
-    local Previous
-    local TotalWidth = (ButtonWidth * NumAuras) + (Spacing * (NumAuras - 1))
-
-    Container:Size(TotalWidth, ButtonHeight)
-    Container:Point(AnchorPoint, Frame, AnchorPoint, OffsetX or 0, OffsetY or 0)
-
-    for i = 1, NumAuras do
-        local Button = UF:CreateAuraButton(Container, ExtraBorder)
-        Button:Size(ButtonWidth, ButtonHeight)
-        Button:Hide()
-
-        if (not Previous) then
-            if (Direction == "RIGHT") then
-                Button:Point("LEFT", Container, "LEFT", 0, 0)
-            else
-                Button:Point("RIGHT", Container, "RIGHT", 0, 0)
-            end
-        else
-            if (Direction == "RIGHT") then
-                Button:Point("LEFT", Previous, "RIGHT", Spacing, 0)
-            else
-                Button:Point("RIGHT", Previous, "LEFT", -Spacing, 0)
-            end
-        end
-
-        -- Direct indexing instead of Container.Buttons table
-        Container[i] = Button
-
-        -- Cache
-        Previous = Button
-    end
-
-    return Container
-end
-
 function UF:CreateBuffsTarget(Frame)
     if (Frame.Buffs) then
         return
     end
 
-    Frame.Buffs = UF:CreateAuraContainer(Frame, 30, 18, 3, "TOPLEFT", 0, 32, "RIGHT", 7, "HELPFUL", false)
+    Frame.Buffs = UI:CreateAuraContainer(Frame, {
+        Anchor = "TOPLEFT",
+        X = 0,
+        Y = 32,
+        Width = 30,
+        Height = 18,
+        Cooldown = true,
+        Count = true,
+        Duration = true,
+        Border = false,
+        Filter = "HELPFUL",
+        MaxAuras = 7,
+    })
 end
 
 function UF:CreateDebuffsTarget(Frame)
@@ -307,7 +52,21 @@ function UF:CreateDebuffsTarget(Frame)
         return
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame, 30, 18, 3, "TOPRIGHT", 0, 56, "LEFT", 7, "HARMFUL|PLAYER", true)
+    Frame.Debuffs = UI:CreateAuraContainer(Frame, {
+        Anchor = "TOPLEFT",
+        X = 0,
+        Y = 56,
+        Width = 30,
+        Height = 18,
+        Direction = "RIGHT",
+        Cooldown = true,
+        Count = true,
+        Duration = true,
+        Border = true,
+        DebuffIndicator = true,
+        Filter = "HARMFUL|PLAYER",
+        MaxAuras = 7,
+    })
 end
 
 function UF:CreatePartyDebuffs(Frame)
@@ -315,7 +74,22 @@ function UF:CreatePartyDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame, 32, 12, 3, "TOPRIGHT", 248, -12, "RIGHT", 7, "HARMFUL|RAID_PLAYER_DISPELLABLE", true)
+    Frame.Debuffs = UI:CreateAuraContainer(Frame, {
+        Anchor = "TOPRIGHT",
+        X = 248,
+        Y = -12,
+        Width = 32,
+        Height = 12,
+        Spacing = 3,
+        Direction = "RIGHT",
+        Cooldown = true,
+        Count = true,
+        Duration = true,
+        Border = true,
+        DebuffIndicator = true,
+        Filter = "HARMFUL|RAID_PLAYER_DISPELLABLE",
+        MaxAuras = 7,
+    })
 end
 
 function UF:CreatePartyBuffs(Frame)
@@ -323,7 +97,21 @@ function UF:CreatePartyBuffs(Frame)
         return
     end
 
-    Frame.Buffs = UF:CreateAuraContainer(Frame, 32, 12, 3, "TOPLEFT", -248, -12, "TOPLEFT", 7, "HELPFUL|PLAYER|RAID", false)
+    Frame.Buffs = UI:CreateAuraContainer(Frame, {
+        Anchor = "TOPLEFT",
+        X = -248,
+        Y = -12,
+        Width = 32,
+        Height = 12,
+        Spacing = 3,
+        Direction = "RIGHT",
+        Cooldown = true,
+        Count = true,
+        Duration = true,
+        Border = false,
+        Filter = "HELPFUL|PLAYER|RAID",
+        MaxAuras = 7,
+    })
 end
 
 function UF:CreatePartyExternal(Frame)
@@ -331,7 +119,20 @@ function UF:CreatePartyExternal(Frame)
         return
     end
 
-    Frame.External = UF:CreateAuraContainer(Frame.InvisFrameHigher, 36, 12, 4, "CENTER", 0, 0, "CENTER", 1, "HELPFUL|BIG_DEFENSIVE", false)
+    Frame.External = UI:CreateAuraContainer(Frame.InvisFrameHigher, {
+        Anchor = "CENTER",
+        X = 0,
+        Y = 0,
+        Width = 36,
+        Height = 12,
+        Spacing = 4,
+        Direction = "RIGHT",
+        Cooldown = true,
+        Count = true,
+        Duration = true,
+        Filter = "HELPFUL|BIG_DEFENSIVE",
+        MaxAuras = 1,
+    })
 end
 
 function UF:CreateRaidDebuffs(Frame)
@@ -339,7 +140,24 @@ function UF:CreateRaidDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 26, 12, 4, "TOPLEFT", 12, -18, "RIGHT", 2, "HARMFUL|RAID_PLAYER_DISPELLABLE", true)
+    --[[
+    Frame.Debuffs = UI:CreateAuraContainer(Frame.InvisFrameHigher, {
+        Anchor = "TOPLEFT",
+        X = 12,
+        Y = -18,
+        Width = 26,
+        Height = 12,
+        Spacing = 4,
+        Direction = "RIGHT",
+        Cooldown = true,
+        Count = true,
+        Duration = true,
+        Border = true,
+        DebuffIndicator = true,
+        Filter = "HARMFUL|RAID_PLAYER_DISPELLABLE",
+        MaxAuras = 2,
+    })
+    --]]
 end
 
 function UF:CreateRaidBuffs(Frame)
@@ -347,15 +165,22 @@ function UF:CreateRaidBuffs(Frame)
         return
     end
 
-    Frame.Buffs = UF:CreateAuraContainer(Frame.InvisFrameHigher, 18, 12, 3, "TOPLEFT", 0, 0, "RIGHT", 4, "HELPFUL|PLAYER|RAID_IN_COMBAT", false)
-
-    for i = 1, #Frame.Buffs.Buttons do
-        local Button = Frame.Buffs.Buttons[i]
-
-        if (Button and Button.Cooldown) then
-            Button.Cooldown:SetHideCountdownNumbers(true)
-        end
-    end
+    --[[
+    Frame.Buffs = UI:CreateAuraContainer(Frame.InvisFrameHigher, {
+        Anchor = "TOPLEFT",
+        X = 0,
+        Y = 0,
+        Width = 18,
+        Height = 12,
+        Spacing = 3,
+        Direction = "RIGHT",
+        Cooldown = true,
+        Count = true,
+        Duration = true,
+        Filter = "HELPFUL|PLAYER|RAID_IN_COMBAT",
+        MaxAuras = 4,
+    })
+    --]]
 end
 
 function UF:CreateRaidExternal(Frame)
@@ -363,5 +188,20 @@ function UF:CreateRaidExternal(Frame)
         return
     end
 
-    Frame.External = UF:CreateAuraContainer(Frame.InvisFrameHigher, 28, 12, 4, "CENTER", 0, -18, "CENTER", 1, "HELPFUL|BIG_DEFENSIVE", false)
+    --[[
+    Frame.External = UI:CreateAuraContainer(Frame.InvisFrameHigher, {
+        Anchor = "CENTER",
+        X = 0,
+        Y = -18,
+        Width = 28,
+        Height = 12,
+        Spacing = 4,
+        Direction = "RIGHT",
+        Cooldown = true,
+        Count = true,
+        Duration = true,
+        Filter = "HELPFUL|BIG_DEFENSIVE",
+        MaxAuras = 1,
+    })
+    --]]
 end

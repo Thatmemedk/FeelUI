@@ -109,4 +109,16 @@ UI.Colors = {
 	},
 }
 
+-- DISPEL
+
+UI.Colors.Dispel = {
+    [0] = _G.DEBUFF_TYPE_NONE_COLOR, -- None
+    [1] = _G.DEBUFF_TYPE_MAGIC_COLOR, -- Magic
+    [2] = _G.DEBUFF_TYPE_CURSE_COLOR, -- Curse
+    [3] = _G.DEBUFF_TYPE_DISEASE_COLOR, -- Disease
+    [4] = _G.DEBUFF_TYPE_POISON_COLOR, -- Poison
+    [11] = _G.DEBUFF_TYPE_BLEED_COLOR, -- Bleed
+    [9] = UI:CreateColor(243, 95, 245), -- Enrage
+}
+
 UI.GetClassColors = UI.Colors.Class[ClassID]

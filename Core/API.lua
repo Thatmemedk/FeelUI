@@ -110,6 +110,26 @@ function UI:NoSecretValues(Value)
 	return not UI:HasSecretValues(Value)
 end
 
+function UI:UnitExists(Unit)
+	if (UI:IsSecretUnit(Unit)) then
+		return
+	end
+
+	return Unit and (UnitExists(Unit) or UnitIsVisible(Unit))
+end
+
+function UI:UnitIsUnit(Unit1, Unit2)
+	if (CanCompareUnitTokens and not CanCompareUnitTokens(Unit1, Unit2)) then
+		return
+	end
+
+	local IsUnit = UnitIsUnit(Unit1, Unit2)
+
+	if (UI:NotSecretValue(IsUnit)) then
+		return IsUnit
+	end
+end
+
 -- UFT8
 function UI:UTF8Sub(Text, Index, Dots)
     if (not (Text) or UI:IsSecretValue(Text))  then 
@@ -325,7 +345,7 @@ function UI:KeepAspectRatio(Button, Icon, Zoom)
 		Right = Right - Trim
 	end
 
-	Zoom = Zoom or 0.20
+	Zoom = Zoom or unpack(DB.Global.General.IconZoom)
 
 	if (Zoom > 0) then
 		local HorizontalZoom = (Right - Left) * Zoom * 0.5

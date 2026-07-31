@@ -147,9 +147,9 @@ function UF:CreatePhaseIcon(Frame)
     end
 
     local PhaseIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
-    PhaseIcon:Size(26, 26)
+    PhaseIcon:SetAtlas("RaidFrame-Icon-outofsight")
+    PhaseIcon:Size(28, 28)
     PhaseIcon:Point("TOP", Frame.Health, 0, 12)
-    PhaseIcon:SetTexture([[Interface\TargetingFrame\UI-PhasingIcon]])
     PhaseIcon:Hide()
 
     Frame.PhaseIcon = PhaseIcon
@@ -170,4 +170,16 @@ function UF:CreateRoleIcon(Frame)
     RoleIcon:Hide()
 
     Frame.RoleIcon = RoleIcon
+end
+
+function UF:CreateStatusIcon(Frame)
+    if (Frame.StatusIcon) then
+        return
+    end
+
+    local StatusIcon = Frame.InvisFrameHigher:CreateTexture(nil, "OVERLAY", nil, 7)
+    StatusIcon:Point("TOP", Frame.Health, 0, 12)
+    StatusIcon:Hide()
+
+    Frame.StatusIcon = StatusIcon
 end

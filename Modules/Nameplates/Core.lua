@@ -51,6 +51,12 @@ NP.PlateTypes = {
 NP.FadeInTime = 0.5
 NP.CastHoldTime = 2
 
+-- SecureFrame
+NP.SecureFrame = CreateFrame("Frame", "UF_SecureFrame", _G.UIParent, "SecureHandlerStateTemplate")
+NP.SecureFrame:SetAllPoints()
+NP.SecureFrame:SetFrameStrata("LOW")
+RegisterStateDriver(NP.SecureFrame, "visibility", "[petbattle] hide; show")
+
 -- HEALTH UPDATE
 
 function NP:UpdateHealth(Frame, Unit)
@@ -62,12 +68,9 @@ function NP:UpdateHealth(Frame, Unit)
     Frame.Health:SetMinMaxValues(0, Max)
     Frame.Health:SetValue(Min, UI.SmoothBars)
 
-    if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit)) then
+    if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsDead(Unit) or UnitIsGhost(Unit)) then
         Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
         Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
-    elseif (UnitIsDead(Unit)) then
-        Frame.Health:SetStatusBarColor(0.25, 0, 0)
-        Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
     else
         if (DB.Global.Nameplates.ReactionColor) then
             local Reaction = UnitReaction(Unit, "player")
@@ -323,10 +326,6 @@ function NP:RefreshUnit(Frame, Unit)
     if (Frame.Name) then self:UpdateName(Frame, Unit) end
     if (Frame.Guild) then self:UpdateGuild(Frame, Unit) end
 
-    -- AURA
-    if (Frame.Debuffs) then self:UpdateAuras(Frame, Unit, true, false) end
-    if (Frame.CrowdControl) then self:UpdateAuras(Frame, Unit, false, true) end
-
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame, Unit) end
 
@@ -547,8 +546,8 @@ function NP:OnEvent(event, unit, ...)
         NP:UnitMouseOver()
     elseif (event == "RAID_TARGET_UPDATE") then
         NP:UnitRaidIcon()
-    elseif (event == "UNIT_AURA") then
-        NP:UnitAura(unit)
+    --elseif (event == "UNIT_AURA") then
+        --NP:UnitAura(unit)
     elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
         NP:UnitHealth(unit)
     elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
@@ -610,48 +609,50 @@ end
 -- REGISTER EVENTS
 
 function NP:RegisterEvents()
+    local SecureEventFrame = NP.SecureFrame
+
     -- NAMEPLATE
-    self:RegisterEvent("NAME_PLATE_UNIT_ADDED")
-    self:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
-    self:RegisterEvent("PLAYER_TARGET_CHANGED")
-    self:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+    SecureEventFrame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+    SecureEventFrame:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
+    SecureEventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    SecureEventFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
     -- HEALTH
-    self:RegisterEvent("UNIT_HEALTH")
-    self:RegisterEvent("UNIT_MAXHEALTH")
+    SecureEventFrame:RegisterEvent("UNIT_HEALTH")
+    SecureEventFrame:RegisterEvent("UNIT_MAXHEALTH")
     -- HEALTH PRED
-    self:RegisterEvent("UNIT_HEAL_PREDICTION")
-    self:RegisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
-    self:RegisterEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
-    self:RegisterEvent("UNIT_MAX_HEALTH_MODIFIERS_CHANGED")
+    SecureEventFrame:RegisterEvent("UNIT_HEAL_PREDICTION")
+    SecureEventFrame:RegisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
+    SecureEventFrame:RegisterEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
+    SecureEventFrame:RegisterEvent("UNIT_MAX_HEALTH_MODIFIERS_CHANGED")
     -- AURA
-    self:RegisterEvent("UNIT_AURA")
+    --SecureEventFrame:RegisterEvent("UNIT_AURA")
     -- NAME
-    self:RegisterEvent("UNIT_NAME_UPDATE")
+    SecureEventFrame:RegisterEvent("UNIT_NAME_UPDATE")
     -- LEVEL
-    self:RegisterEvent("UNIT_LEVEL")
-    self:RegisterEvent("PLAYER_LEVEL_UP")
+    SecureEventFrame:RegisterEvent("UNIT_LEVEL")
+    SecureEventFrame:RegisterEvent("PLAYER_LEVEL_UP")
     -- THREAT
-    self:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE")
-    self:RegisterEvent("UNIT_THREAT_LIST_UPDATE")
+    SecureEventFrame:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE")
+    SecureEventFrame:RegisterEvent("UNIT_THREAT_LIST_UPDATE")
     -- CASTBAR
-    self:RegisterEvent("UNIT_SPELLCAST_START")
-    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
-    self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
-    self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-    self:RegisterEvent("UNIT_SPELLCAST_STOP")
-    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
-    self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
-    self:RegisterEvent("UNIT_SPELLCAST_DELAYED")
-    self:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
-    self:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE")
-    self:RegisterEvent("UNIT_SPELLCAST_FAILED")
-    self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
-    self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE")
-    self:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_START")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_STOP")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_DELAYED")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_FAILED")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
     -- ICONS
-    self:RegisterEvent("RAID_TARGET_UPDATE")
+    SecureEventFrame:RegisterEvent("RAID_TARGET_UPDATE")
     -- ON EVENT
-    self:SetScript("OnEvent", function(_, event, ...) 
+    SecureEventFrame:SetScript("OnEvent", function(_, event, ...) 
         NP:OnEvent(event, ...) 
     end)
 end
