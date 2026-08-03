@@ -368,18 +368,6 @@ function NP:UnitHealthPred(Unit)
     end
 end
 
-function NP:UnitAura(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
-        return
-    end
-
-    if (Frame.Buffs or Frame.Debuffs or Frame.External or Frame.CrowdControl) then 
-        self:UpdateAuras(Frame, Unit) 
-    end
-end
-
 function NP:UnitName(Unit)
     local Frame = self.Frames[Unit]
 

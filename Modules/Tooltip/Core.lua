@@ -289,6 +289,23 @@ function TT:SetBackdropStyle(tt)
     tt.IsSkinned = true
 end
 
+function TT:AuraContainerTooltip()
+    if (not _G.AuraContainerInbound or not _G.AuraContainerInbound.SetTooltipBackdrop) then 
+        return 
+    end
+
+    _G.AuraContainerInbound.SetTooltipBackdrop({
+        backdropInfo = {
+            bgFile = Media.Global.Texture,
+            edgeFile = Media.Global.Blank,
+            edgeSize = UI:Scale(1),
+        },
+
+        borderColor = CreateColor(unpack(DB.Global.General.BorderColor)),
+        centerColor = CreateColor(unpack(DB.Global.General.BackdropColor)),
+    })
+end
+
 function TT:StyleTooltips()
     local TTList = {
         _G.GameTooltip,
@@ -317,6 +334,8 @@ function TT:StyleTooltips()
             end
         end
     end
+
+    TT:AuraContainerTooltip()
 
     if (_G.AutoCompleteBox) then
         _G.AutoCompleteBox.NineSlice:SetAlpha(0)

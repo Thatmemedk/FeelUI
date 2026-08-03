@@ -21,17 +21,17 @@ end
 function Auras:CreatePlayerAuras()
     local ButtonWidth, ButtonHeight = unpack(DB.Global.Auras.ButtonSize)
 
-    local Buffs = CreateFrame("Frame", "FeelUI_Buffs", _G.UIParent)
+    local Buffs = CreateFrame("Frame", "FeelUI_BuffsAnchor", _G.UIParent)
     Buffs:Size(42, 42)
     Buffs:Point(unpack(DB.Global.Auras.Point))
 
     local BuffsFrame = UI:CreateAuraContainer(Buffs, {
+        GrowthDirection = "LEFT",
         Anchor = "TOPLEFT",
         X = 0,
         Y = 0,
         Width = ButtonWidth,
         Height = ButtonHeight,
-        Direction = "LEFT",
         Cooldown = false,
         Count = true,
         Duration = true,
@@ -39,19 +39,20 @@ function Auras:CreatePlayerAuras()
         Filter = "HELPFUL",
         MaxAuras = 32,
         Unit = "player",
+        ShowTempItemEnchantment = true,
     })
 
-    local Debuffs = CreateFrame("Frame", "FeelUI_Debuffs", _G.UIParent)
+    local Debuffs = CreateFrame("Frame", "FeelUI_DebuffsAnchor", _G.UIParent)
     Debuffs:Size(48, 48)
     Debuffs:Point("TOPRIGHT", Buffs, 0, -42*3)
 
     local DebuffFrame = UI:CreateAuraContainer(Debuffs, {
+        GrowthDirection = "LEFT",
         Anchor = "TOPLEFT",
         X = 0,
         Y = 0,
         Width = ButtonWidth+6,
         Height = ButtonHeight+6,
-        Direction = "LEFT",
         Cooldown = false,
         Count = true,
         Duration = true,
@@ -62,6 +63,15 @@ function Auras:CreatePlayerAuras()
         Unit = "player",
         TimeY = -10,
     })
+
+    self.BuffsFrame = BuffsFrame
+    self.DebuffFrame = DebuffFrame
+end
+
+function Auras:UpdateAuras()
+    -- Make sure we update them on reload/login
+    self.BuffsFrame:UpdateAllAuras()
+    self.DebuffFrame:UpdateAllAuras()
 end
 
 function Auras:Initialize()
@@ -69,6 +79,7 @@ function Auras:Initialize()
         return 
     end
 
-    self:CreatePlayerAuras()
     self:DisableBlizzardAuras()
+    self:CreatePlayerAuras()
+    self:UpdateAuras()
 end

@@ -25,20 +25,19 @@ function UI:BuildRuleDurationFormatter()
     return Formatter
 end
 
-function UI:GetDurationFormatter()
-    if (not UI.DurationFormatter) then
-        UI.DurationFormatter = UI:BuildRuleDurationFormatter()
-    end
-
-    return UI.DurationFormatter
-end
-
 function UI:InitializeAuraButton(Button, Options)
     Button:Size(Options.Width, Options.Height)
     Button:SetTemplate()
     Button:CreateShadow()
     Button:StyleButton()
     Button:SetShadowOverlay()
+
+    -- Cancel Aura
+    Button:SetCancelAuraButtons("RightButtonUp, RightButtonDown")
+
+    -- Tooltip
+    Button:SetTooltipAnchorPoint("ANCHOR_BOTTOMLEFT", 0, -6)
+    Button:SetHideTooltipInCombat(true)
 
     -- Icon
     local Icon = Button:CreateTexture(nil, "ARTWORK")
@@ -84,7 +83,7 @@ function UI:InitializeAuraButton(Button, Options)
         
         Button:SetDurationText(Time, {
 			--binding = nil,
-			textFormatter = UI:GetDurationFormatter(),
+			textFormatter = UI:BuildRuleDurationFormatter(),
 			--textFormat = nil,
 			textColor = {
 			    curve = UI.CooldownColorCurve,
@@ -92,6 +91,15 @@ function UI:InitializeAuraButton(Button, Options)
 			},
 		})
     end
+
+    --[[
+    local Highlight = CreateFrame("Frame", nil, Button)
+    Highlight:SetFrameLevel(Button:GetFrameLevel() -1)
+    Highlight:SetInside(Button, 4, 4)
+    Highlight:CreateGlow(3, 3, 1, 0, 1, 1)
+
+    Button:AddDispelTypeTexture(Highlight)
+    --]]
 
     -- Debuff Border
     if (Options.Border) then
@@ -127,46 +135,10 @@ function UI:InitializeAuraButton(Button, Options)
         BorderRight:Point("BOTTOMRIGHT", Button, 0, 0)
         BorderRight:SetTexture(Media.Global.Blank)
 
-		Button.BorderThick = {}
-	
-		for i = 1, 8 do
-			Button.BorderThick[i] = Overlay:CreateTexture(nil, "OVERLAY")
-			Button.BorderThick[i]:Size(1, 1)
-			Button.BorderThick[i]:SetColorTexture(0, 0, 0, 1)
-		end
-		
-		Button.BorderThick[1]:Point("TOPLEFT", Button, "TOPLEFT", -1, 1)
-		Button.BorderThick[1]:Point("TOPRIGHT", Button, "TOPRIGHT", 1, -1)
-
-		Button.BorderThick[2]:Point("BOTTOMLEFT", Button, "BOTTOMLEFT", -1, -1)
-		Button.BorderThick[2]:Point("BOTTOMRIGHT", Button, "BOTTOMRIGHT", 1, -1)
-
-		Button.BorderThick[3]:Point("TOPLEFT", Button, "TOPLEFT", -1, 1)
-		Button.BorderThick[3]:Point("BOTTOMLEFT", Button, "BOTTOMLEFT", 1, -1)
-
-		Button.BorderThick[4]:Point("TOPRIGHT", Button, "TOPRIGHT", 1, 1)
-		Button.BorderThick[4]:Point("BOTTOMRIGHT", Button, "BOTTOMRIGHT", -1, -1)
-
-		Button.BorderThick[5]:Point("TOPLEFT", Button, "TOPLEFT", 1, -1)
-		Button.BorderThick[5]:Point("TOPRIGHT", Button, "TOPRIGHT", -1, 1)
-
-		Button.BorderThick[6]:Point("BOTTOMLEFT", Button, "BOTTOMLEFT", 1, 1)
-		Button.BorderThick[6]:Point("BOTTOMRIGHT", Button, "BOTTOMRIGHT", -1, 1)
-
-		Button.BorderThick[7]:Point("TOPLEFT", Button, "TOPLEFT", 1, -1)
-		Button.BorderThick[7]:Point("BOTTOMLEFT", Button, "BOTTOMLEFT", -1, 1)
-
-		Button.BorderThick[8]:Point("TOPRIGHT", Button, "TOPRIGHT", -1, -1)
-		Button.BorderThick[8]:Point("BOTTOMRIGHT", Button, "BOTTOMRIGHT", 1, 1)
-
         Button:AddDispelTypeTexture(BorderTop, BorderStyle)
         Button:AddDispelTypeTexture(BorderBottom, BorderStyle)
         Button:AddDispelTypeTexture(BorderLeft, BorderStyle)
         Button:AddDispelTypeTexture(BorderRight, BorderStyle)
-
-        Button.Shadow:SetOutside(Button, 3, 3)
-    elseif (Options.Border == false) then
-        Button.Shadow:SetOutside(Button, 2, 2)
     end
 
     -- Debuff Icon
@@ -181,8 +153,60 @@ function UI:InitializeAuraButton(Button, Options)
             showWhenHelpful = false,
         })
     end
+end
 
+function UI:InitializeTempAuraButton(Button, Options)
+    Button:Size(Options.Width, Options.Height)
+    Button:SetTemplate()
+    Button:CreateShadow()
+    Button:StyleButton()
+    Button:SetShadowOverlay()
+
+    -- Cancel Aura
     Button:SetCancelAuraButtons("RightButtonUp, RightButtonDown")
+
+    -- Tooltip
+    Button:SetTooltipAnchorPoint("ANCHOR_BOTTOMLEFT", 0, -6)
+    Button:SetHideTooltipInCombat(true)
+
+    -- Icon
+    local Icon = Button:CreateTexture(nil, "ARTWORK")
+    Icon:SetInside()
+
+    -- Setup Aspect Ratio
+    UI:KeepAspectRatio(Button, Icon)
+
+    -- Set Icon
+    Button:SetIcon(Icon)
+
+    -- Overlay
+    local Overlay = CreateFrame("Frame", nil, Button)
+    Overlay:SetFrameLevel(Button:GetFrameLevel() + 10)
+    Overlay:SetInside()
+
+    -- Temp Aura Highlight
+    local TempEnchHighlight = Button:CreateTexture(nil, "OVERLAY")
+    TempEnchHighlight:SetBlendMode("ADD")
+    TempEnchHighlight:SetInside(Button, 1, 1)
+    TempEnchHighlight:SetTexture(Media.Global.Blank)
+    TempEnchHighlight:SetVertexColor(0.64, 0.19, 0.79, 0.5)
+
+    -- Duration
+    if (Options.Duration) then
+        local Time = Overlay:CreateFontString(nil, "OVERLAY")
+        Time:Point("CENTER", Options.TimeX or 0, Options.TimeY or -8)
+        Time:SetFontTemplate("Default")
+        
+        Button:SetDurationText(Time, {
+            --binding = nil,
+            textFormatter = UI:BuildRuleDurationFormatter(),
+            --textFormat = nil,
+            textColor = {
+                curve = UI.CooldownColorCurve,
+                property = Enum.DurationTextBindingProperty.RemainingDuration,
+            },
+        })
+    end
 end
 
 function UI:AddAura(Container, Options)
@@ -190,47 +214,81 @@ function UI:AddAura(Container, Options)
         UI:InitializeAuraButton(Button, Options)
     end
 
+    local InitializeTempAura = function(Button)
+        UI:InitializeTempAuraButton(Button, Options)
+    end
+
     if (Options.MaxAuras == 1) then
-        Container:AddAuraSlot(Container:GetDebugName(), Options.Filter, {
+        Container:AddAuraSlot("AuraSlot", Options.Filter, {
             initializeFrame = InitializeAura,
         })
     else
-        Container:AddAuraGroup(Container:GetDebugName(), Options.Filter, {
+        Container:AddAuraGroup("AuraGroup", Options.Filter, {
             maxFrameCount = Options.MaxAuras,
             initializeFrame = InitializeAura,
 
             layout = {
                 elementSpacing = Options.Spacing or UI:Scale(3),
-                lineSpacing = Options.LineSpacing or 0,
-				groupSpacing = Options.GroupSpacing or 0,
-				groupLineSpacing = Options.GroupLineSpacing or 0,
+                lineSpacing = Options.LineSpacing or UI:Scale(8),
+				groupSpacing = Options.GroupSpacing or UI:Scale(8),
+				groupLineSpacing = Options.GroupLineSpacing or UI:Scale(8),
 				forceNewLine = true,
 				sortMethod = AuraContainerSortMethod.ExpirationOnly,
 				sortDirection = AuraContainerSortDirection.Normal,
             },
         })
     end
+
+    if (Options.ShowTempItemEnchantment) then
+        Container:AddItemEnchantment(AuraContainerItemEnchantmentSlot.MainHand, {
+            initializeFrame = InitializeTempAura,
+            hidePermanent = true,
+        })
+
+        Container:AddItemEnchantment(AuraContainerItemEnchantmentSlot.OffHand, {
+            initializeFrame = InitializeTempAura,
+            hidePermanent = true,
+        })
+
+        Container:SetItemEnchantmentLayout({
+            placement = CustomAuraContainerItemEnchantmentPlacement.BeforeAuraGroups,
+        })
+
+        Container:SetItemEnchantmentSortMethod(AuraContainerItemEnchantmentSortMethod.Slot, AuraContainerSortDirection.Normal)
+    end
 end
 
 function UI:CreateAuraContainer(Frame, Options)
     local Container = CreateFrame("AuraContainer", nil, Frame, "CustomAuraContainerTemplate")
-    Container:Point(Options.Anchor, Frame, Options.RelativeAnchor or Options.Anchor, Options.X, Options.Y)
-    Container:SetFlowLayoutAnchorPoint(Options.SetFlowLayoutAnchorPoint or "TOPLEFT")
+    Container:Point(Options.Anchor, Frame, Options.X, Options.Y)
+
+    -- Set The Anchors
+    local GrowthDirection = ({
+        LEFT = AnchorUtil.FlowDirection.Left,
+        RIGHT = AnchorUtil.FlowDirection.Right,
+        UP = AnchorUtil.FlowDirection.Up,
+        DOWN = AnchorUtil.FlowDirection.Down,
+    }) [Options.GrowthDirection] or AnchorUtil.FlowDirection.Right
+
+    local VerticalGrowthDirection = ({
+        UP = AnchorUtil.FlowDirection.Up,
+        DOWN = AnchorUtil.FlowDirection.Down,
+    }) [Options.VerticalGrowthDirection] or AnchorUtil.FlowDirection.Down
+
+    Container:SetFlowLayoutAnchorPoint(Options.Anchor or "TOPLEFT")
     Container:SetFlowLayoutAxis(AnchorUtil.FlowLayoutAxis.Horizontal)
-    Container:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Right, AnchorUtil.FlowDirection.Down)
-    --Container:SetFlowLayoutMaximumLineSize(255)
+    Container:SetFlowLayoutGrowthDirection(GrowthDirection, VerticalGrowthDirection)
+    Container:SetFlowLayoutMaximumLineSize(350)
+
+    -- Set Unit
     Container:SetUnit(Frame.unit or Options.Unit)
 
-    if (Options.Direction == "LEFT") then
-        Container:SetFlowLayoutGrowthDirection(-1, 1)
-    elseif (Options.Direction == "RIGHT") then
-        Container:SetFlowLayoutGrowthDirection(1, 1)
-    elseif (Options.Direction == "UP") then
-        Container:SetFlowLayoutGrowthDirection(1, 1)
-    elseif (Options.Direction == "DOWN") then
-        Container:SetFlowLayoutGrowthDirection(1, -1)
+    -- Set Policy
+    if (Options.Policy) then
+        Container:SetAuraProcessingPolicy(CustomAuraContainerAuraProcessingPolicy.ProcessAura, Options.Policy)
     end
 
+    -- Add Options
     self:AddAura(Container, Options)
 
     return Container

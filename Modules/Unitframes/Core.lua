@@ -901,7 +901,10 @@ function UF:RefreshUnit(Unit)
     if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame, Unit) end
 
     -- AURAS
-    --if (Frame.Buffs or Frame.Debuffs or Frame.External or Frame.CrowdControl) then self:UpdateAuras(Frame, Unit) end
+    if (Frame.Buffs) then Frame.Buffs:UpdateAllAuras() end
+    if (Frame.Debuffs) then Frame.Debuffs:UpdateAllAuras() end
+    if (Frame.External) then Frame.External:UpdateAllAuras() end
+    if (Frame.CrowdControl) then Frame.CrowdControl:UpdateAllAuras() end
 
     -- ICONS
     if (Frame.CombatIcon) then self:UpdateCombatIcon(Frame) end
@@ -946,7 +949,10 @@ function UF:RefreshGroup(Frame, Unit)
     if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame, Unit) end
 
     -- AURAS
-    --if (Frame.Buffs or Frame.Debuffs or Frame.External or Frame.CrowdControl) then self:UpdateAuras(Frame, Unit) end
+    -- AURAS
+    if (Frame.Buffs) then Frame.Buffs:UpdateAllAuras() end
+    if (Frame.Debuffs) then Frame.Debuffs:UpdateAllAuras() end
+    if (Frame.External) then Frame.External:UpdateAllAuras() end
 
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame) end
@@ -1056,18 +1062,6 @@ function UF:UnitName(Unit)
 
     if (Frame.NameLevel) then
         self:UpdateTargetNameLevel(Frame, Unit)
-    end
-end
-
-function UF:UnitAura(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
-        return
-    end
-
-    if (Frame.Buffs or Frame.Debuffs or Frame.External or Frame.CrowdControl) then
-        self:UpdateAuras(Frame, Unit)
     end
 end
 
@@ -1227,8 +1221,6 @@ function UF:OnEvent(event, unit, ...)
         end
     end
 
-    --if (event == "UNIT_AURA") then
-        --UF:UnitAura(unit)
     if (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
         UF:UnitHealth(unit)
         UF:UnitStatusIcons(unit)

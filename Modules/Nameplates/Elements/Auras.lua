@@ -57,7 +57,7 @@ function NP:CreateCrowdControlDebuffs(Frame)
     if (Frame.CrowdControl) then
         return
     end
-
+    
     --[[
     Frame.CrowdControl = UI:CreateAuraContainer(Frame, {
         Anchor = "TOPLEFT",

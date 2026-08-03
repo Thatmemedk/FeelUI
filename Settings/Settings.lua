@@ -60,12 +60,7 @@ DB.Global = {
 		ButtonPerRow = 12,
 		ButtonRowSpacing = 12,
 		-- Points Settings
-		Point = { "TOPRIGHT", _G.UIParent, -182, -6 },
-	},
-
-	PrivateAuras = {
-		Enable = true,
-		Point = { "CENTER", _G.UIParent, 0, 0 },
+		Point = { "TOPLEFT", _G.Minimap, -46, 4 },
 	},
 
 	AFK = {

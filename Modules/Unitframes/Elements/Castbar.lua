@@ -475,10 +475,10 @@ function UF:CreatePlayerCastbar(Frame)
     local CastbarIcon = Castbar:CreateTexture(nil, "OVERLAY", nil, 7)
 
     if (DB.Global.UnitFrames.CastBarDetached) then
-        Castbar:Size(222, 26)
+        Castbar:Size(263, 24)
         Castbar:Point(unpack(DB.Global.UnitFrames.CastBarPlayerPoint))
 
-        CastbarIcon:Size(38, 26)
+        CastbarIcon:Size(38, 24)
         CastbarIcon:Point("RIGHT", Castbar, "LEFT", -4, 0)
     else
         Castbar:Size(228, 20) 
