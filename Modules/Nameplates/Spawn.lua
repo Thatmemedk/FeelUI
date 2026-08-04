@@ -19,6 +19,7 @@ function NP:CreateFriendlyPlates(Plate, Unit)
     Frame:Size(unpack(DB.Global.Nameplates.Size))
     Frame:Point("CENTER", Plate, 0, 0)
     Frame:EnableMouse(false)
+    Frame.unit = Unit
 
     if (not Frame.Initialized) then
         -- Create Elements
@@ -39,6 +40,7 @@ function NP:CreateEnemyPlates(Plate, Unit)
     Frame:Size(unpack(DB.Global.Nameplates.Size))
     Frame:Point("CENTER", Plate, 0, 0)
     Frame:EnableMouse(false)
+    Frame.unit = Unit
 
     if (not Frame.Initialized) then
         -- Create Elements

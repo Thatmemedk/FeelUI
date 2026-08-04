@@ -5,6 +5,9 @@ local _G = _G
 local unpack = unpack
 local select = select
 
+-- Tables
+UI.AuraContainerData = {}
+
 function UI:BuildRuleDurationFormatter()
     if (not (C_StringUtil and C_StringUtil.CreateNumericRuleFormatter and Enum.NumericRuleFormatRounding)) then
         return nil
@@ -26,6 +29,10 @@ function UI:BuildRuleDurationFormatter()
 end
 
 function UI:InitializeAuraButton(Button, Options)
+    if (not Button) then
+        return
+    end
+
     Button:Size(Options.Width, Options.Height)
     Button:SetTemplate()
     Button:CreateShadow()
@@ -92,15 +99,6 @@ function UI:InitializeAuraButton(Button, Options)
 		})
     end
 
-    --[[
-    local Highlight = CreateFrame("Frame", nil, Button)
-    Highlight:SetFrameLevel(Button:GetFrameLevel() -1)
-    Highlight:SetInside(Button, 4, 4)
-    Highlight:CreateGlow(3, 3, 1, 0, 1, 1)
-
-    Button:AddDispelTypeTexture(Highlight)
-    --]]
-
     -- Debuff Border
     if (Options.Border) then
         local BorderStyle = {
@@ -113,32 +111,68 @@ function UI:InitializeAuraButton(Button, Options)
 
         local BorderTop = Overlay:CreateTexture(nil, "BORDER")
         BorderTop:Height(1)
-        BorderTop:Point("TOPLEFT", Button, 0, 0)
-        BorderTop:Point("TOPRIGHT", Button, 0, 0)
+        BorderTop:Point("TOPLEFT", Button, "TOPLEFT", 0, 0)
+        BorderTop:Point("TOPRIGHT", Button, "TOPRIGHT", 0, 0)
         BorderTop:SetTexture(Media.Global.Blank)
 
         local BorderBottom = Overlay:CreateTexture(nil, "BORDER")
         BorderBottom:Height(1)
-        BorderBottom:Point("BOTTOMLEFT", 0, 0)
-        BorderBottom:Point("BOTTOMRIGHT", 0, 0)
+        BorderBottom:Point("BOTTOMLEFT", Button, "BOTTOMLEFT", 0, 0)
+        BorderBottom:Point("BOTTOMRIGHT", Button, "BOTTOMRIGHT", 0, 0)
         BorderBottom:SetTexture(Media.Global.Blank)
 
         local BorderLeft = Overlay:CreateTexture(nil, "BORDER")
         BorderLeft:Width(1)
-        BorderLeft:Point("TOPLEFT", Button, 0, 0)
-        BorderLeft:Point("BOTTOMLEFT", Button, 0, 0)
+        BorderLeft:Point("TOPLEFT", Button, "TOPLEFT", 0, 0)
+        BorderLeft:Point("BOTTOMLEFT", Button, "BOTTOMLEFT", 0, 0)
         BorderLeft:SetTexture(Media.Global.Blank)
 
         local BorderRight = Overlay:CreateTexture(nil, "BORDER")
         BorderRight:Width(1)
-        BorderRight:Point("TOPRIGHT", Button, 0, 0)
-        BorderRight:Point("BOTTOMRIGHT", Button, 0, 0)
+        BorderRight:Point("TOPRIGHT", Button, "TOPRIGHT", 0, 0)
+        BorderRight:Point("BOTTOMRIGHT", Button, "BOTTOMRIGHT", 0, 0)
         BorderRight:SetTexture(Media.Global.Blank)
+
+        Button.BorderThick = {}
+    
+        for i = 1, 8 do
+            Button.BorderThick[i] = Overlay:CreateTexture(nil, "OVERLAY")
+            Button.BorderThick[i]:Size(1, 1)
+            Button.BorderThick[i]:SetColorTexture(0, 0, 0, 1)
+        end
+        
+        Button.BorderThick[1]:Point("TOPLEFT", Button, "TOPLEFT", -1, 1)
+        Button.BorderThick[1]:Point("TOPRIGHT", Button, "TOPRIGHT", 1, -1)
+
+        Button.BorderThick[2]:Point("BOTTOMLEFT", Button, "BOTTOMLEFT", -1, -1)
+        Button.BorderThick[2]:Point("BOTTOMRIGHT", Button, "BOTTOMRIGHT", 1, -1)
+
+        Button.BorderThick[3]:Point("TOPLEFT", Button, "TOPLEFT", -1, 1)
+        Button.BorderThick[3]:Point("BOTTOMLEFT", Button, "BOTTOMLEFT", 1, -1)
+
+        Button.BorderThick[4]:Point("TOPRIGHT", Button, "TOPRIGHT", 1, 1)
+        Button.BorderThick[4]:Point("BOTTOMRIGHT", Button, "BOTTOMRIGHT", -1, -1)
+
+        Button.BorderThick[5]:Point("TOPLEFT", Button, "TOPLEFT", 1, -1)
+        Button.BorderThick[5]:Point("TOPRIGHT", Button, "TOPRIGHT", -1, 1)
+
+        Button.BorderThick[6]:Point("BOTTOMLEFT", Button, "BOTTOMLEFT", 1, 1)
+        Button.BorderThick[6]:Point("BOTTOMRIGHT", Button, "BOTTOMRIGHT", -1, 1)
+
+        Button.BorderThick[7]:Point("TOPLEFT", Button, "TOPLEFT", 1, -1)
+        Button.BorderThick[7]:Point("BOTTOMLEFT", Button, "BOTTOMLEFT", -1, 1)
+
+        Button.BorderThick[8]:Point("TOPRIGHT", Button, "TOPRIGHT", -1, -1)
+        Button.BorderThick[8]:Point("BOTTOMRIGHT", Button, "BOTTOMRIGHT", 1, 1)
 
         Button:AddDispelTypeTexture(BorderTop, BorderStyle)
         Button:AddDispelTypeTexture(BorderBottom, BorderStyle)
         Button:AddDispelTypeTexture(BorderLeft, BorderStyle)
         Button:AddDispelTypeTexture(BorderRight, BorderStyle)
+
+        Button.Shadow:SetOutside(Button, 3, 3)
+    elseif (Options.Border == false) then
+        Button.Shadow:SetOutside(Button, 2, 2)
     end
 
     -- Debuff Icon
@@ -156,6 +190,10 @@ function UI:InitializeAuraButton(Button, Options)
 end
 
 function UI:InitializeTempAuraButton(Button, Options)
+    if (not Button) then
+        return
+    end
+
     Button:Size(Options.Width, Options.Height)
     Button:SetTemplate()
     Button:CreateShadow()
@@ -210,6 +248,17 @@ function UI:InitializeTempAuraButton(Button, Options)
 end
 
 function UI:AddAura(Container, Options)
+    if (not Container) then
+        return
+    end
+
+    local Owner = Container:GetParent()
+    local Data = UI.AuraContainerData[Owner]
+
+    if (not Data) then
+        return
+    end
+
     local InitializeAura = function(Button)
         UI:InitializeAuraButton(Button, Options)
     end
@@ -219,22 +268,27 @@ function UI:AddAura(Container, Options)
     end
 
     if (Options.MaxAuras == 1) then
-        Container:AddAuraSlot("AuraSlot", Options.Filter, {
+        Data.SlotIndex = (Data.SlotIndex or 0) + 1
+        local SlotKey = "AuraSlot" .. Data.SlotIndex
+
+        Container:AddAuraSlot(SlotKey, Options.Filter, {
             initializeFrame = InitializeAura,
         })
     else
-        Container:AddAuraGroup("AuraGroup", Options.Filter, {
+        Data.GroupIndex = (Data.GroupIndex or 0) + 1
+        local GroupKey = "AuraGroup" .. Data.GroupIndex
+
+        Container:AddAuraGroup(GroupKey, Options.Filter, {
             maxFrameCount = Options.MaxAuras,
             initializeFrame = InitializeAura,
 
             layout = {
                 elementSpacing = Options.Spacing or UI:Scale(3),
                 lineSpacing = Options.LineSpacing or UI:Scale(8),
-				groupSpacing = Options.GroupSpacing or UI:Scale(8),
-				groupLineSpacing = Options.GroupLineSpacing or UI:Scale(8),
-				forceNewLine = true,
-				sortMethod = AuraContainerSortMethod.ExpirationOnly,
-				sortDirection = AuraContainerSortDirection.Normal,
+                groupSpacing = Options.GroupSpacing or UI:Scale(3),
+                groupLineSpacing = Options.GroupLineSpacing or UI:Scale(8),
+                sortMethod = AuraContainerSortMethod.ExpirationOnly,
+                sortDirection = AuraContainerSortDirection.Normal,
             },
         })
     end
@@ -254,13 +308,40 @@ function UI:AddAura(Container, Options)
             placement = CustomAuraContainerItemEnchantmentPlacement.BeforeAuraGroups,
         })
 
-        Container:SetItemEnchantmentSortMethod(AuraContainerItemEnchantmentSortMethod.Slot, AuraContainerSortDirection.Normal)
+        Container:SetItemEnchantmentSortMethod(
+            AuraContainerItemEnchantmentSortMethod.Slot,
+            AuraContainerSortDirection.Normal
+        )
     end
 end
 
 function UI:CreateAuraContainer(Frame, Options)
-    local Container = CreateFrame("AuraContainer", nil, Frame, "CustomAuraContainerTemplate")
-    Container:Point(Options.Anchor, Frame, Options.X, Options.Y)
+    if (not Frame) then
+        return
+    end
+
+    local Data = UI.AuraContainerData[Frame]
+
+    if (not Data) then
+        Data = {
+            Index = 1,
+            Containers = {},
+            Registry = {},
+        }
+
+        UI.AuraContainerData[Frame] = Data
+    end
+
+    local Container = CreateFrame("AuraContainer", "FeelUI_AuraContainer".. Data.Index, Frame, "CustomAuraContainerTemplate")
+
+    -- Store The Container Reference By Index.
+    Data.Containers[Data.Index] = Container
+
+    -- Increment The Index So The Container Is Unique.
+    Data.Index = Data.Index + 1
+
+    -- Keep A Reverse Reference From Container.
+    Data.Registry[Container] = Frame
 
     -- Set The Anchors
     local GrowthDirection = ({
@@ -275,13 +356,18 @@ function UI:CreateAuraContainer(Frame, Options)
         DOWN = AnchorUtil.FlowDirection.Down,
     }) [Options.VerticalGrowthDirection] or AnchorUtil.FlowDirection.Down
 
+    Container:Point(Options.Anchor, Frame, Options.X, Options.Y)
     Container:SetFlowLayoutAnchorPoint(Options.Anchor or "TOPLEFT")
     Container:SetFlowLayoutAxis(AnchorUtil.FlowLayoutAxis.Horizontal)
     Container:SetFlowLayoutGrowthDirection(GrowthDirection, VerticalGrowthDirection)
-    Container:SetFlowLayoutMaximumLineSize(350)
+    Container:SetFlowLayoutMaximumLineSize(Options.AurasPerRow or 600)
 
     -- Set Unit
-    Container:SetUnit(Frame.unit or Options.Unit)
+    local Unit = Frame.unit or Options.Unit
+
+    if (type(Unit) == "string") then
+        Container:SetUnit(Unit)
+    end
 
     -- Set Policy
     if (Options.Policy) then
@@ -295,6 +381,10 @@ function UI:CreateAuraContainer(Frame, Options)
 end
 
 function UI:InitializeAuraHighlight(Button)
+    if (not Button) then
+        return
+    end
+
     local DispelGradient = Button:CreateTexture(nil, "OVERLAY")
     DispelGradient:SetInside()
     DispelGradient:SetAtlas("_RaidFrame-Dispel-Highlight-Horizontal", false, nil, nil, "REPEAT", "CLAMP")
@@ -324,6 +414,10 @@ function UI:InitializeAuraHighlight(Button)
 end
 
 function UI:AddAuraHighlight(Container, Options)
+    if (not Container) then
+        return
+    end
+
     local InitializeHighlight = function(Button)
         UI:InitializeAuraHighlight(Button)
     end
@@ -334,6 +428,10 @@ function UI:AddAuraHighlight(Container, Options)
 end
 
 function UI:CreateAuraHighlight(Frame, Options)
+    if (not Frame) then
+        return
+    end
+
     local Container = CreateFrame("AuraContainer", nil, Frame, "CustomAuraContainerTemplate")
 	Container:SetInside()
     Container:SetUnit(Frame.unit or Options.Unit)

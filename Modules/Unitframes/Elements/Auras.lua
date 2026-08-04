@@ -136,15 +136,12 @@ function UF:CreateRaidDebuffs(Frame)
         return
     end
 
-    --[[
-    Frame.Debuffs = UI:CreateAuraContainer(Frame.InvisFrameHigher, {
+    Frame.Debuffs = UI:CreateAuraContainer(Frame, {
         Anchor = "TOPLEFT",
         X = 12,
         Y = -18,
         Width = 26,
         Height = 12,
-        Spacing = 4,
-        Direction = "RIGHT",
         Cooldown = true,
         Count = true,
         Duration = true,
@@ -153,7 +150,6 @@ function UF:CreateRaidDebuffs(Frame)
         Filter = "HARMFUL|RAID_PLAYER_DISPELLABLE",
         MaxAuras = 2,
     })
-    --]]
 end
 
 function UF:CreateRaidBuffs(Frame)
@@ -161,22 +157,18 @@ function UF:CreateRaidBuffs(Frame)
         return
     end
 
-    --[[
-    Frame.Buffs = UI:CreateAuraContainer(Frame.InvisFrameHigher, {
+    Frame.Buffs = UI:CreateAuraContainer(Frame, {
         Anchor = "TOPLEFT",
         X = 0,
         Y = 0,
         Width = 18,
         Height = 12,
-        Spacing = 3,
-        Direction = "RIGHT",
         Cooldown = true,
         Count = true,
-        Duration = true,
+        Duration = false,
         Filter = "HELPFUL|PLAYER|RAID_IN_COMBAT",
         MaxAuras = 4,
     })
-    --]]
 end
 
 function UF:CreateRaidExternal(Frame)
@@ -184,20 +176,16 @@ function UF:CreateRaidExternal(Frame)
         return
     end
 
-    --[[
-    Frame.External = UI:CreateAuraContainer(Frame.InvisFrameHigher, {
+    Frame.External = UI:CreateAuraContainer(Frame, {
         Anchor = "CENTER",
         X = 0,
         Y = -18,
         Width = 28,
         Height = 12,
-        Spacing = 4,
-        Direction = "RIGHT",
         Cooldown = true,
         Count = true,
         Duration = true,
         Filter = "HELPFUL|BIG_DEFENSIVE",
         MaxAuras = 1,
     })
-    --]]
 end

@@ -326,6 +326,10 @@ function NP:RefreshUnit(Frame, Unit)
     if (Frame.Name) then self:UpdateName(Frame, Unit) end
     if (Frame.Guild) then self:UpdateGuild(Frame, Unit) end
 
+    -- AURAS
+    if (Frame.Debuffs) then Frame.Debuffs:UpdateAllAuras() end
+    if (Frame.CrowdControl) then Frame.CrowdControl:UpdateAllAuras() end   
+
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame, Unit) end
 
@@ -484,7 +488,6 @@ function NP:NameplateAdded(Unit)
     end
 
     -- Show Unit
-    Frame.unit = Unit
     Frame:Show()
 
     -- Cache Units

@@ -367,11 +367,13 @@ function UF:UpdateName(Frame, Unit, TypeFrame)
         if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
             local _, Class = UnitClass(Unit)
 
-            if (Class) then
-                local Color = UI.Colors.Class[Class]
+            if (not UI:IsSecretValue(Class)) then
+                if (Class) then
+                    local Color = UI.Colors.Class[Class]
 
-                if (Color) then
-                    R, G, B = Color.r, Color.g, Color.b
+                    if (Color) then
+                        R, G, B = Color.r, Color.g, Color.b
+                    end
                 end
             end
         else
@@ -416,13 +418,14 @@ function UF:UpdateTargetNameLevel(Frame, Unit)
     else
         if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
             local _, Class = UnitClass(Unit)
-            local Color = UI.Colors.Class[Class]
 
-            NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
+            if (not UI:IsSecretValue(Class)) then
+                local Color = UI.Colors.Class[Class]
+                NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
+            end
         else
             local Reaction = UnitReaction(Unit, "player") or 5
             local Color = UI.Colors.Reaction[Reaction]
-
             NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
         end
     end
@@ -573,6 +576,10 @@ function UF:UpdateLeaderIcon(Frame)
         Leader = UnitIsGroupLeader(Unit)
     else
         Leader = UnitLeadsAnyGroup(Unit)
+    end
+
+    if (UI:IsSecretValue(Leader)) then
+        Leader = false
     end
 
     if (Leader) then
@@ -944,15 +951,17 @@ function UF:RefreshGroup(Frame, Unit)
     if (Frame.Power) then self:UpdatePower(Frame, Unit) end
     if (Frame.PowerText) then self:UpdatePowerText(Frame, Unit) end
 
-    -- NAME
-    if (Frame.Name) then self:UpdateName(Frame, Unit, Frame.IsParty and "Party" or Frame.IsRaid and "Raid") end
-    if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame, Unit) end
-
     -- AURAS
-    -- AURAS
+    --[[
     if (Frame.Buffs) then Frame.Buffs:UpdateAllAuras() end
     if (Frame.Debuffs) then Frame.Debuffs:UpdateAllAuras() end
     if (Frame.External) then Frame.External:UpdateAllAuras() end
+    if (Frame.CrowdControl) then Frame.CrowdControl:UpdateAllAuras() end
+    --]]
+
+    -- NAME
+    if (Frame.Name) then self:UpdateName(Frame, Unit, Frame.IsParty and "Party" or Frame.IsRaid and "Raid") end
+    if (Frame.NameLevel) then self:UpdateTargetNameLevel(Frame, Unit) end
 
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame) end

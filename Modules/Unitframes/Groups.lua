@@ -13,16 +13,13 @@ function UF:SetupGroupFrame(Frame, Type)
         return 
     end
 
-    if (InCombatLockdown()) then
-        Frame.NeedsSetup = true
-        
-        return
-    end
-
     Frame:RegisterForClicks("AnyUp")
     Frame:SetAttribute("type1", "target")
     Frame:SetAttribute("type2", "togglemenu")
     Frame:SetAttribute("toggleForVehicle", true)
+
+    -- REGISTER UNIT WATCH
+    RegisterUnitWatch(Frame)
 
     -- TYPE
     Frame.IsParty = (Type == "party")
@@ -33,9 +30,6 @@ function UF:SetupGroupFrame(Frame, Type)
     else
         UF:CreateRaid(Frame)
     end
-
-    -- REGISTER UNIT WATCH
-    RegisterUnitWatch(Frame)
 
     -- ON ATTRIBUTE CHANGED
     Frame:HookScript("OnAttributeChanged", function(self, name, value)
@@ -102,12 +96,6 @@ function UF:SpawnGroupHeader(Type)
     Header:RegisterEvent("PLAYER_ENTERING_WORLD")
     Header:RegisterEvent("GROUP_ROSTER_UPDATE")
     Header:SetScript("OnEvent", function(self, event)
-        if (InCombatLockdown()) then
-            self.NeedsRefresh = true
-
-            return
-        end
-
         local Index = 1
 
         while true do
@@ -129,14 +117,6 @@ function UF:SpawnGroupHeader(Type)
                 UF:FullRefreshGroup()
             end)
         end
-
-        if (event == "PLAYER_REGEN_ENABLED" and self.NeedsRefresh) then
-            self.NeedsRefresh = nil
-
-            UI:Delay("RefreshGroups", 0.05, function()
-                UF:FullRefreshGroup()
-            end)
-        end 
     end)
 
     return Header
