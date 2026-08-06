@@ -8,11 +8,16 @@ local _G = _G
 local unpack = unpack
 local select = select
 
-function UF:SetupGroupFrame(Frame, Type)
-    if (Frame.UnitIsCreated) then 
-        return 
+function UF:SetupGroupFrame(Frame, Type, Unit)
+    if (Frame.UnitIsCreated) then
+        return
     end
 
+    -- SET UNIT
+    Frame.unit = Unit
+    Frame:SetAttribute("unit", Unit)
+
+    -- SET ATTRIBUTES
     Frame:RegisterForClicks("AnyUp")
     Frame:SetAttribute("type1", "target")
     Frame:SetAttribute("type2", "togglemenu")
@@ -106,7 +111,7 @@ function UF:SpawnGroupHeader(Type)
             end
 
             if (not Frame.UnitIsCreated) then
-                UF:SetupGroupFrame(Frame, Type)
+                UF:SetupGroupFrame(Frame, Type, Frame:GetAttribute("unit"))
             end
 
             Index = Index + 1

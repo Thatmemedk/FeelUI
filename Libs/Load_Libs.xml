@@ -6,6 +6,10 @@
 	<Script file="LibSharedMedia-3.0\LibSharedMedia-3.0.lua"/>
 	<!-- LibAnimate-1.0 -->
 	<Script file="LibAnimated-1.0\LibAnimated-1.0.lua"/>
+	<!-- LibFade-1.0 -->
+	<Script file="LibFade-1.0\LibFade-1.0.lua"/>
+	<!-- LibFade-1.0 -->
+	<Script file="LibAuraContainers-1.0\LibAuraContainers-1.0.lua"/>
 	<!-- LibBackdropTemplate-1.0 -->
 	<Include file="LibBackdropTemplate-1.0\LibBackdropTemplate-1.0.xml"/>
 </Ui>

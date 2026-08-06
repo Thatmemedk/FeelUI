@@ -9,5 +9,4 @@
 	<Script file="Status.lua"/>
 	<Script file="Popups.lua"/>
 	<Script file="Fonts.lua"/>
-	<Script file="FadeInOut.lua"/>
 </Ui>

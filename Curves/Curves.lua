@@ -5,6 +5,9 @@ local _G = _G
 local unpack = unpack
 local select = select
 
+-- Locals
+local C_CurveUtil = _G.C_CurveUtil
+
 -- DISPELL CURVE
 
 local DEBUFF_DISPLAY_COLOR_INFO = {

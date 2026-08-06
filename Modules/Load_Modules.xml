@@ -20,7 +20,6 @@
 	<Script file="ActionBars\Glow.lua"/>
 	<!-- Auras -->
 	<Script file="Auras\Core.lua"/>
-	<Script file="Auras\Auras.lua"/>
 	<!-- Chat -->
 	<Script file="Chat\Core.lua"/>
 	<Script file="Chat\CopyChat.lua"/>
@@ -83,7 +82,6 @@
 	<!-- NamePlates -->
 	<Script file="Nameplates\Core.lua"/>
 	<Script file="Nameplates\Blizzard.lua"/>
-	<Script file="Nameplates\Spawn.lua"/>
 	<Script file="Nameplates\Elements\Auras.lua"/>
 	<Script file="Nameplates\Elements\Castbar.lua"/>
 	<Script file="Nameplates\Elements\Health.lua"/>

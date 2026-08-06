@@ -8,31 +8,12 @@ local _G = _G
 local unpack = unpack
 local select = select
 
---[[
-
-"HELPFUL"; Displays helpeful Buffs no filtering
-"HARMFUL"; Displays harmful Debuffs, no filtering
-
-"HELPFUL|PLAYER"; Displays helpful Buffs only from player and no filtering.
-"HARMFUL|PLAYER"; Displays harmful Debuffs only from player and no filtering.
-
-"HELPFUL|RAID"; Buffs filtered by the player's class, e.g. for Priests it will only return  [Power Word: Fortitude] etc.
-"HARMFUL|RAID"; Certain Debuffs that only show up on raid frames, e.g. most Debuffs that are relevant in a Raid Setting.
-"HARMFUL|RAID_PLAYER_DISPELLABLE"; Returns auras the player can be Dispelled.
-"HELPFUL|PLAYER|RAID_IN_COMBAT; Returns auras that are flagged to show on raid frames in combat, this should return mostly just HotS.
-
-"HELPFUL|EXTERNAL_DEFENSIVE"; Displays External Defensives such as [Pain Suppression] etc.
-"HELPFUL|BIG_DEFENSIVE"; Displays Defensives such as [Barkskin] etc.
-"HARMFUL|CROWD_CONTROL"; Returns auras that are flagged as Crowd Control.
-
---]]
-
 function NP:CreateDebuffs(Frame)
     if (Frame.Debuffs) then
         return
     end
 
-    Frame.Debuffs = UI:CreateAuraContainer(Frame, {
+    local Debuffs = UI:CreateAuraContainer(Frame, {
         GrowthDirection = "LEFT",
         Anchor = "TOPRIGHT",
         X = 0,
@@ -47,6 +28,8 @@ function NP:CreateDebuffs(Frame)
         Filter = "HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY",
         MaxAuras = 4,
     })
+
+    Frame.Debuffs = Debuffs
 end
 
 function NP:CreateCrowdControlDebuffs(Frame)
@@ -54,7 +37,7 @@ function NP:CreateCrowdControlDebuffs(Frame)
         return
     end
     
-    Frame.CrowdControl = UI:CreateAuraContainer(Frame, {
+    local CrowdControl = UI:CreateAuraContainer(Frame, {
         GrowthDirection = "LEFT",
         Anchor = "TOPLEFT",
         X = -42,
@@ -70,4 +53,6 @@ function NP:CreateCrowdControlDebuffs(Frame)
         Filter = "HARMFUL|CROWD_CONTROL",
         MaxAuras = 6,
     })
+
+    Frame.CrowdControl = CrowdControl
 end

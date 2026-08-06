@@ -19,6 +19,7 @@ local select = select
 "HELPFUL|RAID"; Buffs filtered by the player's class, e.g. for Priests it will only return  [Power Word: Fortitude] etc.
 "HARMFUL|RAID"; Certain Debuffs that only show up on raid frames, e.g. most Debuffs that are relevant in a Raid Setting.
 "HARMFUL|RAID_PLAYER_DISPELLABLE"; Returns auras the player can be Dispelled.
+"HARMFUL|DISPELLABLE; Include only auras that are dispellable/purgeable/stealable, regardless of whether the player or someone in the player's raid can
 "HELPFUL|PLAYER|RAID_IN_COMBAT; Returns auras that are flagged to show on raid frames in combat, this should return mostly just HotS.
 
 "HELPFUL|EXTERNAL_DEFENSIVE"; Displays External Defensives such as [Pain Suppression] etc.
@@ -32,7 +33,7 @@ function UF:CreateBuffsTarget(Frame)
         return
     end
 
-    Frame.Buffs = UI:CreateAuraContainer(Frame, {
+    local Buffs = UI:CreateAuraContainer(Frame, {
         Anchor = "TOPLEFT",
         X = 0,
         Y = 32,
@@ -45,6 +46,8 @@ function UF:CreateBuffsTarget(Frame)
         Filter = "HELPFUL",
         MaxAuras = 7,
     })
+
+    Frame.Buffs = Buffs
 end
 
 function UF:CreateDebuffsTarget(Frame)
@@ -52,7 +55,7 @@ function UF:CreateDebuffsTarget(Frame)
         return
     end
 
-    Frame.Debuffs = UI:CreateAuraContainer(Frame, {
+    local Debuffs = UI:CreateAuraContainer(Frame, {
         Anchor = "TOPLEFT",
         X = 0,
         Y = 56,
@@ -63,9 +66,11 @@ function UF:CreateDebuffsTarget(Frame)
         Duration = true,
         Border = true,
         DebuffIndicator = true,
-        Filter = "HARMFUL|PLAYER",
+        Filter = "HARMFUL",
         MaxAuras = 7,
     })
+
+    Frame.Debuffs = Debuffs
 end
 
 function UF:CreatePartyDebuffs(Frame)
@@ -73,7 +78,7 @@ function UF:CreatePartyDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = UI:CreateAuraContainer(Frame, {
+    local Debuffs = UI:CreateAuraContainer(Frame, {
         Anchor = "TOPRIGHT",
         X = 248,
         Y = -12,
@@ -88,6 +93,8 @@ function UF:CreatePartyDebuffs(Frame)
         Filter = "HARMFUL|RAID_PLAYER_DISPELLABLE",
         MaxAuras = 7,
     })
+
+    Frame.Debuffs = Debuffs
 end
 
 function UF:CreatePartyBuffs(Frame)
@@ -95,7 +102,7 @@ function UF:CreatePartyBuffs(Frame)
         return
     end
 
-    Frame.Buffs = UI:CreateAuraContainer(Frame, {
+    local Buffs = UI:CreateAuraContainer(Frame, {
         Anchor = "TOPLEFT",
         X = -248,
         Y = -12,
@@ -109,6 +116,8 @@ function UF:CreatePartyBuffs(Frame)
         Filter = "HELPFUL|PLAYER|RAID",
         MaxAuras = 7,
     })
+
+   Frame.Buffs = Buffs
 end
 
 function UF:CreatePartyExternal(Frame)
@@ -116,7 +125,7 @@ function UF:CreatePartyExternal(Frame)
         return
     end
 
-    Frame.External = UI:CreateAuraContainer(Frame.InvisFrameHigher, {
+    local External = UI:CreateAuraContainer(Frame.InvisFrameHigher, {
         Anchor = "CENTER",
         X = 0,
         Y = 0,
@@ -129,6 +138,8 @@ function UF:CreatePartyExternal(Frame)
         Filter = "HELPFUL|BIG_DEFENSIVE",
         MaxAuras = 1,
     })
+
+    Frame.External = External
 end
 
 function UF:CreateRaidDebuffs(Frame)
@@ -136,20 +147,22 @@ function UF:CreateRaidDebuffs(Frame)
         return
     end
 
-    Frame.Debuffs = UI:CreateAuraContainer(Frame, {
+    local Debuffs = UI:CreateAuraContainer(Frame, {
         Anchor = "TOPLEFT",
         X = 12,
-        Y = -18,
+        Y = -12,
         Width = 26,
-        Height = 12,
+        Height = 16,
         Cooldown = true,
         Count = true,
         Duration = true,
         Border = true,
-        DebuffIndicator = true,
-        Filter = "HARMFUL|RAID_PLAYER_DISPELLABLE",
+        DebuffIndicator = false,
+        Filter = "HARMFUL|RAID|DISPELLABLE",
         MaxAuras = 2,
     })
+
+    Frame.Debuffs = Debuffs
 end
 
 function UF:CreateRaidBuffs(Frame)
@@ -157,18 +170,20 @@ function UF:CreateRaidBuffs(Frame)
         return
     end
 
-    Frame.Buffs = UI:CreateAuraContainer(Frame, {
+    local Buffs = UI:CreateAuraContainer(Frame, {
         Anchor = "TOPLEFT",
         X = 0,
         Y = 0,
         Width = 18,
         Height = 12,
         Cooldown = true,
-        Count = true,
+        Count = false,
         Duration = false,
         Filter = "HELPFUL|PLAYER|RAID_IN_COMBAT",
-        MaxAuras = 4,
+        MaxAuras = 2,
     })
+
+    Frame.Buffs = Buffs
 end
 
 function UF:CreateRaidExternal(Frame)
@@ -185,7 +200,11 @@ function UF:CreateRaidExternal(Frame)
         Cooldown = true,
         Count = true,
         Duration = true,
+        Border = false,
+        DebuffIndicator = false,
         Filter = "HELPFUL|BIG_DEFENSIVE",
         MaxAuras = 1,
     })
+
+    Frame.External = External
 end

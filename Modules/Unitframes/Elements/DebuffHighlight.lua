@@ -13,10 +13,7 @@ function UF:CreateDebuffHighlight(Frame)
         return
     end
 
-    local DebuffHighlight = CreateFrame("Frame", nil, Frame.InvisFrame)
-    DebuffHighlight:SetInside(Frame, 1, 1)
-
-    local DebuffHighlightAura = UI:CreateAuraHighlight(DebuffHighlight, {
+    local DebuffHighlight = UI:CreateAuraHighlight(Frame, {
         Filter = "HARMFUL|RAID",
         Unit = "player"
     })

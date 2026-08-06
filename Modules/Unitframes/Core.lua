@@ -910,8 +910,6 @@ function UF:RefreshUnit(Unit)
     -- AURAS
     if (Frame.Buffs) then Frame.Buffs:UpdateAllAuras() end
     if (Frame.Debuffs) then Frame.Debuffs:UpdateAllAuras() end
-    if (Frame.External) then Frame.External:UpdateAllAuras() end
-    if (Frame.CrowdControl) then Frame.CrowdControl:UpdateAllAuras() end
 
     -- ICONS
     if (Frame.CombatIcon) then self:UpdateCombatIcon(Frame) end
@@ -952,12 +950,9 @@ function UF:RefreshGroup(Frame, Unit)
     if (Frame.PowerText) then self:UpdatePowerText(Frame, Unit) end
 
     -- AURAS
-    --[[
-    if (Frame.Buffs) then Frame.Buffs:UpdateAllAuras() end
-    if (Frame.Debuffs) then Frame.Debuffs:UpdateAllAuras() end
-    if (Frame.External) then Frame.External:UpdateAllAuras() end
-    if (Frame.CrowdControl) then Frame.CrowdControl:UpdateAllAuras() end
-    --]]
+    --if (Frame.Buffs) then Frame.Buffs:UpdateAllAuras() end
+    --if (Frame.Debuffs) then Frame.Debuffs:UpdateAllAuras() end
+    --if (Frame.External) then Frame.External:UpdateAllAuras() end
 
     -- NAME
     if (Frame.Name) then self:UpdateName(Frame, Unit, Frame.IsParty and "Party" or Frame.IsRaid and "Raid") end
@@ -1212,6 +1207,7 @@ function UF:OnEvent(event, unit, ...)
     if (event == "PLAYER_ENTERING_WORLD") then
         UF:FullRefresh()
     elseif (event == "PLAYER_TARGET_CHANGED") then
+        UF:RefreshUnit("player")
         UF:RefreshUnit("target")
         UF:RefreshUnit("targettarget")
         UF:UpdateTargetPortrait()
@@ -1309,8 +1305,6 @@ function UF:RegisterEvents()
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE")
     SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
-    -- BUFFS / DEBUFFS
-    --SecureEventFrame:RegisterEvent("UNIT_AURA")
     -- HEALTH
     SecureEventFrame:RegisterEvent("UNIT_HEALTH")
     SecureEventFrame:RegisterEvent("UNIT_MAXHEALTH")

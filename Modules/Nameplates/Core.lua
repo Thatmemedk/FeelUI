@@ -33,20 +33,6 @@ NP.Modified = {}
 -- Tables
 NP.Frames = {}
 
--- Tables
-NP.PlateTypes = {
-    [true] = {
-        Key = "FeelUINameplatesFriendly",
-        Opposite = "FeelUINameplatesEnemy",
-        Create = "CreateFriendlyPlates"
-    },
-    [false] = {
-        Key = "FeelUINameplatesEnemy",
-        Opposite = "FeelUINameplatesFriendly",
-        Create = "CreateEnemyPlates"
-    }
-}
-
 -- Locals
 NP.FadeInTime = 0.5
 NP.CastHoldTime = 2
@@ -216,13 +202,14 @@ function NP:UpdateName(Frame, Unit)
 
     if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
         local _, Class = UnitClass(Unit)
-        local Color = UI.Colors.Class[Class]
 
-        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+        if (not UI:IsSecretValue(Class)) then
+            local Color = UI.Colors.Class[Class]
+            Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+        end
     else
         local Reaction = UnitReaction(Unit, "player")
         local Color = UI.Colors.Reaction[Reaction]
-
         Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
     end
 end
@@ -327,8 +314,8 @@ function NP:RefreshUnit(Frame, Unit)
     if (Frame.Guild) then self:UpdateGuild(Frame, Unit) end
 
     -- AURAS
-    if (Frame.Debuffs) then Frame.Debuffs:UpdateAllAuras() end
-    if (Frame.CrowdControl) then Frame.CrowdControl:UpdateAllAuras() end   
+    --if (Frame.Debuffs) then Frame.Debuffs:UpdateAllAuras() end
+    --if (Frame.CrowdControl) then Frame.CrowdControl:UpdateAllAuras() end
 
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame, Unit) end
@@ -403,11 +390,11 @@ end
 function NP:UnitTargetChanged()
     for Key, Frame in next, self.Frames do
         if (Frame.TargetIndicator) then
-            self:UpdateTargetIndicator(Frame, Frame.unit) 
+            self:UpdateTargetIndicator(Frame, Frame.unit)
         end
 
         if (Frame.Highlight) then 
-            self:UpdateHighlight(Frame, Frame.unit) 
+            self:UpdateHighlight(Frame, Frame.unit)
         end
     end
 end
@@ -415,7 +402,7 @@ end
 function NP:UnitMouseOver()
     for Key, Frame in next, self.Frames do
         if (Frame.HighlightMouseOver) then
-            self:UpdateHighlightMouseOver(Frame, Frame.unit) 
+            self:UpdateHighlightMouseOver(Frame, Frame.unit)
         end
     end
 end
@@ -423,7 +410,7 @@ end
 function NP:UnitRaidIcon()
     for Key, Frame in next, self.Frames do
         if (Frame.RaidIcon) then
-            self:UpdateRaidIcon(Frame, Frame.unit) 
+            self:UpdateRaidIcon(Frame, Frame.unit)
         end
     end
 end
@@ -461,62 +448,69 @@ end
 function NP:NameplateAdded(Unit)
     local Plate = C_NamePlate.GetNamePlateForUnit(Unit)
 
-    if (not Plate or not Plate.UnitFrame or Plate:IsForbidden()) then
+    if (not Plate) then
         return
     end
 
-    Plate.UnitFrame:SetAttribute("unit", Unit)
+    if (not Plate.UnitFrames) then
+        -- CHECK IF FRAME ALREADY EXISTS
+        if (self.Frames[Unit]) then
+            return self.Frames[Unit]
+        end
 
+        Plate.UnitFrames = CreateFrame("Button", Plate:GetName(), Plate, "PingableUnitFrameTemplate")
+        Plate.UnitFrames:Size(unpack(DB.Global.Nameplates.Size))
+        Plate.UnitFrames:Point("CENTER", Plate, 0, 0)
+        Plate.UnitFrames:EnableMouse(false)
+
+        -- STORE IN CACHE
+        self.Frames[Unit] = Plate.UnitFrames
+    end
+
+    -- Set Unit
+    Plate.UnitFrames.unit = Unit
+    Plate.UnitFrames:SetAttribute("unit", Unit)
+
+    -- Create Layout
     local IsFriendly = UnitIsFriend("player", Unit)
-    local Type = self.PlateTypes[IsFriendly]
-    local Frame = Plate[Type.Key]
 
-    if (not Frame) then
-        Frame = self[Type.Create](self, Plate, Unit)
-        Plate[Type.Key] = Frame
+    if (Plate.UnitFrames.IsFriendly ~= IsFriendly) then
+        Plate.UnitFrames.IsFriendly = IsFriendly
+        Plate.UnitFrames.Initialized = nil
     end
 
-    if (not Frame) then
-        return
-    end
+    if (not Plate.UnitFrames.Initialized) then
+        if (IsFriendly) then
+            self:CreateFriendlyElements(Plate.UnitFrames)
+        else
+            self:CreateEnemyElements(Plate.UnitFrames)
+        end
 
-    local Opposite = Plate[Type.Opposite]
-
-    if (Opposite and Opposite:IsShown()) then
-        Opposite:Hide()
-        Opposite.Unit = nil
+        Plate.UnitFrames.Initialized = true
     end
 
     -- Show Unit
-    Frame:Show()
-
-    -- Cache Units
-    self.Frames[Unit] = Frame
+    Plate.UnitFrames:Show()
 
     -- Refresh
-    NP:RefreshUnit(Frame, Unit)
+    NP:RefreshUnit(Plate.UnitFrames, Unit)
 end
 
 function NP:NameplateRemoved(Unit)
     local Plate = C_NamePlate.GetNamePlateForUnit(Unit)
 
-    if (not Plate or not Plate.UnitFrame) then
+    if (not Plate or not Plate.UnitFrames) then
         return
     end
 
-    Plate.UnitFrame:SetAttribute("unit", nil)
+    -- Refresh
+    NP:RefreshUnit(Plate.UnitFrames, Unit)
 
-    local Frame = self.Frames[Unit]
+    -- Set Unit
+    Plate.UnitFrames:SetAttribute("unit", nil)
+    Plate.UnitFrames.unit = nil
 
-    if (not Frame) then
-        return
-    end
-
-    -- Hide Unit
-    Frame.unit = nil
-    Frame:Hide()
-
-    -- Reset Unit Cache
+    -- RESET CACHE
     self.Frames[Unit] = nil
 end
 
@@ -537,8 +531,6 @@ function NP:OnEvent(event, unit, ...)
         NP:UnitMouseOver()
     elseif (event == "RAID_TARGET_UPDATE") then
         NP:UnitRaidIcon()
-    --elseif (event == "UNIT_AURA") then
-        --NP:UnitAura(unit)
     elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
         NP:UnitHealth(unit)
     elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
@@ -615,8 +607,6 @@ function NP:RegisterEvents()
     SecureEventFrame:RegisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
     SecureEventFrame:RegisterEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
     SecureEventFrame:RegisterEvent("UNIT_MAX_HEALTH_MODIFIERS_CHANGED")
-    -- AURA
-    --SecureEventFrame:RegisterEvent("UNIT_AURA")
     -- NAME
     SecureEventFrame:RegisterEvent("UNIT_NAME_UPDATE")
     -- LEVEL

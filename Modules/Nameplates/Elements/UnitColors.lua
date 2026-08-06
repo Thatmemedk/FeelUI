@@ -55,14 +55,12 @@ function NP:GetUnitColor(Unit, IsCaster)
             return UI.Colors.Classification.BOSS
         end
 
-        if (not UI:IsSecretValue(Class)) then
-            if (Level == UnitLevel("player") + 1 or Class == "ROGUE") then
-                return UI.Colors.Classification.RARE
-            end
+        if (Level == UnitLevel("player") + 1) then
+            return UI.Colors.Classification.RARE
+        end
 
-            if (Level <= UnitLevel("player") and PowerType == Enum.PowerType.Mana or Class == "PALADIN") then
-                return UI.Colors.Classification.CASTER
-            end
+        if (Level <= UnitLevel("player") and PowerType == Enum.PowerType.Mana) then
+            return UI.Colors.Classification.CASTER
         end
 
         if (Level == UnitLevel("player")) then
