@@ -609,12 +609,11 @@ function UF:UpdateResurrectionIcon(Frame, Unit)
     end
 end
 
-function UF:UpdateSummonIcon(Frame)
-    if (not Frame or not Frame.SummonIcon) then
+function UF:UpdateSummonIcon(Frame, Unit)
+    if (not Frame or not Unit or not Frame.SummonIcon) then
         return
     end
 
-    local Unit = Frame.unit
     local UnitHasIncomingSummon = C_IncomingSummon.IncomingSummonStatus(Unit)
 
     if (UnitHasIncomingSummon ~= SUMMON_STATUS_NONE) then
@@ -921,7 +920,7 @@ function UF:RefreshUnit(Unit)
     if (Frame.RoleIcon) then self:UpdateRoleIcon(Frame) end
     if (Frame.PhaseIcon) then self:UpdatePhaseIcon(Frame) end
     if (Frame.ResurrectionIcon) then self:UpdateResurrectionIcon(Frame, Unit) end
-    if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame) end
+    if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame, Unit) end
 
     -- THREAT
     if (Frame.Threat) then self:UpdateThreatHighlight(Frame, Unit) end
@@ -966,7 +965,7 @@ function UF:RefreshGroup(Frame, Unit)
     if (Frame.RoleIcon) then self:UpdateRoleIcon(Frame) end
     if (Frame.PhaseIcon) then self:UpdatePhaseIcon(Frame) end
     if (Frame.ResurrectionIcon) then self:UpdateResurrectionIcon(Frame, Unit) end
-    if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame) end
+    if (Frame.SummonIcon) then self:UpdateSummonIcon(Frame, Unit) end
     if (Frame.StatusIcon) then self:UpdateStatusIcon(Frame, Unit) end
 
     -- THREAT
@@ -1170,10 +1169,14 @@ function UF:UnitPhaseIcon()
 end
 
 function UF:UnitSummonIcon(Unit)
-    for Key, Frame in next, self.Frames do
-        if (Frame.PhaseIcon) then
-            self:UpdateSummonIcon(Frame)
-        end
+    local Frame = self.Frames[Unit]
+
+    if (not Frame or not Unit or not UnitExists(Unit)) then
+        return
+    end
+
+    if (Frame.SummonIcon) then
+        self:UpdateSummonIcon(Frame, Unit)
     end
 end
 
@@ -1256,7 +1259,7 @@ function UF:OnEvent(event, unit, ...)
     elseif (event == "INCOMING_RESURRECT_CHANGED") then
         UF:UnitResurrectionIcon(unit)
     elseif (event == "INCOMING_SUMMON_CHANGED") then
-        UF:UnitSummonIcon(Unit)
+        UF:UnitSummonIcon(unit)
     end
 
     if (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then

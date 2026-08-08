@@ -9,7 +9,7 @@ local unpack = unpack
 local select = select
 
 function NP:CreateDebuffs(Frame)
-    if (Frame.Debuffs) then
+    if (not Frame or Frame.Debuffs) then
         return
     end
 
@@ -33,7 +33,7 @@ function NP:CreateDebuffs(Frame)
 end
 
 function NP:CreateCrowdControlDebuffs(Frame)
-    if (Frame.CrowdControl) then
+    if (not Frame or Frame.CrowdControl) then
         return
     end
     

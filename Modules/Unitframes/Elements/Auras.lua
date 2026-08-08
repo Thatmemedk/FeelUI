@@ -29,7 +29,7 @@ local select = select
 --]]
 
 function UF:CreateBuffsTarget(Frame)
-    if (Frame.Buffs) then
+    if (not Frame or Frame.Buffs) then
         return
     end
 
@@ -51,7 +51,7 @@ function UF:CreateBuffsTarget(Frame)
 end
 
 function UF:CreateDebuffsTarget(Frame)
-    if (Frame.Debuffs) then
+    if (not Frame or Frame.Debuffs) then
         return
     end
 
@@ -66,7 +66,7 @@ function UF:CreateDebuffsTarget(Frame)
         Duration = true,
         Border = true,
         DebuffIndicator = true,
-        Filter = "HARMFUL",
+        Filter = "HARMFUL|PLAYER",
         MaxAuras = 7,
     })
 
@@ -74,7 +74,7 @@ function UF:CreateDebuffsTarget(Frame)
 end
 
 function UF:CreatePartyDebuffs(Frame)
-    if (Frame.Debuffs) then
+    if (not Frame or Frame.Debuffs) then
         return
     end
 
@@ -98,7 +98,7 @@ function UF:CreatePartyDebuffs(Frame)
 end
 
 function UF:CreatePartyBuffs(Frame)
-    if (Frame.Buffs) then
+    if (not Frame or Frame.Buffs) then
         return
     end
 
@@ -121,7 +121,7 @@ function UF:CreatePartyBuffs(Frame)
 end
 
 function UF:CreatePartyExternal(Frame)
-    if (Frame.External) then
+    if (not Frame or Frame.External) then
         return
     end
 
@@ -143,16 +143,17 @@ function UF:CreatePartyExternal(Frame)
 end
 
 function UF:CreateRaidDebuffs(Frame)
-    if (Frame.Debuffs) then
+    if (not Frame or Frame.Debuffs) then
         return
     end
-
+    
     local Debuffs = UI:CreateAuraContainer(Frame, {
         Anchor = "TOPLEFT",
         X = 12,
-        Y = -12,
+        Y = -14,
         Width = 26,
         Height = 16,
+        CountY = 6,
         Cooldown = true,
         Count = true,
         Duration = true,
@@ -166,7 +167,7 @@ function UF:CreateRaidDebuffs(Frame)
 end
 
 function UF:CreateRaidBuffs(Frame)
-    if (Frame.Buffs) then
+    if (not Frame or Frame.Buffs) then
         return
     end
 
@@ -187,7 +188,7 @@ function UF:CreateRaidBuffs(Frame)
 end
 
 function UF:CreateRaidExternal(Frame)
-    if (Frame.External) then
+    if (not Frame or Frame.External) then
         return
     end
 

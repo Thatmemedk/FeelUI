@@ -68,16 +68,6 @@ function Auras:CreatePlayerAuras()
     self.DebuffFrame = DebuffFrame
 end
 
-function Auras:OnEvent(event)
-    self.BuffsFrame:UpdateAllAuras()
-    self.DebuffFrame:UpdateAllAuras()
-end
-
-function Auras:RegisterEvents()
-    self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:SetScript("OnEvent", self.OnEvent)
-end
-
 function Auras:Initialize()
     if (not DB.Global.Auras.Enable) then 
         return 
@@ -85,5 +75,4 @@ function Auras:Initialize()
 
     self:DisableBlizzardAuras()
     self:CreatePlayerAuras()
-    self:RegisterEvents()
 end

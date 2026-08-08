@@ -117,11 +117,7 @@ function UF:SpawnGroupHeader(Type)
             Index = Index + 1
         end
 
-        if (event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_ENTERING_WORLD") then
-            UI:Delay("RefreshGroups", 0.05, function()
-                UF:FullRefreshGroup()
-            end)
-        end
+        UF:FullRefreshGroup()
     end)
 
     return Header

@@ -8,6 +8,8 @@ local select = select
 -- Tables
 UI.AuraContainerData = {}
 
+-- FORMATTER
+
 function UI:BuildRuleDurationFormatter()
     local Formatter = C_StringUtil.CreateNumericRuleFormatter()
     local Down = Enum.NumericRuleFormatRounding.Down
@@ -15,7 +17,7 @@ function UI:BuildRuleDurationFormatter()
     Formatter:SetBreakpoints({
         { threshold = 0, format = "%.1f", step = 0.1, rounding = Down },
         { threshold = 10, format = "%d", step = 1, rounding = Down },
-        { threshold = 60, format = "%d:%02d", step = 1, rounding = Down, components = { { div = 60 }, { div = 1 } } },
+        { threshold = 60, format = "%d:%02d", step = 1, rounding = Down, components = { { div = 60 }, { div = 1, mod = 60 } } },
         { threshold = 120, format = "%dm", step = 1, rounding = Down, components = { { div = 60 } } },
         { threshold = 3600, format = "%dh", step = 1, rounding = Down, components = { { div = 3600 } } },
         { threshold = 86400, format = "%dd", step = 1, rounding = Down, components = { { div = 86400 } } },
@@ -23,6 +25,8 @@ function UI:BuildRuleDurationFormatter()
 
     return Formatter
 end
+
+-- AURA BUTTONS
 
 function UI:InitializeAuraButton(Button, Options)
     if (not Button) then
@@ -187,6 +191,8 @@ function UI:InitializeAuraButton(Button, Options)
     end
 end
 
+-- TEMP AURA BUTTONS
+
 function UI:InitializeTempAuraButton(Button, Options)
     if (not Button) then
         return
@@ -221,7 +227,7 @@ function UI:InitializeTempAuraButton(Button, Options)
     Overlay:SetInside()
 
     -- Temp Aura Highlight
-    local TempEnchHighlight = Button:CreateTexture(nil, "OVERLAY")
+    local TempEnchHighlight = Overlay:CreateTexture(nil, "OVERLAY")
     TempEnchHighlight:SetBlendMode("ADD")
     TempEnchHighlight:SetInside(Button, 1, 1)
     TempEnchHighlight:SetTexture(Media.Global.Blank)
@@ -244,6 +250,8 @@ function UI:InitializeTempAuraButton(Button, Options)
         })
     end
 end
+
+-- ADD AURA
 
 function UI:AddAura(Container, Options)
     if (not Container) then
@@ -304,6 +312,8 @@ function UI:AddAura(Container, Options)
     end
 end
 
+-- CREATE CONTAINER
+
 function UI:CreateAuraContainer(Frame, Options)
     if (not Frame) then
         return
@@ -323,6 +333,22 @@ function UI:CreateAuraContainer(Frame, Options)
 
     local Container = CreateFrame("AuraContainer", "FeelUI_AuraContainer".. Data.Index, Frame, "CustomAuraContainerTemplate")
 
+    -- Set Unit
+    local Unit = Frame.unit or Options.Unit
+
+    if (not Unit) then
+        return
+    end
+
+    if (Container:GetUnit() ~= Unit) then
+        Container:SetUnit(Unit)
+    else
+        Container:UpdateAllAuras()
+    end
+
+    -- Debug PRINT
+    UI:Print("Created Aura Container:", Container:GetName(), "Frame:", Frame:GetName(), Container, "Unit:", Unit)
+
     -- Store The Container Reference By Index.
     Data.Containers[Data.Index] = Container
 
@@ -332,7 +358,7 @@ function UI:CreateAuraContainer(Frame, Options)
     -- Keep A Reverse Reference From Container.
     Data.Registry[Container] = Frame
 
-    -- Set The Anchors
+   -- Set The Anchors
     local GrowthDirection = ({
         LEFT = AnchorUtil.FlowDirection.Left,
         RIGHT = AnchorUtil.FlowDirection.Right,
@@ -351,42 +377,81 @@ function UI:CreateAuraContainer(Frame, Options)
     Container:SetFlowLayoutGrowthDirection(GrowthDirection, VerticalGrowthDirection)
     Container:SetFlowLayoutMaximumLineSize(Options.AurasPerRow or 550)
 
-    -- Set Unit
-    local Unit = Frame.Unit or Frame.unit or Options.Unit
-    Container:SetUnit(Unit)
-
     -- Set Policy
     if (Options.Policy) then
         Container:SetAuraProcessingPolicy(CustomAuraContainerAuraProcessingPolicy.ProcessAura, Options.Policy)
     end
 
-    -- Add Options
+    -- Add Aura
     self:AddAura(Container, Options)
 
     return Container
 end
+
+-- ENABLE / DISABLE
+
+function UI:EnableAuras(Frame)
+    local Data = UI.AuraContainerData[Frame]
+
+    if (not Data) then
+        return
+    end
+
+    for _, Container in pairs(Data.Containers) do
+        Container:Enabled(true)
+    end
+end
+
+function UI:DisableAuras(Frame)
+    local Data = UI.AuraContainerData[Frame]
+
+    if (not Data) then
+        return
+    end
+
+    for _, Container in pairs(Data.Containers) do
+        Container:Enabled(false)
+    end
+end
+
+-- AURA HIGHLIGHT
 
 function UI:InitializeAuraHighlight(Button)
     if (not Button) then
         return
     end
 
-    Button:SetFrameLevel(Button:GetFrameLevel() + 10)
+    -- Button
+    Button:SetFrameLevel(Button:GetFrameLevel() +6)
     Button:SetInside()
     Button:EnableMouse(false)
 
-    local DispelGradient = Button:CreateTexture(nil, "OVERLAY")
+    -- Overlay
+    local OverlayGradient = CreateFrame("Frame", nil, Button)
+    OverlayGradient:SetFrameLevel(Button:GetFrameLevel() -1)
+    OverlayGradient:SetInside()
+    OverlayGradient:SetAlpha(0.5)
+
+    local OverlayBorder = CreateFrame("Frame", nil, Button)
+    OverlayBorder:SetFrameLevel(Button:GetFrameLevel() -1)
+    OverlayBorder:SetInside()
+    OverlayBorder:SetAlpha(0.25)
+
+    -- Gradient Border
+    local DispelGradient = OverlayGradient:CreateTexture(nil, "OVERLAY")
     DispelGradient:SetInside()
     DispelGradient:SetAtlas("_RaidFrame-Dispel-Highlight-Horizontal", false, nil, nil, "REPEAT", "CLAMP")
     DispelGradient:SetTexCoord(0, 1, 0, 1)
 
-    local DispelBorder = Button:CreateTexture(nil, "OVERLAY")
-    DispelBorder:SetInside()
+    -- Border
+    local DispelBorder = OverlayBorder:CreateTexture(nil, "OVERLAY")
+    DispelBorder:SetInside(Button, -1, -1)
     DispelBorder:SetAtlas("RaidFrame-DispelHighlight")
 
+    -- Icon
     local DispelIcon = Button:CreateTexture(nil, "OVERLAY")
-    DispelIcon:Size(24, 24)
-    DispelIcon:Point("CENTER", Button, "TOPRIGHT", -1, -1)
+    DispelIcon:Size(18, 18)
+    DispelIcon:Point("CENTER", Button, 0, 22)
 
     Button:AddDispelTypeTexture(DispelGradient, {
         style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
@@ -422,10 +487,38 @@ function UI:CreateAuraHighlight(Frame, Options)
         return
     end
 
-    local Container = CreateFrame("AuraContainer", nil, Frame, "CustomAuraContainerTemplate")
-    Container:SetInside()
-    Container:SetUnit(Frame.unit or Options.Unit)
+    local Data = UI.AuraContainerData[Frame]
 
+    if (not Data) then
+        Data = {
+            Index = 1,
+            Containers = {},
+            Registry = {},
+        }
+
+        UI.AuraContainerData[Frame] = Data
+    end
+
+    local Container = CreateFrame("AuraContainer", "FeelUI_AuraHighlightContainer".. Data.Index, Frame, "CustomAuraContainerTemplate")
+    Container:SetInside()
+
+    -- Store The Container Reference By Index.
+    Data.Containers[Data.Index] = Container
+
+    -- Increment The Index So The Container Is Unique.
+    Data.Index = Data.Index + 1
+
+    -- Keep A Reverse Reference From Container.
+    Data.Registry[Container] = Frame
+
+    -- Set Unit
+    local Unit = Frame.unit or Options.Unit
+
+    if (Container:GetUnit() ~= Frame.unit) then
+        Container:SetUnit(Unit)
+    end
+
+    -- Add Aura
     self:AddAuraHighlight(Container, Options)
 
     return Container

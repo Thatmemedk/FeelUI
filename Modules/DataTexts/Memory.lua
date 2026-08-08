@@ -7,18 +7,18 @@ local Panels = UI:CallModule("Panels")
 -- Lib Globals
 local _G = _G
 local unpack = unpack
-local select = select
 local sort = table.sort
 local wipe = table.wipe
+local collectgarbage = collectgarbage
 
 -- WoW Globals
-local GetAddOnInfo = C_AddOns.GetAddOnInfo
-local GetNumAddOns = C_AddOns.GetNumAddOns
-local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
+local GetAddOnInfo = _G.C_AddOns.GetAddOnInfo
+local GetNumAddOns = _G.C_AddOns.GetNumAddOns
+local IsAddOnLoaded = _G.C_AddOns.IsAddOnLoaded
 local GetAddOnMemoryUsage = GetAddOnMemoryUsage
 local UpdateAddOnMemoryUsage = UpdateAddOnMemoryUsage
-local GameTooltip = GameTooltip
-local InCombatLockdown = InCombatLockdown
+local ResetCPUUsage = ResetCPUUsage
+local GameTooltip = _G.GameTooltip
 
 -- Locals
 local UpdateTime = 10
@@ -31,24 +31,34 @@ local GradientColorPalette = {
     1, 0, 0
 }
 
+local function SortMemory(a, b)
+    return a.Memory > b.Memory
+end
+
 function AM:Create()
-    local Frame = CreateFrame("Frame", nil, UIParent)
+    local Frame = CreateFrame("Frame", nil, _G.UIParent)
     Frame:Size(160, 50)
     Frame:Point("CENTER", Panels.DataTextHolder, 0, -2)
-    Frame:SetScript("OnEnter", function() self:OnEnter() end)
-    Frame:SetScript("OnLeave", function() self:OnLeave() end)
+    Frame:SetScript("OnEnter", function()
+        self:OnEnter()
+    end)
+
+    Frame:SetScript("OnLeave", function()
+        self:OnLeave()
+    end)
+
+    Frame:SetScript("OnMouseDown", function()
+        collectgarbage("collect")
+        ResetCPUUsage()
+    end)
 
     local Text = Frame:CreateFontString(nil, "OVERLAY")
-    Text:Point("CENTER", Frame, 0, 0)
+    Text:Point("CENTER", Frame)
     Text:SetFontTemplate("Default")
     Text:SetTextColor(unpack(DB.Global.DataTexts.TextColor))
 
     self.Frame = Frame
     self.Text = Text
-end
-
-local function SortMemory(A, B)
-    return A.Memory > B.Memory
 end
 
 function AM:BuildAddonList()
@@ -59,47 +69,45 @@ function AM:BuildAddonList()
     end
 
     self.AddOnCount = Count
-    self.AddOnList = {}
+
+    if (not self.AddOnList) then
+        self.AddOnList = {}
+    else
+        wipe(self.AddOnList)
+    end
 
     for i = 1, Count do
         if (IsAddOnLoaded(i)) then
+            local Name = GetAddOnInfo(i)
+
             self.AddOnList[#self.AddOnList + 1] = {
                 Index = i,
-                Name = GetAddOnInfo(i)
+                Name = Name
             }
         end
     end
 end
 
-function AM:GetAddOnMemoryList()
+function AM:GetMemoryList()
+    if (not self.MemoryList) then
+        self.MemoryList = {}
+    end
+
+    local List = self.MemoryList
     local Total = 0
 
-    if (not self.AddOns) then
-        self.AddOns = {}
-    end
+    wipe(List)
 
-    local List = self.AddOns
-    local Addons = self.AddOnList
+    for i = 1, #self.AddOnList do
+        local Addon = self.AddOnList[i]
 
-    for i = 1, #Addons do
-        local Addon = Addons[i]
         local Memory = GetAddOnMemoryUsage(Addon.Index)
-
         Total = Total + Memory
 
-        local Entry = List[i]
-
-        if (not Entry) then
-            Entry = {}
-            List[i] = Entry
-        end
-
-        Entry.Name = Addon.Name
-        Entry.Memory = Memory
-    end
-
-    for i = #Addons + 1, #List do
-        List[i] = nil
+        List[#List + 1] = {
+            Name = Addon.Name,
+            Memory = Memory
+        }
     end
 
     return List, Total
@@ -112,46 +120,48 @@ function AM:OnEnter()
 
     UpdateAddOnMemoryUsage()
 
-    local AddOns, Total = self:GetAddOnMemoryList()
-    sort(AddOns, SortMemory)
+    local List, Total = self:GetMemoryList()
+    sort(List, SortMemory)
 
-    _G.GameTooltip:ClearLines()
-    _G.GameTooltip:SetOwner(self.Frame, "ANCHOR_CURSOR", 0, -4)
+    GameTooltip:ClearLines()
+    GameTooltip:SetOwner(self.Frame, "ANCHOR_CURSOR", 0, -4)
 
-    for i = 1, #AddOns do
-        local Data = AddOns[i]
+    for i = 1, #List do
+        local Data = List[i]
 
         local R, G, B = UI:ColorGradientText(Data.Memory / 25000, unpack(GradientColorPalette))
-        _G.GameTooltip:AddDoubleLine(Data.Name, UI:FormVal(Data.Memory), 1, 0.82, 0, R, G, B)
+        GameTooltip:AddDoubleLine(Data.Name, UI:FormVal(Data.Memory), 1, 0.82, 0, R, G, B)
     end
 
     local R, G, B = UI:ColorGradientText(Total / 25000, unpack(GradientColorPalette))
-    _G.GameTooltip:AddLine(" ")
-    _G.GameTooltip:AddDoubleLine("Total AddOn Memory Usage:", UI:FormVal(Total),1, 0.82, 0, R, G, B)
-    _G.GameTooltip:Show()
+    GameTooltip:AddLine(" ")
+    GameTooltip:AddDoubleLine("Total AddOn Memory Usage:", UI:FormVal(Total), 1, 0.82, 0,R, G, B)
+    GameTooltip:Show()
 end
 
 function AM:OnLeave()
-    _G.GameTooltip:Hide()
+    GameTooltip:Hide()
 end
 
 function AM:Update(Elapsed)
     self.TimeElapsed = (self.TimeElapsed or 0) - Elapsed
 
-    if (self.TimeElapsed > 0) then 
-        return 
+    if (self.TimeElapsed > 0) then
+        return
     end
 
     self.TimeElapsed = UpdateTime
 
     UpdateAddOnMemoryUsage()
 
-    local _, Total = self:GetAddOnMemoryList()
+    local _, Total = self:GetMemoryList()
     self.Text:SetText(UI:FormVal(Total))
 end
 
-function AM:OnUpdate()
-    self:SetScript("OnUpdate", self.Update)
+function AM:RegisterOnUpdate()
+    self.Frame:SetScript("OnUpdate", function(_, elapsed)
+        self:Update(elapsed)
+    end)
 end
 
 function AM:Initialize()
@@ -161,5 +171,5 @@ function AM:Initialize()
 
     self:Create()
     self:BuildAddonList()
-    self:OnUpdate()
+    self:RegisterOnUpdate()
 end

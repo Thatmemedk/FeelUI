@@ -9,7 +9,6 @@ local unpack = unpack
 local select = select
 
 function NP:CreateEnemyElements(Frame)
-    self:CreateStackingBounds(Frame)
     self:CreatePanels(Frame)
     self:CreateHighlight(Frame)
     self:CreateHighlightMouseOver(Frame)

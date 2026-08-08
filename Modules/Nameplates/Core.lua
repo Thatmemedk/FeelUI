@@ -24,6 +24,8 @@ local UnitIsPlayer = UnitIsPlayer
 local UnitClass = UnitClass
 local GetRaidTargetIndex = GetRaidTargetIndex
 local UnitThreatSituation = UnitThreatSituation
+local UnitNameplateShowsWidgetsOnly = UnitNameplateShowsWidgetsOnly
+local UnitIsGameObject = UnitIsGameObject
 local SetCVar = C_CVar.SetCVar
 
 -- Tables
@@ -31,7 +33,8 @@ NP.Hooked = {}
 NP.Modified = {}
 
 -- Tables
-NP.Frames = {}
+NP.EnemyFrames = {}
+NP.FriendlyFrames = {}
 
 -- Locals
 NP.FadeInTime = 0.5
@@ -222,6 +225,7 @@ function NP:UpdateGuild(Frame, Unit)
     local GuildName, GuildRankName = GetGuildInfo(Unit)
 
     if (not GuildName) then
+        Frame.Guild:SetText("")
         return
     end
 
@@ -268,6 +272,10 @@ end
 -- HIGHLIGHT
 
 function NP:UpdateTargetIndicator(Frame, Unit)
+    if (not Frame or not Unit or not Frame.TargetIndicator) then
+        return
+    end
+
     local IsTarget = UnitIsUnit("target", Unit)
 
     if (IsTarget) then
@@ -278,6 +286,10 @@ function NP:UpdateTargetIndicator(Frame, Unit)
 end
 
 function NP:UpdateHighlight(Frame, Unit)
+    if (not Frame or not Unit or not Frame.Highlight) then
+        return
+    end
+
     local IsTarget = UnitIsUnit("target", Unit)
 
     if (IsTarget) then
@@ -288,6 +300,10 @@ function NP:UpdateHighlight(Frame, Unit)
 end
 
 function NP:UpdateHighlightMouseOver(Frame, Unit)
+    if (not Frame or not Unit or not Frame.HighlightMouseOver) then
+        return
+    end
+
     local IsMouseover = UnitIsUnit("mouseover", Unit)
 
     if (IsMouseover) then
@@ -314,8 +330,29 @@ function NP:RefreshUnit(Frame, Unit)
     if (Frame.Guild) then self:UpdateGuild(Frame, Unit) end
 
     -- AURAS
-    --if (Frame.Debuffs) then Frame.Debuffs:UpdateAllAuras() end
-    --if (Frame.CrowdControl) then Frame.CrowdControl:UpdateAllAuras() end
+    if (Frame.Debuffs) then
+        UI:EnableAuras(Frame.Debuffs)
+    end
+
+    if (Frame.CrowdControl) then
+        UI:EnableAuras(Frame.CrowdControl)
+    end
+
+    --[[
+    if (Frame.Debuffs) then
+        UI:Print("RefreshUnit - Debuffs", Frame.Debuffs, Unit)
+
+        Frame.Debuffs:SetEnabled(true) 
+        Frame.Debuffs:UpdateAllAuras()
+    end
+
+    if (Frame.CrowdControl) then
+        UI:Print("RefreshUnit - CrowdControl", Frame.CrowdControl, Unit)
+
+        Frame.CrowdControl:SetEnabled(true) 
+        Frame.CrowdControl:UpdateAllAuras()
+    end
+    --]]
 
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame, Unit) end
@@ -329,10 +366,35 @@ function NP:RefreshUnit(Frame, Unit)
     if (Frame.HighlightMouseOver) then self:UpdateHighlightMouseOver(Frame, Unit) end
 end
 
+function NP:RefreshUnitRemoved(Frame, Unit)
+    -- AURAS
+    if (Frame.Debuffs) then
+        UI:DisableAuras(Frame.Debuffs)
+    end
+
+    if (Frame.CrowdControl) then
+        UI:DisableAuras(Frame.CrowdControl)
+    end
+
+    --[[
+    if (Frame.Debuffs) then
+        UI:Print("RefreshUnitRemoved - Debuffs", Frame.Debuffs, Unit)
+
+        Frame.Debuffs:SetEnabled(false)
+    end
+
+    if (Frame.CrowdControl) then
+        UI:Print("RefreshUnitRemoved - CrowdControl", Frame.CrowdControl, Unit)
+
+        Frame.CrowdControl:SetEnabled(false)
+    end
+    --]]
+end
+
 -- EVENT UPDATES
 
 function NP:UnitHealth(Unit)
-    local Frame = self.Frames[Unit]
+    local Frame = self.EnemyFrames[Unit]
 
     if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
         return
@@ -348,7 +410,7 @@ function NP:UnitHealth(Unit)
 end
 
 function NP:UnitHealthPred(Unit)
-    local Frame = self.Frames[Unit]
+    local Frame = self.EnemyFrames[Unit]
 
     if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
         return
@@ -360,7 +422,7 @@ function NP:UnitHealthPred(Unit)
 end
 
 function NP:UnitName(Unit)
-    local Frame = self.Frames[Unit]
+    local Frame = self.EnemyFrames[Unit] or self.FriendlyFrames[Unit]
 
     if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
         return
@@ -376,7 +438,7 @@ function NP:UnitName(Unit)
 end
 
 function NP:UnitThreat(Unit)
-    local Frame = self.Frames[Unit]
+    local Frame = self.EnemyFrames[Unit]
 
     if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
         return
@@ -388,30 +450,29 @@ function NP:UnitThreat(Unit)
 end
 
 function NP:UnitTargetChanged()
-    for Key, Frame in next, self.Frames do
-        if (Frame.TargetIndicator) then
-            self:UpdateTargetIndicator(Frame, Frame.unit)
-        end
+    for Key, Frame in next, self.EnemyFrames do
+        self:UpdateTargetIndicator(Frame, Frame.unit)
+        self:UpdateHighlight(Frame, Frame.unit)
+    end
 
-        if (Frame.Highlight) then 
-            self:UpdateHighlight(Frame, Frame.unit)
-        end
+    for Key, Frame in next, self.FriendlyFrames do
+        self:UpdateHighlight(Frame, Frame.unit)
     end
 end
 
 function NP:UnitMouseOver()
-    for Key, Frame in next, self.Frames do
-        if (Frame.HighlightMouseOver) then
-            self:UpdateHighlightMouseOver(Frame, Frame.unit)
-        end
+    for Key, Frame in next, self.EnemyFrames do
+        self:UpdateHighlightMouseOver(Frame, Frame.unit)
     end
 end
 
 function NP:UnitRaidIcon()
-    for Key, Frame in next, self.Frames do
-        if (Frame.RaidIcon) then
-            self:UpdateRaidIcon(Frame, Frame.unit)
-        end
+    for Key, Frame in next, self.EnemyFrames do
+        self:UpdateRaidIcon(Frame, Frame.unit)
+    end
+
+    for Key, Frame in next, self.FriendlyFrames do
+        self:UpdateRaidIcon(Frame, Frame.unit)
     end
 end
 
@@ -429,7 +490,7 @@ function NP:CastBarOnNamePlateUnitAdded(Unit)
 end
 
 function NP:CastBarOnNamePlateUnitRemoved(Unit)
-    local Frame = self.Frames[Unit]
+    local Frame = self.EnemyFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
@@ -452,80 +513,148 @@ function NP:NameplateAdded(Unit)
         return
     end
 
-    if (not Plate.UnitFrames) then
-        -- CHECK IF FRAME ALREADY EXISTS
-        if (self.Frames[Unit]) then
-            return self.Frames[Unit]
+    local IsFriend = UnitIsFriend("player", Unit)
+
+    if (IsFriend) then
+        if (Plate.EnemyNP) then
+            Plate.EnemyNP:Hide()
+            Plate.EnemyNP.unit = nil
+            Plate.EnemyNP:SetAttribute("unit", nil)
         end
 
-        Plate.UnitFrames = CreateFrame("Button", Plate:GetName(), Plate, "PingableUnitFrameTemplate")
-        Plate.UnitFrames:Size(unpack(DB.Global.Nameplates.Size))
-        Plate.UnitFrames:Point("CENTER", Plate, 0, 0)
-        Plate.UnitFrames:EnableMouse(false)
+        local FriendlyFrame = Plate.FriendlyNP
 
-        -- STORE IN CACHE
-        self.Frames[Unit] = Plate.UnitFrames
-    end
+        if (not FriendlyFrame) then
+            FriendlyFrame = CreateFrame("Frame", "FeelUI_FriendlyNP" .. Plate:GetName(), Plate, "PingableUnitFrameTemplate")
+            FriendlyFrame:EnableMouse(false)
+            FriendlyFrame:Size(unpack(DB.Global.Nameplates.Size))
+            FriendlyFrame:Point("CENTER", Plate, 0, 0)
 
-    -- Set Unit
-    Plate.UnitFrames.unit = Unit
-    Plate.UnitFrames:SetAttribute("unit", Unit)
+            Plate.FriendlyNP = FriendlyFrame
+        end
 
-    -- Create Layout
-    local IsFriendly = UnitIsFriend("player", Unit)
+        -- SET UNIT
+        FriendlyFrame.unit = Unit
+        FriendlyFrame:SetAttribute("unit", Unit)
 
-    if (Plate.UnitFrames.IsFriendly ~= IsFriendly) then
-        Plate.UnitFrames.IsFriendly = IsFriendly
-        Plate.UnitFrames.Initialized = nil
-    end
+        -- UPDATE CACHE
+        self.FriendlyFrames[Unit] = FriendlyFrame
 
-    if (not Plate.UnitFrames.Initialized) then
-        if (IsFriendly) then
-            self:CreateFriendlyElements(Plate.UnitFrames)
+        if (UnitNameplateShowsWidgetsOnly(Unit) or UnitIsGameObject(Unit)) then
+            Plate:Hide()
         else
-            self:CreateEnemyElements(Plate.UnitFrames)
+            -- SHOW
+            FriendlyFrame:Show()
+
+            Plate:ClearAllHitTestPoints()
+            Plate:SetAllHitTestPoints(FriendlyFrame)
         end
 
-        Plate.UnitFrames.Initialized = true
+        -- ELEMENTS
+        NP:CreateFriendlyElements(FriendlyFrame)
+
+        -- REFRESH
+        NP:RefreshUnit(FriendlyFrame, Unit)
+    else
+        if (Plate.FriendlyNP) then
+            Plate.FriendlyNP:Hide()
+            Plate.FriendlyNP.unit = nil
+            Plate.FriendlyNP:SetAttribute("unit", nil)
+        end
+
+        local EnemyFrame = Plate.EnemyNP
+
+        if (not EnemyFrame) then
+            EnemyFrame = CreateFrame("Frame", "FeelUI_EnemyNP" .. Plate:GetName(), Plate, "PingableUnitFrameTemplate")
+            EnemyFrame:EnableMouse(false)
+            EnemyFrame:Size(unpack(DB.Global.Nameplates.Size))
+            EnemyFrame:Point("CENTER", Plate, 0, 0)
+
+            Plate.EnemyNP = EnemyFrame
+        end
+
+        -- SET UNIT
+        EnemyFrame.unit = Unit
+        EnemyFrame:SetAttribute("unit", Unit)
+
+        -- UPDATE CACHE
+        self.EnemyFrames[Unit] = EnemyFrame
+
+        if (UnitNameplateShowsWidgetsOnly(Unit) or UnitIsGameObject(Unit)) then
+            Plate:Hide()
+        else
+            -- SHOW
+            EnemyFrame:Show()
+
+            Plate:ClearAllHitTestPoints()
+            Plate:SetAllHitTestPoints(EnemyFrame)
+        end
+
+        -- ELEMENTS
+        NP:CreateEnemyElements(EnemyFrame)
+
+        -- REFRESH
+        NP:RefreshUnit(EnemyFrame, Unit)
     end
-
-    -- Show Unit
-    Plate.UnitFrames:Show()
-
-    -- Refresh
-    NP:RefreshUnit(Plate.UnitFrames, Unit)
 end
 
 function NP:NameplateRemoved(Unit)
     local Plate = C_NamePlate.GetNamePlateForUnit(Unit)
 
-    if (not Plate or not Plate.UnitFrames) then
+    if (not Plate) then 
         return
     end
 
-    -- Refresh
-    NP:RefreshUnit(Plate.UnitFrames, Unit)
+    if (Plate.EnemyNP) then
+        NP:RefreshUnitRemoved(Plate.EnemyNP, Unit)
 
-    -- Set Unit
-    Plate.UnitFrames:SetAttribute("unit", nil)
-    Plate.UnitFrames.unit = nil
+        -- RESET UNIT
+        Plate.EnemyNP:Hide()
+        Plate.EnemyNP.unit = nil
+        Plate.EnemyNP:SetAttribute("unit", nil)
 
-    -- RESET CACHE
-    self.Frames[Unit] = nil
+        -- RESET CACHE
+        self.EnemyFrames[Unit] = nil
+    end
+
+    if (Plate.FriendlyNP) then
+        NP:RefreshUnitRemoved(Plate.FriendlyNP, Unit)
+
+        -- RESET UNIT
+        Plate.FriendlyNP:Hide()
+        Plate.FriendlyNP.unit = nil
+        Plate.FriendlyNP:SetAttribute("unit", nil)
+
+        -- RESET CACHE
+        self.FriendlyFrames[Unit] = nil
+    end
+end
+
+function NP:NameplatePlayerTargetChanged()
+    local Plate = C_NamePlate.GetNamePlateForUnit("target")
+
+    if (not Plate) then
+        return
+    end
+    
+    if (UnitNameplateShowsWidgetsOnly("target") or UnitIsGameObject("target")) then 
+        return 
+    end
 end
 
 function NP:OnEvent(event, unit, ...)
     if (unit and not unit:match("^nameplate%d+$")) then
         return
     end
-
+    
     if (event == "NAME_PLATE_UNIT_ADDED") then
         NP:NameplateAdded(unit)
         NP:CastBarOnNamePlateUnitAdded(unit)
     elseif (event == "NAME_PLATE_UNIT_REMOVED") then
-        NP:NameplateRemoved(unit)
         NP:CastBarOnNamePlateUnitRemoved(unit)
+        NP:NameplateRemoved(unit)
     elseif (event == "PLAYER_TARGET_CHANGED") then
+        NP:NameplatePlayerTargetChanged()
         NP:UnitTargetChanged()
     elseif (event == "UPDATE_MOUSEOVER_UNIT") then
         NP:UnitMouseOver()
@@ -609,9 +738,6 @@ function NP:RegisterEvents()
     SecureEventFrame:RegisterEvent("UNIT_MAX_HEALTH_MODIFIERS_CHANGED")
     -- NAME
     SecureEventFrame:RegisterEvent("UNIT_NAME_UPDATE")
-    -- LEVEL
-    SecureEventFrame:RegisterEvent("UNIT_LEVEL")
-    SecureEventFrame:RegisterEvent("PLAYER_LEVEL_UP")
     -- THREAT
     SecureEventFrame:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE")
     SecureEventFrame:RegisterEvent("UNIT_THREAT_LIST_UPDATE")

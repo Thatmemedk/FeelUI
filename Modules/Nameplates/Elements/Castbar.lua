@@ -90,12 +90,15 @@ function NP:SetupEmpowerPips(Castbar, StagePercentages)
 end
 
 function NP:CastStarted(Event, Unit)
-    local Frame = self.Frames[Unit]
+    local Frame = self.EnemyFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
         return
     end
+
+    -- Reset CastBar
+    NP:ResetCastBar(Castbar)
 
     -- Cache Names
     local Direction, Duration = Enum.StatusBarTimerDirection.ElapsedTime
@@ -161,7 +164,7 @@ function NP:CastStarted(Event, Unit)
 end
 
 function NP:CastSucceeded(Event, Unit)
-    local Frame = self.Frames[Unit]
+    local Frame = self.EnemyFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
@@ -172,7 +175,7 @@ function NP:CastSucceeded(Event, Unit)
 end
 
 function NP:CastStopped(Event, Unit, _, _, ...)
-    local Frame = self.Frames[Unit]
+    local Frame = self.EnemyFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
@@ -211,13 +214,13 @@ function NP:CastStopped(Event, Unit, _, _, ...)
 end
 
 function NP:CastFailed(Event, Unit, _, _, ...)
-    local Frame = self.Frames[Unit]
+    local Frame = self.EnemyFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
         return
     end
-
+    
     local CastID, InterruptedBy
 
     if (Event == "UNIT_SPELLCAST_FAILED") then
@@ -244,13 +247,13 @@ function NP:CastFailed(Event, Unit, _, _, ...)
 end
 
 function NP:CastInterrupted(Event, Unit, _, _, ...)
-    local Frame = self.Frames[Unit]
+    local Frame = self.EnemyFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
         return
     end
-
+    
     local CastID, InterruptedBy
 
     if (Event == "UNIT_SPELLCAST_INTERRUPTED") then
@@ -277,7 +280,7 @@ function NP:CastInterrupted(Event, Unit, _, _, ...)
 end
 
 function NP:CastUpdated(Event, Unit, _, _, CastID)
-    local Frame = self.Frames[Unit]
+    local Frame = self.EnemyFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
     if (not Castbar) then
@@ -332,10 +335,10 @@ function NP:CastUpdated(Event, Unit, _, _, CastID)
 end
 
 function NP:CastNonInterruptable(Event, Unit)
-    local Frame = self.Frames[Unit]
+    local Frame = self.EnemyFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
-    if (not Castbar) then   
+    if (not Castbar) then
         return
     end
 

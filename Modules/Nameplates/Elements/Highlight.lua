@@ -8,27 +8,6 @@ local _G = _G
 local unpack = unpack
 local select = select
 
-function NP:CreateStackingBounds(Frame)
-    if (Frame.StackingBound) then
-        return
-    end
-
-    local StackingBound = CreateFrame("Frame", nil, Frame)
-    StackingBound:SetAllPoints()
-
-    local Texture = StackingBound:CreateTexture()
-    Texture:SetColorTexture(1, 0, 0, 0)
-    Texture:SetAllPoints(StackingBound)
-
-    local Plate = Frame:GetParent()
-
-    if (Plate and Plate.SetStackingBoundsFrame) then
-        Plate:SetStackingBoundsFrame(StackingBound)
-    end
-
-    Frame.StackingBound = StackingBound
-end
-
 function NP:CreatePanels(Frame)
     if (Frame.Panel or Frame.InvisFrame or Frame.InvisFrameHigher) then
         return
@@ -84,6 +63,12 @@ function NP:CreateHighlightMouseOver(Frame)
         self.Elapsed = (self.Elapsed or 0) + Elapsed
 
         if (self.Elapsed > 0.1) then
+            if (not self.unit or not UnitExists(self.unit)) then
+                self.HighlightMouseOver:Hide()
+                self.Elapsed = 0
+                return
+            end
+
             if (not UI:UnitIsUnit("mouseover", self.unit)) then
                 self.HighlightMouseOver:Hide()
             end

@@ -98,6 +98,9 @@ function UF:CastStarted(Event, Unit)
         return
     end
 
+    -- Reset CastBar
+    UF:ResetCastBar(Castbar)
+
     -- Cache Names
     local Direction, Duration = Enum.StatusBarTimerDirection.ElapsedTime
     local Name, Text, Icon, StartTime, EndTime, _, _, NotInterruptible, SpellID, CastID = UnitCastingInfo(Unit)
