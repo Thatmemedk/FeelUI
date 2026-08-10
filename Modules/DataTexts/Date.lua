@@ -9,8 +9,8 @@ local unpack = unpack
 local select = select
 
 -- WoW Globals
-local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-local LoadAddOn = C_AddOns.LoadAddOn
+local IsAddOnLoaded = _G.C_AddOns.IsAddOnLoaded
+local LoadAddOn = _G.C_AddOns.LoadAddOn
 
 function Date:Create()
 	local Frame = CreateFrame("Button", nil, _G.Minimap)

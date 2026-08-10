@@ -108,15 +108,6 @@ function UI:Round(Number, Decimals)
 	return format(format("%%.%df", Decimals), Number)
 end
 
--- Short Numbers
-function UI:FormVal(Value)
-	if (Value > 1024) then
-		return format("%.2f MB", Value/1024)
-	else
-		return format("%.2f KB", Value)
-	end
-end
-
 function UI:ShortNumbers(Value)
 	if (Value >= 1e6) then
 		return format("%.1fm", Value / 1e6)

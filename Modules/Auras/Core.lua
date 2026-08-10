@@ -21,7 +21,7 @@ end
 function Auras:CreatePlayerAuras()
     local ButtonWidth, ButtonHeight = unpack(DB.Global.Auras.ButtonSize)
 
-    local Buffs = CreateFrame("Frame", "FeelUI_BuffsAnchor", _G.UIParent)
+    local Buffs = CreateFrame("Frame", "FeelUI_PlayerBuffs", _G.UIParent)
     Buffs:Size(42, 42)
     Buffs:Point(unpack(DB.Global.Auras.Point))
 
@@ -42,7 +42,7 @@ function Auras:CreatePlayerAuras()
         ShowTempItemEnchantment = true,
     })
 
-    local Debuffs = CreateFrame("Frame", "FeelUI_DebuffsAnchor", _G.UIParent)
+    local Debuffs = CreateFrame("Frame", "FeelUI_PlayerDebuffs", _G.UIParent)
     Debuffs:Size(48, 48)
     Debuffs:Point("TOPRIGHT", Buffs, 0, -42*3)
 

@@ -214,24 +214,24 @@ function DamageMeter:Skin()
 			-- NAME
 			Window.DamageMeterTypeDropdown.TypeName:SetParent(Window)
 			Window.DamageMeterTypeDropdown.TypeName:ClearAllPoints()
-			Window.DamageMeterTypeDropdown.TypeName:Point("TOPLEFT", Window, 18, -16)
+			Window.DamageMeterTypeDropdown.TypeName:Point("TOPLEFT", Window, 0, -12)
 			Window.DamageMeterTypeDropdown.TypeName:SetFontTemplate("Default")
 			Window.DamageMeterTypeDropdown.TypeName:SetTextColor(1, 1, 1)
 
+			-- SESSION TIMER
+			Window.SessionTimer:ClearAllPoints()
+			Window.SessionTimer:Point("RIGHT", Window.DamageMeterTypeDropdown.TypeName, 52, 0)
+			Window.SessionTimer:SetFontTemplate("Default")
+
 			-- SETTINGS BUTTONS
 			Window.SettingsDropdown:ClearAllPoints()
-			Window.SettingsDropdown:Point("TOPRIGHT", Window, -32, -4)
+			Window.SettingsDropdown:Point("RIGHT", Window.DamageMeterTypeDropdown.TypeName, 0, 28)
 
 			Window.SessionDropdown:ClearAllPoints()
 			Window.SessionDropdown:Point("LEFT", Window.SettingsDropdown, -32, 0)
 
 			Window.DamageMeterTypeDropdown:ClearAllPoints()
 			Window.DamageMeterTypeDropdown:Point("LEFT", Window.SessionDropdown, -32, 0)
-
-			-- SESSION TIMER
-			Window.SessionTimer:ClearAllPoints()
-			Window.SessionTimer:Point("RIGHT", Window.DamageMeterTypeDropdown.TypeName, 52, 0)
-			Window.SessionTimer:SetFontTemplate("Default")
 
 			-- SKIN BUTTONS
 			self:SkinButtons(Window.SettingsDropdown, 26, Media.Global.Cogwheel)

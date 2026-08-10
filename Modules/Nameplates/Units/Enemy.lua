@@ -8,7 +8,7 @@ local _G = _G
 local unpack = unpack
 local select = select
 
-function NP:CreateEnemyElements(Frame)
+function NP:CreateEnemyElements(Frame, Unit)
     self:CreatePanels(Frame)
     self:CreateHighlight(Frame)
     self:CreateHighlightMouseOver(Frame)

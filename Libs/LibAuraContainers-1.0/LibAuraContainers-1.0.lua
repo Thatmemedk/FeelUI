@@ -8,6 +8,9 @@ local select = select
 -- Tables
 UI.AuraContainerData = {}
 
+-- Tables
+UI.AuraContainerIndex = 0
+
 -- FORMATTER
 
 function UI:BuildRuleDurationFormatter()
@@ -78,7 +81,7 @@ function UI:InitializeAuraButton(Button, Options)
     if (Options.Count) then
         local Count = Overlay:CreateFontString(nil, "OVERLAY")
         Count:Point("TOPRIGHT", Button, Options.CountX or 2, Options.CountY or 2)
-        Count:SetFontTemplate("Default")
+        Count:SetFontTemplate("Default", Options.CountSize or 12)
 
         Button:SetApplicationCount(Count)
     end
@@ -87,7 +90,7 @@ function UI:InitializeAuraButton(Button, Options)
     if (Options.Duration) then
         local Time = Overlay:CreateFontString(nil, "OVERLAY")
         Time:Point("CENTER", Options.TimeX or 0, Options.TimeY or -8)
-        Time:SetFontTemplate("Default")
+        Time:SetFontTemplate("Default", Options.TimeSize or 12)
         
         Button:SetDurationText(Time, {
             --binding = nil,
@@ -312,6 +315,44 @@ function UI:AddAura(Container, Options)
     end
 end
 
+function UI:AddAuraNP(Container, Options)
+    if (not Container) then
+        return
+    end
+
+    local Owner = Container:GetParent()
+    local Data = UI.AuraContainerData[Owner]
+
+    if (not Data) then
+        return
+    end
+
+    local InitializeAura = function(Button)
+        UI:InitializeAuraButton(Button, Options)
+    end
+
+    local InitializeTempAura = function(Button)
+        UI:InitializeTempAuraButton(Button, Options)
+    end
+
+    Data.GroupIndex = (Data.GroupIndex or 0) + 1
+    local GroupKey = "AuraGroup" .. Data.GroupIndex
+
+    Container:AddAuraGroup(GroupKey, Options.Filter, {
+        maxFrameCount = Options.MaxAuras,
+        initializeFrame = InitializeAura,
+
+        layout = {
+            elementSpacing = Options.Spacing or UI:Scale(3),
+            lineSpacing = Options.LineSpacing or UI:Scale(8),
+            groupSpacing = Options.GroupSpacing or UI:Scale(3),
+            groupLineSpacing = Options.GroupLineSpacing or UI:Scale(8),
+            sortMethod = AuraContainerSortMethod.ExpirationOnly,
+            sortDirection = AuraContainerSortDirection.Normal,
+        },
+    })
+end
+
 -- CREATE CONTAINER
 
 function UI:CreateAuraContainer(Frame, Options)
@@ -323,7 +364,6 @@ function UI:CreateAuraContainer(Frame, Options)
 
     if (not Data) then
         Data = {
-            Index = 1,
             Containers = {},
             Registry = {},
         }
@@ -331,7 +371,35 @@ function UI:CreateAuraContainer(Frame, Options)
         UI.AuraContainerData[Frame] = Data
     end
 
-    local Container = CreateFrame("AuraContainer", "FeelUI_AuraContainer".. Data.Index, Frame, "CustomAuraContainerTemplate")
+    -- Increment The Global Index So Container IDs Are Never Reused.
+    UI.AuraContainerIndex = UI.AuraContainerIndex + 1
+
+    local Container = CreateFrame("AuraContainer", "FeelUI_AuraContainer".. UI.AuraContainerIndex, Frame, "CustomAuraContainerTemplate")
+
+    -- Store The Container Reference For This Frame.
+    Data.Containers[#Data.Containers + 1] = Container
+
+    -- Keep A Reverse Reference From Container.
+    Data.Registry[Container] = Frame
+
+   -- Set The Anchors
+    local GrowthDirection = ({
+        LEFT = AnchorUtil.FlowDirection.Left,
+        RIGHT = AnchorUtil.FlowDirection.Right,
+        UP = AnchorUtil.FlowDirection.Up,
+        DOWN = AnchorUtil.FlowDirection.Down,
+    }) [Options.GrowthDirection] or AnchorUtil.FlowDirection.Right
+
+    local VerticalGrowthDirection = ({
+        UP = AnchorUtil.FlowDirection.Up,
+        DOWN = AnchorUtil.FlowDirection.Down,
+    }) [Options.VerticalGrowthDirection] or AnchorUtil.FlowDirection.Down
+
+    Container:Point(Options.Anchor, Frame, Options.X, Options.Y)
+    Container:SetFlowLayoutAnchorPoint(Options.Anchor or "TOPLEFT")
+    Container:SetFlowLayoutAxis(AnchorUtil.FlowLayoutAxis.Horizontal)
+    Container:SetFlowLayoutGrowthDirection(GrowthDirection, VerticalGrowthDirection)
+    Container:SetFlowLayoutMaximumLineSize(Options.AurasPerRow or 550)
 
     -- Set Unit
     local Unit = Frame.unit or Options.Unit
@@ -342,18 +410,42 @@ function UI:CreateAuraContainer(Frame, Options)
 
     if (Container:GetUnit() ~= Unit) then
         Container:SetUnit(Unit)
-    else
-        Container:UpdateAllAuras()
     end
 
-    -- Debug PRINT
-    UI:Print("Created Aura Container:", Container:GetName(), "Frame:", Frame:GetName(), Container, "Unit:", Unit)
+    -- Set Policy
+    if (Options.Policy) then
+        Container:SetAuraProcessingPolicy(CustomAuraContainerAuraProcessingPolicy.ProcessAura, Options.Policy)
+    end
 
-    -- Store The Container Reference By Index.
-    Data.Containers[Data.Index] = Container
+    -- Add Aura
+    self:AddAura(Container, Options)
 
-    -- Increment The Index So The Container Is Unique.
-    Data.Index = Data.Index + 1
+    return Container
+end
+
+function UI:CreateAuraContainerNP(Frame, Options)
+    if (not Frame) then
+        return
+    end
+
+    local Data = UI.AuraContainerData[Frame]
+
+    if (not Data) then
+        Data = {
+            Containers = {},
+            Registry = {},
+        }
+
+        UI.AuraContainerData[Frame] = Data
+    end
+
+    -- Increment The Global Index So Container IDs Are Never Reused.
+    UI.AuraContainerIndex = UI.AuraContainerIndex + 1
+
+    local Container = CreateFrame("AuraContainer", "FeelUI_AuraContainerNP".. UI.AuraContainerIndex, Frame, "CustomAuraContainerTemplate")
+
+    -- Store The Container Reference For This Frame.
+    Data.Containers[#Data.Containers + 1] = Container
 
     -- Keep A Reverse Reference From Container.
     Data.Registry[Container] = Frame
@@ -383,35 +475,9 @@ function UI:CreateAuraContainer(Frame, Options)
     end
 
     -- Add Aura
-    self:AddAura(Container, Options)
+    self:AddAuraNP(Container, Options)
 
     return Container
-end
-
--- ENABLE / DISABLE
-
-function UI:EnableAuras(Frame)
-    local Data = UI.AuraContainerData[Frame]
-
-    if (not Data) then
-        return
-    end
-
-    for _, Container in pairs(Data.Containers) do
-        Container:Enabled(true)
-    end
-end
-
-function UI:DisableAuras(Frame)
-    local Data = UI.AuraContainerData[Frame]
-
-    if (not Data) then
-        return
-    end
-
-    for _, Container in pairs(Data.Containers) do
-        Container:Enabled(false)
-    end
 end
 
 -- AURA HIGHLIGHT
@@ -487,34 +553,13 @@ function UI:CreateAuraHighlight(Frame, Options)
         return
     end
 
-    local Data = UI.AuraContainerData[Frame]
-
-    if (not Data) then
-        Data = {
-            Index = 1,
-            Containers = {},
-            Registry = {},
-        }
-
-        UI.AuraContainerData[Frame] = Data
-    end
-
-    local Container = CreateFrame("AuraContainer", "FeelUI_AuraHighlightContainer".. Data.Index, Frame, "CustomAuraContainerTemplate")
+    local Container = CreateFrame("AuraContainer", "FeelUI_AuraHighlightContainer", Frame, "CustomAuraContainerTemplate")
     Container:SetInside()
-
-    -- Store The Container Reference By Index.
-    Data.Containers[Data.Index] = Container
-
-    -- Increment The Index So The Container Is Unique.
-    Data.Index = Data.Index + 1
-
-    -- Keep A Reverse Reference From Container.
-    Data.Registry[Container] = Frame
 
     -- Set Unit
     local Unit = Frame.unit or Options.Unit
 
-    if (Container:GetUnit() ~= Frame.unit) then
+    if (Container:GetUnit() ~= Unit) then
         Container:SetUnit(Unit)
     end
 

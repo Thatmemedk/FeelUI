@@ -13,7 +13,7 @@ function NP:CreateDebuffs(Frame)
         return
     end
 
-    local Debuffs = UI:CreateAuraContainer(Frame, {
+    local Debuffs = UI:CreateAuraContainerNP(Frame, {
         GrowthDirection = "LEFT",
         Anchor = "TOPRIGHT",
         X = 0,
@@ -25,8 +25,8 @@ function NP:CreateDebuffs(Frame)
         Duration = true,
         Border = true,
         DebuffIndicator = false,
-        Filter = "HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY",
-        MaxAuras = 4,
+        Filter = "HARMFUL|PLAYER",
+        MaxAuras = 2,
     })
 
     Frame.Debuffs = Debuffs
@@ -37,7 +37,7 @@ function NP:CreateCrowdControlDebuffs(Frame)
         return
     end
     
-    local CrowdControl = UI:CreateAuraContainer(Frame, {
+    local CrowdControl = UI:CreateAuraContainerNP(Frame, {
         GrowthDirection = "LEFT",
         Anchor = "TOPLEFT",
         X = -42,

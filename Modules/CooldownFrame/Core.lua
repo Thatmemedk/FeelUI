@@ -26,14 +26,6 @@ function Cooldown:Initialize()
             return
         end
 
-        local Success, Regions = pcall(function()
-            return { self:GetRegions() }
-        end)
-
-        if (not Success or not Regions) then
-            return
-        end
-
         for i = 1, self:GetNumRegions() do
             local Region = select(i, self:GetRegions())
 

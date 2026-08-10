@@ -1,10 +1,10 @@
 ## Title: F|CFF00AAFFeelUI|r
 ## Notes: Lightweight User Interface.
 ## Author: Thatmemedk
-## Version: 1.17
+## Version: 1.18
 ## SavedVariables: FeelDB
 ## SavedVariablesPerCharacter: FeelCharacterDB
-## Interface: 120001, 120005, 120000
+## Interface: 120100
 ## IconTexture: Interface\AddOns\FeelUI\Media\Logo\Logo
 ## Category-enUS: FeelUI
 ## Group: FeelUI

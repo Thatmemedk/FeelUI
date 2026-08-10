@@ -70,6 +70,9 @@ local READY_CHECK_WAITING_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Waiting"
 UF.FadeInTime = 0.5
 UF.CastHoldTime = 2
 
+-- Locals
+UF.GroupUpdatePending = false
+
 -- Tables
 UF.Frames = {}
 UF.Frames.Party = {}
@@ -105,6 +108,7 @@ function UF:UpdateHealth(Frame, Unit)
     end
 
     local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
+
     Frame.Health:SetMinMaxValues(0, Max)
     Frame.Health:SetValue(Min, UI.SmoothBars)
 
@@ -136,7 +140,7 @@ function UF:UpdateHealth(Frame, Unit)
 end
 
 function UF:UpdateHealthTextCur(Frame, Unit)
-    if (not Frame or not Unit or not Frame.HealthTextCur) then
+    if (not Frame or not Unit or not Frame.HealthTextCur or not Frame.Health) then
         return
     end
 
@@ -167,6 +171,10 @@ function UF:UpdateHealthTextPer(Frame, Unit)
 end
 
 function UF:UpdateStatusIcon(Frame, Unit)
+    if (not Frame or not Unit or not Frame.StatusIcon) then
+        return
+    end
+    
     if (UnitIsGhost(Unit) or UnitIsDead(Unit)) then
         Frame.StatusIcon:Size(32, 32)
         Frame.StatusIcon:SetAtlas("GM-icon-difficulty-normal-hover")
@@ -178,60 +186,33 @@ end
 
 -- HEAL PRED
 
-function UF:UpdateHealthPred(Frame, Unit)
-    if (not Frame or not Unit or not Frame.HealthPrediction) then
+function UF:LayoutHealPred(Frame)
+    if (not Frame or not Frame.Health or not Frame.HealthPrediction) then
         return
     end
 
-    local Calculator = Frame.HealthPrediction.Calculator
-    local PlayerHealsBar = Frame.HealthPrediction.PlayerHeals
-    local OtherHealsBar = Frame.HealthPrediction.OtherHeals
-    local AllAbsorbsBar = Frame.HealthPrediction.AllAbsorbs
-    local HealAbsorbsBar = Frame.HealthPrediction.HealAbsorbs
-    local OverHealsBar = Frame.HealthPrediction.OverHeals
-    local OverAbsorbsBar = Frame.HealthPrediction.OverAbsorbs
-    local OverHealsAbsorbsBar = Frame.HealthPrediction.OverHealsAbsorbs
+    local Health = Frame.Health
+    local Prediction = Frame.HealthPrediction
+    local PlayerHealsBar = Prediction.PlayerHeals
+    local OtherHealsBar = Prediction.OtherHeals
+    local AllAbsorbsBar = Prediction.AllAbsorbs
+    local HealAbsorbsBar = Prediction.HealAbsorbs
+    local OverHealsBar = Prediction.OverHeals
+    local OverAbsorbsBar = Prediction.OverAbsorbs
+    local OverHealsAbsorbsBar = Prediction.OverHealsAbsorbs
+    local Orientation = Health:GetOrientation()
+    local PrevTexture = Health:GetStatusBarTexture()
+    local BarWidth, BarHeight = Health:GetSize()    
 
-    UnitGetDetailedHealPrediction(Unit, "player", Calculator)
-
-    -- Calculate Predictions
-    local AllHeals, PlayerHeals, OtherHeals, HealingClamped = Calculator:GetIncomingHeals()
-    local AbsorbsAmount, AbsorbsClamped = Calculator:GetDamageAbsorbs()
-    local HealAbsorbAmount, HealAbsorbClamped = Calculator:GetHealAbsorbs()
-    local Max = UnitHealthMax(Unit)
-
-    local Orientation = Frame.Health:GetOrientation()
-    local PrevTexture = Frame.Health:GetStatusBarTexture()
-    local BarWidth, BarHeight = Frame.Health:GetSize()
-
+    -- Orientation
     PlayerHealsBar:SetOrientation(Orientation)
-    PlayerHealsBar:SetMinMaxValues(0, Max)
-    PlayerHealsBar:SetValue(PlayerHeals, UI.SmoothBars)
-
     OtherHealsBar:SetOrientation(Orientation)
-    OtherHealsBar:SetMinMaxValues(0, Max)
-    OtherHealsBar:SetValue(OtherHeals, UI.SmoothBars)
-
     AllAbsorbsBar:SetOrientation(Orientation)
-    AllAbsorbsBar:SetReverseFill(true)
-    AllAbsorbsBar:SetMinMaxValues(0, Max)
-    AllAbsorbsBar:SetValue(AbsorbsAmount, UI.SmoothBars)
-
     HealAbsorbsBar:SetOrientation(Orientation)
+
+    -- Set Reverse Fill
+    AllAbsorbsBar:SetReverseFill(true)
     HealAbsorbsBar:SetReverseFill(true)
-    HealAbsorbsBar:SetMinMaxValues(0, Max)
-    HealAbsorbsBar:SetValue(HealAbsorbAmount, UI.SmoothBars)
-
-    -- Healing Prediction
-    PlayerHealsBar:SetAlphaFromBoolean(PlayerHeals, 1, 0)
-    OtherHealsBar:SetAlphaFromBoolean(OtherHeals, 1, 0)
-    AllAbsorbsBar:SetAlphaFromBoolean(AbsorbsAmount, 1, 0)
-    HealAbsorbsBar:SetAlphaFromBoolean(HealAbsorbAmount, 1, 0)
-
-    -- Over Healing/Absorbs
-    OverHealsBar:SetAlphaFromBoolean(HealingClamped, 1, 0)
-    OverAbsorbsBar:SetAlphaFromBoolean(AbsorbsClamped, 1, 0)
-    OverHealsAbsorbsBar:SetAlphaFromBoolean(HealAbsorbClamped, 1, 0)
 
     if (Orientation == "HORIZONTAL") then
         PlayerHealsBar:Size(BarWidth, BarHeight)
@@ -274,6 +255,60 @@ function UF:UpdateHealthPred(Frame, Unit)
         -- OverHealsAbsorbs
         OverHealsAbsorbsBar:SetOutsideTop(HealAbsorbsBar:GetStatusBarTexture(), 0, 0)
     end
+
+    Prediction.LayoutIsCreated = true
+end
+
+function UF:UpdateHealthPred(Frame, Unit)
+    if (not Frame or not Unit or not Frame.HealthPrediction) then
+        return
+    end
+
+    local Prediction = Frame.HealthPrediction
+
+    if (not Prediction.LayoutIsCreated) then
+        UF:LayoutHealPred(Frame)
+    end
+
+    local Calculator = Prediction.Calculator
+    local PlayerHealsBar = Prediction.PlayerHeals
+    local OtherHealsBar = Prediction.OtherHeals
+    local AllAbsorbsBar = Prediction.AllAbsorbs
+    local HealAbsorbsBar = Prediction.HealAbsorbs
+    local OverHealsBar = Prediction.OverHeals
+    local OverAbsorbsBar = Prediction.OverAbsorbs
+    local OverHealsAbsorbsBar = Prediction.OverHealsAbsorbs
+
+    UnitGetDetailedHealPrediction(Unit, "player", Calculator)
+
+    -- Calculate Predictions
+    local AllHeals, PlayerHeals, OtherHeals, HealingClamped = Calculator:GetIncomingHeals()
+    local AbsorbsAmount, AbsorbsClamped = Calculator:GetDamageAbsorbs()
+    local HealAbsorbAmount, HealAbsorbClamped = Calculator:GetHealAbsorbs()
+    local Max = UnitHealthMax(Unit)
+
+    PlayerHealsBar:SetMinMaxValues(0, Max)
+    PlayerHealsBar:SetValue(PlayerHeals, UI.SmoothBars)
+
+    OtherHealsBar:SetMinMaxValues(0, Max)
+    OtherHealsBar:SetValue(OtherHeals, UI.SmoothBars)
+
+    AllAbsorbsBar:SetMinMaxValues(0, Max)
+    AllAbsorbsBar:SetValue(AbsorbsAmount, UI.SmoothBars)
+
+    HealAbsorbsBar:SetMinMaxValues(0, Max)
+    HealAbsorbsBar:SetValue(HealAbsorbAmount, UI.SmoothBars)
+
+    -- Healing Prediction
+    PlayerHealsBar:SetAlphaFromBoolean(PlayerHeals, 1, 0)
+    OtherHealsBar:SetAlphaFromBoolean(OtherHeals, 1, 0)
+    AllAbsorbsBar:SetAlphaFromBoolean(AbsorbsAmount, 1, 0)
+    HealAbsorbsBar:SetAlphaFromBoolean(HealAbsorbAmount, 1, 0)
+
+    -- Over Healing/Absorbs
+    OverHealsBar:SetAlphaFromBoolean(HealingClamped, 1, 0)
+    OverAbsorbsBar:SetAlphaFromBoolean(AbsorbsClamped, 1, 0)
+    OverHealsAbsorbsBar:SetAlphaFromBoolean(HealAbsorbClamped, 1, 0)
 end
 
 --- UPDATE POWER
@@ -854,31 +889,34 @@ function UF:UpdateRangeState(Frame, Unit)
     end
 end
 
-function UF:UpdateRange(Frame, Unit)
-    if (not Frame or not Unit or not Frame.Range) then
-        return
+function UF:StartRangeDriver()
+    if (self.RangeTicker) then 
+        return 
     end
 
-    local Range = Frame.Range
-
-    if (Range.Ticker) then
-        Range.Ticker:Cancel()
-        Range.Ticker = nil
-    end
-
-    Range.Ticker = C_Timer.NewTicker(0.2, function()
-        UF:UpdateRangeState(Frame, Frame.unit or Unit)
-    end)
-
-    if (not Range.OnHideHooked) then
-        Frame:HookScript("OnHide", function(self)
-            if (self.Range and self.Range.Ticker) then
-                self.Range.Ticker:Cancel()
-                self.Range.Ticker = nil
+    self.RangeTicker = C_Timer.NewTicker(0.2, function()
+        for Frame, Unit in pairs(UF.Frames.Range) do
+            if (Frame:IsShown()) then
+                UF:UpdateRangeState(Frame, Frame.unit)
             end
+        end
+    end)
+end
+
+function UF:UpdateRange(Frame, Unit)
+    if (not Frame or not Unit or not Frame.Range) then 
+        return 
+    end
+
+    UF.Frames.Range[Frame] = Unit
+    UF:StartRangeDriver()
+    
+    if (not Frame.Range.OnHideHooked) then
+        Frame:HookScript("OnHide", function(self)
+            UF.Frames.Range[self] = nil
         end)
 
-        Range.OnHideHooked = true
+        Frame.Range.OnHideHooked = true
     end
 end
 
@@ -1210,7 +1248,6 @@ function UF:OnEvent(event, unit, ...)
     if (event == "PLAYER_ENTERING_WORLD") then
         UF:FullRefresh()
     elseif (event == "PLAYER_TARGET_CHANGED") then
-        UF:RefreshUnit("player")
         UF:RefreshUnit("target")
         UF:RefreshUnit("targettarget")
         UF:UpdateTargetPortrait()
@@ -1360,5 +1397,4 @@ function UF:Initialize()
     self:DisableBlizzard()
     self:CreateUF()
     self:RegisterEvents()
-    self:FullRefresh()
 end

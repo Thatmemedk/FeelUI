@@ -52,7 +52,7 @@ function NP:UpdateHealth(Frame, Unit)
     if (not Frame or not Unit or not Frame.Health) then
         return
     end
-
+    
     local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
     Frame.Health:SetMinMaxValues(0, Max)
     Frame.Health:SetValue(Min, UI.SmoothBars)
@@ -95,60 +95,33 @@ end
 
 -- HEAL PRED
 
-function NP:UpdateHealthPred(Frame, Unit)
-    if (not Frame or not Unit or not Frame.HealthPrediction) then
+function NP:LayoutHealPred(Frame)
+    if (not Frame or not Frame.Health or not Frame.HealthPrediction) then
         return
     end
 
-    local Calculator = Frame.HealthPrediction.Calculator
-    local PlayerHealsBar = Frame.HealthPrediction.PlayerHeals
-    local OtherHealsBar = Frame.HealthPrediction.OtherHeals
-    local AllAbsorbsBar = Frame.HealthPrediction.AllAbsorbs
-    local HealAbsorbsBar = Frame.HealthPrediction.HealAbsorbs
-    local OverHealsBar = Frame.HealthPrediction.OverHeals
-    local OverAbsorbsBar = Frame.HealthPrediction.OverAbsorbs
-    local OverHealsAbsorbsBar = Frame.HealthPrediction.OverHealsAbsorbs
+    local Health = Frame.Health
+    local Prediction = Frame.HealthPrediction
+    local PlayerHealsBar = Prediction.PlayerHeals
+    local OtherHealsBar = Prediction.OtherHeals
+    local AllAbsorbsBar = Prediction.AllAbsorbs
+    local HealAbsorbsBar = Prediction.HealAbsorbs
+    local OverHealsBar = Prediction.OverHeals
+    local OverAbsorbsBar = Prediction.OverAbsorbs
+    local OverHealsAbsorbsBar = Prediction.OverHealsAbsorbs
+    local Orientation = Health:GetOrientation()
+    local PrevTexture = Health:GetStatusBarTexture()
+    local BarWidth, BarHeight = Health:GetSize()    
 
-    UnitGetDetailedHealPrediction(Unit, "player", Calculator)
-
-    -- Calculate Predictions
-    local AllHeals, PlayerHeals, OtherHeals, HealingClamped = Calculator:GetIncomingHeals()
-    local AbsorbsAmount, AbsorbsClamped = Calculator:GetDamageAbsorbs()
-    local HealAbsorbAmount, HealAbsorbClamped = Calculator:GetHealAbsorbs()
-    local Max = UnitHealthMax(Unit)
-
-    local Orientation = Frame.Health:GetOrientation()
-    local PrevTexture = Frame.Health:GetStatusBarTexture()
-    local BarWidth, BarHeight = Frame.Health:GetSize()
-
+    -- Orientation
     PlayerHealsBar:SetOrientation(Orientation)
-    PlayerHealsBar:SetMinMaxValues(0, Max)
-    PlayerHealsBar:SetValue(PlayerHeals, UI.SmoothBars)
-
     OtherHealsBar:SetOrientation(Orientation)
-    OtherHealsBar:SetMinMaxValues(0, Max)
-    OtherHealsBar:SetValue(OtherHeals, UI.SmoothBars)
-
     AllAbsorbsBar:SetOrientation(Orientation)
-    AllAbsorbsBar:SetReverseFill(true)
-    AllAbsorbsBar:SetMinMaxValues(0, Max)
-    AllAbsorbsBar:SetValue(AbsorbsAmount, UI.SmoothBars)
-
     HealAbsorbsBar:SetOrientation(Orientation)
+
+    -- Set Reverse Fill
+    AllAbsorbsBar:SetReverseFill(true)
     HealAbsorbsBar:SetReverseFill(true)
-    HealAbsorbsBar:SetMinMaxValues(0, Max)
-    HealAbsorbsBar:SetValue(HealAbsorbAmount, UI.SmoothBars)
-
-    -- Healing Prediction
-    PlayerHealsBar:SetAlphaFromBoolean(PlayerHeals, 1, 0)
-    OtherHealsBar:SetAlphaFromBoolean(OtherHeals, 1, 0)
-    AllAbsorbsBar:SetAlphaFromBoolean(AbsorbsAmount, 1, 0)
-    HealAbsorbsBar:SetAlphaFromBoolean(HealAbsorbAmount, 1, 0)
-
-    -- Over Healing/Absorbs
-    OverHealsBar:SetAlphaFromBoolean(HealingClamped, 1, 0)
-    OverAbsorbsBar:SetAlphaFromBoolean(AbsorbsClamped, 1, 0)
-    OverHealsAbsorbsBar:SetAlphaFromBoolean(HealAbsorbClamped, 1, 0)
 
     if (Orientation == "HORIZONTAL") then
         PlayerHealsBar:Size(BarWidth, BarHeight)
@@ -191,6 +164,61 @@ function NP:UpdateHealthPred(Frame, Unit)
         -- OverHealsAbsorbs
         OverHealsAbsorbsBar:SetOutsideTop(HealAbsorbsBar:GetStatusBarTexture(), 0, 0)
     end
+
+    Prediction.LayoutIsCreated = true
+end
+
+function NP:UpdateHealthPred(Frame, Unit)
+    if (not Frame or not Unit or not Frame.HealthPrediction) then
+        return
+    end
+
+    local Prediction = Frame.HealthPrediction
+
+    if (not Prediction.LayoutIsCreated) then
+        NP:LayoutHealPred(Frame)
+    end
+
+    local Calculator = Prediction.Calculator
+
+    local PlayerHealsBar = Prediction.PlayerHeals
+    local OtherHealsBar = Prediction.OtherHeals
+    local AllAbsorbsBar = Prediction.AllAbsorbs
+    local HealAbsorbsBar = Prediction.HealAbsorbs
+    local OverHealsBar = Prediction.OverHeals
+    local OverAbsorbsBar = Prediction.OverAbsorbs
+    local OverHealsAbsorbsBar = Prediction.OverHealsAbsorbs
+
+    UnitGetDetailedHealPrediction(Unit, "player", Calculator)
+
+    -- Calculate Predictions
+    local AllHeals, PlayerHeals, OtherHeals, HealingClamped = Calculator:GetIncomingHeals()
+    local AbsorbsAmount, AbsorbsClamped = Calculator:GetDamageAbsorbs()
+    local HealAbsorbAmount, HealAbsorbClamped = Calculator:GetHealAbsorbs()
+    local Max = UnitHealthMax(Unit)
+
+    PlayerHealsBar:SetMinMaxValues(0, Max)
+    PlayerHealsBar:SetValue(PlayerHeals, UI.SmoothBars)
+
+    OtherHealsBar:SetMinMaxValues(0, Max)
+    OtherHealsBar:SetValue(OtherHeals, UI.SmoothBars)
+
+    AllAbsorbsBar:SetMinMaxValues(0, Max)
+    AllAbsorbsBar:SetValue(AbsorbsAmount, UI.SmoothBars)
+
+    HealAbsorbsBar:SetMinMaxValues(0, Max)
+    HealAbsorbsBar:SetValue(HealAbsorbAmount, UI.SmoothBars)
+
+    -- Healing Prediction
+    PlayerHealsBar:SetAlphaFromBoolean(PlayerHeals, 1, 0)
+    OtherHealsBar:SetAlphaFromBoolean(OtherHeals, 1, 0)
+    AllAbsorbsBar:SetAlphaFromBoolean(AbsorbsAmount, 1, 0)
+    HealAbsorbsBar:SetAlphaFromBoolean(HealAbsorbAmount, 1, 0)
+
+    -- Over Healing/Absorbs
+    OverHealsBar:SetAlphaFromBoolean(HealingClamped, 1, 0)
+    OverAbsorbsBar:SetAlphaFromBoolean(AbsorbsClamped, 1, 0)
+    OverHealsAbsorbsBar:SetAlphaFromBoolean(HealAbsorbClamped, 1, 0)
 end
 
 -- NAME UPDATE
@@ -329,31 +357,6 @@ function NP:RefreshUnit(Frame, Unit)
     if (Frame.Name) then self:UpdateName(Frame, Unit) end
     if (Frame.Guild) then self:UpdateGuild(Frame, Unit) end
 
-    -- AURAS
-    if (Frame.Debuffs) then
-        UI:EnableAuras(Frame.Debuffs)
-    end
-
-    if (Frame.CrowdControl) then
-        UI:EnableAuras(Frame.CrowdControl)
-    end
-
-    --[[
-    if (Frame.Debuffs) then
-        UI:Print("RefreshUnit - Debuffs", Frame.Debuffs, Unit)
-
-        Frame.Debuffs:SetEnabled(true) 
-        Frame.Debuffs:UpdateAllAuras()
-    end
-
-    if (Frame.CrowdControl) then
-        UI:Print("RefreshUnit - CrowdControl", Frame.CrowdControl, Unit)
-
-        Frame.CrowdControl:SetEnabled(true) 
-        Frame.CrowdControl:UpdateAllAuras()
-    end
-    --]]
-
     -- ICONS
     if (Frame.RaidIcon) then self:UpdateRaidIcon(Frame, Unit) end
 
@@ -366,29 +369,41 @@ function NP:RefreshUnit(Frame, Unit)
     if (Frame.HighlightMouseOver) then self:UpdateHighlightMouseOver(Frame, Unit) end
 end
 
-function NP:RefreshUnitRemoved(Frame, Unit)
-    -- AURAS
-    if (Frame.Debuffs) then
-        UI:DisableAuras(Frame.Debuffs)
+function NP:RefreshUnitAuras(Frame, Unit)
+    if (not Frame or not Unit) then
+        return
     end
 
-    if (Frame.CrowdControl) then
-        UI:DisableAuras(Frame.CrowdControl)
+    local Data = UI.AuraContainerData[Frame]
+
+    if (not Data) then
+        return
     end
 
-    --[[
-    if (Frame.Debuffs) then
-        UI:Print("RefreshUnitRemoved - Debuffs", Frame.Debuffs, Unit)
+    for _, Container in pairs(Data.Containers) do
+        if (Container) then
+            Container:SetEnabled(true)
+            Container:SetUnit(Unit)
+        end
+    end
+end
 
-        Frame.Debuffs:SetEnabled(false)
+function NP:RefreshUnitRemovedAuras(Frame)
+    if (not Frame) then
+        return
     end
 
-    if (Frame.CrowdControl) then
-        UI:Print("RefreshUnitRemoved - CrowdControl", Frame.CrowdControl, Unit)
+    local Data = UI.AuraContainerData[Frame]
 
-        Frame.CrowdControl:SetEnabled(false)
+    if (not Data) then
+        return
     end
-    --]]
+
+    for _, Container in pairs(Data.Containers) do
+        if (Container) then
+            Container:SetEnabled(false)
+        end
+    end
 end
 
 -- EVENT UPDATES
@@ -551,7 +566,11 @@ function NP:NameplateAdded(Unit)
         end
 
         -- ELEMENTS
-        NP:CreateFriendlyElements(FriendlyFrame)
+        if (not FriendlyFrame.IsCreated) then
+            NP:CreateFriendlyElements(FriendlyFrame)
+
+            FriendlyFrame.IsCreated = true
+        end
 
         -- REFRESH
         NP:RefreshUnit(FriendlyFrame, Unit)
@@ -591,35 +610,26 @@ function NP:NameplateAdded(Unit)
         end
 
         -- ELEMENTS
-        NP:CreateEnemyElements(EnemyFrame)
+        if (not EnemyFrame.IsCreated) then
+            NP:CreateEnemyElements(EnemyFrame)
+
+            EnemyFrame.IsCreated = true
+        end
 
         -- REFRESH
         NP:RefreshUnit(EnemyFrame, Unit)
+        NP:RefreshUnitAuras(EnemyFrame, Unit)
     end
 end
 
 function NP:NameplateRemoved(Unit)
     local Plate = C_NamePlate.GetNamePlateForUnit(Unit)
 
-    if (not Plate) then 
+    if (not Plate or Plate.FriendlyNP or Plate.EnemyNP) then 
         return
     end
 
-    if (Plate.EnemyNP) then
-        NP:RefreshUnitRemoved(Plate.EnemyNP, Unit)
-
-        -- RESET UNIT
-        Plate.EnemyNP:Hide()
-        Plate.EnemyNP.unit = nil
-        Plate.EnemyNP:SetAttribute("unit", nil)
-
-        -- RESET CACHE
-        self.EnemyFrames[Unit] = nil
-    end
-
     if (Plate.FriendlyNP) then
-        NP:RefreshUnitRemoved(Plate.FriendlyNP, Unit)
-
         -- RESET UNIT
         Plate.FriendlyNP:Hide()
         Plate.FriendlyNP.unit = nil
@@ -627,6 +637,19 @@ function NP:NameplateRemoved(Unit)
 
         -- RESET CACHE
         self.FriendlyFrames[Unit] = nil
+    end
+
+    if (Plate.EnemyNP) then
+        -- RESET UNIT
+        Plate.EnemyNP:Hide()
+        Plate.EnemyNP.unit = nil
+        Plate.EnemyNP:SetAttribute("unit", nil)
+
+        -- REMOVE AURAS
+        NP:RefreshUnitRemovedAuras(Plate.EnemyNP)
+
+        -- RESET CACHE
+        self.EnemyFrames[Unit] = nil
     end
 end
 

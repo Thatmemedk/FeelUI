@@ -1,4 +1,4 @@
-local UI, DB, Media, Language = select(2, ...):Call() 
+local UI, DB, Media, Language = select(2, ...):Call()
 
 -- Call Modules
 local UF = UI:CallModule("UnitFrames")
@@ -52,9 +52,49 @@ function UF:SetupGroupFrame(Frame, Type, Unit)
     Frame.UnitIsCreated = true
 end
 
+function UF:UpdateGroupChildren(Header)
+    local Type = Header.GroupType
+    local Index = 1
+
+    while true do
+        local Frame = Header:GetAttribute("child" .. Index)
+
+        if (not Frame) then
+            break
+        end
+
+        if (not Frame.UnitIsCreated) then
+            UF:SetupGroupFrame(Frame, Type, Frame:GetAttribute("unit"))
+        end
+
+        Index = Index + 1
+    end
+end
+
+function UF:QueueUpdateForGroups(Header)
+    if (Header.GroupUpdatePending) then
+        return
+    end
+
+    Header.GroupUpdatePending = true
+
+    C_Timer.After(0, function()
+        Header.GroupUpdatePending = false
+
+        if (Header:IsForbidden()) then
+            return
+        end
+
+        UF:UpdateGroupChildren(Header)
+    end)
+end
+
 function UF:SpawnGroupHeader(Type)
     local Name = (Type == "party") and "FeelUI_Party" or "FeelUI_Raid"
     local Header = CreateFrame("Frame", Name, UF.SecureFrame, "SecureGroupHeaderTemplate")
+
+    -- STORE TYPE
+    Header.GroupType = Type
 
     Header:SetAttribute("template", "SecureUnitButtonTemplate, SecureHandlerStateTemplate, SecureHandlerEnterLeaveTemplate, PingableUnitFrameTemplate")
     Header:SetAttribute("initialConfigFunction", [[
@@ -66,7 +106,7 @@ function UF:SpawnGroupHeader(Type)
         -- PARTY SETTINGS
         Header:SetAttribute("showPlayer", false)
         Header:SetAttribute("showParty", true)
-        Header:SetAttribute("showRaid", true)
+        Header:SetAttribute("showRaid", false)
         Header:SetAttribute("initial-width", 202)
         Header:SetAttribute("initial-height", 36)
         Header:SetAttribute("point", "TOP")
@@ -100,24 +140,12 @@ function UF:SpawnGroupHeader(Type)
     -- EVENTS
     Header:RegisterEvent("PLAYER_ENTERING_WORLD")
     Header:RegisterEvent("GROUP_ROSTER_UPDATE")
-    Header:SetScript("OnEvent", function(self, event)
-        local Index = 1
-
-        while true do
-            local Frame = self:GetAttribute("child" .. Index)
-
-            if (not Frame) then
-                break
-            end
-
-            if (not Frame.UnitIsCreated) then
-                UF:SetupGroupFrame(Frame, Type, Frame:GetAttribute("unit"))
-            end
-
-            Index = Index + 1
-        end
-
-        UF:FullRefreshGroup()
+    Header:HookScript("OnEvent", function(self, event)
+        -- Process children that already exist.
+        UF:UpdateGroupChildren(self)
+        -- Queue another pass after the SecureGroupHeader has
+        -- had a chance to update/rebuild its children.
+        UF:QueueUpdateForGroups(self)
     end)
 
     return Header

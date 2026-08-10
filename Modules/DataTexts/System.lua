@@ -15,6 +15,9 @@ local GetFramerate = GetFramerate
 local GetNetStats = GetNetStats
 
 -- Locals
+System.UpdateInterval = 1
+
+-- Locals
 local GradientColorPalet = {
 	1, 0, 0,      -- Red
 	1, 0.42, 0,   -- Orange
@@ -28,9 +31,6 @@ local GradientColorPaletDown = {
     1, 0.42, 0,  -- Orange
     1, 0, 0      -- Red
 }
-
--- Locals
-local UpdateTime = 1
 
 function System:Create()
     local Frame = CreateFrame("Frame", nil, _G.UIParent)
@@ -53,7 +53,7 @@ function System:Update(Elapsed)
         return 
     end
 
-    self.TimeElapsed = UpdateTime
+    self.TimeElapsed = self.UpdateInterval
 
     -- Locals
     local FrameRate = GetFramerate()

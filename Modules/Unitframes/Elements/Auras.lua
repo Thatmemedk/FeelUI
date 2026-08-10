@@ -181,7 +181,7 @@ function UF:CreateRaidBuffs(Frame)
         Count = false,
         Duration = false,
         Filter = "HELPFUL|PLAYER|RAID_IN_COMBAT",
-        MaxAuras = 2,
+        MaxAuras = 3,
     })
 
     Frame.Buffs = Buffs

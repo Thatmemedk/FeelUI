@@ -9,7 +9,7 @@ local unpack = unpack
 local select = select
 
 -- Locals
-local UpdateTime = 5
+Time.UpdateInterval = 1
 
 function Time:Create()
 	local Frame = CreateFrame("Frame", nil, _G.Minimap)
@@ -32,7 +32,7 @@ function Time:Update(Elapsed)
         return 
     end
 
-    self.TimeElapsed = UpdateTime
+    self.TimeElapsed = self.UpdateInterval
 
 	-- Update Text
 	self.Text:SetText(date("|CFFFFFFFF%I|r:|CFFFFFFFF%M|r"))

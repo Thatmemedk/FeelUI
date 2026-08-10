@@ -49,7 +49,7 @@ DB.Global = {
 		EquipColor = { 0.64, 0.19, 0.79, 0.5 },
 		OverlayGlowColor = { R, G, B, 0.80 },
 		-- Points Settings
-		Bar1Point = { "BOTTOM", _G.UIParent, 0, 122 },
+		Bar1Point = { "BOTTOM", _G.UIParent, 0, 122 }, -- "BOTTOM", _G.UIParent, 0, 42
 	},
 
 	Auras = {
@@ -201,8 +201,8 @@ DB.Global = {
 		TargetPoint = { "BOTTOMRIGHT", _G.UIParent, -482, 244 },
 		BossPoint = { "RIGHT", _G.UIParent, -252, -122 },
 		PartyPoint = { "LEFT", _G.UIParent, 219, 1 },
-		RaidPoint = { "LEFT", _G.UIParent, 78, -1 },
+		RaidPoint = { "LEFT", _G.UIParent, 78, -1 }, -- "BOTTOM", _G.UIParent, 0, 168
 		-- Points Settings
-		CastBarPlayerPoint = { "CENTER", _G.UIParent, 0, -288 },
+		CastBarPlayerPoint = { "CENTER", _G.UIParent, 0, -288 }, -- "BOTTOM", _G.UIParent, 0, 122
 	},
 }

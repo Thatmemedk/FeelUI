@@ -191,54 +191,20 @@ function AB:CreateActionBars()
 	self.BackdropAB = BackdropAB
 end
 
-function AB:Load(event)
-	if (event == "SETTINGS_LOADED") then
-		self:CreateActionBars()
-		self:CreateBar1()
-		self:CreateBar2()
-		self:CreateBar3()
-		self:CreateBar4()
-		self:CreateBar5()
-		self:CreateBarPet()
-		self:CreateBarStance()
-
-		if (_G.EditModeManagerFrame) then
-			_G.EditModeManagerFrame:UnregisterAllEvents()
-			_G.EditModeManagerFrame:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
-		end
-	end
-
-    local ActionBarAnimationEvents = {
-        "UNIT_SPELLCAST_INTERRUPTED",
-        "UNIT_SPELLCAST_SUCCEEDED",
-        "UNIT_SPELLCAST_FAILED",
-        "UNIT_SPELLCAST_START",
-        "UNIT_SPELLCAST_STOP",
-        "UNIT_SPELLCAST_CHANNEL_START",
-        "UNIT_SPELLCAST_CHANNEL_STOP",
-        "UNIT_SPELLCAST_RETICLE_TARGET",
-        "UNIT_SPELLCAST_RETICLE_CLEAR",
-        "UNIT_SPELLCAST_EMPOWER_START",
-        "UNIT_SPELLCAST_EMPOWER_STOP",
-    }
-
-    for _, Frames in ipairs(ActionBarAnimationEvents) do
-        _G.ActionBarActionEventsFrame:UnregisterEvent(Frames)
-    end
-end
-
-function AB:RegisterEvents()
-	self:RegisterEvent("SETTINGS_LOADED")
-	self:SetScript("OnEvent", AB.Load)
-end
-
 function AB:Initialize()
 	if (not DB.Global.ActionBars.Enable) then
 		return
 	end
 
 	self:DisableBlizzard()
-	self:RegisterEvents()
+	self:CreateActionBars()
+	self:CreateBar1()
+	self:CreateBar2()
+	self:CreateBar3()
+	self:CreateBar4()
+	self:CreateBar5()
+	self:CreateBarPet()
+	self:CreateBarStance()
 	self:CreateVehicleExitButtons()
 	self:CreateToggleButtons()
 	self:CreateExtraActionButton()
