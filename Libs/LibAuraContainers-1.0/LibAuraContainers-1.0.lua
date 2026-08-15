@@ -5,29 +5,55 @@ local _G = _G
 local unpack = unpack
 local select = select
 
--- Tables
-UI.AuraContainerData = {}
+---------------------------
+-- LibAuraContainers 1.0 --
+---------------------------
 
--- Tables
-UI.AuraContainerIndex = 0
+--[[
+"HELPFUL"; Include only helpful auras (buffs)
+"HELPFUL|PLAYER"; Include only auras that were cast by the player, or by the player's pet or vehicle
+"HELPFUL|RAID"; Include only auras the player can apply
+"HELPFUL|PLAYER|RAID_IN_COMBAT; Include only auras flagged to show on raid frames in combat. Combine with HELPFUL & PLAYER to return self-cast HoTs
+"HELPFUL|RAID_PLAYER_DISPELLABLE"; Include only auras someone in the player's raid can purge/steal
+"HELPFUL|EXTERNAL_DEFENSIVE"; Include only auras that are external defensives
+"HELPFUL|BIG_DEFENSIVE"; Include only auras that are big defensives
+
+"HARMFUL"; Include only harmful auras (debuffs)
+"HARMFUL|PLAYER"; Include only auras that were cast by the player, or by the player's pet or vehicle
+"HARMFUL|RAID"; Include only auras the player can dispel
+"HARMFUL|RAID_PLAYER_DISPELLABLE"; Include only auras someone in the player's raid can dispel
+"HARMFUL|DISPELLABLE; Include only auras that are dispellable/purgeable/stealable, regardless of whether the player or someone in the player's raid can
+"HARMFUL|CROWD_CONTROL"; Include only auras that have a crowd control effect (stun, fear, silence, slow, etc.)
+--]]
 
 -- FORMATTER
 
 function UI:BuildRuleDurationFormatter()
     local Formatter = C_StringUtil.CreateNumericRuleFormatter()
     local Down = Enum.NumericRuleFormatRounding.Down
+    local ExpireColor = CreateColor(unpack(DB.Global.CooldownFrame.ExpireColor))
+    local SecondsColor = CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor))
+    local SecondsColor2 = CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor2))
+    local NormalColor = CreateColor(unpack(DB.Global.CooldownFrame.NormalColor))
 
     Formatter:SetBreakpoints({
-        { threshold = 0, format = "%.1f", step = 0.1, rounding = Down },
-        { threshold = 10, format = "%d", step = 1, rounding = Down },
-        { threshold = 60, format = "%d:%02d", step = 1, rounding = Down, components = { { div = 60 }, { div = 1, mod = 60 } } },
-        { threshold = 120, format = "%dm", step = 1, rounding = Down, components = { { div = 60 } } },
-        { threshold = 3600, format = "%dh", step = 1, rounding = Down, components = { { div = 3600 } } },
-        { threshold = 86400, format = "%dd", step = 1, rounding = Down, components = { { div = 86400 } } },
+        { threshold = 0, format = ExpireColor:WrapTextInColorCode("%.1f"), step = 0.1, rounding = Down },
+        { threshold = 10, format = SecondsColor:WrapTextInColorCode("%d"), step = 1, rounding = Down },
+        { threshold = 30, format = SecondsColor2:WrapTextInColorCode("%d"), step = 1, rounding = Down },
+        { threshold = 60, format = NormalColor:WrapTextInColorCode("%d:%02d"), step = 1, rounding = Down, components = {{ div = 60 }, { div = 1, mod = 60 }} },
+        { threshold = 120, format = NormalColor:WrapTextInColorCode("%dm"), step = 1, rounding = Down, components = {{ div = 60 }} },
+        { threshold = 3600, format = NormalColor:WrapTextInColorCode("%dh"), step = 1, rounding = Down, components = {{ div = 3600 }} },
+        { threshold = 86400, format = NormalColor:WrapTextInColorCode("%dd"), step = 1, rounding = Down, components = {{ div = 86400 }} },
     })
 
     return Formatter
 end
+
+-- Tables
+UI.AuraContainerData = {}
+
+-- Tables
+UI.AuraContainerIndex = 0
 
 -- AURA BUTTONS
 
@@ -48,7 +74,7 @@ function UI:InitializeAuraButton(Button, Options)
 
     -- Tooltip
     Button:SetTooltipAnchorPoint("ANCHOR_BOTTOMLEFT", 0, -6)
-    Button:SetHideTooltipInCombat(true)
+    Button:SetHideTooltipInCombat(false or Options.HideTooltipInCombat)
 
     -- Icon
     local Icon = Button:CreateTexture(nil, "OVERLAY")
@@ -93,13 +119,7 @@ function UI:InitializeAuraButton(Button, Options)
         Time:SetFontTemplate("Default", Options.TimeSize or 12)
         
         Button:SetDurationText(Time, {
-            --binding = nil,
             textFormatter = UI:BuildRuleDurationFormatter(),
-            --textFormat = nil,
-            textColor = {
-                curve = UI.CooldownColorCurve,
-                property = Enum.DurationTextBindingProperty.RemainingDuration,
-            },
         })
     end
 
@@ -343,10 +363,10 @@ function UI:AddAuraNP(Container, Options)
         initializeFrame = InitializeAura,
 
         layout = {
-            elementSpacing = Options.Spacing or UI:Scale(3),
-            lineSpacing = Options.LineSpacing or UI:Scale(8),
-            groupSpacing = Options.GroupSpacing or UI:Scale(3),
-            groupLineSpacing = Options.GroupLineSpacing or UI:Scale(8),
+            elementSpacing = Options.Spacing or 3,
+            lineSpacing = Options.LineSpacing or 8,
+            groupSpacing = Options.GroupSpacing or 3,
+            groupLineSpacing = Options.GroupLineSpacing or 8,
             sortMethod = AuraContainerSortMethod.ExpirationOnly,
             sortDirection = AuraContainerSortDirection.Normal,
         },

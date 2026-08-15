@@ -13,17 +13,19 @@ local LossOfControlFrame = _G.LossOfControlFrame
 
 function LossControl:UpdateSetUpDisplay()
 	if (self.AbilityName) then
-		self.AbilityName:SetFontTemplate("Default", 24, 2, 2)
-		self.AbilityName.scrollTime = nil
+		self.AbilityName:SetShadowOffset(UI:Scale(2), -UI:Scale(2))
+		self.AbilityName:SetShadowColor(0, 0, 0, 0.5)
 	end
 
-	if (self.TimeLeft) then
-		self.TimeLeft.NumberText:SetFontTemplate("Default", 20, 2, 2)
+	if (self.TimeLeft.NumberText) then
 		self.TimeLeft.NumberText:SetTextColor(unpack(DB.Global.CooldownFrame.SecondsColor))
-		self.TimeLeft.NumberText.scrollTime = nil
+		self.TimeLeft.NumberText:SetShadowOffset(UI:Scale(2), -UI:Scale(2))
+		self.TimeLeft.NumberText:SetShadowColor(0, 0, 0, 0.5)
+	end
 
-		self.TimeLeft.SecondsText:SetFontTemplate("Default", 20, 2, 2)
-		self.TimeLeft.SecondsText.scrollTime = nil
+	if (self.TimeLeft.SecondsText) then
+		self.TimeLeft.SecondsText:SetShadowOffset(UI:Scale(2), -UI:Scale(2))
+		self.TimeLeft.SecondsText:SetShadowColor(0, 0, 0, 0.5)
 	end
 
 	if (self.Cooldown) then
@@ -39,7 +41,7 @@ function LossControl:Update()
 	LossOfControlFrame.IconOverlay:SetTemplate()
 	LossOfControlFrame.IconOverlay:CreateShadow()
 	LossOfControlFrame.IconOverlay:SetShadowOverlay()
-	LossOfControlFrame.IconOverlay:CreateGlow(6, 3, 1 * 0.55, 0, 0, 0.80)
+	LossOfControlFrame.IconOverlay:CreateGlow(4, 3, 1 * 0.55, 0, 0, 0.80)
 
 	LossOfControlFrame.Icon:Size(48, 28)
 	UI:KeepAspectRatio(LossOfControlFrame.Icon, LossOfControlFrame.Icon)

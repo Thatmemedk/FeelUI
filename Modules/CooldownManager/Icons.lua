@@ -29,18 +29,8 @@ function CDM:StripTextureMasks(Frame)
 	end
 end
 
-function CDM:UpdateBorderColor(Frame, Data)
-	local Color = Data and GetAuraDispelTypeColor(Frame.CDMParent.auraDataUnit, Data.auraInstanceID, UI.AuraColorCurve)
-
-	if (Color) then
-		Frame.CDMParent:SetColorTemplate(Color:GetRGB())
-	else
-		Frame.CDMParent:SetColorTemplate(0, 0, 0, 0)
-	end
-end
-
 function CDM:SkinIcons(Button, ButtonSize)
-	if (Button.CDMIsSkinned) then
+	if (not Button or Button.CDMIsSkinned) then
 		return
 	end
 
@@ -53,7 +43,7 @@ function CDM:SkinIcons(Button, ButtonSize)
 	local Border = Button.DebuffBorder
 	local BorderTex = select(3, Button:GetRegions())
 
-	if (not Button and not Icon) then
+	if (not Icon) then
 		return
 	end
 
@@ -81,13 +71,6 @@ function CDM:SkinIcons(Button, ButtonSize)
 
    	if (Border) then
 		Border:SetAlpha(0)
-		--Border.CDMParent = Button
-
-		--[[
-		hooksecurefunc(Border, "UpdateFromAuraData", function(self, Data)
-			CDM:UpdateBorderColor(self, Data)
-		end)
-		--]]
 	end
 
 	if (Icon) then

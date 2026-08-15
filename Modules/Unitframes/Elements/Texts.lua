@@ -53,7 +53,7 @@ function UF:CreateTargetTexts(Frame)
     PowerText:SetFontTemplate("Default")
     
     local NameLevel = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
-    NameLevel:Width(155)
+    NameLevel:Width(160)
     NameLevel:Point("RIGHT", Frame, -4, 20)
     NameLevel:SetJustifyH("RIGHT")
     NameLevel:SetJustifyV("MIDDLE")

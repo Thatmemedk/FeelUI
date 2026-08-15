@@ -27,6 +27,7 @@ function NP:CreateDebuffs(Frame)
         DebuffIndicator = false,
         Filter = "HARMFUL|PLAYER",
         MaxAuras = 2,
+        HideTooltipInCombat = true,
     })
 
     Frame.Debuffs = Debuffs
@@ -36,7 +37,7 @@ function NP:CreateCrowdControlDebuffs(Frame)
     if (not Frame or Frame.CrowdControl) then
         return
     end
-    
+        
     local CrowdControl = UI:CreateAuraContainerNP(Frame, {
         GrowthDirection = "LEFT",
         Anchor = "TOPLEFT",
@@ -44,6 +45,7 @@ function NP:CreateCrowdControlDebuffs(Frame)
         Y = 0,
         Width = 36,
         Height = 12,
+        Spacing = 4,
         Direction = "LEFT",
         Cooldown = true,
         Count = true,
@@ -52,6 +54,7 @@ function NP:CreateCrowdControlDebuffs(Frame)
         DebuffIndicator = false,
         Filter = "HARMFUL|CROWD_CONTROL",
         MaxAuras = 6,
+        HideTooltipInCombat = true,
     })
 
     Frame.CrowdControl = CrowdControl

@@ -15,13 +15,15 @@ function UF:SetupGroupFrame(Frame, Type, Unit)
 
     -- SET UNIT
     Frame.unit = Unit
-    Frame:SetAttribute("unit", Unit)
 
     -- SET ATTRIBUTES
-    Frame:RegisterForClicks("AnyUp")
-    Frame:SetAttribute("type1", "target")
-    Frame:SetAttribute("type2", "togglemenu")
-    Frame:SetAttribute("toggleForVehicle", true)
+    if (not InCombatLockdown()) then
+        Frame:SetAttribute("unit", Unit)
+        Frame:RegisterForClicks("AnyUp")
+        Frame:SetAttribute("type1", "target")
+        Frame:SetAttribute("type2", "togglemenu")
+        Frame:SetAttribute("toggleForVehicle", true)
+    end
 
     -- REGISTER UNIT WATCH
     RegisterUnitWatch(Frame)
@@ -46,6 +48,13 @@ function UF:SetupGroupFrame(Frame, Type, Unit)
 
         if (value) then
             UF:RefreshGroup(self, value)
+
+            -- REFRESH AURAS
+            if (not UnitExists(value) or not UnitIsVisible(value)) then
+                UF:RefreshUnitRemovedAuras(self)
+            else
+                UF:RefreshUnitAuras(self, value)
+            end
         end
     end)
 
@@ -53,6 +62,11 @@ function UF:SetupGroupFrame(Frame, Type, Unit)
 end
 
 function UF:UpdateGroupChildren(Header)
+    if (InCombatLockdown()) then
+        Header.GroupUpdatePending = true
+        return
+    end
+
     local Type = Header.GroupType
     local Index = 1
 
@@ -82,6 +96,11 @@ function UF:QueueUpdateForGroups(Header)
         Header.GroupUpdatePending = false
 
         if (Header:IsForbidden()) then
+            return
+        end
+
+        if (InCombatLockdown()) then
+            Header.GroupUpdatePending = true
             return
         end
 
@@ -140,9 +159,18 @@ function UF:SpawnGroupHeader(Type)
     -- EVENTS
     Header:RegisterEvent("PLAYER_ENTERING_WORLD")
     Header:RegisterEvent("GROUP_ROSTER_UPDATE")
+    Header:RegisterEvent("PLAYER_REGEN_ENABLED")
+
     Header:HookScript("OnEvent", function(self, event)
+        if (event == "PLAYER_REGEN_ENABLED") then
+            self.GroupUpdatePending = false
+            UF:UpdateGroupChildren(self)
+            return
+        end
+
         -- Process children that already exist.
         UF:UpdateGroupChildren(self)
+
         -- Queue another pass after the SecureGroupHeader has
         -- had a chance to update/rebuild its children.
         UF:QueueUpdateForGroups(self)

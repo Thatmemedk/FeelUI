@@ -17,9 +17,15 @@ function CDM:CreateContainers(Frame, Point, Anchor, X, Y, IconSpacing)
         return
     end
 
-    local AnchorFrame = CreateFrame("Frame", nil, _G.UIParent, "SecureHandlerStateTemplate")
-    AnchorFrame:Size(36, 18)
-    AnchorFrame:Point(Point, Anchor, X or 0, Y or 0)
+    local Existing = self.Anchors[Frame]
+    local AnchorFrame = Existing and Existing.Frame
+
+    if (not AnchorFrame) then
+        AnchorFrame = CreateFrame("Frame", nil, _G.UIParent, "SecureHandlerStateTemplate")
+        AnchorFrame:Size(36, 18)
+        AnchorFrame:ClearAllPoints()
+        AnchorFrame:Point(Point, Anchor, X or 0, Y or 0)
+    end
 
     self.Anchors[Frame] = { 
         Frame = AnchorFrame, 
@@ -43,72 +49,6 @@ function CDM:PositionContainers()
     local UtilityContainer = self:CreateContainers(UtilityCooldownViewer, Point, Parent, X, Y, Spacing)
 end
 
-function CDM:GetViewerIcons(Viewer)
-    if (not Viewer) then
-        return nil
-    end
-
-    local Container = Viewer:GetItemContainerFrame()
-
-    if (not Container) then
-        return nil
-    end
-
-    return Container:GetLayoutChildren()
-end
-
-function CDM:ApplyIconPositions(Viewer)
-    if (not Viewer) then
-        return
-    end
-
-    local AnchorData = self.Anchors[Viewer]
-
-    if (not AnchorData) then
-        return
-    end
-
-    local AnchorFrame = AnchorData.Frame
-
-    if (not AnchorFrame) then
-        return
-    end
-
-    local Icons = self:GetViewerIcons(Viewer)
-
-    if (not Icons or #Icons == 0) then
-        return
-    end
-
-    local ShownIcons = {}
-
-    for _, Icon in ipairs(Icons) do
-        if (Icon:IsShown()) then
-            ShownIcons[#ShownIcons + 1] = Icon
-        end
-    end
-
-    if (#ShownIcons == 0) then
-        return
-    end
-
-    local FirstIcon = ShownIcons[1]
-    local Width = FirstIcon:GetWidth()
-
-    if (not Width or Width <= 0) then
-        return
-    end
-
-    local Spacing = AnchorData.IconSpacing or 0
-    local TotalWidth =(#ShownIcons * Width) + ((#ShownIcons - 1) * Spacing)
-    local StartX = -TotalWidth / 2 + Width / 2
-
-    for i, Icon in ipairs(ShownIcons) do
-        Icon:ClearAllPoints()
-        Icon:Point("CENTER", AnchorFrame,"CENTER", StartX + (i - 1) * (Width + Spacing), 0)
-    end
-end
-
 function CDM:UpdateAnchors()
     for Viewer, Data in pairs(self.Anchors) do
         local AnchorFrame = Data.Frame
@@ -122,7 +62,7 @@ function CDM:UpdateAnchors()
 end
 
 function CDM:HookViewer(Viewer)
-    if (not Viewer or Viewer.Hooked) then
+    if (not Viewer) then
         return
     end
 
@@ -132,30 +72,35 @@ function CDM:HookViewer(Viewer)
         return
     end
 
-    Viewer.Hooked = true
-
-    Viewer:HookScript("OnShow", function()
-        CDM:ApplyIconPositions(Viewer)
-    end)
-
-    if (Container.Layout) then
-        hooksecurefunc(Container, "Layout", function()
-            if (Viewer:IsShown()) then
-                CDM:ApplyIconPositions(Viewer)
-            end
-        end)
+    if (self.ViewerHooks[Viewer]) then
+        return
     end
+
+    self.ViewerHooks[Viewer] = true
+
+    hooksecurefunc(Container, "RefreshLayout", function(self)
+        if (not self) then
+            return
+        end
+
+        local AnchorData = CDM.Anchors[Viewer]
+
+        if (not AnchorData) then
+            return
+        end
+
+        local Spacing = AnchorData.IconSpacing or 0
+
+        if (self.childXPadding ~= Spacing) then
+            self.childXPadding = UI:Scale(Spacing)
+            self:Layout()
+        end
+    end)
 end
 
 function CDM:UpdateHooks()
     for _, Viewer in ipairs(self.Viewers) do
         self:HookViewer(Viewer)
-
-        C_Timer.After(0, function()
-            if (Viewer:IsShown()) then
-                self:ApplyIconPositions(Viewer)
-            end
-        end)
     end
 end
 

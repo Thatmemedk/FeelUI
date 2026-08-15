@@ -49,7 +49,6 @@ function AB:CreateExtraActionButton()
 				Button.cooldown:ClearAllPoints()
 				Button.cooldown:SetInside()
 
-                -- Update The Text
                 UI:UpdateCooldownText(Button.cooldown, Button, 0, 0, true)
 			end
 		
@@ -86,7 +85,6 @@ function AB:CreateExtraActionButton()
 					Button.Cooldown:ClearAllPoints()
 					Button.Cooldown:SetInside()
 
-	                -- Update The Text
 	                UI:UpdateCooldownText(Button.Cooldown, Button, 0, 0, true)
 				end
 

@@ -21,6 +21,16 @@ local MapsZoomOut = _G.Minimap.ZoomOut
 local TimeManagerClockButton = _G.TimeManagerClockButton
 local ExpansionMinimapButton = _G.ExpansionLandingPageMinimapButton
 
+function Maps:PositionExpansionButton()
+	if (not ExpansionMinimapButton) then
+		return
+	end
+
+	ExpansionMinimapButton:SetScale(0.8)
+	ExpansionMinimapButton:ClearAllPoints()
+	ExpansionMinimapButton:Point("CENTER", Minimap, "LEFT", 0, 0)
+end
+
 function Maps:Style()
 	local MinimapBG = CreateFrame("Frame", nil, Minimap)
 	MinimapBG:SetFrameLevel(Minimap:GetFrameLevel() - 1)
@@ -118,10 +128,6 @@ function Maps:Disable()
         MapsCluster.Tracking:Point("BOTTOMLEFT", Minimap, 0, 0)
     end
 
-	if (ExpansionMinimapButton) then
-		ExpansionMinimapButton:Kill()
-	end
-
 	for i, FrameName in pairs(HiddenFrames) do
 		local Frame = _G[FrameName]
 		
@@ -211,9 +217,14 @@ function Maps:RegisterEvents()
 	self:SetScript("OnEvent", self.OnEvent)
 end
 
+function Maps:AddHooks()
+	hooksecurefunc(ExpansionMinimapButton, "UpdateIcon", Maps.PositionExpansionButton)
+end
+
 function Maps:Initialize()
 	self:Disable()
 	self:Style()
 	self:EnableClick()
 	self:RegisterEvents()
+	self:AddHooks()
 end

@@ -19,5 +19,11 @@ function NP:CreateHealth(Frame)
     Health:CreateBackdrop()
     Health:CreateShadow()
 
+    if (Health.Value) then
+        Health.Value:ResetPredictedValues()
+    else
+        Health.Value = CreateUnitHealPredictionCalculator()
+    end
+
     Frame.Health = Health
 end

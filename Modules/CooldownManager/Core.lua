@@ -18,6 +18,7 @@ local LoadAddOn = C_AddOns.LoadAddOn
 
 -- Locals
 CDM.Anchors = {}
+CDM.ViewerHooks = {}
 
 -- Locals
 CDM.Viewers = {

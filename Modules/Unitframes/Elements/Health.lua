@@ -20,5 +20,11 @@ function UF:CreateHealth(Frame, Size, Orientation)
     Health:SetOrientation(Orientation or "HORIZONTAL")
     Health:SetStatusBarTexture(Media.Global.Texture)
 
+    if (Health.Value) then
+        Health.Value:ResetPredictedValues()
+    else
+        Health.Value = CreateUnitHealPredictionCalculator()
+    end
+
     Frame.Health = Health
 end

@@ -8,26 +8,6 @@ local _G = _G
 local unpack = unpack
 local select = select
 
---[[
-
-"HELPFUL"; Displays helpeful Buffs no filtering
-"HARMFUL"; Displays harmful Debuffs, no filtering
-
-"HELPFUL|PLAYER"; Displays helpful Buffs only from player and no filtering.
-"HARMFUL|PLAYER"; Displays harmful Debuffs only from player and no filtering.
-
-"HELPFUL|RAID"; Buffs filtered by the player's class, e.g. for Priests it will only return  [Power Word: Fortitude] etc.
-"HARMFUL|RAID"; Certain Debuffs that only show up on raid frames, e.g. most Debuffs that are relevant in a Raid Setting.
-"HARMFUL|RAID_PLAYER_DISPELLABLE"; Returns auras the player can be Dispelled.
-"HARMFUL|DISPELLABLE; Include only auras that are dispellable/purgeable/stealable, regardless of whether the player or someone in the player's raid can
-"HELPFUL|PLAYER|RAID_IN_COMBAT; Returns auras that are flagged to show on raid frames in combat, this should return mostly just HotS.
-
-"HELPFUL|EXTERNAL_DEFENSIVE"; Displays External Defensives such as [Pain Suppression] etc.
-"HELPFUL|BIG_DEFENSIVE"; Displays Defensives such as [Barkskin] etc.
-"HARMFUL|CROWD_CONTROL"; Returns auras that are flagged as Crowd Control.
-
---]]
-
 function UF:CreateBuffsTarget(Frame)
     if (not Frame or Frame.Buffs) then
         return
@@ -65,9 +45,10 @@ function UF:CreateDebuffsTarget(Frame)
         Count = true,
         Duration = true,
         Border = true,
-        DebuffIndicator = true,
+        DebuffIndicator = false,
         Filter = "HARMFUL|PLAYER",
         MaxAuras = 7,
+        HideTooltipInCombat = true,
     })
 
     Frame.Debuffs = Debuffs

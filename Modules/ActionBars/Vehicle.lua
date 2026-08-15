@@ -53,8 +53,8 @@ function AB:CreateVehicleExitButton(Anchor, OffsetX)
 end
 
 function AB:CreateVehicleExitButtons()
-    local VehicleExitButtonLeft = self:CreateVehicleExitButton("LEFT", -39)
-    local VehicleExitButtonRight = self:CreateVehicleExitButton("RIGHT", 39)
+    local VehicleExitButtonLeft = self:CreateVehicleExitButton("LEFT", -52)
+    local VehicleExitButtonRight = self:CreateVehicleExitButton("RIGHT", 52)
 
     VehicleExitButtonLeft:SetScript("OnClick", function(self)
         if UnitOnTaxi("player") then

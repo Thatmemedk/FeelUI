@@ -74,8 +74,7 @@ function TotemBar:OnEvent(event)
             if (Button.Cooldown) then
                 Button.Cooldown:SetCooldownFromDurationObject(DurationObject)
 
-                -- Update The Text
-                UI:UpdateCooldownText(Button.Cooldown, Button, 0, 0, true)
+                UI:UpdateCooldownText(Button.Cooldown, Button, 0, -6, true)
             end
       	else
             UI:UIFrameFadeOut(Button, 0.25, Button:GetAlpha(), 0)

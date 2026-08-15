@@ -89,7 +89,7 @@ function AB:StyleActionButton(Button, Icon, Name)
         Cooldown:ClearAllPoints()
         Cooldown:SetInside()
 
-        UI:UpdateABCooldownText(Cooldown, Button, 0, 0, true)
+        UI:UpdateCooldownText(Cooldown, Button, 0, 0, true)
     end
 
     if (LossControlCD) then

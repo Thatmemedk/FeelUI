@@ -13,10 +13,12 @@ function UF:CreateDebuffHighlight(Frame)
         return
     end
 
+    --[[
     local DebuffHighlight = UI:CreateAuraHighlight(Frame, {
         Filter = "HARMFUL|RAID|DISPELLABLE",
         Unit = "player"
     })
+    --]]
 
     Frame.DebuffHighlight = DebuffHighlight
 end

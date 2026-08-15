@@ -14,6 +14,10 @@ local TableInsert = table.insert
 local TableRemove = table.remove
 local Lower = string.lower
 
+---------------------
+-- LibAnimated 1.0 --
+---------------------
+
 -- Tables
 LibAnimated.Running = {}
 LibAnimated.Constructors = {}

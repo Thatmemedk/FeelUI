@@ -18,20 +18,31 @@ function Auras:DisableBlizzardAuras()
     end
 end
 
-function Auras:CreatePlayerAuras()
-    local ButtonWidth, ButtonHeight = unpack(DB.Global.Auras.ButtonSize)
-
+function Auras:CreateAnchors()
     local Buffs = CreateFrame("Frame", "FeelUI_PlayerBuffs", _G.UIParent)
     Buffs:Size(42, 42)
     Buffs:Point(unpack(DB.Global.Auras.Point))
 
-    local BuffsFrame = UI:CreateAuraContainer(Buffs, {
+    local Debuffs = CreateFrame("Frame", "FeelUI_PlayerDebuffs", _G.UIParent)
+    Debuffs:Size(48, 48)
+    Debuffs:Point("TOPRIGHT", Buffs, 0, -42*3)
+
+    self.Buffs = Buffs
+    self.Debuffs = Debuffs
+end
+
+function Auras:CreatePlayerAuras()
+    local ButtonWidth, ButtonHeight = unpack(DB.Global.Auras.ButtonSize)
+
+    -- Player Buffs
+    local BuffsFrame = UI:CreateAuraContainer(self.Buffs, {
         GrowthDirection = "LEFT",
         Anchor = "TOPLEFT",
         X = 0,
         Y = 0,
         Width = ButtonWidth,
         Height = ButtonHeight,
+        Spacing = DB.Global.Auras.ButtonSpacing,
         Cooldown = false,
         Count = true,
         Duration = true,
@@ -42,17 +53,15 @@ function Auras:CreatePlayerAuras()
         ShowTempItemEnchantment = true,
     })
 
-    local Debuffs = CreateFrame("Frame", "FeelUI_PlayerDebuffs", _G.UIParent)
-    Debuffs:Size(48, 48)
-    Debuffs:Point("TOPRIGHT", Buffs, 0, -42*3)
-
-    local DebuffFrame = UI:CreateAuraContainer(Debuffs, {
+    -- Player Debuffs
+    local DebuffFrame = UI:CreateAuraContainer(self.Debuffs, {
         GrowthDirection = "LEFT",
         Anchor = "TOPLEFT",
         X = 0,
         Y = 0,
         Width = ButtonWidth+6,
         Height = ButtonHeight+6,
+        Spacing = DB.Global.Auras.ButtonSpacing+2,
         Cooldown = false,
         Count = true,
         Duration = true,
@@ -68,11 +77,23 @@ function Auras:CreatePlayerAuras()
     self.DebuffFrame = DebuffFrame
 end
 
+function Auras:OnEvent()
+    self.BuffsFrame:UpdateAllAuras()
+    self.DebuffFrame:UpdateAllAuras()
+end
+
+function Auras:RegisterEvents()
+    self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self:SetScript("OnEvent", self.OnEvent)
+end
+
 function Auras:Initialize()
     if (not DB.Global.Auras.Enable) then 
         return 
     end
 
     self:DisableBlizzardAuras()
+    self:CreateAnchors()
     self:CreatePlayerAuras()
+    self:RegisterEvents()
 end

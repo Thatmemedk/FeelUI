@@ -195,8 +195,9 @@ function VB:UpdateCooldowns()
 
                 if (Start and Duration and Duration > 0) then
                     Icon.Cooldown:SetCooldown(Start, Duration)
-                    UI:UpdateCooldownText(Icon.Cooldown, Icon, 0, -6, true)
                     Icon.Cooldown:Show()
+
+                    UI:UpdateCooldownText(Icon.Cooldown, Icon, 0, -6, true)
                 else
                     Icon.Cooldown:Hide()
                 end
@@ -209,8 +210,9 @@ function VB:UpdateCooldowns()
 
             if (CooldownInfo and CooldownInfo.duration and CooldownInfo.duration > 0) then
                 Icon.Cooldown:SetCooldown(CooldownInfo.startTime, CooldownInfo.duration)
-                UI:UpdateCooldownText(Icon.Cooldown, Icon, 0, -6, true)
                 Icon.Cooldown:Show()
+
+                UI:UpdateCooldownText(Icon.Cooldown, Icon, 0, -6, true)
             else
                 Icon.Cooldown:Hide()
             end

@@ -45,7 +45,7 @@ function PBM:CreateIcon(Type, Name, ID)
     if (Index == 1) then
         Frame:Point("LEFT", self.Holder, "LEFT", 0, 0)
     else
-        Frame:Point("LEFT", self.Buttons[Index -1], "RIGHT", DB.Global.PotionButtonMenu.ButtonSpacing, 0)
+        Frame:Point("LEFT", self.Buttons[Index - 1], "RIGHT", DB.Global.PotionButtonMenu.ButtonSpacing, 0)
     end
 
     Frame.Icon = Frame:CreateTexture(nil, "ARTWORK")
@@ -106,6 +106,19 @@ function PBM:GetItemList(Name)
     return self.ItemID[Name]
 end
 
+function PBM:ResetCooldowns()
+    for _, Button in pairs(self.Buttons) do
+        if (Button.Cooldown) then
+            Button.Cooldown:Clear()
+            Button.Cooldown:Hide()
+        end
+        
+        Button.ItemID = nil
+    end
+
+    self:UpdateAll()
+end
+
 function PBM:UpdateButton(Button)
     local List = self:GetItemList(Button.ButtonName)
     local ItemID
@@ -153,7 +166,6 @@ function PBM:UpdateButton(Button)
 
     if (not ItemLink) then
         C_Item.RequestLoadItemDataByID(ItemID)
-
         return
     end
 
@@ -195,14 +207,11 @@ function PBM:UpdateButton(Button)
 
             Button.Cooldown:Show()
 
-            -- Update The Text
+            -- Update the text
             UI:UpdateCooldownText(Button.Cooldown, Button, 0, 1, true)
         else
-            local OldStart = Button.Cooldown:GetCooldownTimes()
-
-            if (OldStart == 0) then
-                Button.Cooldown:Hide()
-            end
+            Button.Cooldown:Clear()
+            Button.Cooldown:Hide()
         end
     end
 end
@@ -224,12 +233,22 @@ function PBM:OnEvent(event, ...)
                 for _, ID in ipairs(List) do
                     if (ID == ItemID) then
                         self:UpdateButton(Button)
-
                         break
                     end
                 end
             end
         end
+
+    elseif (event == "ENCOUNTER_END") then
+        local EncounterID, EncounterName, DifficultyID, GroupSize, Success = ...
+
+        -- Reset the displayed potion cooldown after a raid/boss wipe.
+        if (Success == 0) then
+            self:ResetCooldowns()
+        else
+            self:UpdateAll()
+        end
+
     else
         self:UpdateAll()
     end
@@ -242,6 +261,7 @@ function PBM:RegisterEvents()
     self:RegisterEvent("SPELL_UPDATE_COOLDOWN")
     self:RegisterEvent("SPELL_UPDATE_CHARGES")
     self:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+    self:RegisterEvent("ENCOUNTER_END")
     self:SetScript("OnEvent", self.OnEvent)
 end
 

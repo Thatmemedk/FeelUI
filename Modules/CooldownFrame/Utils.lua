@@ -5,10 +5,6 @@ local _G = _G
 local unpack = unpack
 local select = select
 
--- WoW Globals
-local GetAuraDuration = _G.C_UnitAuras.GetAuraDuration
-local GetActionCooldownDuration = _G.C_ActionBar.GetActionCooldownDuration
-
 function UI:GetCooldownFontScale(CD)
     if (not CD) then
         return
@@ -46,76 +42,34 @@ function UI:GetCooldownFontScale(CD)
     return FontSize
 end
 
-function UI:UpdateCooldownTextColor(CD, Elapsed)
-    if (not CD) then
-        return
-    end
+function UI:BuildRuleDurationFormatter()
+    local Formatter = C_StringUtil.CreateNumericRuleFormatter()
+    local Down = Enum.NumericRuleFormatRounding.Down
+    local ExpireColor = CreateColor(unpack(DB.Global.CooldownFrame.ExpireColor))
+    local SecondsColor = CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor))
+    local SecondsColor2 = CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor2))
+    local NormalColor = CreateColor(unpack(DB.Global.CooldownFrame.NormalColor))
 
-    local Button = CD:GetParent()
+    Formatter:SetBreakpoints({
+        { threshold = 0, format = ExpireColor:WrapTextInColorCode("%.1f"), step = 0.1, rounding = Down },
+        { threshold = 10, format = SecondsColor:WrapTextInColorCode("%d"), step = 1, rounding = Down },
+        { threshold = 30, format = SecondsColor2:WrapTextInColorCode("%d"), step = 1, rounding = Down },
+        { threshold = 60, format = NormalColor:WrapTextInColorCode("%d:%02d"), step = 1, rounding = Down, components = {{ div = 60 }, { div = 1, mod = 60 }} },
+        { threshold = 120, format = NormalColor:WrapTextInColorCode("%dm"), step = 1, rounding = Down, components = {{ div = 60 }} },
+        { threshold = 3600, format = NormalColor:WrapTextInColorCode("%dh"), step = 1, rounding = Down, components = {{ div = 3600 }} },
+        { threshold = 86400, format = NormalColor:WrapTextInColorCode("%dd"), step = 1, rounding = Down, components = {{ div = 86400 }} },
+    })
 
-    if (not Button) then
-        return
-    end
-
-    CD.Elapsed = (CD.Elapsed or 0) + Elapsed
-
-    if (CD.Elapsed < 0.1) then
-        return
-    end
-
-    CD.Elapsed = 0
-
-    local ActionID = Button.action
-
-    if (ActionID and not UI:IsSecretValue(ActionID)) then
-        local Duration = GetActionCooldownDuration(ActionID)
-
-        if (Duration) then
-            local Evaluated = Duration:EvaluateRemainingDuration(UI.CooldownColorCurve)
-        
-            if (Evaluated) then
-                for i = 1, CD:GetNumRegions() do
-                    local Region = select(i, CD:GetRegions())
-
-                    if (Region and Region.GetText) then
-                        Region:SetVertexColor(Evaluated:GetRGBA())
-                    end
-                end
-            end
-        end
-    end
-end
-
-function UI:UpdateABCooldownText(CD, Parent, OffsetX, OffsetY, DynamicFontSize)
-    if (not CD or CD.IsRegisteredCooldown or UI:IsSecretValue(CD)) then
-        return
-    end
-    
-    for i = 1, CD:GetNumRegions() do
-        local Region = select(i, CD:GetRegions())
-
-        if (Region and Region.GetText) then
-            local FontSize = DynamicFontSize and UI:GetCooldownFontScale(CD)
-
-            Region:ClearAllPoints()
-            Region:Point("CENTER", Parent, OffsetX or 0, OffsetY or 0)
-            Region:SetFontTemplate("Default", FontSize or 12)
-            Region:SetTextColor(1, 0.82, 0)
-        end
-    end
-
-    CD:HookScript("OnUpdate", function(self, Elapsed)
-        UI:UpdateCooldownTextColor(self, Elapsed, IsAura)
-    end)
-
-    CD.IsRegisteredCooldown = true
+    return Formatter
 end
 
 function UI:UpdateCooldownText(CD, Parent, OffsetX, OffsetY, DynamicFontSize)
-    if (not CD or CD.CooldownTextIsUpdated or UI:IsSecretValue(CD)) then
+    if (not CD or CD.CooldownTextIsUpdated or CD:IsForbidden() or UI:IsSecretValue(CD)) then
         return
     end
     
+    CD:SetCountdownFormatter(UI:BuildRuleDurationFormatter())
+
     for i = 1, CD:GetNumRegions() do
         local Region = select(i, CD:GetRegions())
 
@@ -125,7 +79,6 @@ function UI:UpdateCooldownText(CD, Parent, OffsetX, OffsetY, DynamicFontSize)
             Region:ClearAllPoints()
             Region:Point("CENTER", Parent, OffsetX or 0, OffsetY or 0)
             Region:SetFontTemplate("Default", FontSize or 12)
-            Region:SetTextColor(1, 0.82, 0)
         end
     end
 

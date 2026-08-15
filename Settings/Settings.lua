@@ -91,7 +91,7 @@ DB.Global = {
 		BuffViewerButtonSize = { 38, 18 },
 		EssentialViewerButtonSize = { 32, 18 },
 		UtilityViewerButtonSize = { 32, 18 },
-		ButtonSpacing = 2,
+		ButtonSpacing = 3,
 		-- Points Settings
 		BuffViewerPoint = { "CENTER", _G.UIParent, 0, -170 },
 		EssentialViewerPoint = { "CENTER", _G.UIParent, 0, -222 },

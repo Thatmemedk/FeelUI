@@ -66,7 +66,7 @@
 	<Script file="Misc\TimeTrackers.lua"/>
 	<!-- Skins Blizzard -->
 	<Script file="Skins\Blizzard\Bubbles.lua"/>
-	<Script file="Skins\Blizzard\DamageMeter.lua"/>
+	<Script file="Skins\Blizzard\DamageMeters.lua"/>
 	<Script file="Skins\Blizzard\DeathRecap.lua"/>
 	<Script file="Skins\Blizzard\DropDown.lua"/>
 	<Script file="Skins\Blizzard\EncounterWarnings.lua"/>
@@ -79,6 +79,7 @@
 	<Script file="Skins\Blizzard\TalkingHead.lua"/>
 	<!-- Tooltip -->
 	<Script file="Tooltip\Core.lua"/>
+	<Script file="Tooltip\NameHover.lua"/>
 	<!-- NamePlates -->
 	<Script file="Nameplates\Core.lua"/>
 	<Script file="Nameplates\Blizzard.lua"/>

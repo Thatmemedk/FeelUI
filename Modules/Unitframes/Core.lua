@@ -78,7 +78,10 @@ UF.Frames = {}
 UF.Frames.Party = {}
 UF.Frames.Raid = {}
 UF.Frames.Hidden = {}
+
+-- Tables
 UF.Frames.Range = {}
+UF.Frames.RangeState = {}
 
 -- Tables
 UF.ValidUnits = {
@@ -102,41 +105,59 @@ RegisterStateDriver(UF.SecureFrame, "visibility", "[petbattle] hide; show")
 
 --- UPDATE HEALTH
 
+function UF:UpdateHealthColor(Frame, Unit)
+    if (not Frame or not Unit or not Frame.Health) then
+        return
+    end
+
+    if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsDead(Unit) or UnitIsGhost(Unit)) then
+        Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
+        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
+
+        return
+    end
+
+    if (DB.Global.UnitFrames.ClassColor) then
+        local Color
+
+        if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or (UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit))) then
+            local _, Class = UnitClass(Unit)
+            Color = UI.Colors.Class[Class]
+        else
+            local Reaction = UnitReaction(Unit, "player")
+            Color = UI.Colors.Reaction[Reaction]
+        end
+
+        Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
+    else
+        Frame.Health:SetStatusBarColor(unpack(DB.Global.UnitFrames.HealthBarColor))
+
+        local CurveColor = UnitHealthPercent(Unit, true, UI.UnitFramesHealthColorCurve)
+        Frame.Health:GetStatusBarTexture():SetVertexColor(CurveColor:GetRGB())
+    end
+
+    Frame.Health:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
+end
+
 function UF:UpdateHealth(Frame, Unit)
     if (not Frame or not Unit or not Frame.Health) then
         return
     end
 
-    local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
+    UnitGetDetailedHealPrediction(Unit, "player", Frame.Health.Value)
+
+    local Min = Frame.Health.Value:GetCurrentHealth()
+    local Max = Frame.Health.Value:GetMaximumHealth()
 
     Frame.Health:SetMinMaxValues(0, Max)
-    Frame.Health:SetValue(Min, UI.SmoothBars)
 
-    if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsDead(Unit) or UnitIsGhost(Unit)) then
-        Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
-        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
+    if (UnitIsConnected(Unit)) then
+        Frame.Health:SetValue(Min, UI.SmoothBars)
     else
-        if (DB.Global.UnitFrames.ClassColor) then
-            if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
-                local _, Class = UnitClass(Unit)
-                local Color = UI.Colors.Class[Class]
-
-                Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
-            else
-                local Reaction = UnitReaction(Unit, "player")
-                local Color = UI.Colors.Reaction[Reaction]
-
-                Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
-            end
-        else
-            Frame.Health:SetStatusBarColor(unpack(DB.Global.UnitFrames.HealthBarColor))
-
-            local CurveColor = UnitHealthPercent(Unit, true, UI.UnitFramesHealthColorCurve)
-            Frame.Health:GetStatusBarTexture():SetVertexColor(CurveColor:GetRGB())
-        end
-
-        Frame.Health:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
+        Frame.Health:SetValue(Max, UI.SmoothBars)
     end
+
+    self:UpdateHealthColor(Frame, Unit)
 end
 
 function UF:UpdateHealthTextCur(Frame, Unit)
@@ -144,7 +165,8 @@ function UF:UpdateHealthTextCur(Frame, Unit)
         return
     end
 
-    local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
+    local Min = Frame.Health.Value:GetCurrentHealth()
+    local Max = Frame.Health.Value:GetMaximumHealth()
 
     if (not UnitIsConnected(Unit)) then
         Frame.HealthTextCur:SetText(PLAYER_OFFLINE)
@@ -847,8 +869,12 @@ function UF:IsFriendlyUnitReachable(Unit)
     local InRange, WasChecked = UnitInRange(Unit)
 
     if (UI:IsSecretValue(WasChecked)) then
-        if (UF.Frames.Range[Unit] and (UnitInParty(Unit) or UnitInRaid(Unit))) then
-            UF.Frames.Range.IsInRange, UF.Frames.Range.CheckedRange = InRange, WasChecked
+        local State = UF.Frames.RangeState[Unit]
+
+        if (State and (UnitInParty(Unit) or UnitInRaid(Unit))) then
+            State.IsInRange = InRange
+            State.CheckedRange = WasChecked
+
             return
         end
     elseif (WasChecked and not InRange) then
@@ -863,54 +889,57 @@ function UF:UpdateRangeState(Frame, Unit)
         return
     end
 
+    UF.Frames.RangeState.IsInRange = nil
+    UF.Frames.RangeState.CheckedRange = nil
+
     local Range = UF.Frames.Range[Unit]
-    local RangeExists = UI:UnitExists(Unit)
 
-    UF.Frames.Range.IsInRange, UF.Frames.Range.CheckedRange = nil, nil
+    if (UnitIsDeadOrGhost(Unit)) then
+        Range = UF:CheckUnitCategoryRange(Unit, "FRIENDLY")
+    elseif (UnitCanAttack("player", Unit)) then
+        Range = UF:CheckUnitCategoryRange(Unit, "ENEMY")
+    elseif UI:UnitIsUnit("pet", Unit) then
+        Range = UF:CheckUnitCategoryRange(Unit, "PET")
+    elseif (UnitIsConnected(Unit)) then
+        Range = UF:IsFriendlyUnitReachable(Unit)
+    else
+        Range = false
+    end
 
-    if (RangeExists) then
-        if (UnitIsDeadOrGhost(Unit)) then
-            Range = UF:CheckUnitCategoryRange(Unit, "FRIENDLY")
-        elseif (UnitCanAttack("player", Unit)) then
-            Range = UF:CheckUnitCategoryRange(Unit, "ENEMY")
-        elseif UI:UnitIsUnit("pet", Unit) then
-            Range = UF:CheckUnitCategoryRange(Unit, "PET")
-        elseif (UnitIsConnected(Unit)) then
-            Range = UF:IsFriendlyUnitReachable(Unit)
-        else
-            Range = false
-        end
-
-        if (Range == true) then
-            UI:UIFrameFadeIn(Frame, Frame.Range.FadeTime, Frame:GetAlpha(), Frame.Range.InRangeAlpha)
-        elseif (Range == false) then
-            UI:UIFrameFadeOut(Frame, Frame.Range.FadeTime, Frame:GetAlpha(), Frame.Range.OutOfRangeAlpha)
-        end
+    if (Range == true) then
+        UI:UIFrameFadeIn(Frame, Frame.Range.FadeTime, Frame:GetAlpha(), Frame.Range.InRangeAlpha)
+    elseif (Range == false) then
+        UI:UIFrameFadeOut(Frame, Frame.Range.FadeTime, Frame:GetAlpha(), Frame.Range.OutOfRangeAlpha)
     end
 end
 
 function UF:StartRangeDriver()
-    if (self.RangeTicker) then 
-        return 
+    if (self.RangeTicker) then
+        return
     end
 
-    self.RangeTicker = C_Timer.NewTicker(0.2, function()
+    self.RangeTicker = C_Timer.NewTicker(0.4, function()
         for Frame, Unit in pairs(UF.Frames.Range) do
-            if (Frame:IsShown()) then
-                UF:UpdateRangeState(Frame, Frame.unit)
+            if (Frame and Frame:IsShown()) then
+                UF:UpdateRangeState(Frame, Unit)
             end
         end
     end)
 end
 
 function UF:UpdateRange(Frame, Unit)
-    if (not Frame or not Unit or not Frame.Range) then 
-        return 
+    if (not Frame or not Unit or not Frame.Range) then
+        return
     end
 
     UF.Frames.Range[Frame] = Unit
+
+    if (not UF.Frames.RangeState[Unit]) then
+        UF.Frames.RangeState[Unit] = {}
+    end
+
     UF:StartRangeDriver()
-    
+
     if (not Frame.Range.OnHideHooked) then
         Frame:HookScript("OnHide", function(self)
             UF.Frames.Range[self] = nil
@@ -923,9 +952,13 @@ end
 --- UPDATE FRAMES
 
 function UF:RefreshUnit(Unit)
+    if (not Unit or not UnitExists(Unit)) then
+        return
+    end
+
     local Frame = self.Frames[Unit]
 
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Frame) then
         return
     end
 
@@ -972,7 +1005,7 @@ function UF:RefreshUnit(Unit)
 end
 
 function UF:RefreshGroup(Frame, Unit)
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Frame or not Unit) then
         return
     end
 
@@ -1036,113 +1069,164 @@ function UF:FullRefreshGroup()
     end
 end
 
--- EVENT UPDATES
-
-function UF:UnitHealth(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+function UF:RefreshUnitAuras(Frame, Unit)
+    if (not Frame or not Unit) then
         return
     end
 
-    if (Frame.Health) then
-        self:UpdateHealth(Frame, Unit)
+    local Data = UI.AuraContainerData[Frame]
+
+    if (not Data) then
+        return
     end
 
-    if (Frame.HealthTextCur) then
-        self:UpdateHealthTextCur(Frame, Unit)
+    for _, Container in pairs(Data.Containers) do
+        if (Container) then
+            Container:SetEnabled(true)
+            Container:SetUnit(Unit)
+        end
+    end
+end
+
+function UF:RefreshUnitRemovedAuras(Frame)
+    if (not Frame) then
+        return
     end
 
-    if (Frame.HealthTextPer) then
-        self:UpdateHealthTextPer(Frame, Unit)
+    local Data = UI.AuraContainerData[Frame]
+
+    if (not Data) then
+        return
+    end
+
+    for _, Container in pairs(Data.Containers) do
+        if (Container) then
+            Container:SetEnabled(false)
+        end
+    end
+end
+
+-- EVENT UPDATES
+
+function UF:UnitHealth(Unit)
+    if (not Unit) then
+        return
+    end
+
+    local Frame = self.Frames[Unit]
+
+    if (Frame and UnitExists(Unit)) then
+        if (Frame.Health) then
+            self:UpdateHealth(Frame, Unit)
+        end
+
+        if (Frame.HealthTextCur) then
+            self:UpdateHealthTextCur(Frame, Unit)
+        end
+
+        if (Frame.HealthTextPer) then
+            self:UpdateHealthTextPer(Frame, Unit)
+        end
     end
 end
 
 function UF:UnitHealthPred(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Unit) then
         return
     end
 
-    if (Frame.HealthPrediction) then
-        self:UpdateHealthPred(Frame, Unit)
+    local Frame = self.Frames[Unit]
+
+    if (Frame and UnitExists(Unit)) then
+        if (Frame.HealthPrediction) then
+            self:UpdateHealthPred(Frame, Unit)
+        end
     end
 end
 
 function UF:UnitPower(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Unit) then
         return
     end
 
-    if (Frame.Power) then 
-        self:UpdatePower(Frame, Unit) 
-    end
+    local Frame = self.Frames[Unit]
 
-    if (Frame.PowerText) then
-        self:UpdatePowerText(Frame, Unit)
-    end
+    if (Frame and UnitExists(Unit)) then
+        if (Frame.Power) then 
+            self:UpdatePower(Frame, Unit) 
+        end
 
-    if (Frame.AdditionalPower) then
-        self:UpdateAdditionalPower(Frame)
+        if (Frame.PowerText) then
+            self:UpdatePowerText(Frame, Unit)
+        end
+
+        if (Frame.AdditionalPower) then
+            self:UpdateAdditionalPower(Frame)
+        end
     end
 end
 
 function UF:UnitName(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Unit) then
         return
     end
 
-    if (Frame.Name) then
-        self:UpdateName(Frame, Unit)
-    end
+    local Frame = self.Frames[Unit]
 
-    if (Frame.NameLevel) then
-        self:UpdateTargetNameLevel(Frame, Unit)
+    if (Frame and UnitExists(Unit)) then
+        if (Frame.Name) then
+            self:UpdateName(Frame, Unit)
+        end
+
+        if (Frame.NameLevel) then
+            self:UpdateTargetNameLevel(Frame, Unit)
+        end
     end
 end
 
 function UF:UnitThreat(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Unit) then
         return
     end
 
-    if (Frame.Threat) then
-        if (Frame.IsRaid) then
-            self:UpdateThreatHighlightRaid(Frame, Unit)
-        else
-            self:UpdateThreatHighlight(Frame, Unit)
+    local Frame = self.Frames[Unit]
+
+    if (Frame and UnitExists(Unit)) then
+        if (Frame.Threat) then
+            if (Frame.IsRaid) then
+                self:UpdateThreatHighlightRaid(Frame, Unit)
+            else
+                self:UpdateThreatHighlight(Frame, Unit)
+            end
         end
     end
 end
 
 function UF:UnitPortrait(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Unit) then
         return
     end
 
-    if (Frame.Portrait) then
-        self:UpdatePortrait(Frame, Unit)
+    local Frame = self.Frames[Unit]
+
+    if (Frame and UnitExists(Unit)) then
+        if (Frame.Portrait) then
+            self:UpdatePortrait(Frame, Unit)
+        end
     end
 end
 
 function UF:UnitStatusIcons(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Unit) then
         return
     end
 
-    if (Frame.StatusIcon) then
-        self:UpdateStatusIcon(Frame, Unit)
+    local Frame = self.Frames[Unit]
+
+    if (Frame and UnitExists(Unit)) then
+        if (Frame.StatusIcon) then
+            self:UpdateStatusIcon(Frame, Unit)
+        end
     end
 end
 
@@ -1207,26 +1291,30 @@ function UF:UnitPhaseIcon()
 end
 
 function UF:UnitSummonIcon(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Unit) then
         return
     end
 
-    if (Frame.SummonIcon) then
-        self:UpdateSummonIcon(Frame, Unit)
+    local Frame = self.Frames[Unit]
+
+    if (Frame and UnitExists(Unit)) then
+        if (Frame.SummonIcon) then
+            self:UpdateSummonIcon(Frame, Unit)
+        end
     end
 end
 
 function UF:UnitResurrectionIcon(Unit)
-    local Frame = self.Frames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit)) then
+    if (not Unit) then
         return
     end
 
-    if (Frame.ResurrectionIcon) then
-        self:UpdateResurrectionIcon(Frame, Unit)
+    local Frame = self.Frames[Unit]
+
+    if (Frame and UnitExists(Unit)) then
+        if (Frame.ResurrectionIcon) then
+            self:UpdateResurrectionIcon(Frame, Unit)
+        end
     end
 end
 
@@ -1397,4 +1485,5 @@ function UF:Initialize()
     self:DisableBlizzard()
     self:CreateUF()
     self:RegisterEvents()
+    self:FullRefresh()
 end

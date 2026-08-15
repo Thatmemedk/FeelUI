@@ -48,40 +48,59 @@ RegisterStateDriver(NP.SecureFrame, "visibility", "[petbattle] hide; show")
 
 -- HEALTH UPDATE
 
-function NP:UpdateHealth(Frame, Unit)
+function NP:UpdateHealthColor(Frame, Unit)
     if (not Frame or not Unit or not Frame.Health) then
         return
     end
-    
-    local Min, Max = UnitHealth(Unit), UnitHealthMax(Unit)
-    Frame.Health:SetMinMaxValues(0, Max)
-    Frame.Health:SetValue(Min, UI.SmoothBars)
 
     if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsDead(Unit) or UnitIsGhost(Unit)) then
         Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
         Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
-    else
-        if (DB.Global.Nameplates.ReactionColor) then
-            local Reaction = UnitReaction(Unit, "player")
-            local Color = UI.Colors.Reaction[Reaction]
 
-            Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.70)
-        elseif (DB.Global.Nameplates.UnitColors) then
-            local IsCaster = UnitCastingInfo(Unit) or UnitChannelInfo(Unit)
-            local UnitClassifColor = NP:GetUnitColor(Unit, IsCaster and true)
-
-            if (UnitClassifColor) then
-                Frame.Health:SetStatusBarColor(UnitClassifColor.r, UnitClassifColor.g, UnitClassifColor.b, 0.70)
-            end
-        else
-            Frame.Health:SetStatusBarColor(unpack(DB.Global.Nameplates.HealthBarColor))
-
-            local CurveColor = UnitHealthPercent(Unit, true, UI.NameplatesHealthColorCurve)
-            Frame.Health:GetStatusBarTexture():SetVertexColor(CurveColor:GetRGB())
-        end
-
-        Frame.Health:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
+        return
     end
+
+    if (DB.Global.Nameplates.ReactionColor) then
+        local Reaction = UnitReaction(Unit, "player")
+        local Color = UI.Colors.Reaction[Reaction]
+
+        Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.70)
+    elseif (DB.Global.Nameplates.UnitColors) then
+        local IsCaster = UnitCastingInfo(Unit) or UnitChannelInfo(Unit)
+        local UnitClassifColor = NP:GetUnitColor(Unit, IsCaster and true)
+
+        if (UnitClassifColor) then
+            Frame.Health:SetStatusBarColor(UnitClassifColor.r, UnitClassifColor.g, UnitClassifColor.b, 0.70)
+        end
+    else
+        Frame.Health:SetStatusBarColor(unpack(DB.Global.Nameplates.HealthBarColor))
+
+        local CurveColor = UnitHealthPercent(Unit, true, UI.NameplatesHealthColorCurve)
+        Frame.Health:GetStatusBarTexture():SetVertexColor(CurveColor:GetRGB())
+    end
+
+    Frame.Health:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
+end
+
+function NP:UpdateHealth(Frame, Unit)
+    if (not Frame or not Unit or not Frame.Health) then
+        return
+    end
+
+    UnitGetDetailedHealPrediction(Unit, "player", Frame.Health.Value)
+
+    local Min = Frame.Health.Value:GetCurrentHealth()
+    local Max = Frame.Health.Value:GetMaximumHealth()
+
+    Frame.Health:SetMinMaxValues(0, Max)
+
+    if (UnitIsConnected(Unit)) then
+        Frame.Health:SetValue(Min, UI.SmoothBars)
+    else
+        Frame.Health:SetValue(Max, UI.SmoothBars)
+    end
+
+    self:UpdateHealthColor(Frame, Unit)
 end
 
 function NP:UpdateHealthText(Frame, Unit)
@@ -409,58 +428,66 @@ end
 -- EVENT UPDATES
 
 function NP:UnitHealth(Unit)
-    local Frame = self.EnemyFrames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
+    if (not Unit) then
         return
     end
 
-    if (Frame.Health) then 
-        self:UpdateHealth(Frame, Unit)
-    end
+    local Frame = self.EnemyFrames[Unit]
 
-    if (Frame.HealthText) then 
-        self:UpdateHealthText(Frame, Unit)
+    if (Frame and UnitExists(Unit)) then
+        if (Frame.Health) then 
+            self:UpdateHealth(Frame, Unit)
+        end
+
+        if (Frame.HealthText) then 
+            self:UpdateHealthText(Frame, Unit)
+        end
     end
 end
 
 function NP:UnitHealthPred(Unit)
-    local Frame = self.EnemyFrames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
+    if (not Unit) then
         return
     end
 
-    if (Frame.HealthPrediction) then
-        self:UpdateHealthPred(Frame, Unit)
+    local Frame = self.EnemyFrames[Unit]
+
+    if (Frame and UnitExists(Unit)) then
+        if (Frame.HealthPrediction) then
+            self:UpdateHealthPred(Frame, Unit)
+        end
     end
 end
 
 function NP:UnitName(Unit)
-    local Frame = self.EnemyFrames[Unit] or self.FriendlyFrames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
+    if (not Unit) then
         return
     end
 
-    if (Frame.Name) then
-        self:UpdateName(Frame, Unit)
-    end
+    local Frame = self.EnemyFrames[Unit] or self.FriendlyFrames[Unit]
 
-    if (Frame.Guild) then
-        self:UpdateGuild(Frame, Unit)
+    if (Frame and UnitExists(Unit)) then
+        if (Frame.Name) then
+            self:UpdateName(Frame, Unit)
+        end
+
+        if (Frame.Guild) then
+            self:UpdateGuild(Frame, Unit)
+        end
     end
 end
 
 function NP:UnitThreat(Unit)
-    local Frame = self.EnemyFrames[Unit]
-
-    if (not Frame or not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
+    if (not Unit) then
         return
     end
 
-    if (Frame.Threat) then
-        self:UpdateThreatHighlight(Frame, Unit)
+    local Frame = self.EnemyFrames[Unit]
+
+    if (Frame and UnitExists(Unit)) then
+        if (Frame.Threat) then
+            self:UpdateThreatHighlight(Frame, Unit)
+        end
     end
 end
 
@@ -505,6 +532,10 @@ function NP:CastBarOnNamePlateUnitAdded(Unit)
 end
 
 function NP:CastBarOnNamePlateUnitRemoved(Unit)
+    if (not Unit) then
+        return
+    end
+
     local Frame = self.EnemyFrames[Unit]
     local Castbar = Frame and Frame.Castbar
 
@@ -529,15 +560,22 @@ function NP:NameplateAdded(Unit)
     end
 
     local IsFriend = UnitIsFriend("player", Unit)
+    local FriendlyFrame = Plate.FriendlyNP
+    local EnemyFrame = Plate.EnemyNP
 
     if (IsFriend) then
-        if (Plate.EnemyNP) then
-            Plate.EnemyNP:Hide()
-            Plate.EnemyNP.unit = nil
-            Plate.EnemyNP:SetAttribute("unit", nil)
-        end
+        -- HIDE ENEMY
+        if (EnemyFrame) then
+            local OldUnit = EnemyFrame.unit
 
-        local FriendlyFrame = Plate.FriendlyNP
+            if (OldUnit and self.EnemyFrames[OldUnit] == EnemyFrame) then
+                self.EnemyFrames[OldUnit] = nil
+            end
+
+            EnemyFrame:Hide()
+            EnemyFrame.unit = nil
+            EnemyFrame:SetAttribute("unit", nil)
+        end
 
         if (not FriendlyFrame) then
             FriendlyFrame = CreateFrame("Frame", "FeelUI_FriendlyNP" .. Plate:GetName(), Plate, "PingableUnitFrameTemplate")
@@ -546,24 +584,50 @@ function NP:NameplateAdded(Unit)
             FriendlyFrame:Point("CENTER", Plate, 0, 0)
 
             Plate.FriendlyNP = FriendlyFrame
+
+            FriendlyFrame:HookScript("OnHide", function(Frame)
+                local OldUnit = Frame.unit
+
+                if (OldUnit and self.FriendlyFrames[OldUnit] == Frame) then
+                    self.FriendlyFrames[OldUnit] = nil
+                end
+
+                Frame.unit = nil
+                Frame:SetAttribute("unit", nil)
+            end)
+
+            Plate.UnitFrame.WidgetContainer:SetParent(Plate)
+            Plate.UnitFrame.WidgetContainer:SetPoint("TOP", Plate, "BOTTOM")
+            Plate.UnitFrame.SoftTargetFrame:SetParent(Plate)  
         end
 
-        -- SET UNIT
-        FriendlyFrame.unit = Unit
-        FriendlyFrame:SetAttribute("unit", Unit)
+        -- REMOVE STALE CACHE ENTRY
+        local OldUnit = FriendlyFrame.unit
 
-        -- UPDATE CACHE
-        self.FriendlyFrames[Unit] = FriendlyFrame
+        if (OldUnit and OldUnit ~= Unit and self.FriendlyFrames[OldUnit] == FriendlyFrame) then
+            self.FriendlyFrames[OldUnit] = nil
+        end
 
         if (UnitNameplateShowsWidgetsOnly(Unit) or UnitIsGameObject(Unit)) then
-            Plate:Hide()
+            FriendlyFrame:Hide()
+
+            self.FriendlyFrames[Unit] = nil
         else
-            -- SHOW
+            FriendlyFrame.unit = Unit
+            FriendlyFrame:SetAttribute("unit", Unit)
             FriendlyFrame:Show()
 
             Plate:ClearAllHitTestPoints()
             Plate:SetAllHitTestPoints(FriendlyFrame)
         end
+
+        -- SET UNIT
+        FriendlyFrame.unit = Unit
+        FriendlyFrame:SetAttribute("unit", Unit)
+        FriendlyFrame:Show()
+
+        -- UPDATE CACHE
+        self.FriendlyFrames[Unit] = FriendlyFrame
 
         -- ELEMENTS
         if (not FriendlyFrame.IsCreated) then
@@ -575,10 +639,16 @@ function NP:NameplateAdded(Unit)
         -- REFRESH
         NP:RefreshUnit(FriendlyFrame, Unit)
     else
-        if (Plate.FriendlyNP) then
-            Plate.FriendlyNP:Hide()
-            Plate.FriendlyNP.unit = nil
-            Plate.FriendlyNP:SetAttribute("unit", nil)
+        if (FriendlyFrame) then
+            local OldUnit = FriendlyFrame.unit
+
+            if (OldUnit and self.FriendlyFrames[OldUnit] == FriendlyFrame) then
+                self.FriendlyFrames[OldUnit] = nil
+            end
+
+            FriendlyFrame:Hide()
+            FriendlyFrame.unit = nil
+            FriendlyFrame:SetAttribute("unit", nil)
         end
 
         local EnemyFrame = Plate.EnemyNP
@@ -590,24 +660,46 @@ function NP:NameplateAdded(Unit)
             EnemyFrame:Point("CENTER", Plate, 0, 0)
 
             Plate.EnemyNP = EnemyFrame
+
+            EnemyFrame:HookScript("OnHide", function(Frame)
+                local OldUnit = Frame.unit
+
+                if (OldUnit and self.EnemyFrames[OldUnit] == Frame) then
+                    self.EnemyFrames[OldUnit] = nil
+                end
+
+                Frame.unit = nil
+                Frame:SetAttribute("unit", nil)
+            end)
+
+            Plate.UnitFrame.WidgetContainer:SetParent(Plate)
+            Plate.UnitFrame.WidgetContainer:SetPoint("TOP", Plate, "BOTTOM")
+            Plate.UnitFrame.SoftTargetFrame:SetParent(Plate)
+        end
+
+        -- REMOVE STALE CACHE ENTRY
+        local OldUnit = EnemyFrame.unit
+
+        if (OldUnit and OldUnit ~= Unit and self.EnemyFrames[OldUnit] == EnemyFrame) then
+            self.EnemyFrames[OldUnit] = nil
         end
 
         -- SET UNIT
-        EnemyFrame.unit = Unit
-        EnemyFrame:SetAttribute("unit", Unit)
-
-        -- UPDATE CACHE
-        self.EnemyFrames[Unit] = EnemyFrame
-
         if (UnitNameplateShowsWidgetsOnly(Unit) or UnitIsGameObject(Unit)) then
-            Plate:Hide()
+            EnemyFrame:Hide()
+
+            self.EnemyFrames[Unit] = nil
         else
-            -- SHOW
+            EnemyFrame.unit = Unit
+            EnemyFrame:SetAttribute("unit", Unit)
             EnemyFrame:Show()
 
             Plate:ClearAllHitTestPoints()
             Plate:SetAllHitTestPoints(EnemyFrame)
         end
+
+        -- UPDATE CACHE
+        self.EnemyFrames[Unit] = EnemyFrame
 
         -- ELEMENTS
         if (not EnemyFrame.IsCreated) then
@@ -629,24 +721,27 @@ function NP:NameplateRemoved(Unit)
         return
     end
 
-    if (Plate.FriendlyNP) then
+    local FriendlyFrame = Plate.FriendlyNP
+    local EnemyFrame = Plate.EnemyNP
+
+    if (FriendlyFrame) then
         -- RESET UNIT
-        Plate.FriendlyNP:Hide()
-        Plate.FriendlyNP.unit = nil
-        Plate.FriendlyNP:SetAttribute("unit", nil)
+        FriendlyFrame:Hide()
+        FriendlyFrame.unit = nil
+        FriendlyFrame:SetAttribute("unit", nil)
 
         -- RESET CACHE
         self.FriendlyFrames[Unit] = nil
     end
 
-    if (Plate.EnemyNP) then
+    if (EnemyFrame) then
         -- RESET UNIT
-        Plate.EnemyNP:Hide()
-        Plate.EnemyNP.unit = nil
-        Plate.EnemyNP:SetAttribute("unit", nil)
+        EnemyFrame:Hide()
+        EnemyFrame.unit = nil
+        EnemyFrame:SetAttribute("unit", nil)
 
         -- REMOVE AURAS
-        NP:RefreshUnitRemovedAuras(Plate.EnemyNP)
+        NP:RefreshUnitRemovedAuras(EnemyFrame)
 
         -- RESET CACHE
         self.EnemyFrames[Unit] = nil
@@ -683,7 +778,7 @@ function NP:OnEvent(event, unit, ...)
         NP:UnitMouseOver()
     elseif (event == "RAID_TARGET_UPDATE") then
         NP:UnitRaidIcon()
-    elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH") then
+    elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
         NP:UnitHealth(unit)
     elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
         NP:UnitHealthPred(unit)
