@@ -70,8 +70,8 @@ local READY_CHECK_WAITING_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Waiting"
 UF.FadeInTime = 0.5
 UF.CastHoldTime = 2
 
--- Locals
-UF.GroupUpdatePending = false
+-- Tables
+UF.AuraFilter = {}
 
 -- Tables
 UF.Frames = {}
@@ -80,8 +80,7 @@ UF.Frames.Raid = {}
 UF.Frames.Hidden = {}
 
 -- Tables
-UF.Frames.Range = {}
-UF.Frames.RangeState = {}
+UF.ActiveRangeFrames = {}
 
 -- Tables
 UF.ValidUnits = {
@@ -809,9 +808,8 @@ end
 function UF:IsAnySpellInRange(Unit, Spells)
     local AnySpellChecked = false
 
-    for SpellID in pairs(Spells) do
+    for _, SpellID in pairs(Spells) do
         local Spell = C_Spell.IsSpellInRange(SpellID, Unit)
-
         if (Spell == true) then
             return true
         elseif (Spell ~= nil) then
@@ -831,14 +829,10 @@ function UF:CheckUnitCategoryRange(Unit, Category)
     local Class = select(2, UnitClass("player"))
 
     if (not Spells or not Class or not Spells[Class]) then
-        if (Category == "FRIENDLY") then
-            if InCombatLockdown() then
-                return true
-            else
-                return CheckInteractDistance(Unit, 4)
-            end
+        if (Category == "FRIENDLY" and not InCombatLockdown()) then
+            return CheckInteractDistance(Unit, 4)
         else
-            return nil
+            return true
         end
     end
 
@@ -850,34 +844,27 @@ function UF:CheckUnitCategoryRange(Unit, Category)
 
     local Range = UF:IsAnySpellInRange(Unit, SpellList)
 
-    if (Category == "FRIENDLY" and Range == nil) then
-        if InCombatLockdown() then
-            return true
-        else
+    if (Range == nil) then
+        if (Category == "FRIENDLY" and not InCombatLockdown()) then
             return CheckInteractDistance(Unit, 4)
+        else
+            return true
         end
     end
 
     return Range
 end
 
-function UF:IsFriendlyUnitReachable(Unit)
+function UF:IsFriendlyUnitReachable(Frame, Unit)
     if (UnitIsPlayer(Unit) and UnitPhaseReason(Unit)) then
         return false
     end
 
-    local InRange, WasChecked = UnitInRange(Unit)
+    local InRange, RangeChecked = UnitInRange(Unit)
 
-    if (UI:IsSecretValue(WasChecked)) then
-        local State = UF.Frames.RangeState[Unit]
-
-        if (State and (UnitInParty(Unit) or UnitInRaid(Unit))) then
-            State.IsInRange = InRange
-            State.CheckedRange = WasChecked
-
-            return
-        end
-    elseif (WasChecked and not InRange) then
+    if (UI:IsSecretValue(RangeChecked)) then
+        Frame.Range.IsInRange, Frame.Range.RangeIsChecked = InRange, RangeChecked
+    elseif (RangeChecked and not InRange) then
         return false
     end
 
@@ -889,23 +876,26 @@ function UF:UpdateRangeState(Frame, Unit)
         return
     end
 
-    UF.Frames.RangeState.IsInRange = nil
-    UF.Frames.RangeState.CheckedRange = nil
+    local Range
+    local Exists = UI:UnitExists(Unit)
 
-    local Range = UF.Frames.Range[Unit]
+    Frame.Range.IsInRange = nil
+    Frame.Range.RangeIsChecked = nil
 
-    if (UnitIsDeadOrGhost(Unit)) then
-        Range = UF:CheckUnitCategoryRange(Unit, "FRIENDLY")
+    if (not Exists) then
+        Range = true
+    elseif (UnitIsDeadOrGhost(Unit)) then
+        Range = true
     elseif (UnitCanAttack("player", Unit)) then
         Range = UF:CheckUnitCategoryRange(Unit, "ENEMY")
-    elseif UI:UnitIsUnit("pet", Unit) then
+    elseif (UI:UnitIsUnit("pet", Unit)) then
         Range = UF:CheckUnitCategoryRange(Unit, "PET")
     elseif (UnitIsConnected(Unit)) then
-        Range = UF:IsFriendlyUnitReachable(Unit)
+        Range = UF:IsFriendlyUnitReachable(Frame, Unit)
     else
         Range = false
     end
-
+    
     if (Range == true) then
         UI:UIFrameFadeIn(Frame, Frame.Range.FadeTime, Frame:GetAlpha(), Frame.Range.InRangeAlpha)
     elseif (Range == false) then
@@ -913,15 +903,15 @@ function UF:UpdateRangeState(Frame, Unit)
     end
 end
 
-function UF:StartRangeDriver()
-    if (self.RangeTicker) then
+function UF:EnsureSharedRangeTicker()
+    if (UF.RangeTicker) then
         return
     end
 
-    self.RangeTicker = C_Timer.NewTicker(0.4, function()
-        for Frame, Unit in pairs(UF.Frames.Range) do
-            if (Frame and Frame:IsShown()) then
-                UF:UpdateRangeState(Frame, Unit)
+    UF.RangeTicker = C_Timer.NewTicker(0.2, function()
+        for Frame, Unit in pairs(UF.ActiveRangeFrames) do
+            if (Frame:IsShown()) then
+                UF:UpdateRangeState(Frame, Frame.unit or Unit)
             end
         end
     end)
@@ -932,17 +922,13 @@ function UF:UpdateRange(Frame, Unit)
         return
     end
 
-    UF.Frames.Range[Frame] = Unit
-
-    if (not UF.Frames.RangeState[Unit]) then
-        UF.Frames.RangeState[Unit] = {}
-    end
-
-    UF:StartRangeDriver()
+    UF.ActiveRangeFrames[Frame] = Unit
+    UF:UpdateRangeState(Frame, Unit)
+    UF:EnsureSharedRangeTicker()
 
     if (not Frame.Range.OnHideHooked) then
         Frame:HookScript("OnHide", function(self)
-            UF.Frames.Range[self] = nil
+            UF.ActiveRangeFrames[self] = nil
         end)
 
         Frame.Range.OnHideHooked = true

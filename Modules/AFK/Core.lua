@@ -84,9 +84,10 @@ function AFK:UpdateAFKState(State)
     if (State) then
         -- Fade In
         UI:UIFrameFadeIn(self.Frame, 1, self.Frame:GetAlpha(), 1)
+        UI:UIFrameFadeOut(_G.UIParent, 1, _G.UIParent:GetAlpha(), 0)
 
-        -- Hide UIParent
-        _G.UIParent:Hide()
+        -- Hide
+        _G.Minimap:Hide()
 
         if (IsInGuild()) then
             local GuildName, GuildRankName = GetGuildInfo("player")
@@ -110,9 +111,10 @@ function AFK:UpdateAFKState(State)
     elseif (self.IsAFK) then
         -- Fade Out
         UI:UIFrameFadeOut(self.Frame, 1, self.Frame:GetAlpha(), 0)
-
-        -- Show UIParent
-        _G.UIParent:Show()
+        UI:UIFrameFadeIn(_G.UIParent, 1, _G.UIParent:GetAlpha(), 1)
+        
+        -- Show
+        _G.Minimap:Show()
 
         -- Update
         self.Frame:SetScript("OnUpdate", nil)

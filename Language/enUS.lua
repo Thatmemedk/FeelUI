@@ -22,6 +22,14 @@ Language.ElvUI.Enabled = "You have |cff00aaffFeelUI|r and |cff1784d1ElvUI|r enab
 Language.ElvUI.Disabled = "Disable |cff1784d1ElvUI|r"
 
 ------------------------------------------------
+Language.EllesmeresUI = {}
+------------------------------------------------
+
+Language.EllesmeresUI.Print = "|cffff3333Warning!|r You have |cff00aaffFeelUI|r and |cff1784d1ElvUI|r enabled - Disable |cff1784d1EllesmeresUI|r."
+Language.EllesmeresUI.Enabled = "You have |cff00aaffFeelUI|r and |cff1784d1EllesmeresUI|r enabled."
+Language.EllesmeresUI.Disabled = "Disable |cff1784d1EllesmeresUI|r"
+
+------------------------------------------------
 Language.Help = {}
 ------------------------------------------------
 

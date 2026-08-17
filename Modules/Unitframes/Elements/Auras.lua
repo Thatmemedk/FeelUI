@@ -106,7 +106,7 @@ function UF:CreatePartyExternal(Frame)
         return
     end
 
-    local External = UI:CreateAuraContainer(Frame.InvisFrameHigher, {
+    local External = UI:CreateAuraContainer(Frame, {
         Anchor = "CENTER",
         X = 0,
         Y = 0,
@@ -140,7 +140,7 @@ function UF:CreateRaidDebuffs(Frame)
         Duration = true,
         Border = true,
         DebuffIndicator = false,
-        Filter = "HARMFUL|RAID|DISPELLABLE",
+        Filter = "HARMFUL",
         MaxAuras = 2,
     })
 

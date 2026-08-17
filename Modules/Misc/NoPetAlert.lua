@@ -77,12 +77,14 @@ function NPA:UpdatePetStatus()
     if (not ValidClassSpec) then
         self.Frame:Hide()
         self.Anim:Stop()
+        
         return
     end
 
     if (IsMounted()) then
         self.Frame:Hide()
         self.Anim:Stop()
+
         return
     end
 

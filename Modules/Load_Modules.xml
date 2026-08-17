@@ -79,7 +79,6 @@
 	<Script file="Skins\Blizzard\TalkingHead.lua"/>
 	<!-- Tooltip -->
 	<Script file="Tooltip\Core.lua"/>
-	<Script file="Tooltip\NameHover.lua"/>
 	<!-- NamePlates -->
 	<Script file="Nameplates\Core.lua"/>
 	<Script file="Nameplates\Blizzard.lua"/>

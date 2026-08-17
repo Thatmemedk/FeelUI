@@ -91,10 +91,14 @@ function CDM:HookViewer(Viewer)
 
         local Spacing = AnchorData.IconSpacing or 0
 
-        if (self.childXPadding ~= Spacing) then
-            self.childXPadding = UI:Scale(Spacing)
-            self:Layout()
+        if (not UI:IsSecretValue(self)) then
+            if (self.childXPadding ~= Spacing) then
+                self.childXPadding = UI:Scale(Spacing)
+                self:Layout()
+            end
         end
+
+        CDM:UpdateAnchors()
     end)
 end
 

@@ -102,7 +102,10 @@ function UI:PLAYER_LOGIN(event)
 	elseif (GetAddOnEnableState(UI.MyName, "Tukui") == 2) then
 		UI:Print(Language.Tukui.Print)
 		StaticPopup_Show("TUKUI_INCOMPATIBLE")
-	elseif (not IsAddOnLoaded("Tukui") or IsAddOnLoaded("ElvUI")) then
+	elseif (GetAddOnEnableState(UI.MyName, "EllesmeresUI") == 2) then
+		UI:Print(Language.EllesmeresUI.Print)
+		StaticPopup_Show("ELLESMERESUI_INCOMPATIBLE")
+	elseif (not IsAddOnLoaded("Tukui") or not IsAddOnLoaded("ElvUI") or not IsAddOnLoaded("EllesmeresUI")) then
 		self:LoadModules()
 	end
 	

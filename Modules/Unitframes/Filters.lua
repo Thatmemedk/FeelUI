@@ -8,6 +8,106 @@ local _G = _G
 local unpack = unpack
 local select = select
 
+-- AURAS
+
+UF.AuraFilter.Blacklist = {
+    -- Druid
+    [1126] = true,          -- Mark of the Wild
+    [474754] = true,        -- Symbiotic Relationship
+    -- Evoker
+    [369459] = true,        -- Source of Magic
+    [381732] = true,        -- Blessing of the Bronze
+    [381741] = true,        -- Blessing of the Bronze
+    [381746] = true,        -- Blessing of the Bronze
+    [381748] = true,        -- Blessing of the Bronze
+    [381749] = true,        -- Blessing of the Bronze
+    [381750] = true,        -- Blessing of the Bronze
+    [381751] = true,        -- Blessing of the Bronze
+    [381752] = true,        -- Blessing of the Bronze
+    [381753] = true,        -- Blessing of the Bronze
+    [381754] = true,        -- Blessing of the Bronze
+    [381756] = true,        -- Blessing of the Bronze
+    [381757] = true,        -- Blessing of the Bronze
+    [381758] = true,        -- Blessing of the Bronze
+    [406789] = true,        -- Spatial Paradox (Others)
+    -- Hunter
+    [260286] = true,        -- Tip of the Spear
+    -- Mage
+    [1459] = true,          -- Arcane Intellect
+    [205473] = true,        -- Icicles
+    -- Monk
+    [124255] = true,        -- Stagger
+    -- Paladin
+    [433568] = true,        -- Rite of Sanctification
+    [433583] = true,        -- Rite of Adjuration
+    -- Priest
+    [21562] = true,         -- Power Word: Fortitude
+    [1217607] = true,       -- Void Metamorphosis
+    [1225789] = true,       -- Void Metamorphosis
+    [1227702] = true,       -- Collapsing Star
+    -- Rogue
+    [2823] = true,          -- Deadly Poison
+    [3408] = true,          -- Crippling Poison
+    [5761] = true,          -- Numbing Poison
+    [8679] = true,          -- Wound Poison
+    [315584] = true,        -- Instant Poison
+    [381637] = true,        -- Atrophic Poison
+    [381664] = true,        -- Amplifying Poison
+    -- Shaman
+    [462854] = true,        -- Skyfury
+    -- Imbuements
+    [319773] = true,        -- Windfury Weapon
+    [319778] = true,        -- Flametongue Weapon
+    [344179] = true,        -- Maelstrom Weapon
+    [382021] = true,        -- Earthliving Weapon
+    [382022] = true,        -- Earthliving Weapon
+    [457481] = true,        -- Tidecaller's Guard
+    [457496] = true,        -- Tidecaller's Guard
+    [462742] = true,        -- Thunderstrike Ward
+    [462757] = true,        -- Thunderstrike Ward
+    -- Warrior
+    [6673] = true,          -- Battle Shout
+    [405189] = true,        -- Overflowing Power | Berserk
+    -- General / Miscellaneous
+    [1283888] = true,       -- [DNT] Aura Never Secret Test Spell
+    [308312] = true,        -- Time Trial Practice
+    [369968] = true,        -- Racing
+    [388367] = true,        -- Ohn'ahra's Gusts
+    -- Skyriding
+    [377234] = true,        -- Thrill of the Skies
+    [404464] = true,        -- Flight Style: Skyriding
+    [404468] = true,        -- Flight Style: Steady
+    [418590] = true,        -- Static Charge
+    [427490] = true,        -- Ride Along
+    [447959] = true,        -- Ride Along - Enabled
+    [447960] = true,        -- Ride Along - Inactive
+    -- Bloodlust / Heroism
+    [57723] = true,         -- Exhaustion | Heroism
+    [57724] = true,         -- Sated | Bloodlust
+    [80354] = true,         -- Temporal Displacement | Time Warp
+    [95809] = true,         -- Insanity | Ancient Hysteria
+    [160455] = true,        -- Fatigued | Netherwinds
+    [264689] = true,        -- Fatigued | Primal Rage
+    [390435] = true,        -- Exhaustion | Fury of the Aspects
+    -- Dungeon
+    [26013] = true,         -- Deserter | Battlegrounds
+    [71041] = true,         -- Dungeon Deserter | Dungeon Finder or Raid Finder
+    [1313593] = true,       -- Deserter
+    [206151] = true,        -- Challenger's Burden
+    [1254550] = true,       -- Arcane Empowerment
+}
+
+UF.AuraFilter.Whitelist = {
+    [160029] = true,     -- Resurrecting
+    [225080] = true,     -- Reincarnation
+    [255234] = true,     -- Totemic Revival
+    [10060] = true,      -- Power Infusion
+    [29166] = true,      -- Innervate
+    [406789] = true,     -- Spatial Paradox
+}
+
+-- RANGE
+
 UF.RangeSpells = {
     FRIENDLY = {
         HUNTER = {

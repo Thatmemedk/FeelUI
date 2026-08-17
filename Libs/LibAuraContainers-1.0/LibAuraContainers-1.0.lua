@@ -26,6 +26,10 @@ local select = select
 "HARMFUL|CROWD_CONTROL"; Include only auras that have a crowd control effect (stun, fear, silence, slow, etc.)
 --]]
 
+-- Tables
+UI.AuraContainerData = {}
+UI.AuraContainerIndex = 0
+
 -- FORMATTER
 
 function UI:BuildRuleDurationFormatter()
@@ -48,12 +52,6 @@ function UI:BuildRuleDurationFormatter()
 
     return Formatter
 end
-
--- Tables
-UI.AuraContainerData = {}
-
--- Tables
-UI.AuraContainerIndex = 0
 
 -- AURA BUTTONS
 
@@ -302,6 +300,7 @@ function UI:AddAura(Container, Options)
     Container:AddAuraGroup(GroupKey, Options.Filter, {
         maxFrameCount = Options.MaxAuras,
         initializeFrame = InitializeAura,
+        candidateFilters = Options.CandidateFilters,
 
         layout = {
             elementSpacing = Options.Spacing or UI:Scale(3),
@@ -361,6 +360,7 @@ function UI:AddAuraNP(Container, Options)
     Container:AddAuraGroup(GroupKey, Options.Filter, {
         maxFrameCount = Options.MaxAuras,
         initializeFrame = InitializeAura,
+        candidateFilters = Options.CandidateFilters,
 
         layout = {
             elementSpacing = Options.Spacing or 3,
@@ -578,6 +578,10 @@ function UI:CreateAuraHighlight(Frame, Options)
 
     -- Set Unit
     local Unit = Frame.unit or Options.Unit
+
+    if (not Unit) then
+        return
+    end
 
     if (Container:GetUnit() ~= Unit) then
         Container:SetUnit(Unit)

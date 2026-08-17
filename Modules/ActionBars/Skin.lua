@@ -42,7 +42,18 @@ function AB:StyleActionButton(Button, Icon, Name)
     local AutoCastable = Button.AutoCastable
     local LossControlCD = Button.lossOfControlCooldown
     local Arrow = Button.Arrow
-    
+
+    local SpellAnimTexture = Button.SpellCastAnimFrame
+    local TargetReticleAnimTexture = Button.TargetReticleAnimFrame
+    local ReticleBase = TargetReticleAnimTexture and TargetReticleAnimTexture.Base
+    local ReticleHighlight = TargetReticleAnimTexture and TargetReticleAnimTexture.Highlight
+    local InterruptDisplay = Button.InterruptDisplay
+    local InterruptBase = InterruptDisplay and InterruptDisplay.Base
+    local InterruptHighlight = InterruptDisplay and InterruptDisplay.Highlight
+    local SpellHighlightTexture = Button.SpellHighlightTexture
+    local ButtonWidth, ButtonHeight = unpack(DB.Global.ActionBars.ButtonSize)
+    local AnimTexWidth, AnimTexHeight = ButtonWidth * 1.5, ButtonHeight * 1.5
+
     -- HIDE TEXTURES
     AB:SafeHide(Normal)
     AB:SafeHide(IconMask)
@@ -52,6 +63,41 @@ function AB:StyleActionButton(Button, Icon, Name)
     AB:SafeHide(Corners)
     AB:SafeHide(MacroName)
     AB:SafeHide(Arrow)
+
+    if (SpellAnimTexture) then
+        if (SpellAnimTexture.EndBurst) then
+            SpellAnimTexture.EndBurst.EndMask:Size(AnimTexWidth, AnimTexHeight)
+        end
+
+        if (SpellAnimTexture.Fill) then
+            SpellAnimTexture.Fill.FillMask:Size(AnimTexWidth, AnimTexHeight)
+
+            SpellAnimTexture.Fill.InnerGlowTexture:SetInside(Button, 1, 1)
+            SpellAnimTexture.Fill.InnerGlowTexture:SetTexture(Media.Global.Texture)
+            SpellAnimTexture.Fill.InnerGlowTexture:SetTexCoord(unpack(UI.TexCoords))
+        end
+    end
+
+    if (ReticleBase) then
+        ReticleBase:SetInside(Button, 1, 1)
+        ReticleBase:SetTexture(Media.Global.Texture)
+        ReticleBase:SetTexCoord(unpack(UI.TexCoords))
+        ReticleBase:SetVertexColor(unpack(DB.Global.ActionBars.OverlayGlowColor))
+    end
+
+    if (ReticleHighlight) then
+        ReticleHighlight:SetInside(Button, 1, 1)
+    end
+
+    if (InterruptBase) then
+        InterruptBase:SetInside(Button, 1, 1)
+    end
+
+    if (InterruptHighlight) then
+        InterruptHighlight.Mask:ClearAllPoints()
+        InterruptHighlight.Mask:Point("CENTER", 0, 0)
+        InterruptHighlight.Mask:Size(AnimTexWidth, AnimTexHeight)
+    end
 
     if (SpellHighlightTexture) then
         SpellHighlightTexture:SetInside(Button, 1, 1)

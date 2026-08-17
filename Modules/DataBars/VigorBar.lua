@@ -26,12 +26,12 @@ local R, G, B = unpack(UI.GetClassColors)
 
 function VB:CreateBar()
     local VigorBars = CreateFrame("Frame", nil, _G.UIParent)
-    VigorBars:Size(242, 8)
+    VigorBars:Size(263, 8)
     VigorBars:Point("CENTER", _G.UIParent, 0, -204)
     VigorBars:SetAlpha(0)
 
     local CooldownsBars = CreateFrame("Frame", nil, VigorBars)
-    CooldownsBars:Size(242, 8)
+    CooldownsBars:Size(263, 8)
     CooldownsBars:Point("BOTTOM", VigorBars, 0, -14)
 
     local InvisFrame = CreateFrame("Frame", nil, VigorBars)
@@ -101,13 +101,13 @@ end
 
 function VB:CreateCooldownIcon(Frame, Index, SpellID)
     local Icon = CreateFrame("Frame", nil, Frame)
-    Icon:Size(38, 18)
+    Icon:Size(42, 18)
     Icon:SetTemplate()
     Icon:CreateShadow()
     Icon:StyleButton()
     Icon:SetShadowOverlay()
 
-    local IconSize = 38
+    local IconSize = 42
     local TotalWidth = (IconSize * #self.CooldownSpells) + (self.Spacing * (#self.CooldownSpells - 1))
     local StartX = -(TotalWidth / 2) + (IconSize / 2)
 

@@ -21,7 +21,7 @@ function Cooldown:Initialize()
     end
 
     hooksecurefunc("CooldownFrame_Set", function(self, Start, Duration, Enable, ForceShowDrawEdge, ModRate)
-        if (not self or self:IsForbidden() or UI:IsSecretValue(self)) then
+        if (not self or self.CooldownTextIsUpdated or self:IsForbidden() or UI:IsSecretValue(self)) then
             return
         end
 
@@ -43,5 +43,7 @@ function Cooldown:Initialize()
                 Region:SetFontTemplate("Default", FontSize)
             end
         end
+
+        self.CooldownTextIsUpdated = true
     end)
 end
