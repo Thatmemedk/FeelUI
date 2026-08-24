@@ -22,9 +22,9 @@ StaticPopupDialogs["TUKUI_INCOMPATIBLE"] = {
 }
 
 StaticPopupDialogs["ELLESMERESUI_INCOMPATIBLE"] = {
-	text = Language.Tukui.Enabled,
+	text = Language.EllesmeresUI.Enabled,
 	OnAccept = function() DisableAddOn("EllesmeresUI") ReloadUI() end,
-	button1 = Language.Tukui.Disabled,
+	button1 = Language.EllesmeresUI.Disabled,
 	whileDead = 1,
 	hideOnEscape = false,
 }

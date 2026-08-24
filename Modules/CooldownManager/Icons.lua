@@ -30,7 +30,7 @@ function CDM:StripTextureMasks(Frame)
 end
 
 function CDM:SkinIcons(Button, ButtonSize)
-	if (not Button or Button.CDMIsSkinned) then
+	if (not Button or Button.CDMIsSkinned or Button:IsForbidden() or UI:IsSecretValue(Button)) then
 		return
 	end
 
@@ -87,18 +87,18 @@ function CDM:SkinIcons(Button, ButtonSize)
 	if (Cooldown) then
 		Cooldown:SetSwipeTexture(Media.Global.Blank)
 		Cooldown:ClearAllPoints()
-		Cooldown:SetInside()
+		Cooldown:SetInside(Button, 1, 1)
 		Cooldown:SetReverse(true)
 	end
 
 	if (CooldownFlash) then
 		CooldownFlash:ClearAllPoints()
-		CooldownFlash:SetInside()
+		CooldownFlash:SetInside(Button, 1, 1)
 	end
 
 	if (OutOfRange) then
 		OutOfRange:ClearAllPoints()
-		OutOfRange:SetInside()
+		OutOfRange:SetInside(Button, 1, 1)
 	end
  
 	if (Charges) then

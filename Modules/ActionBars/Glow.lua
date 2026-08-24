@@ -18,6 +18,7 @@ function AB:StartButtonHighlight()
 
     if (not self.Animation) then
         self.NewProc = CreateFrame("Frame", nil, self)
+        self.NewProc:SetFrameLevel(self:GetFrameLevel() + 5)
         self.NewProc:SetInside()
         self.NewProc:CreateBackdrop()
         self.NewProc:SetBackdropColorTemplate(unpack(DB.Global.ActionBars.OverlayGlowColor))

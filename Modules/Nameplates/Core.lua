@@ -40,6 +40,10 @@ NP.FriendlyFrames = {}
 NP.FadeInTime = 0.5
 NP.CastHoldTime = 2
 
+-- Locals
+NP.CurrentTargetFrame = nil
+NP.CurrentMouseoverFrame = nil
+
 -- SecureFrame
 NP.SecureFrame = CreateFrame("Frame", "UF_SecureFrame", _G.UIParent, "SecureHandlerStateTemplate")
 NP.SecureFrame:SetAllPoints()
@@ -121,67 +125,111 @@ function NP:LayoutHealPred(Frame)
 
     local Health = Frame.Health
     local Prediction = Frame.HealthPrediction
-    local PlayerHealsBar = Prediction.PlayerHeals
-    local OtherHealsBar = Prediction.OtherHeals
-    local AllAbsorbsBar = Prediction.AllAbsorbs
-    local HealAbsorbsBar = Prediction.HealAbsorbs
-    local OverHealsBar = Prediction.OverHeals
-    local OverAbsorbsBar = Prediction.OverAbsorbs
-    local OverHealsAbsorbsBar = Prediction.OverHealsAbsorbs
+    local HealingPlayer = Prediction.HealingPlayer
+    local HealingOther = Prediction.HealingOther
+    local DamageAbsorb = Prediction.DamageAbsorb
+    local HealAbsorb = Prediction.HealAbsorb
+    local OverHealIndicator = Prediction.OverHealIndicator
+    local OverDamageAbsorbIndicator = Prediction.OverDamageAbsorbIndicator
+    local OverHealAbsorbIndicator = Prediction.OverHealAbsorbIndicator
     local Orientation = Health:GetOrientation()
-    local PrevTexture = Health:GetStatusBarTexture()
-    local BarWidth, BarHeight = Health:GetSize()    
+    local ReverseFill = Health:GetReverseFill()
+    local HealthTexture = Health:GetStatusBarTexture()
+    local BarWidth, BarHeight = Health:GetSize()
+
+    -- Size
+    HealingPlayer:Size(BarWidth, BarHeight)
+    HealingOther:Size(BarWidth, BarHeight)
+    DamageAbsorb:Size(BarWidth, BarHeight)
+    HealAbsorb:Size(BarWidth, BarHeight)
+    OverHealIndicator:Size(2, BarHeight)
+    OverDamageAbsorbIndicator:Size(2, BarHeight)
+    OverHealAbsorbIndicator:Size(2, BarHeight)
 
     -- Orientation
-    PlayerHealsBar:SetOrientation(Orientation)
-    OtherHealsBar:SetOrientation(Orientation)
-    AllAbsorbsBar:SetOrientation(Orientation)
-    HealAbsorbsBar:SetOrientation(Orientation)
+    HealingPlayer:SetOrientation(Orientation)
+    HealingOther:SetOrientation(Orientation)
+    DamageAbsorb:SetOrientation(Orientation)
+    HealAbsorb:SetOrientation(Orientation)
 
-    -- Set Reverse Fill
-    AllAbsorbsBar:SetReverseFill(true)
-    HealAbsorbsBar:SetReverseFill(true)
+    -- Reverse Fill
+    HealingPlayer:SetReverseFill(ReverseFill)
+    HealingOther:SetReverseFill(ReverseFill)
+    DamageAbsorb:SetReverseFill(true)
+    HealAbsorb:SetReverseFill(true)
 
     if (Orientation == "HORIZONTAL") then
-        PlayerHealsBar:Size(BarWidth, BarHeight)
-        OtherHealsBar:Size(BarWidth, BarHeight)
-        AllAbsorbsBar:Size(BarWidth, BarHeight)
-        HealAbsorbsBar:Size(BarWidth, BarHeight)
+        HealingPlayer:Size(BarWidth, BarHeight)
+        HealingOther:Size(BarWidth, BarHeight)
+        DamageAbsorb:Size(BarWidth, BarHeight)
+        HealAbsorb:Size(BarWidth, BarHeight)
+        OverHealIndicator:Size(2, BarHeight)
+        OverDamageAbsorbIndicator:Size(2, BarHeight)
+        OverHealAbsorbIndicator:Size(2, BarHeight)
 
         -- Player Heals
-        PlayerHealsBar:SetOutsideRight(PrevTexture, 0, 0)
+        HealingPlayer:Point("LEFT", Health)
+        HealingPlayer:Point("LEFT", HealthTexture, "RIGHT")
+
         -- Other Heals
-        OtherHealsBar:SetOutsideRight(PlayerHealsBar:GetStatusBarTexture(), 0, 0)
-        -- All Absorbs
-        AllAbsorbsBar:SetInsideRight(PrevTexture, 0, 0)
+        HealingOther:Point("LEFT", Health)
+        HealingOther:Point("LEFT", HealingPlayer:GetStatusBarTexture(), "RIGHT")
+
+        -- Damage Absorbs
+        DamageAbsorb:Point("BOTTOM", Health)
+        DamageAbsorb:Point("BOTTOMRIGHT", Health, "BOTTOMRIGHT")
+
         -- Heal Absorbs
-        HealAbsorbsBar:SetInsideRight(PrevTexture, 0, 0)
-        -- OverHeals
-        OverHealsBar:SetOutsideRight(OtherHealsBar:GetStatusBarTexture(), -1, 0)
-        -- OverAbsorbs
-        OverAbsorbsBar:SetOutsideRight(AllAbsorbsBar:GetStatusBarTexture(), 0, 0)
-        -- OverHealsAbsorbs
-        OverHealsAbsorbsBar:SetOutsideRight(HealAbsorbsBar:GetStatusBarTexture(), 0, 0)
+        HealAbsorb:Point("BOTTOM", Health)
+        HealAbsorb:Point("BOTTOMRIGHT", Health, "BOTTOMRIGHT")
+
+        -- Over Heals
+        OverHealIndicator:Point("TOPLEFT", HealingOther, "TOPRIGHT")
+        OverHealIndicator:Point("BOTTOMLEFT", HealingOther, "BOTTOMRIGHT")
+
+        -- Over Damage Absorbs
+        OverDamageAbsorbIndicator:Point("TOPLEFT", DamageAbsorb, "TOPRIGHT")
+        OverDamageAbsorbIndicator:Point("BOTTOMLEFT", DamageAbsorb, "BOTTOMRIGHT")
+
+        -- Over Heal Absorbs
+        OverHealAbsorbIndicator:Point("TOPLEFT", HealAbsorb, "TOPRIGHT")
+        OverHealAbsorbIndicator:Point("BOTTOMLEFT", HealAbsorb, "BOTTOMRIGHT")
     else
-        PlayerHealsBar:Size(BarHeight, BarWidth)
-        OtherHealsBar:Size(BarHeight, BarWidth)
-        AllAbsorbsBar:Size(BarHeight, BarWidth)
-        HealAbsorbsBar:Size(BarHeight, BarWidth)
+        HealingPlayer:Size(BarHeight, BarWidth)
+        HealingOther:Size(BarHeight, BarWidth)
+        DamageAbsorb:Size(BarHeight, BarWidth)
+        HealAbsorb:Size(BarHeight, BarWidth)
+        OverHealIndicator:Size(BarWidth, 2)
+        OverDamageAbsorbIndicator:Size(BarWidth, 2)
+        OverHealAbsorbIndicator:Size(BarWidth, 2)
 
         -- Player Heals
-        PlayerHealsBar:SetOutsideTop(PrevTexture, 0, 0)
+        HealingPlayer:Point("BOTTOMLEFT", HealthTexture, "TOPLEFT")
+        HealingPlayer:Point("BOTTOMRIGHT", HealthTexture, "TOPRIGHT")
+
         -- Other Heals
-        OtherHealsBar:SetOutsideTop(PlayerHealsBar:GetStatusBarTexture(), 0, 0)
-        -- All Absorbs
-        AllAbsorbsBar:SetInsideTop(PrevTexture, 0, 0)
+        HealingOther:Point("BOTTOMLEFT", HealingPlayer:GetStatusBarTexture(), "TOPLEFT")
+        HealingOther:Point("BOTTOMRIGHT", HealingPlayer:GetStatusBarTexture(), "TOPRIGHT")
+
+        -- Damage Absorbs
+        DamageAbsorb:Point("TOPLEFT", HealthTexture, "TOPLEFT")
+        DamageAbsorb:Point("TOPRIGHT", HealthTexture, "TOPRIGHT")
+
         -- Heal Absorbs
-        HealAbsorbsBar:SetInsideTop(PrevTexture, 0, 0)
-        -- OverHeals
-        OverHealsBar:SetOutsideTop(OtherHealsBar:GetStatusBarTexture(), 0, 0)
-        -- OverAbsorbs
-        OverAbsorbsBar:SetOutsideTop(AllAbsorbsBar:GetStatusBarTexture(), 0, 0)
-        -- OverHealsAbsorbs
-        OverHealsAbsorbsBar:SetOutsideTop(HealAbsorbsBar:GetStatusBarTexture(), 0, 0)
+        HealAbsorb:Point("TOPLEFT", HealthTexture, "TOPLEFT")
+        HealAbsorb:Point("TOPRIGHT", HealthTexture, "TOPRIGHT")
+
+        -- Over Heals
+        OverHealIndicator:Point("BOTTOMLEFT", HealingOther, "TOPLEFT")
+        OverHealIndicator:Point("BOTTOMRIGHT", HealingOther, "TOPRIGHT")
+
+        -- Over Damage Absorbs
+        OverDamageAbsorbIndicator:Point("BOTTOMLEFT", DamageAbsorb, "TOPLEFT")
+        OverDamageAbsorbIndicator:Point("BOTTOMRIGHT", DamageAbsorb, "TOPRIGHT")
+
+        -- Over Heal Absorbs
+        OverHealAbsorbIndicator:Point("BOTTOMLEFT", HealAbsorb, "TOPLEFT")
+        OverHealAbsorbIndicator:Point("BOTTOMRIGHT", HealAbsorb, "TOPRIGHT")
     end
 
     Prediction.LayoutIsCreated = true
@@ -199,14 +247,13 @@ function NP:UpdateHealthPred(Frame, Unit)
     end
 
     local Calculator = Prediction.Calculator
-
-    local PlayerHealsBar = Prediction.PlayerHeals
-    local OtherHealsBar = Prediction.OtherHeals
-    local AllAbsorbsBar = Prediction.AllAbsorbs
-    local HealAbsorbsBar = Prediction.HealAbsorbs
-    local OverHealsBar = Prediction.OverHeals
-    local OverAbsorbsBar = Prediction.OverAbsorbs
-    local OverHealsAbsorbsBar = Prediction.OverHealsAbsorbs
+    local HealingPlayer = Prediction.HealingPlayer
+    local HealingOther = Prediction.HealingOther
+    local OverHealIndicator = Prediction.OverHealIndicator
+    local DamageAbsorb = Prediction.DamageAbsorb
+    local OverDamageAbsorbIndicator = Prediction.OverDamageAbsorbIndicator
+    local HealAbsorb = Prediction.HealAbsorb
+    local OverHealAbsorbIndicator = Prediction.OverHealAbsorbIndicator
 
     UnitGetDetailedHealPrediction(Unit, "player", Calculator)
 
@@ -216,28 +263,43 @@ function NP:UpdateHealthPred(Frame, Unit)
     local HealAbsorbAmount, HealAbsorbClamped = Calculator:GetHealAbsorbs()
     local Max = UnitHealthMax(Unit)
 
-    PlayerHealsBar:SetMinMaxValues(0, Max)
-    PlayerHealsBar:SetValue(PlayerHeals, UI.SmoothBars)
+    if (HealingPlayer or HealingOther or OverHealIndicator) then
+        if (HealingPlayer) then
+            HealingPlayer:SetMinMaxValues(0, Max)
+            HealingPlayer:SetValue(PlayerHeals, UI.SmoothBars)
+        end
 
-    OtherHealsBar:SetMinMaxValues(0, Max)
-    OtherHealsBar:SetValue(OtherHeals, UI.SmoothBars)
+        if (HealingOther) then
+            HealingOther:SetMinMaxValues(0, Max)
+            HealingOther:SetValue(OtherHeals, UI.SmoothBars)
+        end
 
-    AllAbsorbsBar:SetMinMaxValues(0, Max)
-    AllAbsorbsBar:SetValue(AbsorbsAmount, UI.SmoothBars)
+        if (OverHealIndicator) then
+            OverHealIndicator:SetAlphaFromBoolean(HealingClamped, 1, 0)
+        end
+    end
 
-    HealAbsorbsBar:SetMinMaxValues(0, Max)
-    HealAbsorbsBar:SetValue(HealAbsorbAmount, UI.SmoothBars)
+    if (DamageAbsorb or OverDamageAbsorbIndicator) then
+        if (DamageAbsorb) then
+            DamageAbsorb:SetMinMaxValues(0, Max)
+            DamageAbsorb:SetValue(AbsorbsAmount, UI.SmoothBars)
+        end
 
-    -- Healing Prediction
-    PlayerHealsBar:SetAlphaFromBoolean(PlayerHeals, 1, 0)
-    OtherHealsBar:SetAlphaFromBoolean(OtherHeals, 1, 0)
-    AllAbsorbsBar:SetAlphaFromBoolean(AbsorbsAmount, 1, 0)
-    HealAbsorbsBar:SetAlphaFromBoolean(HealAbsorbAmount, 1, 0)
+        if (OverDamageAbsorbIndicator) then
+            OverDamageAbsorbIndicator:SetAlphaFromBoolean(AbsorbsClamped, 1, 0)
+        end
+    end
 
-    -- Over Healing/Absorbs
-    OverHealsBar:SetAlphaFromBoolean(HealingClamped, 1, 0)
-    OverAbsorbsBar:SetAlphaFromBoolean(AbsorbsClamped, 1, 0)
-    OverHealsAbsorbsBar:SetAlphaFromBoolean(HealAbsorbClamped, 1, 0)
+    if (HealAbsorb or OverHealAbsorbIndicator) then
+        if (HealAbsorb) then
+            HealAbsorb:SetMinMaxValues(0, Max)
+            HealAbsorb:SetValue(HealAbsorbAmount, UI.SmoothBars)
+        end
+
+        if (OverHealAbsorbIndicator) then
+            OverHealAbsorbIndicator:SetAlphaFromBoolean(HealAbsorbClamped, 1, 0)
+        end
+    end
 end
 
 -- NAME UPDATE
@@ -492,20 +554,43 @@ function NP:UnitThreat(Unit)
 end
 
 function NP:UnitTargetChanged()
-    for Key, Frame in next, self.EnemyFrames do
-        self:UpdateTargetIndicator(Frame, Frame.unit)
-        self:UpdateHighlight(Frame, Frame.unit)
+    local NewFrame = nil
+
+    if (UnitExists("target")) then
+        local Plate = C_NamePlate.GetNamePlateForUnit("target")
+        NewFrame = Plate and (Plate.EnemyNP or Plate.FriendlyNP)
     end
 
-    for Key, Frame in next, self.FriendlyFrames do
-        self:UpdateHighlight(Frame, Frame.unit)
+    if (self.CurrentTargetFrame and self.CurrentTargetFrame ~= NewFrame) then
+        self:UpdateTargetIndicator(self.CurrentTargetFrame, self.CurrentTargetFrame.unit)
+        self:UpdateHighlight(self.CurrentTargetFrame, self.CurrentTargetFrame.unit)
     end
+
+    if (NewFrame) then
+        self:UpdateTargetIndicator(NewFrame, NewFrame.unit)
+        self:UpdateHighlight(NewFrame, NewFrame.unit)
+    end
+
+    self.CurrentTargetFrame = NewFrame
 end
 
 function NP:UnitMouseOver()
-    for Key, Frame in next, self.EnemyFrames do
-        self:UpdateHighlightMouseOver(Frame, Frame.unit)
+    local NewFrame = nil
+
+    if (UnitExists("mouseover")) then
+        local Plate = C_NamePlate.GetNamePlateForUnit("mouseover")
+        NewFrame = Plate and Plate.EnemyNP
     end
+
+    if (self.CurrentMouseoverFrame and self.CurrentMouseoverFrame ~= NewFrame) then
+        self:UpdateHighlightMouseOver(self.CurrentMouseoverFrame, self.CurrentMouseoverFrame.unit)
+    end
+
+    if (NewFrame) then
+        self:UpdateHighlightMouseOver(NewFrame, NewFrame.unit)
+    end
+
+    self.CurrentMouseoverFrame = NewFrame
 end
 
 function NP:UnitRaidIcon()
@@ -608,15 +693,17 @@ function NP:NameplateAdded(Unit)
             self.FriendlyFrames[OldUnit] = nil
         end
 
+        -- WIDGETS
         if (UnitNameplateShowsWidgetsOnly(Unit) or UnitIsGameObject(Unit)) then
             FriendlyFrame:Hide()
+            FriendlyFrame.unit = nil
+            FriendlyFrame:SetAttribute("unit", nil)
 
+            -- UPDATE CACHE
             self.FriendlyFrames[Unit] = nil
-        else
-            FriendlyFrame.unit = Unit
-            FriendlyFrame:SetAttribute("unit", Unit)
-            FriendlyFrame:Show()
 
+            return
+        else
             Plate:ClearAllHitTestPoints()
             Plate:SetAllHitTestPoints(FriendlyFrame)
         end
@@ -672,9 +759,9 @@ function NP:NameplateAdded(Unit)
                 Frame:SetAttribute("unit", nil)
             end)
 
-            Plate.UnitFrame.WidgetContainer:SetParent(Plate)
-            Plate.UnitFrame.WidgetContainer:SetPoint("TOP", Plate, "BOTTOM")
             Plate.UnitFrame.SoftTargetFrame:SetParent(Plate)
+            Plate.UnitFrame.WidgetContainer:SetParent(Plate)
+            Plate.UnitFrame.WidgetContainer:Point("TOP", Plate, "BOTTOM")
         end
 
         -- REMOVE STALE CACHE ENTRY
@@ -684,19 +771,25 @@ function NP:NameplateAdded(Unit)
             self.EnemyFrames[OldUnit] = nil
         end
 
-        -- SET UNIT
+        -- WIDGETS
         if (UnitNameplateShowsWidgetsOnly(Unit) or UnitIsGameObject(Unit)) then
             EnemyFrame:Hide()
+            EnemyFrame.unit = nil
+            EnemyFrame:SetAttribute("unit", nil)
 
+            -- UPDATE CACHE
             self.EnemyFrames[Unit] = nil
-        else
-            EnemyFrame.unit = Unit
-            EnemyFrame:SetAttribute("unit", Unit)
-            EnemyFrame:Show()
 
+            return
+        else
             Plate:ClearAllHitTestPoints()
             Plate:SetAllHitTestPoints(EnemyFrame)
         end
+
+        -- SET UNIT
+        EnemyFrame.unit = Unit
+        EnemyFrame:SetAttribute("unit", Unit)
+        EnemyFrame:Show()
 
         -- UPDATE CACHE
         self.EnemyFrames[Unit] = EnemyFrame
@@ -780,7 +873,7 @@ function NP:OnEvent(event, unit, ...)
         NP:UnitRaidIcon()
     elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
         NP:UnitHealth(unit)
-    elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
+    elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED") then
         NP:UnitHealthPred(unit)
     elseif (event == "UNIT_NAME_UPDATE") then
         NP:UnitName(unit)
@@ -803,6 +896,51 @@ function NP:OnEvent(event, unit, ...)
     elseif (event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_INTERRUPTIBLE") then
         NP:CastNonInterruptable(event, unit)
     end
+end
+
+-- REGISTER EVENTS
+
+function NP:RegisterEvents()
+    local SecureEventFrame = NP.SecureFrame
+
+    -- NAMEPLATE
+    SecureEventFrame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+    SecureEventFrame:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
+    SecureEventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    SecureEventFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+    -- HEALTH
+    SecureEventFrame:RegisterEvent("UNIT_HEALTH")
+    SecureEventFrame:RegisterEvent("UNIT_MAXHEALTH")
+    -- HEALTH PRED
+    SecureEventFrame:RegisterEvent("UNIT_HEAL_PREDICTION")
+    SecureEventFrame:RegisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
+    SecureEventFrame:RegisterEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
+    -- NAME
+    SecureEventFrame:RegisterEvent("UNIT_NAME_UPDATE")
+    -- THREAT
+    SecureEventFrame:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE")
+    SecureEventFrame:RegisterEvent("UNIT_THREAT_LIST_UPDATE")
+    -- CASTBAR
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_START")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_STOP")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_DELAYED")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_FAILED")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE")
+    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
+    -- ICONS
+    SecureEventFrame:RegisterEvent("RAID_TARGET_UPDATE")
+    -- ON EVENT
+    SecureEventFrame:SetScript("OnEvent", function(_, event, ...) 
+        NP:OnEvent(event, ...) 
+    end)
 end
 
 -- SET CVARS
@@ -834,52 +972,6 @@ function NP:SetCVarOnLogin()
     SetCVar("nameplateShowOnlyNameForFriendlyPlayerUnits", 1)
     -- Never Show
     SetCVar("nameplateShowSelf", 0)
-end
-
--- REGISTER EVENTS
-
-function NP:RegisterEvents()
-    local SecureEventFrame = NP.SecureFrame
-
-    -- NAMEPLATE
-    SecureEventFrame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
-    SecureEventFrame:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
-    SecureEventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
-    SecureEventFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
-    -- HEALTH
-    SecureEventFrame:RegisterEvent("UNIT_HEALTH")
-    SecureEventFrame:RegisterEvent("UNIT_MAXHEALTH")
-    -- HEALTH PRED
-    SecureEventFrame:RegisterEvent("UNIT_HEAL_PREDICTION")
-    SecureEventFrame:RegisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
-    SecureEventFrame:RegisterEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
-    SecureEventFrame:RegisterEvent("UNIT_MAX_HEALTH_MODIFIERS_CHANGED")
-    -- NAME
-    SecureEventFrame:RegisterEvent("UNIT_NAME_UPDATE")
-    -- THREAT
-    SecureEventFrame:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE")
-    SecureEventFrame:RegisterEvent("UNIT_THREAT_LIST_UPDATE")
-    -- CASTBAR
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_START")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_START")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_STOP")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_STOP")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_DELAYED")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_EMPOWER_UPDATE")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_FAILED")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE")
-    SecureEventFrame:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
-    -- ICONS
-    SecureEventFrame:RegisterEvent("RAID_TARGET_UPDATE")
-    -- ON EVENT
-    SecureEventFrame:SetScript("OnEvent", function(_, event, ...) 
-        NP:OnEvent(event, ...) 
-    end)
 end
 
 -- INITIALIZE

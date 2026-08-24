@@ -21,10 +21,13 @@ function UF:Spawn(Unit, Width, Height, Orientation)
     end
 
     local Frame = CreateFrame("Button", "FeelUI_"..Unit, UF.SecureFrame, "SecureUnitButtonTemplate, PingableUnitFrameTemplate")
-    Frame.unit = Unit
-
     Frame:Size(Width or 228, Height or 36)
+
+    -- SET UNIT
+    Frame.unit = Unit
     Frame:SetAttribute("unit", Unit)
+
+    -- SET ATTRIBUTE
     Frame:RegisterForClicks("AnyUp")
     Frame:SetAttribute("type1", "target")
     Frame:SetAttribute("type2", "togglemenu")

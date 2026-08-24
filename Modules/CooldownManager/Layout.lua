@@ -79,7 +79,7 @@ function CDM:HookViewer(Viewer)
     self.ViewerHooks[Viewer] = true
 
     hooksecurefunc(Container, "RefreshLayout", function(self)
-        if (not self) then
+        if (not self or self:IsForbidden() or UI:IsSecretValue(self)) then
             return
         end
 
@@ -91,13 +91,11 @@ function CDM:HookViewer(Viewer)
 
         local Spacing = AnchorData.IconSpacing or 0
 
-        if (not UI:IsSecretValue(self)) then
-            if (self.childXPadding ~= Spacing) then
-                self.childXPadding = UI:Scale(Spacing)
-                self:Layout()
-            end
+        if (self.childXPadding ~= Spacing) then
+            self.childXPadding = UI:Scale(Spacing)
+            self:Layout()
         end
-
+    
         CDM:UpdateAnchors()
     end)
 end

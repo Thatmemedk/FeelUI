@@ -8,27 +8,6 @@ local _G = _G
 local unpack = unpack
 local select = select
 
-function UF:OnHide()
-    if (not self:IsShown()) then
-        self:SetAlpha(0)
-    end
-
-    UI:UIFrameFadeOut(self, UF.FadeInTime, self:GetAlpha(), 0)
-end
-
-function UF:OnShow()
-    if (not self:IsShown()) then
-        self:SetAlpha(0)
-    end
-
-    UI:UIFrameFadeIn(self, UF.FadeInTime, self:GetAlpha(), 1)
-end
-
-function UF:CreateFadeInOut(Frame)
-    Frame:SetScript("OnShow", UF.OnShow)
-    Frame:SetScript("OnHide", UF.OnHide)
-end
-
 function UF:CreateOnEnterLeave(Frame)
     Frame:SetScript("OnEnter", _G.UnitFrame_OnEnter)
     Frame:SetScript("OnLeave", _G.UnitFrame_OnLeave)

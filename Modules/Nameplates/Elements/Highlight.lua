@@ -78,13 +78,11 @@ function NP:CreateHighlightMouseOver(Frame)
     end)
 
     -- On Hide
-    Frame:HookScript("OnHide", self.HighlightOnHide)
+    Frame:HookScript("OnHide", function(self)
+        self.HighlightMouseOver:Hide()
+    end)
 
     Frame.HighlightMouseOver = HighlightMouseOver
-end
-
-function NP:HighlightOnHide()
-    self.HighlightMouseOver:Hide()
 end
 
 function NP:CreateTargetIndicator(Frame)

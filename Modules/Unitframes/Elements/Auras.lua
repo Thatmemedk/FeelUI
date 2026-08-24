@@ -46,7 +46,7 @@ function UF:CreateDebuffsTarget(Frame)
         Duration = true,
         Border = true,
         DebuffIndicator = false,
-        Filter = "HARMFUL|PLAYER",
+        Filter = "HARMFUL",
         MaxAuras = 7,
         HideTooltipInCombat = true,
     })
@@ -71,8 +71,12 @@ function UF:CreatePartyDebuffs(Frame)
         Duration = true,
         Border = true,
         DebuffIndicator = true,
-        Filter = "HARMFUL|RAID_PLAYER_DISPELLABLE",
+        Filter = "HARMFUL|IMPORTANT",
         MaxAuras = 7,
+        CandidateFilters = {
+            includeSpellIDs = UF.AuraFilter.Whitelist,
+            excludeSpellIDs = UF.AuraFilter.Blacklist,
+        },
     })
 
     Frame.Debuffs = Debuffs
@@ -96,6 +100,10 @@ function UF:CreatePartyBuffs(Frame)
         Border = false,
         Filter = "HELPFUL|PLAYER|RAID",
         MaxAuras = 7,
+        CandidateFilters = {
+            includeSpellIDs = UF.AuraFilter.Whitelist,
+            excludeSpellIDs = UF.AuraFilter.Blacklist,
+        },
     })
 
    Frame.Buffs = Buffs
@@ -140,8 +148,12 @@ function UF:CreateRaidDebuffs(Frame)
         Duration = true,
         Border = true,
         DebuffIndicator = false,
-        Filter = "HARMFUL",
+        Filter = "HARMFUL|DISPELLABLE",
         MaxAuras = 2,
+        CandidateFilters = {
+            includeSpellIDs = UF.AuraFilter.Whitelist,
+            excludeSpellIDs = UF.AuraFilter.Blacklist,
+        },
     })
 
     Frame.Debuffs = Debuffs

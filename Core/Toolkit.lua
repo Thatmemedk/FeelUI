@@ -166,7 +166,7 @@ end
 --------------------
 
 local function SetFontTemplate(self, FontTemplate, FontSize, ShadowOffsetX, ShadowOffsetY, ShadowColor)
-	if not (self and not self:IsForbidden()) then
+	if not (self or self:IsForbidden()) then
 		return
 	end
 
@@ -266,62 +266,6 @@ local function SetInside(self, Anchor, OffsetX, OffsetY, Anchor2)
 	self:Point("BOTTOMRIGHT", Anchor2 or Anchor, "BOTTOMRIGHT", -OffsetX, OffsetY)
 end
 
-local function SetOutsideRight(self, Anchor, OffsetX, OffsetY, Anchor2)
-	OffsetX = OffsetX or 0
-	OffsetY = OffsetY or 0
-	Anchor = Anchor or self:GetParent()
-
-	if UI:PointsRestricted(self) or self:GetPoint() then
-		self:ClearAllPoints()
-	end
-
-	DisablePixelSnap(self)
-	self:Point("TOPLEFT", Anchor, "TOPRIGHT", OffsetX, OffsetY)
-	self:Point("BOTTOMLEFT", Anchor2 or Anchor, "BOTTOMRIGHT", OffsetX, OffsetY)
-end
-
-local function SetInsideRight(self, Anchor, OffsetX, OffsetY, Anchor2)
-	OffsetX = OffsetX or 0
-	OffsetY = OffsetY or 0
-	Anchor = Anchor or self:GetParent()
-
-	if UI:PointsRestricted(self) or self:GetPoint() then
-		self:ClearAllPoints()
-	end
-
-	DisablePixelSnap(self)
-	self:Point("TOPRIGHT", Anchor, "TOPRIGHT", OffsetX, OffsetY)
-	self:Point("BOTTOMRIGHT", Anchor2 or Anchor, "BOTTOMRIGHT", OffsetX, OffsetY)
-end
-
-local function SetOutsideTop(self, Anchor, OffsetX, OffsetY, Anchor2)
-	OffsetX = OffsetX or 0
-	OffsetY = OffsetY or 0
-	Anchor = Anchor or self:GetParent()
-
-	if UI:PointsRestricted(self) or self:GetPoint() then
-		self:ClearAllPoints()
-	end
-
-	DisablePixelSnap(self)
-	self:Point("BOTTOMLEFT", Anchor, "TOPLEFT", OffsetX, OffsetY)
-	self:Point("BOTTOMRIGHT", Anchor2 or Anchor, "TOPRIGHT", OffsetX, OffsetY)
-end
-
-local function SetInsideTop(self, Anchor, OffsetX, OffsetY, Anchor2)
-	OffsetX = OffsetX or 0
-	OffsetY = OffsetY or 0
-	Anchor = Anchor or self:GetParent()
-
-	if UI:PointsRestricted(self) or self:GetPoint() then
-		self:ClearAllPoints()
-	end
-
-	DisablePixelSnap(self)
-	self:Point("TOPLEFT", Anchor, "TOPLEFT", OffsetX, OffsetY)
-	self:Point("TOPRIGHT", Anchor2 or Anchor, "TOPRIGHT", OffsetX, OffsetY)
-end
-
 ------------------------
 -- Borders & Backdrop --
 ------------------------
@@ -334,7 +278,7 @@ local function SetTemplate(self, ExtraShadowBorders)
 	self.FrameRaised = CreateFrame("Frame", nil, self)
 	self.FrameRaised:SetFrameLevel(self:GetFrameLevel() + 1)
 	self.FrameRaised:SetFrameStrata(self:GetFrameStrata())
-	self.FrameRaised:SetAllPoints()	
+	self.FrameRaised:SetAllPoints()
 
 	self.Border = {}
 	
@@ -1122,10 +1066,6 @@ local function AddAPI(object)
 	if not object.Point then mt.Point = Point end
 	if not object.SetOutside then mt.SetOutside = SetOutside end
 	if not object.SetInside then mt.SetInside = SetInside end
-	if not object.SetOutsideRight then mt.SetOutsideRight = SetOutsideRight end
-	if not object.SetInsideRight then mt.SetInsideRight = SetInsideRight end
-	if not object.SetOutsideTop then mt.SetOutsideTop = SetOutsideTop end
-	if not object.SetInsideTop then mt.SetInsideTop = SetInsideTop end
 	-- Borders & Backdrop
 	if not object.SetTemplate then mt.SetTemplate = SetTemplate end
 	if not object.SetBackdropTemplate then mt.SetBackdropTemplate = SetBackdropTemplate end

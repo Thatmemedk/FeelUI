@@ -508,7 +508,7 @@ function UI:InitializeAuraHighlight(Button)
     end
 
     -- Button
-    Button:SetFrameLevel(Button:GetFrameLevel() +6)
+    Button:SetFrameLevel(Button:GetFrameLevel() + 6)
     Button:SetInside()
     Button:EnableMouse(false)
 

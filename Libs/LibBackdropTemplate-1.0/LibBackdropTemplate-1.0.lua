@@ -104,6 +104,10 @@ local function SetupBackdropTextureCoordinates(Region, PieceSetup, RepeatX, Repe
 end
 
 function LibBackdropTemplateMixin:SetupTextureCoordinates()
+    if (self:IsForbidden() or UI:IsSecretValue(self)) then
+        return
+    end
+
     local Width = self:GetWidth()
     local Height = self:GetHeight()
     local EffectiveScale = self:GetEffectiveScale()

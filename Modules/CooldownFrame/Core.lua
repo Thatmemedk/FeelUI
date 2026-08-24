@@ -31,6 +31,12 @@ function Cooldown:Initialize()
             local Region = select(i, self:GetRegions())
 
             if (Region and Region.GetText) then
+                local InvisFrame = CreateFrame("Frame", nil, self)
+                InvisFrame:SetFrameStrata("HIGH")
+                InvisFrame:SetFrameLevel(self:GetFrameLevel() + 10)
+                InvisFrame:SetInside()
+
+                Region:SetParent(InvisFrame)
                 Region:ClearAllPoints()
 
                 if (Cooldown:IsActionBarParent(self)) then

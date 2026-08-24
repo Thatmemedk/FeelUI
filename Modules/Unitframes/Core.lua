@@ -164,6 +164,8 @@ function UF:UpdateHealthTextCur(Frame, Unit)
         return
     end
 
+    UnitGetDetailedHealPrediction(Unit, "player", Frame.Health.Value)
+
     local Min = Frame.Health.Value:GetCurrentHealth()
     local Max = Frame.Health.Value:GetMaximumHealth()
 
@@ -214,67 +216,102 @@ function UF:LayoutHealPred(Frame)
 
     local Health = Frame.Health
     local Prediction = Frame.HealthPrediction
-    local PlayerHealsBar = Prediction.PlayerHeals
-    local OtherHealsBar = Prediction.OtherHeals
-    local AllAbsorbsBar = Prediction.AllAbsorbs
-    local HealAbsorbsBar = Prediction.HealAbsorbs
-    local OverHealsBar = Prediction.OverHeals
-    local OverAbsorbsBar = Prediction.OverAbsorbs
-    local OverHealsAbsorbsBar = Prediction.OverHealsAbsorbs
+    local HealingPlayer = Prediction.HealingPlayer
+    local HealingOther = Prediction.HealingOther
+    local DamageAbsorb = Prediction.DamageAbsorb
+    local HealAbsorb = Prediction.HealAbsorb
+    local OverHealIndicator = Prediction.OverHealIndicator
+    local OverDamageAbsorbIndicator = Prediction.OverDamageAbsorbIndicator
+    local OverHealAbsorbIndicator = Prediction.OverHealAbsorbIndicator
     local Orientation = Health:GetOrientation()
-    local PrevTexture = Health:GetStatusBarTexture()
-    local BarWidth, BarHeight = Health:GetSize()    
+    local ReverseFill = Health:GetReverseFill()
+    local HealthTexture = Health:GetStatusBarTexture()
+    local BarWidth, BarHeight = Health:GetSize()
 
     -- Orientation
-    PlayerHealsBar:SetOrientation(Orientation)
-    OtherHealsBar:SetOrientation(Orientation)
-    AllAbsorbsBar:SetOrientation(Orientation)
-    HealAbsorbsBar:SetOrientation(Orientation)
+    HealingPlayer:SetOrientation(Orientation)
+    HealingOther:SetOrientation(Orientation)
+    DamageAbsorb:SetOrientation(Orientation)
+    HealAbsorb:SetOrientation(Orientation)
 
-    -- Set Reverse Fill
-    AllAbsorbsBar:SetReverseFill(true)
-    HealAbsorbsBar:SetReverseFill(true)
+    -- Reverse Fill
+    HealingPlayer:SetReverseFill(ReverseFill)
+    HealingOther:SetReverseFill(ReverseFill)
+    DamageAbsorb:SetReverseFill(true)
+    HealAbsorb:SetReverseFill(true)
 
     if (Orientation == "HORIZONTAL") then
-        PlayerHealsBar:Size(BarWidth, BarHeight)
-        OtherHealsBar:Size(BarWidth, BarHeight)
-        AllAbsorbsBar:Size(BarWidth, BarHeight)
-        HealAbsorbsBar:Size(BarWidth, BarHeight)
+        HealingPlayer:Size(BarWidth, BarHeight)
+        HealingOther:Size(BarWidth, BarHeight)
+        DamageAbsorb:Size(BarWidth, BarHeight)
+        HealAbsorb:Size(BarWidth, BarHeight)
+        OverHealIndicator:Size(2, BarHeight)
+        OverDamageAbsorbIndicator:Size(2, BarHeight)
+        OverHealAbsorbIndicator:Size(2, BarHeight)
 
         -- Player Heals
-        PlayerHealsBar:SetOutsideRight(PrevTexture, 0, 0)
+        HealingPlayer:Point("LEFT", Health)
+        HealingPlayer:Point("LEFT", HealthTexture, "RIGHT")
+
         -- Other Heals
-        OtherHealsBar:SetOutsideRight(PlayerHealsBar:GetStatusBarTexture(), 0, 0)
-        -- All Absorbs
-        AllAbsorbsBar:SetInsideRight(PrevTexture, 0, 0)
+        HealingOther:Point("LEFT", Health)
+        HealingOther:Point("LEFT", HealingPlayer:GetStatusBarTexture(), "RIGHT")
+
+        -- Damage Absorbs
+        DamageAbsorb:Point("BOTTOM", Health)
+        DamageAbsorb:Point("BOTTOMRIGHT", Health, "BOTTOMRIGHT")
+
         -- Heal Absorbs
-        HealAbsorbsBar:SetInsideRight(PrevTexture, 0, 0)
-        -- OverHeals
-        OverHealsBar:SetOutsideRight(OtherHealsBar:GetStatusBarTexture(), -1, 0)
-        -- OverAbsorbs
-        OverAbsorbsBar:SetOutsideRight(AllAbsorbsBar:GetStatusBarTexture(), 0, 0)
-        -- OverHealsAbsorbs
-        OverHealsAbsorbsBar:SetOutsideRight(HealAbsorbsBar:GetStatusBarTexture(), 0, 0)
+        HealAbsorb:Point("BOTTOM", Health)
+        HealAbsorb:Point("BOTTOMRIGHT", Health, "BOTTOMRIGHT")
+
+        -- Over Heals
+        OverHealIndicator:Point("TOPLEFT", HealingOther, "TOPRIGHT")
+        OverHealIndicator:Point("BOTTOMLEFT", HealingOther, "BOTTOMRIGHT")
+
+        -- Over Damage Absorbs
+        OverDamageAbsorbIndicator:Point("TOPLEFT", DamageAbsorb, "TOPRIGHT")
+        OverDamageAbsorbIndicator:Point("BOTTOMLEFT", DamageAbsorb, "BOTTOMRIGHT")
+
+        -- Over Heal Absorbs
+        OverHealAbsorbIndicator:Point("TOPLEFT", HealAbsorb, "TOPRIGHT")
+        OverHealAbsorbIndicator:Point("BOTTOMLEFT", HealAbsorb, "BOTTOMRIGHT")
     else
-        PlayerHealsBar:Size(BarHeight, BarWidth)
-        OtherHealsBar:Size(BarHeight, BarWidth)
-        AllAbsorbsBar:Size(BarHeight, BarWidth)
-        HealAbsorbsBar:Size(BarHeight, BarWidth)
+        HealingPlayer:Size(BarHeight, BarWidth)
+        HealingOther:Size(BarHeight, BarWidth)
+        DamageAbsorb:Size(BarHeight, BarWidth)
+        HealAbsorb:Size(BarHeight, BarWidth)
+        OverHealIndicator:Size(BarWidth, 2)
+        OverDamageAbsorbIndicator:Size(BarWidth, 2)
+        OverHealAbsorbIndicator:Size(BarWidth, 2)
 
         -- Player Heals
-        PlayerHealsBar:SetOutsideTop(PrevTexture, 0, 0)
+        HealingPlayer:Point("BOTTOMLEFT", HealthTexture, "TOPLEFT")
+        HealingPlayer:Point("BOTTOMRIGHT", HealthTexture, "TOPRIGHT")
+
         -- Other Heals
-        OtherHealsBar:SetOutsideTop(PlayerHealsBar:GetStatusBarTexture(), 0, 0)
-        -- All Absorbs
-        AllAbsorbsBar:SetInsideTop(PrevTexture, 0, 0)
+        HealingOther:Point("BOTTOMLEFT", HealingPlayer:GetStatusBarTexture(), "TOPLEFT")
+        HealingOther:Point("BOTTOMRIGHT", HealingPlayer:GetStatusBarTexture(), "TOPRIGHT")
+
+        -- Damage Absorbs
+        DamageAbsorb:Point("TOPLEFT", HealthTexture, "TOPLEFT")
+        DamageAbsorb:Point("TOPRIGHT", HealthTexture, "TOPRIGHT")
+
         -- Heal Absorbs
-        HealAbsorbsBar:SetInsideTop(PrevTexture, 0, 0)
-        -- OverHeals
-        OverHealsBar:SetOutsideTop(OtherHealsBar:GetStatusBarTexture(), 0, 0)
-        -- OverAbsorbs
-        OverAbsorbsBar:SetOutsideTop(AllAbsorbsBar:GetStatusBarTexture(), 0, 0)
-        -- OverHealsAbsorbs
-        OverHealsAbsorbsBar:SetOutsideTop(HealAbsorbsBar:GetStatusBarTexture(), 0, 0)
+        HealAbsorb:Point("TOPLEFT", HealthTexture, "TOPLEFT")
+        HealAbsorb:Point("TOPRIGHT", HealthTexture, "TOPRIGHT")
+
+        -- Over Heals
+        OverHealIndicator:Point("BOTTOMLEFT", HealingOther, "TOPLEFT")
+        OverHealIndicator:Point("BOTTOMRIGHT", HealingOther, "TOPRIGHT")
+
+        -- Over Damage Absorbs
+        OverDamageAbsorbIndicator:Point("BOTTOMLEFT", DamageAbsorb, "TOPLEFT")
+        OverDamageAbsorbIndicator:Point("BOTTOMRIGHT", DamageAbsorb, "TOPRIGHT")
+
+        -- Over Heal Absorbs
+        OverHealAbsorbIndicator:Point("BOTTOMLEFT", HealAbsorb, "TOPLEFT")
+        OverHealAbsorbIndicator:Point("BOTTOMRIGHT", HealAbsorb, "TOPRIGHT")
     end
 
     Prediction.LayoutIsCreated = true
@@ -292,13 +329,13 @@ function UF:UpdateHealthPred(Frame, Unit)
     end
 
     local Calculator = Prediction.Calculator
-    local PlayerHealsBar = Prediction.PlayerHeals
-    local OtherHealsBar = Prediction.OtherHeals
-    local AllAbsorbsBar = Prediction.AllAbsorbs
-    local HealAbsorbsBar = Prediction.HealAbsorbs
-    local OverHealsBar = Prediction.OverHeals
-    local OverAbsorbsBar = Prediction.OverAbsorbs
-    local OverHealsAbsorbsBar = Prediction.OverHealsAbsorbs
+    local HealingPlayer = Prediction.HealingPlayer
+    local HealingOther = Prediction.HealingOther
+    local OverHealIndicator = Prediction.OverHealIndicator
+    local DamageAbsorb = Prediction.DamageAbsorb
+    local OverDamageAbsorbIndicator = Prediction.OverDamageAbsorbIndicator
+    local HealAbsorb = Prediction.HealAbsorb
+    local OverHealAbsorbIndicator = Prediction.OverHealAbsorbIndicator
 
     UnitGetDetailedHealPrediction(Unit, "player", Calculator)
 
@@ -308,28 +345,43 @@ function UF:UpdateHealthPred(Frame, Unit)
     local HealAbsorbAmount, HealAbsorbClamped = Calculator:GetHealAbsorbs()
     local Max = UnitHealthMax(Unit)
 
-    PlayerHealsBar:SetMinMaxValues(0, Max)
-    PlayerHealsBar:SetValue(PlayerHeals, UI.SmoothBars)
+    if (HealingPlayer or HealingOther or OverHealIndicator) then
+        if (HealingPlayer) then
+            HealingPlayer:SetMinMaxValues(0, Max)
+            HealingPlayer:SetValue(PlayerHeals, UI.SmoothBars)
+        end
 
-    OtherHealsBar:SetMinMaxValues(0, Max)
-    OtherHealsBar:SetValue(OtherHeals, UI.SmoothBars)
+        if (HealingOther) then
+            HealingOther:SetMinMaxValues(0, Max)
+            HealingOther:SetValue(OtherHeals, UI.SmoothBars)
+        end
 
-    AllAbsorbsBar:SetMinMaxValues(0, Max)
-    AllAbsorbsBar:SetValue(AbsorbsAmount, UI.SmoothBars)
+        if (OverHealIndicator) then
+            OverHealIndicator:SetAlphaFromBoolean(HealingClamped, 1, 0)
+        end
+    end
 
-    HealAbsorbsBar:SetMinMaxValues(0, Max)
-    HealAbsorbsBar:SetValue(HealAbsorbAmount, UI.SmoothBars)
+    if (DamageAbsorb or OverDamageAbsorbIndicator) then
+        if (DamageAbsorb) then
+            DamageAbsorb:SetMinMaxValues(0, Max)
+            DamageAbsorb:SetValue(AbsorbsAmount, UI.SmoothBars)
+        end
 
-    -- Healing Prediction
-    PlayerHealsBar:SetAlphaFromBoolean(PlayerHeals, 1, 0)
-    OtherHealsBar:SetAlphaFromBoolean(OtherHeals, 1, 0)
-    AllAbsorbsBar:SetAlphaFromBoolean(AbsorbsAmount, 1, 0)
-    HealAbsorbsBar:SetAlphaFromBoolean(HealAbsorbAmount, 1, 0)
+        if (OverDamageAbsorbIndicator) then
+            OverDamageAbsorbIndicator:SetAlphaFromBoolean(AbsorbsClamped, 1, 0)
+        end
+    end
 
-    -- Over Healing/Absorbs
-    OverHealsBar:SetAlphaFromBoolean(HealingClamped, 1, 0)
-    OverAbsorbsBar:SetAlphaFromBoolean(AbsorbsClamped, 1, 0)
-    OverHealsAbsorbsBar:SetAlphaFromBoolean(HealAbsorbClamped, 1, 0)
+    if (HealAbsorb or OverHealAbsorbIndicator) then
+        if (HealAbsorb) then
+            HealAbsorb:SetMinMaxValues(0, Max)
+            HealAbsorb:SetValue(HealAbsorbAmount, UI.SmoothBars)
+        end
+
+        if (OverHealAbsorbIndicator) then
+            OverHealAbsorbIndicator:SetAlphaFromBoolean(HealAbsorbClamped, 1, 0)
+        end
+    end
 end
 
 --- UPDATE POWER
@@ -443,10 +495,6 @@ function UF:UpdateName(Frame, Unit, TypeFrame)
     end
 
     if (TypeFrame == "Raid") then
-        if (not UnitIsConnected(Unit) or UnitIsGhost(Unit) or UnitIsDead(Unit)) then
-            R, G, B = 0.25, 0.25, 0.25
-        end
-
         Text = UI:UTF8Sub(Name, 8)
     elseif (TypeFrame == "Party") then
         Text = UI:UTF8Sub(Name, 12)
@@ -884,7 +932,7 @@ function UF:UpdateRangeState(Frame, Unit)
 
     if (not Exists) then
         Range = true
-    elseif (UnitIsDeadOrGhost(Unit)) then
+    elseif (UnitIsDeadOrGhost(Unit) or not UnitIsConnected(Unit)) then
         Range = true
     elseif (UnitCanAttack("player", Unit)) then
         Range = UF:CheckUnitCategoryRange(Unit, "ENEMY")
@@ -1343,7 +1391,7 @@ function UF:OnEvent(event, unit, ...)
     if (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
         UF:UnitHealth(unit)
         UF:UnitStatusIcons(unit)
-    elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED" or event == "UNIT_MAX_HEALTH_MODIFIERS_CHANGED") then
+    elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED") then
         UF:UnitHealthPred(unit)
     elseif (event == "UNIT_DISPLAYPOWER" or event == "UNIT_POWER_FREQUENT" or event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER") then
         UF:UnitPower(unit)
@@ -1427,7 +1475,6 @@ function UF:RegisterEvents()
     SecureEventFrame:RegisterEvent("UNIT_HEAL_PREDICTION")
     SecureEventFrame:RegisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
     SecureEventFrame:RegisterEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
-    SecureEventFrame:RegisterEvent("UNIT_MAX_HEALTH_MODIFIERS_CHANGED")
     -- POWER
     SecureEventFrame:RegisterEvent("UNIT_POWER_FREQUENT")
     SecureEventFrame:RegisterEvent("UNIT_MAXPOWER")

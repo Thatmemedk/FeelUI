@@ -9,7 +9,6 @@ local unpack = unpack
 local select = select
 
 function UF:CreateBoss(Frame, Height, Orientation)
-    self:CreateFadeInOut(Frame)
     self:CreateOnEnterLeave(Frame)
     self:CreatePanels(Frame)
     self:CreateHighlight(Frame)

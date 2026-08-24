@@ -40,6 +40,10 @@ function CDM:Initialize()
 		LoadAddOn("Blizzard_CooldownViewer")
 	end
 
+    if (_G.CinematicFrame:IsShown() or _G.MovieFrame:IsShown()) then
+        return
+    end
+
 	self:UpdateLayout()
 	self:UpdateIcons()
 	--self:UpdateTracker()

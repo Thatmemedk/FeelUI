@@ -27,7 +27,7 @@ function CH:SafeHide(Frame)
 end
 
 function CH:StyleFrames(Frame)
-	if (Frame.ChatIsSkinned) then
+	if (not Frame or Frame.ChatIsSkinned) then
 		return
 	end
 
@@ -126,13 +126,16 @@ end
 function CH:SetupChat()
 	for i = 1, NUM_CHAT_WINDOWS do
 		local Frame = _G["ChatFrame"..i]
-		self:StyleFrames(Frame)
-		
-		if (not Frame.isLocked) then
-			_G.FCF_SetLocked(Frame, 1)
-		end
 
-		self.SetChatFramePosition(Frame)
+		if (Frame) then
+			self:StyleFrames(Frame)
+
+			if (not Frame.isLocked) then
+				_G.FCF_SetLocked(Frame, 1)
+			end
+
+			self.SetChatFramePosition(Frame)
+		end
 	end
 end
 

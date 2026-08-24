@@ -9,7 +9,6 @@ local unpack = unpack
 local select = select
 
 function UF:CreateRaid(Frame)
-    self:CreateFadeInOut(Frame)
     self:CreatePanels(Frame)
     self:CreateHighlight(Frame)
     self:CreateHighlightTarget(Frame)

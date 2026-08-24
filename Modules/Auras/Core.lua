@@ -42,7 +42,7 @@ function Auras:CreatePlayerAuras()
         Y = 0,
         Width = ButtonWidth,
         Height = ButtonHeight,
-        Spacing = DB.Global.Auras.ButtonSpacing,
+        Spacing = UI:Scale(DB.Global.Auras.ButtonSpacing),
         Cooldown = false,
         Count = true,
         Duration = true,
@@ -61,7 +61,7 @@ function Auras:CreatePlayerAuras()
         Y = 0,
         Width = ButtonWidth+6,
         Height = ButtonHeight+6,
-        Spacing = DB.Global.Auras.ButtonSpacing+2,
+        Spacing = UI:Scale(DB.Global.Auras.ButtonSpacing+2),
         Cooldown = false,
         Count = true,
         Duration = true,
@@ -77,16 +77,6 @@ function Auras:CreatePlayerAuras()
     self.DebuffFrame = DebuffFrame
 end
 
-function Auras:OnEvent()
-    self.BuffsFrame:UpdateAllAuras()
-    self.DebuffFrame:UpdateAllAuras()
-end
-
-function Auras:RegisterEvents()
-    self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:SetScript("OnEvent", self.OnEvent)
-end
-
 function Auras:Initialize()
     if (not DB.Global.Auras.Enable) then 
         return 
@@ -95,5 +85,4 @@ function Auras:Initialize()
     self:DisableBlizzardAuras()
     self:CreateAnchors()
     self:CreatePlayerAuras()
-    self:RegisterEvents()
 end
