@@ -42,7 +42,6 @@ function AB:StyleActionButton(Button, Icon, Name)
     local AutoCastable = Button.AutoCastable
     local LossControlCD = Button.lossOfControlCooldown
     local Arrow = Button.Arrow
-
     local SpellAnimTexture = Button.SpellCastAnimFrame
     local TargetReticleAnimTexture = Button.TargetReticleAnimFrame
     local ReticleBase = TargetReticleAnimTexture and TargetReticleAnimTexture.Base
@@ -90,7 +89,11 @@ function AB:StyleActionButton(Button, Icon, Name)
     end
 
     if (InterruptBase) then
-        InterruptBase:SetInside(Button, 1, 1)
+        if (InterruptBase.Base) then
+            InterruptBase.Base:SetInside(Button, 1, 1)
+            InterruptBase.Base:SetTexture(Media.Global.Texture)
+            InterruptBase.Base:SetTexCoord(unpack(UI.TexCoords))
+        end
     end
 
     if (InterruptHighlight) then
@@ -203,7 +206,7 @@ function AB:StyleFlyout()
         local Parent = Button:GetParent()
 
         Button.Backdrop = CreateFrame("Frame", nil, Parent)
-        Button.Backdrop:SetInside(Paret, 1, 1)
+        Button.Backdrop:SetOutside(Parent, 2, 2)
         Button.Backdrop:SetFrameLevel(Parent:GetFrameLevel() - 1)
         Button.Backdrop:CreateBackdrop()
         Button.Backdrop:CreateShadow()
@@ -212,17 +215,13 @@ function AB:StyleFlyout()
     end
 
     while Button do
-        if (_G.SpellFlyout:IsShown()) then
+        if (Button:IsShown()) then
             if (not InCombatLockdown()) then
                 Button:Size(unpack(DB.Global.ActionBars.ButtonSize))
             end
         end
 
         AB.SkinButton(Button)
-
-        if (not Button.isFlyout) then
-            Button.isFlyout = true
-        end
 
         Index = Index + 1
         Button = _G["SpellFlyoutPopupButton"..Index]

@@ -7,6 +7,9 @@ local NP = UI:RegisterModule("NamePlates")
 local _G = _G
 local unpack = unpack
 local select = select
+local format = string.format
+local pairs = pairs
+local next = next
 
 -- WoW Globals
 local UnitReaction = UnitReaction
@@ -22,11 +25,23 @@ local UnitChannelInfo = UnitChannelInfo
 local UnitName = UnitName
 local UnitIsPlayer = UnitIsPlayer
 local UnitClass = UnitClass
+local UnitExists = UnitExists
+local UnitIsVisible = UnitIsVisible
+local UnitIsUnit = UnitIsUnit
+local UnitIsFriend = UnitIsFriend
+local UnitInPartyIsAI = UnitInPartyIsAI
+local UnitPlayerControlled = UnitPlayerControlled
+local UnitGetDetailedHealPrediction = UnitGetDetailedHealPrediction
 local GetRaidTargetIndex = GetRaidTargetIndex
+local SetRaidTargetIconTexture = SetRaidTargetIconTexture
 local UnitThreatSituation = UnitThreatSituation
+local GetThreatStatusColor = GetThreatStatusColor
 local UnitNameplateShowsWidgetsOnly = UnitNameplateShowsWidgetsOnly
 local UnitIsGameObject = UnitIsGameObject
-local SetCVar = C_CVar.SetCVar
+local GetGuildInfo = GetGuildInfo
+local IsInGuild = IsInGuild
+local SetCVar = _G.C_CVar.SetCVar
+local GetNamePlateForUnit = _G.C_NamePlate.GetNamePlateForUnit
 
 -- Tables
 NP.Hooked = {}
@@ -44,6 +59,12 @@ NP.CastHoldTime = 2
 NP.CurrentTargetFrame = nil
 NP.CurrentMouseoverFrame = nil
 
+-- Cache
+NP.PlayerGuildCache = {
+    InGuild = false,
+    GuildName = nil,
+}
+
 -- SecureFrame
 NP.SecureFrame = CreateFrame("Frame", "UF_SecureFrame", _G.UIParent, "SecureHandlerStateTemplate")
 NP.SecureFrame:SetAllPoints()
@@ -51,6 +72,34 @@ NP.SecureFrame:SetFrameStrata("LOW")
 RegisterStateDriver(NP.SecureFrame, "visibility", "[petbattle] hide; show")
 
 -- HEALTH UPDATE
+
+function NP:UpdateHealth(Frame, Unit)
+    if (not Frame or not Unit or not Frame.Health) then
+        return
+    end
+
+    UnitGetDetailedHealPrediction(Unit, "player", Frame.Health.Value)
+
+    local Min = Frame.Health.Value:GetCurrentHealth()
+    local Max = Frame.Health.Value:GetMaximumHealth()
+
+    Frame.Health:SetMinMaxValues(0, Max)
+
+    if (UnitIsConnected(Unit)) then
+        Frame.Health:SetValue(Min, UI.SmoothBars)
+    else
+        Frame.Health:SetValue(Max, UI.SmoothBars)
+    end
+end
+
+function NP:UpdateHealthText(Frame, Unit)
+    if (not Frame or not Unit or not Frame.HealthText) then
+        return
+    end
+
+    local Percent = UnitHealthPercent(Unit, false, UI.CurvePercent)
+    Frame.HealthText:SetFormattedText("%d%%", Percent or 0)
+end
 
 function NP:UpdateHealthColor(Frame, Unit)
     if (not Frame or not Unit or not Frame.Health) then
@@ -86,65 +135,35 @@ function NP:UpdateHealthColor(Frame, Unit)
     Frame.Health:SetBackdropColorTemplate(unpack(DB.Global.General.BackdropColor))
 end
 
-function NP:UpdateHealth(Frame, Unit)
+function NP:UpdateHealthAll(Frame, Unit)
     if (not Frame or not Unit or not Frame.Health) then
         return
     end
 
-    UnitGetDetailedHealPrediction(Unit, "player", Frame.Health.Value)
-
-    local Min = Frame.Health.Value:GetCurrentHealth()
-    local Max = Frame.Health.Value:GetMaximumHealth()
-
-    Frame.Health:SetMinMaxValues(0, Max)
-
-    if (UnitIsConnected(Unit)) then
-        Frame.Health:SetValue(Min, UI.SmoothBars)
-    else
-        Frame.Health:SetValue(Max, UI.SmoothBars)
-    end
-
+    self:UpdateHealth(Frame, Unit)
+    self:UpdateHealthText(Frame, Unit)
     self:UpdateHealthColor(Frame, Unit)
-end
-
-function NP:UpdateHealthText(Frame, Unit)
-    if (not Frame or not Unit or not Frame.HealthText) then
-        return
-    end
-
-    local Percent = UnitHealthPercent(Unit, false, UI.CurvePercent)
-    Frame.HealthText:SetFormattedText("%d%%", Percent or 0)
 end
 
 -- HEAL PRED
 
-function NP:LayoutHealPred(Frame)
+function NP:UpdateHealthPredLayout(Frame)
     if (not Frame or not Frame.Health or not Frame.HealthPrediction) then
         return
     end
 
     local Health = Frame.Health
-    local Prediction = Frame.HealthPrediction
-    local HealingPlayer = Prediction.HealingPlayer
-    local HealingOther = Prediction.HealingOther
-    local DamageAbsorb = Prediction.DamageAbsorb
-    local HealAbsorb = Prediction.HealAbsorb
-    local OverHealIndicator = Prediction.OverHealIndicator
-    local OverDamageAbsorbIndicator = Prediction.OverDamageAbsorbIndicator
-    local OverHealAbsorbIndicator = Prediction.OverHealAbsorbIndicator
+    local HealingPlayer = Frame.HealthPrediction.HealingPlayer
+    local HealingOther = Frame.HealthPrediction.HealingOther
+    local DamageAbsorb = Frame.HealthPrediction.DamageAbsorb
+    local HealAbsorb = Frame.HealthPrediction.HealAbsorb
+    local OverHealIndicator = Frame.HealthPrediction.OverHealIndicator
+    local OverDamageAbsorbIndicator = Frame.HealthPrediction.OverDamageAbsorbIndicator
+    local OverHealAbsorbIndicator = Frame.HealthPrediction.OverHealAbsorbIndicator
     local Orientation = Health:GetOrientation()
     local ReverseFill = Health:GetReverseFill()
     local HealthTexture = Health:GetStatusBarTexture()
     local BarWidth, BarHeight = Health:GetSize()
-
-    -- Size
-    HealingPlayer:Size(BarWidth, BarHeight)
-    HealingOther:Size(BarWidth, BarHeight)
-    DamageAbsorb:Size(BarWidth, BarHeight)
-    HealAbsorb:Size(BarWidth, BarHeight)
-    OverHealIndicator:Size(2, BarHeight)
-    OverDamageAbsorbIndicator:Size(2, BarHeight)
-    OverHealAbsorbIndicator:Size(2, BarHeight)
 
     -- Orientation
     HealingPlayer:SetOrientation(Orientation)
@@ -231,8 +250,6 @@ function NP:LayoutHealPred(Frame)
         OverHealAbsorbIndicator:Point("BOTTOMLEFT", HealAbsorb, "TOPLEFT")
         OverHealAbsorbIndicator:Point("BOTTOMRIGHT", HealAbsorb, "TOPRIGHT")
     end
-
-    Prediction.LayoutIsCreated = true
 end
 
 function NP:UpdateHealthPred(Frame, Unit)
@@ -240,20 +257,14 @@ function NP:UpdateHealthPred(Frame, Unit)
         return
     end
 
-    local Prediction = Frame.HealthPrediction
-
-    if (not Prediction.LayoutIsCreated) then
-        NP:LayoutHealPred(Frame)
-    end
-
-    local Calculator = Prediction.Calculator
-    local HealingPlayer = Prediction.HealingPlayer
-    local HealingOther = Prediction.HealingOther
-    local OverHealIndicator = Prediction.OverHealIndicator
-    local DamageAbsorb = Prediction.DamageAbsorb
-    local OverDamageAbsorbIndicator = Prediction.OverDamageAbsorbIndicator
-    local HealAbsorb = Prediction.HealAbsorb
-    local OverHealAbsorbIndicator = Prediction.OverHealAbsorbIndicator
+    local Calculator = Frame.HealthPrediction.Calculator
+    local HealingPlayer = Frame.HealthPrediction.HealingPlayer
+    local HealingOther = Frame.HealthPrediction.HealingOther
+    local OverHealIndicator = Frame.HealthPrediction.OverHealIndicator
+    local DamageAbsorb = Frame.HealthPrediction.DamageAbsorb
+    local OverDamageAbsorbIndicator = Frame.HealthPrediction.OverDamageAbsorbIndicator
+    local HealAbsorb = Frame.HealthPrediction.HealAbsorb
+    local OverHealAbsorbIndicator = Frame.HealthPrediction.OverHealAbsorbIndicator
 
     UnitGetDetailedHealPrediction(Unit, "player", Calculator)
 
@@ -300,6 +311,10 @@ function NP:UpdateHealthPred(Frame, Unit)
             OverHealAbsorbIndicator:SetAlphaFromBoolean(HealAbsorbClamped, 1, 0)
         end
     end
+
+    if (Frame.HealthPrediction) then
+        self:UpdateHealthPredLayout(Frame)
+    end
 end
 
 -- NAME UPDATE
@@ -310,20 +325,29 @@ function NP:UpdateName(Frame, Unit)
     end
 
     local Name = UnitName(Unit) or ""
-    Frame.Name:SetText(Name)
+    local R, G, B = 1, 1, 1
 
     if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
         local _, Class = UnitClass(Unit)
 
         if (not UI:IsSecretValue(Class)) then
             local Color = UI.Colors.Class[Class]
-            Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+
+            if (Color) then
+                R, G, B = Color.r, Color.g, Color.b
+            end
         end
     else
         local Reaction = UnitReaction(Unit, "player")
         local Color = UI.Colors.Reaction[Reaction]
-        Frame.Name:SetTextColor(Color.r, Color.g, Color.b)
+
+        if (Color) then
+            R, G, B = Color.r, Color.g, Color.b
+        end
     end
+
+    Frame.Name:SetText(Name)
+    Frame.Name:SetTextColor(R, G, B)
 end
 
 function NP:UpdateGuild(Frame, Unit)
@@ -331,17 +355,27 @@ function NP:UpdateGuild(Frame, Unit)
         return
     end
 
-    local GuildName, GuildRankName = GetGuildInfo(Unit)
+    local GuildName = GetGuildInfo(Unit)
 
     if (not GuildName) then
         Frame.Guild:SetText("")
+
         return
     end
 
-    local SameGuild = IsInGuild() and GetGuildInfo("player") == GuildName
+    local Cache = NP.PlayerGuildCache
+    local SameGuild = Cache.InGuild and Cache.GuildName == GuildName
     local ColorFormat = SameGuild and "|CFFFF66CC[%s]|r" or "|CFFFFFFFF[%s]|r"
-    Frame.Guild:SetText(string.format(ColorFormat, GuildName))
+    
+    Frame.Guild:SetText(format(ColorFormat, GuildName))
 end
+
+function NP:RefreshPlayerGuildCache()
+    local InGuild = IsInGuild()
+    NP.PlayerGuildCache.InGuild = InGuild
+    NP.PlayerGuildCache.GuildName = InGuild and GetGuildInfo("player") or nil
+end
+
 
 -- ICONS
 
@@ -430,8 +464,7 @@ function NP:RefreshUnit(Frame, Unit)
     end
 
     -- HEALTH
-    if (Frame.Health) then self:UpdateHealth(Frame, Unit) end
-    if (Frame.HealthText) then self:UpdateHealthText(Frame, Unit) end
+    if (Frame.Health) then self:UpdateHealthAll(Frame, Unit) end
     if (Frame.HealthPrediction) then self:UpdateHealthPred(Frame, Unit) end
 
     -- NAME
@@ -497,12 +530,8 @@ function NP:UnitHealth(Unit)
     local Frame = self.EnemyFrames[Unit]
 
     if (Frame and UnitExists(Unit)) then
-        if (Frame.Health) then 
-            self:UpdateHealth(Frame, Unit)
-        end
-
-        if (Frame.HealthText) then 
-            self:UpdateHealthText(Frame, Unit)
+        if (Frame.Health) then
+            self:UpdateHealthAll(Frame, Unit)
         end
     end
 end
@@ -557,7 +586,7 @@ function NP:UnitTargetChanged()
     local NewFrame = nil
 
     if (UnitExists("target")) then
-        local Plate = C_NamePlate.GetNamePlateForUnit("target")
+        local Plate = GetNamePlateForUnit("target")
         NewFrame = Plate and (Plate.EnemyNP or Plate.FriendlyNP)
     end
 
@@ -578,7 +607,7 @@ function NP:UnitMouseOver()
     local NewFrame = nil
 
     if (UnitExists("mouseover")) then
-        local Plate = C_NamePlate.GetNamePlateForUnit("mouseover")
+        local Plate = GetNamePlateForUnit("mouseover")
         NewFrame = Plate and Plate.EnemyNP
     end
 
@@ -604,12 +633,12 @@ function NP:UnitRaidIcon()
 end
 
 function NP:CastBarOnNamePlateUnitAdded(Unit)
-    local Casting = UnitCastingInfo(Unit)
-    local Channeling = UnitChannelInfo(Unit)
-
     if (not Unit or not UnitExists(Unit) or not UnitIsVisible(Unit)) then
         return
     end
+
+    local Casting = UnitCastingInfo(Unit)
+    local Channeling = UnitChannelInfo(Unit)
 
     if (Casting or Channeling) then
         NP:CastStarted("UNIT_SPELLCAST_START", Unit)
@@ -637,8 +666,20 @@ end
 
 -- EVENT HANDLER
 
+function NP:ClearFrames(Frame, Cache)
+    local OldUnit = Frame.unit
+
+    if (OldUnit and Cache[OldUnit] == Frame) then
+        Cache[OldUnit] = nil
+    end
+
+    Frame.unit = nil
+    Frame:SetAttribute("unit", nil)
+    Frame:Hide()
+end
+
 function NP:NameplateAdded(Unit)
-    local Plate = C_NamePlate.GetNamePlateForUnit(Unit)
+    local Plate = GetNamePlateForUnit(Unit)
 
     if (not Plate) then
         return
@@ -651,17 +692,10 @@ function NP:NameplateAdded(Unit)
     if (IsFriend) then
         -- HIDE ENEMY
         if (EnemyFrame) then
-            local OldUnit = EnemyFrame.unit
-
-            if (OldUnit and self.EnemyFrames[OldUnit] == EnemyFrame) then
-                self.EnemyFrames[OldUnit] = nil
-            end
-
-            EnemyFrame:Hide()
-            EnemyFrame.unit = nil
-            EnemyFrame:SetAttribute("unit", nil)
+            NP:ClearFrames(EnemyFrame, self.EnemyFrames)
         end
 
+        -- CREATE FRIENDLY
         if (not FriendlyFrame) then
             FriendlyFrame = CreateFrame("Frame", "FeelUI_FriendlyNP" .. Plate:GetName(), Plate, "PingableUnitFrameTemplate")
             FriendlyFrame:EnableMouse(false)
@@ -670,20 +704,9 @@ function NP:NameplateAdded(Unit)
 
             Plate.FriendlyNP = FriendlyFrame
 
-            FriendlyFrame:HookScript("OnHide", function(Frame)
-                local OldUnit = Frame.unit
-
-                if (OldUnit and self.FriendlyFrames[OldUnit] == Frame) then
-                    self.FriendlyFrames[OldUnit] = nil
-                end
-
-                Frame.unit = nil
-                Frame:SetAttribute("unit", nil)
-            end)
-
+            Plate.UnitFrame.SoftTargetFrame:SetParent(Plate)
             Plate.UnitFrame.WidgetContainer:SetParent(Plate)
             Plate.UnitFrame.WidgetContainer:SetPoint("TOP", Plate, "BOTTOM")
-            Plate.UnitFrame.SoftTargetFrame:SetParent(Plate)  
         end
 
         -- REMOVE STALE CACHE ENTRY
@@ -695,25 +718,23 @@ function NP:NameplateAdded(Unit)
 
         -- WIDGETS
         if (UnitNameplateShowsWidgetsOnly(Unit) or UnitIsGameObject(Unit)) then
-            FriendlyFrame:Hide()
-            FriendlyFrame.unit = nil
-            FriendlyFrame:SetAttribute("unit", nil)
-
-            -- UPDATE CACHE
-            self.FriendlyFrames[Unit] = nil
+            NP:ClearFrames(FriendlyFrame, self.FriendlyFrames)
 
             return
-        else
+        end
+
+        -- HIT TEST
+        if (Plate.HitTestFrame ~= FriendlyFrame) then
             Plate:ClearAllHitTestPoints()
             Plate:SetAllHitTestPoints(FriendlyFrame)
+
+            Plate.HitTestFrame = FriendlyFrame
         end
 
         -- SET UNIT
         FriendlyFrame.unit = Unit
         FriendlyFrame:SetAttribute("unit", Unit)
-        FriendlyFrame:Show()
 
-        -- UPDATE CACHE
         self.FriendlyFrames[Unit] = FriendlyFrame
 
         -- ELEMENTS
@@ -723,23 +744,19 @@ function NP:NameplateAdded(Unit)
             FriendlyFrame.IsCreated = true
         end
 
+        -- SHOW
+        FriendlyFrame:Show()
+
         -- REFRESH
         NP:RefreshUnit(FriendlyFrame, Unit)
+
     else
+        -- HIDE FRIENDLY
         if (FriendlyFrame) then
-            local OldUnit = FriendlyFrame.unit
-
-            if (OldUnit and self.FriendlyFrames[OldUnit] == FriendlyFrame) then
-                self.FriendlyFrames[OldUnit] = nil
-            end
-
-            FriendlyFrame:Hide()
-            FriendlyFrame.unit = nil
-            FriendlyFrame:SetAttribute("unit", nil)
+            NP:ClearFrames(FriendlyFrame, self.FriendlyFrames)
         end
 
-        local EnemyFrame = Plate.EnemyNP
-
+        -- CREATE ENEMY
         if (not EnemyFrame) then
             EnemyFrame = CreateFrame("Frame", "FeelUI_EnemyNP" .. Plate:GetName(), Plate, "PingableUnitFrameTemplate")
             EnemyFrame:EnableMouse(false)
@@ -747,17 +764,6 @@ function NP:NameplateAdded(Unit)
             EnemyFrame:Point("CENTER", Plate, 0, 0)
 
             Plate.EnemyNP = EnemyFrame
-
-            EnemyFrame:HookScript("OnHide", function(Frame)
-                local OldUnit = Frame.unit
-
-                if (OldUnit and self.EnemyFrames[OldUnit] == Frame) then
-                    self.EnemyFrames[OldUnit] = nil
-                end
-
-                Frame.unit = nil
-                Frame:SetAttribute("unit", nil)
-            end)
 
             Plate.UnitFrame.SoftTargetFrame:SetParent(Plate)
             Plate.UnitFrame.WidgetContainer:SetParent(Plate)
@@ -773,25 +779,23 @@ function NP:NameplateAdded(Unit)
 
         -- WIDGETS
         if (UnitNameplateShowsWidgetsOnly(Unit) or UnitIsGameObject(Unit)) then
-            EnemyFrame:Hide()
-            EnemyFrame.unit = nil
-            EnemyFrame:SetAttribute("unit", nil)
-
-            -- UPDATE CACHE
-            self.EnemyFrames[Unit] = nil
+            NP:ClearFrames(EnemyFrame, self.EnemyFrames)
 
             return
-        else
+        end
+
+        -- HIT TEST
+        if (Plate.HitTestFrame ~= EnemyFrame) then
             Plate:ClearAllHitTestPoints()
             Plate:SetAllHitTestPoints(EnemyFrame)
+
+            Plate.HitTestFrame = EnemyFrame
         end
 
         -- SET UNIT
         EnemyFrame.unit = Unit
         EnemyFrame:SetAttribute("unit", Unit)
-        EnemyFrame:Show()
 
-        -- UPDATE CACHE
         self.EnemyFrames[Unit] = EnemyFrame
 
         -- ELEMENTS
@@ -801,6 +805,9 @@ function NP:NameplateAdded(Unit)
             EnemyFrame.IsCreated = true
         end
 
+        -- SHOW
+        EnemyFrame:Show()
+
         -- REFRESH
         NP:RefreshUnit(EnemyFrame, Unit)
         NP:RefreshUnitAuras(EnemyFrame, Unit)
@@ -808,16 +815,16 @@ function NP:NameplateAdded(Unit)
 end
 
 function NP:NameplateRemoved(Unit)
-    local Plate = C_NamePlate.GetNamePlateForUnit(Unit)
+    local Plate = GetNamePlateForUnit(Unit)
 
-    if (not Plate or Plate.FriendlyNP or Plate.EnemyNP) then 
+    if (not Plate) then
         return
     end
 
     local FriendlyFrame = Plate.FriendlyNP
     local EnemyFrame = Plate.EnemyNP
 
-    if (FriendlyFrame) then
+    if (FriendlyFrame and FriendlyFrame.unit == Unit) then
         -- RESET UNIT
         FriendlyFrame:Hide()
         FriendlyFrame.unit = nil
@@ -827,7 +834,7 @@ function NP:NameplateRemoved(Unit)
         self.FriendlyFrames[Unit] = nil
     end
 
-    if (EnemyFrame) then
+    if (EnemyFrame and EnemyFrame.unit == Unit) then
         -- RESET UNIT
         EnemyFrame:Hide()
         EnemyFrame.unit = nil
@@ -842,7 +849,7 @@ function NP:NameplateRemoved(Unit)
 end
 
 function NP:NameplatePlayerTargetChanged()
-    local Plate = C_NamePlate.GetNamePlateForUnit("target")
+    local Plate = GetNamePlateForUnit("target")
 
     if (not Plate) then
         return
@@ -853,48 +860,84 @@ function NP:NameplatePlayerTargetChanged()
     end
 end
 
-function NP:OnEvent(event, unit, ...)
-    if (unit and not unit:match("^nameplate%d+$")) then
-        return
-    end
-    
-    if (event == "NAME_PLATE_UNIT_ADDED") then
+local function IsNamePlateUnit(Unit)
+    return Unit ~= nil and Unit:sub(1, 9) == "nameplate"
+end
+
+local NamePlateLifecycleEvents = {
+    NAME_PLATE_UNIT_ADDED = function(unit)
         NP:NameplateAdded(unit)
         NP:CastBarOnNamePlateUnitAdded(unit)
-    elseif (event == "NAME_PLATE_UNIT_REMOVED") then
+    end,
+
+    NAME_PLATE_UNIT_REMOVED = function(unit)
         NP:CastBarOnNamePlateUnitRemoved(unit)
         NP:NameplateRemoved(unit)
-    elseif (event == "PLAYER_TARGET_CHANGED") then
+    end,
+}
+
+local GlobalEvents = {
+    PLAYER_TARGET_CHANGED = function()
         NP:NameplatePlayerTargetChanged()
         NP:UnitTargetChanged()
-    elseif (event == "UPDATE_MOUSEOVER_UNIT") then
-        NP:UnitMouseOver()
-    elseif (event == "RAID_TARGET_UPDATE") then
-        NP:UnitRaidIcon()
-    elseif (event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or event == "UNIT_CONNECTION") then
-        NP:UnitHealth(unit)
-    elseif (event == "UNIT_HEAL_PREDICTION" or event == "UNIT_ABSORB_AMOUNT_CHANGED" or event == "UNIT_HEAL_ABSORB_AMOUNT_CHANGED") then
-        NP:UnitHealthPred(unit)
-    elseif (event == "UNIT_NAME_UPDATE") then
-        NP:UnitName(unit)
-    elseif (event == "UNIT_THREAT_SITUATION_UPDATE" or event == "UNIT_THREAT_LIST_UPDATE") then
-        NP:UnitThreat(unit)
+    end,
+
+    UPDATE_MOUSEOVER_UNIT = function() NP:UnitMouseOver() end,
+    RAID_TARGET_UPDATE = function() NP:UnitRaidIcon() end,
+    PLAYER_GUILD_UPDATE = function() NP:RefreshPlayerGuildCache() end,
+}
+
+local UnitDataEvents = {
+    UNIT_HEALTH = function(unit) NP:UnitHealth(unit) end,
+    UNIT_MAXHEALTH = function(unit) NP:UnitHealth(unit) end,
+    UNIT_HEAL_PREDICTION = function(unit) NP:UnitHealthPred(unit) end,
+    UNIT_ABSORB_AMOUNT_CHANGED = function(unit) NP:UnitHealthPred(unit) end,
+    UNIT_HEAL_ABSORB_AMOUNT_CHANGED = function(unit) NP:UnitHealthPred(unit) end,
+    UNIT_NAME_UPDATE = function(unit) NP:UnitName(unit) end,
+    UNIT_THREAT_SITUATION_UPDATE = function(unit) NP:UnitThreat(unit) end,
+    UNIT_THREAT_LIST_UPDATE = function(unit) NP:UnitThreat(unit) end,
+}
+
+local CastEvents = {
+    UNIT_SPELLCAST_START = function(unit, event) NP:CastStarted(event, unit) end,
+    UNIT_SPELLCAST_CHANNEL_START = function(unit, event) NP:CastStarted(event, unit) end,
+    UNIT_SPELLCAST_EMPOWER_START = function(unit, event) NP:CastStarted(event, unit) end,
+    UNIT_SPELLCAST_STOP = function(unit, event, ...) NP:CastStopped(event, unit, ...) end,
+    UNIT_SPELLCAST_CHANNEL_STOP = function(unit, event, ...) NP:CastStopped(event, unit, ...) end,
+    UNIT_SPELLCAST_EMPOWER_STOP = function(unit, event, ...) NP:CastStopped(event, unit, ...) end,
+    UNIT_SPELLCAST_FAILED = function(unit, event, ...) NP:CastFailed(event, unit, ...) end,
+    UNIT_SPELLCAST_INTERRUPTED = function(unit, event, ...) NP:CastInterrupted(event, unit, ...) end,
+    UNIT_SPELLCAST_DELAYED = function(unit, event, ...) NP:CastUpdated(event, unit, ...) end,
+    UNIT_SPELLCAST_CHANNEL_UPDATE = function(unit, event, ...) NP:CastUpdated(event, unit, ...) end,
+    UNIT_SPELLCAST_EMPOWER_UPDATE = function(unit, event, ...) NP:CastUpdated(event, unit, ...) end,
+    UNIT_SPELLCAST_INTERRUPTIBLE = function(unit, event) NP:CastNonInterruptable(event, unit) end,
+    UNIT_SPELLCAST_NOT_INTERRUPTIBLE = function(unit, event) NP:CastNonInterruptable(event, unit) end,
+}
+
+function NP:OnEvent(event, unit, ...)
+    if (unit and not IsNamePlateUnit(unit)) then
+        return
     end
 
-    if (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START") then
-        NP:CastStarted(event, unit)
-    elseif (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_EMPOWER_STOP") then
-        NP:CastStopped(event, unit, ...)
-    elseif (event == "UNIT_SPELLCAST_FAILED") then
-        NP:CastFailed(event, unit, ...)
-    elseif (event == "UNIT_SPELLCAST_INTERRUPTED") then
-        NP:CastInterrupted(event, unit, ...)
-    elseif (event == "UNIT_SPELLCAST_SUCCEEDED") then
-        --NP:CastSucceeded(event, unit, ...)
-    elseif (event == "UNIT_SPELLCAST_DELAYED" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE") then
-        NP:CastUpdated(event, unit, ...)
-    elseif (event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_INTERRUPTIBLE") then
-        NP:CastNonInterruptable(event, unit)
+    local LifecycleHandler = NamePlateLifecycleEvents[event]
+    local GlobalHandler = GlobalEvents[event]
+    local DataHandler = UnitDataEvents[event]
+    local CastHandler = CastEvents[event]
+
+    if (LifecycleHandler) then
+        LifecycleHandler(unit)
+    end
+
+    if (GlobalHandler) then
+        GlobalHandler(unit)
+    end
+
+    if (DataHandler) then
+        DataHandler(unit)
+    end
+
+    if (CastHandler) then
+        CastHandler(unit, event, ...)
     end
 end
 
@@ -917,6 +960,8 @@ function NP:RegisterEvents()
     SecureEventFrame:RegisterEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
     -- NAME
     SecureEventFrame:RegisterEvent("UNIT_NAME_UPDATE")
+    -- GUILD (keeps NP.PlayerGuildCache correct)
+    SecureEventFrame:RegisterEvent("PLAYER_GUILD_UPDATE")
     -- THREAT
     SecureEventFrame:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE")
     SecureEventFrame:RegisterEvent("UNIT_THREAT_LIST_UPDATE")
@@ -984,4 +1029,5 @@ function NP:Initialize()
     self:DisableBlizzard()
     self:RegisterEvents()
     self:SetCVarOnLogin()
+    self:RefreshPlayerGuildCache()
 end

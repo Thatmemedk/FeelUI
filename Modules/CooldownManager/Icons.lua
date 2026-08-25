@@ -85,6 +85,7 @@ function CDM:SkinIcons(Button, ButtonSize)
 	end
 
 	if (Cooldown) then
+		Cooldown:Size(unpack(ButtonSize))
 		Cooldown:SetSwipeTexture(Media.Global.Blank)
 		Cooldown:ClearAllPoints()
 		Cooldown:SetInside(Button, 1, 1)
