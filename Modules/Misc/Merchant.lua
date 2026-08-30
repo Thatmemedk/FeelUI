@@ -7,15 +7,15 @@ local Merchant = UI:RegisterModule("Merchant")
 local _G = _G
 local unpack = unpack
 local select = select
-local floor = math.floor
 
 -- WoW Globals
-local GetContainerNumSlots = GetContainerNumSlots or (C_Container and C_Container.GetContainerNumSlots)
-local GetContainerItemLink = GetContainerItemLink or (C_Container and C_Container.GetContainerItemLink)
-local GetItemInfo = GetItemInfo or (C_Container and C_Container.GetItemInfo)
-local GetContainerItemInfo = GetContainerItemInfo or (C_Container and C_Container.GetContainerItemInfo)
-local UseContainerItem = UseContainerItem or (C_Container and C_Container.UseContainerItem)
+local GetContainerNumSlots = C_Container and C_Container.GetContainerNumSlots or GetContainerNumSlots
+local GetContainerItemLink = C_Container and C_Container.GetContainerItemLink or GetContainerItemLink
+local GetContainerItemInfo = C_Container and C_Container.GetContainerItemInfo or GetContainerItemInfo
+local UseContainerItem = C_Container and C_Container.UseContainerItem or UseContainerItem
+local GetItemInfo = GetItemInfo
 local PickupMerchantItem = PickupMerchantItem
+local CanMerchantRepair = CanMerchantRepair
 local GetRepairAllCost = GetRepairAllCost
 local RepairAllItems = RepairAllItems
 local IsInGuild = IsInGuild
@@ -23,13 +23,22 @@ local CanGuildBankRepair = CanGuildBankRepair
 local GetGuildBankWithdrawMoney = GetGuildBankWithdrawMoney
 local GetMoney = GetMoney
 
+function Merchant:IsJunk(Link)
+	local _, _, Quality, _, _, _, _, _, _, _, SellPrice = GetItemInfo(Link)
+	return Quality == 0 and SellPrice and SellPrice > 0
+end
+
+function Merchant:SellItem(Bag, Slot)
+	UseContainerItem(Bag, Slot)
+	PickupMerchantItem()
+end
+
 function Merchant:AutoSellJunk()
 	if (not DB.Global.Merchant.AutoSellJunk) then
 		return
 	end
 
 	local Profit = 0
-	local TotalCount = 0
 
 	for Bag = 0, 4 do
 		local NumSlots = GetContainerNumSlots(Bag)
@@ -38,21 +47,15 @@ function Merchant:AutoSellJunk()
 			for Slot = 1, NumSlots do
 				local Link = GetContainerItemLink(Bag, Slot)
 
-				if (Link) then
+				if (Link and Merchant:IsJunk(Link)) then
 					local Info = GetContainerItemInfo(Bag, Slot)
-					local Count = (Info and Info.stackCount) or 1
-					local Name, _, Quality, _, _, _, _, _, _, _, SellPrice = GetItemInfo(Link)
+					local Count = Info and Info.stackCount or 1
+					local _, _, _, _, _, _, _, _, _, _, SellPrice = GetItemInfo(Link)
 
 					if (SellPrice and SellPrice > 0) then
-						local TotalPrice = SellPrice * Count
+						Merchant:SellItem(Bag, Slot)
 
-						if (Quality and Quality <= 0 and TotalPrice > 0) then
-							UseContainerItem(Bag, Slot)
-							PickupMerchantItem()
-
-							Profit = Profit + TotalPrice
-							TotalCount = TotalCount + Count
-						end
+						Profit = Profit + (SellPrice * Count)
 					end
 				end
 			end
@@ -65,31 +68,32 @@ function Merchant:AutoSellJunk()
 end
 
 function Merchant:AutoRepair()
-	if (not DB.Global.Merchant.AutoRepair) then
+	if (not DB.Global.Merchant.AutoRepair or not CanMerchantRepair()) then
 		return
 	end
 
-	if (CanMerchantRepair()) then
-		local Cost, CanRepair = GetRepairAllCost()
+	local Cost, CanRepair = GetRepairAllCost()
 
-		if (CanRepair and Cost > 0) then
-			local UseGuild = DB.Global.Merchant.GuildRepair and IsInGuild() and CanGuildBankRepair() and (GetGuildBankWithdrawMoney() >= Cost)
-
-			if (UseGuild) then
-				RepairAllItems(true)
-
-				UI:Print(Language.Merchant.RepairGuild .. UI:FormatMoney(Cost, true))
-			else
-				if (GetMoney() > Cost) then
-					RepairAllItems()
-
-					UI:Print(Language.Merchant.Repair .. UI:FormatMoney(Cost, true))
-				else
-					UI:Print(Language.Merchant.NotEnoughGold)
-				end
-			end
-		end
+	if (not CanRepair or Cost <= 0) then
+		return
 	end
+
+	local GuildRepair = DB.Global.Merchant.GuildRepair and IsInGuild and CanGuildBankRepair() and GetGuildBankWithdrawMoney() >= Cost
+
+	if (GuildRepair) then
+		RepairAllItems(true)
+		UI:Print(Language.Merchant.RepairGuild .. UI:FormatMoney(Cost, true))
+		return
+	end
+
+	if (GetMoney() < Cost) then
+		UI:Print(Language.Merchant.NotEnoughGold)
+		return
+	end
+
+	RepairAllItems()
+
+	UI:Print(Language.Merchant.Repair .. UI:FormatMoney(Cost, true))
 end
 
 function Merchant:OnEvent()

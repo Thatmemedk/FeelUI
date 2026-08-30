@@ -8,9 +8,6 @@ local _G = _G
 local unpack = unpack
 local select = select
 
--- WoW Globals
-local CreateFrame = CreateFrame
-
 function Panels:Initialize()
 	-- ChatPanelLeft
 	local ChatPanelLeft = CreateFrame("Frame", nil, _G.UIParent)

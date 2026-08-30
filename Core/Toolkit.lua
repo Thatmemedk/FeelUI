@@ -447,6 +447,33 @@ local function SetShadowOverlay(self, ShadowOverlayAlpha)
 	self.ShadowOverlay = ShadowOverlay
 end
 
+local function HandlePixelIcon(self, Texture, Highlight)
+	if (not self or self.HandlePixelIconIsSkinned) then
+		return
+	end
+
+	self.Icon = self:CreateTexture(nil, "ARTWORK", nil, 7)
+	self.Icon:SetInside()
+
+	if (Texture) then
+		local Atlas = strmatch(Texture, "Atlas:(.+)$")
+		
+		if (Atlas) then
+			self.Icon:SetAtlas(Atlas)
+		else
+			self.Icon:SetTexture(Texture)
+		end
+	end
+
+	if (Highlight) then
+		self.HL = self:CreateTexture(nil, "HIGHLIGHT")
+		self.HL:SetAllPoints(self.Icon)
+		self.HL:SetColorTexture(1, 1, 1, 0.25)
+	end
+
+	self.HandlePixelIconIsSkinned = true
+end
+
 ----------------------
 -- ActionBars Style --
 ----------------------
@@ -1075,6 +1102,7 @@ local function AddAPI(object)
 	if not object.CreateShadow then mt.CreateShadow = CreateShadow end
 	if not object.CreateGlow then mt.CreateGlow = CreateGlow end
 	if not object.SetShadowOverlay then mt.SetShadowOverlay = SetShadowOverlay end
+	if not object.HandlePixelIcon then mt.HandlePixelIcon = HandlePixelIcon end
 	if not object.CreateButtonPanel then mt.CreateButtonPanel = CreateButtonPanel end
 	if not object.CreateButtonBackdrop then mt.CreateButtonBackdrop = CreateButtonBackdrop end
 	if not object.CreateButtonHighlight then mt.CreateButtonHighlight = CreateButtonHighlight end

@@ -29,17 +29,22 @@ local select = select
 -- Tables
 UI.AuraContainerData = {}
 UI.AuraContainerIndex = 0
+UI.CachedDurationFormatter = nil
 
 -- FORMATTER
-
+ 
 function UI:BuildRuleDurationFormatter()
+    if (UI.CachedDurationFormatter) then
+        return UI.CachedDurationFormatter
+    end
+ 
     local Formatter = C_StringUtil.CreateNumericRuleFormatter()
     local Down = Enum.NumericRuleFormatRounding.Down
     local ExpireColor = CreateColor(unpack(DB.Global.CooldownFrame.ExpireColor))
     local SecondsColor = CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor))
     local SecondsColor2 = CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor2))
     local NormalColor = CreateColor(unpack(DB.Global.CooldownFrame.NormalColor))
-
+ 
     Formatter:SetBreakpoints({
         { threshold = 0, format = ExpireColor:WrapTextInColorCode("%.1f"), step = 0.1, rounding = Down },
         { threshold = 10, format = SecondsColor:WrapTextInColorCode("%d"), step = 1, rounding = Down },
@@ -49,7 +54,9 @@ function UI:BuildRuleDurationFormatter()
         { threshold = 3600, format = NormalColor:WrapTextInColorCode("%dh"), step = 1, rounding = Down, components = {{ div = 3600 }} },
         { threshold = 86400, format = NormalColor:WrapTextInColorCode("%dd"), step = 1, rounding = Down, components = {{ div = 86400 }} },
     })
-
+ 
+    UI.CachedDurationFormatter = Formatter
+ 
     return Formatter
 end
 
@@ -301,14 +308,14 @@ function UI:AddAura(Container, Options)
         maxFrameCount = Options.MaxAuras,
         initializeFrame = InitializeAura,
         candidateFilters = Options.CandidateFilters,
-
+        sortMethod = AuraContainerSortMethod.ExpirationOnly,
+        sortDirection = Options.SortDirection or AuraContainerSortDirection.Normal,
+        
         layout = {
             elementSpacing = Options.Spacing or UI:Scale(3),
             lineSpacing = Options.LineSpacing or UI:Scale(8),
             groupSpacing = Options.GroupSpacing or UI:Scale(3),
             groupLineSpacing = Options.GroupLineSpacing or UI:Scale(8),
-            sortMethod = AuraContainerSortMethod.ExpirationOnly,
-            sortDirection = AuraContainerSortDirection.Normal,
         },
     })
 
@@ -361,14 +368,14 @@ function UI:AddAuraNP(Container, Options)
         maxFrameCount = Options.MaxAuras,
         initializeFrame = InitializeAura,
         candidateFilters = Options.CandidateFilters,
+        sortMethod = AuraContainerSortMethod.ExpirationOnly,
+        sortDirection = Options.SortDirection or AuraContainerSortDirection.Normal,
 
         layout = {
-            elementSpacing = Options.Spacing or 3,
-            lineSpacing = Options.LineSpacing or 8,
-            groupSpacing = Options.GroupSpacing or 3,
-            groupLineSpacing = Options.GroupLineSpacing or 8,
-            sortMethod = AuraContainerSortMethod.ExpirationOnly,
-            sortDirection = AuraContainerSortDirection.Normal,
+            elementSpacing = Options.Spacing or UI:Scale(3),
+            lineSpacing = Options.LineSpacing or UI:Scale(8),
+            groupSpacing = Options.GroupSpacing or UI:Scale(3),
+            groupLineSpacing = Options.GroupLineSpacing or UI:Scale(8),
         },
     })
 end

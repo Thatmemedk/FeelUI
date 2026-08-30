@@ -172,7 +172,7 @@ function UF:UpdateHealthTextPer(Frame, Unit)
         return
     end
 
-    local Percent = UnitHealthPercent(Unit, false, UI.CurvePercent)
+    local Percent = UnitHealthPercent(Unit, true, UI.CurvePercent)
     Frame.HealthTextPer:SetFormattedText("%d%%", Percent or 0)
 end
 
@@ -612,7 +612,7 @@ end
 -- UPDATE PORTRAITS
 
 function UF:UpdatePortrait(Frame, Unit)
-    if (not Frame or not Unit or not Frame.Portrait) then
+    if (not Frame or not Unit or not UI:UnitIsUnit(Frame.unit, Unit) or not Frame.Portrait) then
         return
     end
 

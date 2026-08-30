@@ -20,7 +20,7 @@ function UF:Spawn(Unit, Width, Height, Orientation)
         return self.Frames[Unit]
     end
 
-    local Frame = CreateFrame("Button", "FeelUI_"..Unit, UF.SecureFrame, "SecureUnitButtonTemplate, PingableUnitFrameTemplate")
+    local Frame = CreateFrame("Button", "FeelUI_" .. Unit:gsub("^%l", string.upper), UF.SecureFrame, "SecureUnitButtonTemplate, PingableUnitFrameTemplate")
     Frame:Size(Width or 228, Height or 36)
 
     -- SET UNIT

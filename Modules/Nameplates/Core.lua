@@ -97,7 +97,7 @@ function NP:UpdateHealthText(Frame, Unit)
         return
     end
 
-    local Percent = UnitHealthPercent(Unit, false, UI.CurvePercent)
+    local Percent = UnitHealthPercent(Unit, true, UI.CurvePercent)
     Frame.HealthText:SetFormattedText("%d%%", Percent or 0)
 end
 

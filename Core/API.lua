@@ -30,7 +30,8 @@ local issecretvalue = issecretvalue
 local issecrettable = issecrettable
 local canaccessvalue = canaccessvalue
 local hasanysecretvalues = hasanysecretvalues
-local UnitSecret = C_Secrets.ShouldUnitIdentityBeSecret
+local UnitSecret = _G.C_Secrets.ShouldUnitIdentityBeSecret
+local CompareUnitTokens = _G.C_Secrets.CanCompareUnitTokens
 
 -- WoW Globals
 local GetMouseFocus = GetMouseFocus
@@ -119,7 +120,7 @@ function UI:UnitExists(Unit)
 end
 
 function UI:UnitIsUnit(Unit1, Unit2)
-	if (CanCompareUnitTokens and not CanCompareUnitTokens(Unit1, Unit2)) then
+	if (CompareUnitTokens and not CompareUnitTokens(Unit1, Unit2)) then
 		return
 	end
 
@@ -323,29 +324,31 @@ function FeelUI:LoadCommands()
 end
 
 -- Keep Aspect Ratio
-function UI:KeepAspectRatio(Button, Icon, Zoom)
+function UI:KeepAspectRatio(Button, Icon, Base)
 	if (not Button or not Icon) then
 		return
 	end
 
-	local BaseLeft, BaseRight, BaseTop, BaseBottom = unpack(UI.TexCoords)
+	local BaseLeft, BaseRight, BaseTop, BaseBottom = unpack(Base or UI.TexCoords)
 	local Width, Height = Button:GetWidth(), Button:GetHeight()
 	local Aspect = Width / Height
 	local Left, Right = BaseLeft, BaseRight
 	local Top, Bottom = BaseTop, BaseBottom
+	local SpanH = Right - Left
+	local SpanV = Bottom - Top
 	local Trim = 0
 
 	if (Aspect > 1) then
-		Trim = (1 - (1 / Aspect)) * 0.5
+		Trim = SpanV * (1 - (1 / Aspect)) * 0.5
 		Top = Top + Trim
 		Bottom = Bottom - Trim
 	elseif (Aspect < 1) then
-		Trim = (1 - Aspect) * 0.5
+		Trim = SpanH * (1 - Aspect) * 0.5
 		Left = Left + Trim
 		Right = Right - Trim
 	end
 
-	Zoom = Zoom or unpack(DB.Global.General.IconZoom)
+	local Zoom = unpack(DB.Global.General.IconZoom)
 
 	if (Zoom > 0) then
 		local HorizontalZoom = (Right - Left) * Zoom * 0.5

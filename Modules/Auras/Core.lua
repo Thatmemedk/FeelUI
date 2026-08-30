@@ -47,6 +47,7 @@ function Auras:CreatePlayerAuras()
         Count = true,
         Duration = true,
         Border = false,
+        SortDirection = AuraContainerSortDirection.Reverse,
         Filter = "HELPFUL",
         MaxAuras = 32,
         Unit = "player",
@@ -67,10 +68,11 @@ function Auras:CreatePlayerAuras()
         Duration = true,
         Border = true,
         DebuffIndicator = true,
+        SortDirection = AuraContainerSortDirection.Reverse,
         Filter = "HARMFUL",
         MaxAuras = 12,
         Unit = "player",
-        TimeY = -10,
+        TimeY = -12,
     })
 
     self.BuffsFrame = BuffsFrame

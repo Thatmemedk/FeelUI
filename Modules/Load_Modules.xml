@@ -32,6 +32,8 @@
 	<Script file="CooldownManager\Icons.lua"/>
 	<Script file="CooldownManager\Layout.lua"/>
 	<Script file="CooldownManager\Tracker.lua"/>
+	<!-- Damage Meters -->
+	<Script file="DamageMeters\Core.lua"/>
 	<!-- DataBars -->
 	<Script file="DataBars\ClassPowerBar.lua"/>
 	<Script file="DataBars\ExperienceBar.lua"/>
@@ -53,6 +55,7 @@
 	<Script file="Maps\MinimapButtonsBar.lua"/>
 	<!-- Misc -->
 	<Script file="Misc\Alerts.lua"/>
+	<Script file="Misc\BattleRess.lua"/>
 	<Script file="Misc\Blizzard.lua"/>
 	<Script file="Misc\CombatText.lua"/>
 	<Script file="Misc\ErrorFilter.lua"/>
@@ -62,10 +65,10 @@
 	<Script file="Misc\NoPetAlert.lua"/>
 	<Script file="Misc\ObjectiveTracker.lua"/>
 	<Script file="Misc\PotionButtonMenu.lua"/>
+	<Script file="Misc\RaidUtility.lua"/>
 	<Script file="Misc\TimeTrackers.lua"/>
 	<!-- Skins Blizzard -->
 	<Script file="Skins\Blizzard\Bubbles.lua"/>
-	<Script file="Skins\Blizzard\DamageMeters.lua"/>
 	<Script file="Skins\Blizzard\DeathRecap.lua"/>
 	<Script file="Skins\Blizzard\DropDown.lua"/>
 	<Script file="Skins\Blizzard\EncounterWarnings.lua"/>

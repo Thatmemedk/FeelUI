@@ -73,7 +73,6 @@ DB.Global = {
 
 	Chat = {
 		Enable = true,
-		TimeStamps = true,
 	},
 
 	CooldownFrame = {

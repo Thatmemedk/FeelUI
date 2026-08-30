@@ -26,8 +26,11 @@ function NP:CreateDebuffs(Frame)
         Border = true,
         DebuffIndicator = false,
         Filter = "HARMFUL|PLAYER",
-        MaxAuras = 2,
+        MaxAuras = 6,
         HideTooltipInCombat = true,
+        CandidateFilters = {
+            nameplateShowPersonal = true,
+        },
     })
 
     Frame.Debuffs = Debuffs

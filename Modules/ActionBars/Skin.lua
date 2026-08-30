@@ -93,6 +93,7 @@ function AB:StyleActionButton(Button, Icon, Name)
             InterruptBase.Base:SetInside(Button, 1, 1)
             InterruptBase.Base:SetTexture(Media.Global.Texture)
             InterruptBase.Base:SetTexCoord(unpack(UI.TexCoords))
+            InterruptBase.Base:SetVertexColor(unpack(DB.Global.ActionBars.OverlayGlowColor))
         end
     end
 
