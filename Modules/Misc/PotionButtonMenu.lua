@@ -11,7 +11,7 @@ local select = select
 -- Tables
 PBM.ItemID = {
     Healthstone = { 5512, 224464 },
-    HealingPotions = { 241304, 241305 }, -- Silvermoon Health Potion
+    HealingPotions = { 241304, 241305, 271883, 271884 }, -- Silvermoon Health Potion
     Potions = { 241308, 241309, 241288, 241289 }, -- Light's Potential & Potion of Recklessness
 }
 

@@ -47,7 +47,7 @@ UI.NameplatesHealthColorCurve:AddPoint(1, CreateColor(unpack(DB.Global.Nameplate
 
 UI.CooldownColorCurve = C_CurveUtil.CreateColorCurve()
 UI.CooldownColorCurve:SetType(Enum.LuaCurveType.Step)
-UI.CooldownColorCurve:AddPoint(0,  CreateColor(unpack(DB.Global.CooldownFrame.ExpireColor)))
-UI.CooldownColorCurve:AddPoint(9,  CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor)))
+UI.CooldownColorCurve:AddPoint(0, CreateColor(unpack(DB.Global.CooldownFrame.ExpireColor)))
+UI.CooldownColorCurve:AddPoint(9, CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor)))
 UI.CooldownColorCurve:AddPoint(29, CreateColor(unpack(DB.Global.CooldownFrame.SecondsColor2)))
 UI.CooldownColorCurve:AddPoint(59, CreateColor(unpack(DB.Global.CooldownFrame.NormalColor)))

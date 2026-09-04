@@ -515,20 +515,24 @@ function UI:InitializeAuraHighlight(Button)
     end
 
     -- Button
-    Button:SetFrameLevel(Button:GetFrameLevel() + 6)
     Button:SetInside()
     Button:EnableMouse(false)
 
     -- Overlay
     local OverlayGradient = CreateFrame("Frame", nil, Button)
-    OverlayGradient:SetFrameLevel(Button:GetFrameLevel() -1)
+    OverlayGradient:SetFrameLevel(Button:GetFrameLevel() + 6)
     OverlayGradient:SetInside()
-    OverlayGradient:SetAlpha(0.5)
+    OverlayGradient:SetAlpha(0.50)
 
-    local OverlayBorder = CreateFrame("Frame", nil, Button)
-    OverlayBorder:SetFrameLevel(Button:GetFrameLevel() -1)
-    OverlayBorder:SetInside()
-    OverlayBorder:SetAlpha(0.25)
+    --local OverlayBorder = CreateFrame("Frame", nil, Button)
+    --OverlayBorder:SetFrameStrata("LOW")
+    --OverlayBorder:SetFrameLevel(Button:GetFrameLevel() -1)
+    --OverlayBorder:SetInside()
+    --OverlayBorder:SetAlpha(0.5)
+
+    local OverlayIcon = CreateFrame("Frame", nil, Button)
+    OverlayIcon:SetFrameLevel(Button:GetFrameLevel() + 7)
+    OverlayIcon:SetInside()
 
     -- Gradient Border
     local DispelGradient = OverlayGradient:CreateTexture(nil, "OVERLAY")
@@ -537,12 +541,12 @@ function UI:InitializeAuraHighlight(Button)
     DispelGradient:SetTexCoord(0, 1, 0, 1)
 
     -- Border
-    local DispelBorder = OverlayBorder:CreateTexture(nil, "OVERLAY")
-    DispelBorder:SetInside(Button, -1, -1)
-    DispelBorder:SetAtlas("RaidFrame-DispelHighlight")
+    --local DispelBorder = OverlayBorder:CreateTexture(nil, "OVERLAY")
+    --DispelBorder:SetOutside(Button, 2, 2)
+    --DispelBorder:SetAtlas("RaidFrame-DispelHighlight")
 
     -- Icon
-    local DispelIcon = Button:CreateTexture(nil, "OVERLAY")
+    local DispelIcon = OverlayIcon:CreateTexture(nil, "OVERLAY")
     DispelIcon:Size(18, 18)
     DispelIcon:Point("CENTER", Button, 0, 22)
 
@@ -551,10 +555,12 @@ function UI:InitializeAuraHighlight(Button)
         customDispelColorMap = UI.Colors.Dispel,
     })
 
+    --[[
     Button:AddDispelTypeTexture(DispelBorder, {
         style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
         customDispelColorMap = UI.Colors.Dispel,
     })
+    --]]
 
     Button:AddDispelTypeTexture(DispelIcon, {
         style = Enum.CustomAuraButtonDispelTypeTextureStyle.Icon,

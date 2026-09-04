@@ -8,5 +8,6 @@
 	<Script file="Install.lua"/>
 	<Script file="Status.lua"/>
 	<Script file="Popups.lua"/>
+	<Script file="Dropdown.lua"/>
 	<Script file="Fonts.lua"/>
 </Ui>

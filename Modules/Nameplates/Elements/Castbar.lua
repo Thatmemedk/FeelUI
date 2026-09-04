@@ -14,6 +14,10 @@ local UnitChannelInfo = UnitChannelInfo
 local UnitChannelDuration = UnitChannelDuration
 local UnitCastingDuration = UnitCastingDuration
 local UnitEmpoweredChannelDuration = UnitEmpoweredChannelDuration
+local UnitEmpoweredStagePercentages = UnitEmpoweredStagePercentages
+
+-- WoW Globals
+local C_ClassColor_GetClassColor = _G.C_ClassColor.GetClassColor
 
 -- WoW Globals
 local FAILED = _G.FAILED or "Failed"
@@ -58,7 +62,7 @@ function NP:SetupEmpowerPips(Castbar, StagePercentages)
         return
     end
 
-    local NumPips = #StagePercentages -1
+    local NumPips = #StagePercentages - 1
 
     if (NumPips <= 0) then
         return
@@ -89,6 +93,66 @@ function NP:SetupEmpowerPips(Castbar, StagePercentages)
     end
 end
 
+function NP:GetInterruptedText(Castbar, InterruptedBy)
+    local InterrupterName = InterruptedBy and UnitNameFromGUID(InterruptedBy)
+
+    if (not InterrupterName) then
+        return string.format("%s", INTERRUPTED)
+    end
+
+    local _, ClassFileName = UnitClassFromGUID(InterruptedBy)
+    local ClassColor = C_ClassColor_GetClassColor(ClassFileName)
+
+    if (ClassColor) then
+        InterrupterName = ClassColor:WrapTextInColorCode(InterrupterName)
+    end
+
+    return string.format("%s - %s", INTERRUPTED, InterrupterName)
+end
+
+function NP:UpdateCastTarget(Castbar, Unit)
+    local _, CastingInfoText = UnitCastingInfo(Unit)
+    local _, ChannelInfoText = UnitChannelInfo(Unit)
+
+    if (not CastingInfoText or ChannelInfoText) then
+        Castbar.TargetName = nil
+        Castbar.TargetClass = nil
+
+        if (Castbar.Text) then
+            Castbar.Text:SetText(Castbar.SpellName or "")
+        end
+
+        return
+    end
+
+    if (UnitSpellTargetName) then
+        Castbar.TargetName = UnitSpellTargetName(Unit)
+        Castbar.TargetClass = UnitSpellTargetClass(Unit)
+    else
+        Castbar.TargetName = UnitName(Unit .. "target")
+        Castbar.TargetClass = UnitClassBase(Unit .. "target")
+    end
+
+    if (not Castbar.Text) then
+        return
+    end
+
+    local Text = Castbar.SpellName or ""
+
+    if (Castbar.TargetName) then
+        local Target = Castbar.TargetName
+        local Color = C_ClassColor_GetClassColor(Castbar.TargetClass)
+
+        if (Color) then
+            Target = Color:WrapTextInColorCode(Target)
+        end
+
+        Text = string.format("%s - %s", Text, Target)
+    end
+
+    Castbar.Text:SetText(Text)
+end
+
 function NP:CastStarted(Event, Unit)
     local Frame = self.EnemyFrames[Unit]
     local Castbar = Frame and Frame.Castbar
@@ -110,6 +174,7 @@ function NP:CastStarted(Event, Unit)
         Duration = UnitCastingDuration(Unit)
     else
         local IsEmpowered
+
         Name, Text, Icon, StartTime, EndTime, _, NotInterruptible, SpellID, IsEmpowered, _, CastID = UnitChannelInfo(Unit)
 
         if (IsEmpowered) then
@@ -133,6 +198,7 @@ function NP:CastStarted(Event, Unit)
     Castbar.CastID = CastID
     Castbar.SpellID = SpellID
     Castbar.SpellName = Text
+    Castbar.SpellTarget = UnitSpellTargetName(Unit)
     Castbar.CastDelayed = 0
 
     -- Set Values
@@ -149,6 +215,7 @@ function NP:CastStarted(Event, Unit)
     -- Text
     if (Castbar.Text) then
         Castbar.Text:SetText(Text)
+        NP:UpdateCastTarget(Castbar, Unit)
     end
 
     -- Create EmpowerPips
@@ -198,7 +265,7 @@ function NP:CastStopped(Event, Unit, _, _, ...)
 
     if (InterruptedBy) then
         -- Set Text
-        Castbar.Text:SetText(INTERRUPTED)
+        Castbar.Text:SetText(self:GetInterruptedText(Castbar, InterruptedBy))
 
         -- Set Values
         Castbar:SetMinMaxValues(0, 1)
@@ -208,7 +275,7 @@ function NP:CastStopped(Event, Unit, _, _, ...)
 
     -- Reset CastBar
     NP:ResetCastBar(Castbar)
-    
+
     -- Call Fade
     UI:UIFrameFadeOut(Castbar, NP.CastHoldTime, Castbar:GetAlpha(), 0)
 end
@@ -220,7 +287,7 @@ function NP:CastFailed(Event, Unit, _, _, ...)
     if (not Castbar) then
         return
     end
-    
+
     local CastID, InterruptedBy
 
     if (Event == "UNIT_SPELLCAST_FAILED") then
@@ -253,7 +320,7 @@ function NP:CastInterrupted(Event, Unit, _, _, ...)
     if (not Castbar) then
         return
     end
-    
+
     local CastID, InterruptedBy
 
     if (Event == "UNIT_SPELLCAST_INTERRUPTED") then
@@ -265,7 +332,7 @@ function NP:CastInterrupted(Event, Unit, _, _, ...)
     end
 
     -- Set Text
-    Castbar.Text:SetText(INTERRUPTED)
+    Castbar.Text:SetText(self:GetInterruptedText(Castbar, InterruptedBy))
 
     -- Set Values
     Castbar:SetMinMaxValues(0, 1)
@@ -314,7 +381,7 @@ function NP:CastUpdated(Event, Unit, _, _, CastID)
     if (Unit == "player") then
         -- Convert milliseconds to seconds
         StartTime = StartTime / 1000
-        
+
         local Delay
 
         if (Castbar.Channel) then
@@ -343,7 +410,6 @@ function NP:CastNonInterruptable(Event, Unit)
     end
 
     Castbar.NotInterruptible = Event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE"
-
     Castbar:GetStatusBarTexture():SetVertexColorFromBoolean(Castbar.NotInterruptible, CreateColor(0.67, 0, 0, 0.7), CreateColor(0.45, 0.45, 0.45, 0.7))
 end
 
@@ -364,9 +430,9 @@ function NP.CastBarOnUpdate(Castbar)
             local Total = DurationObject:GetTotalDuration()
 
             if (Castbar.CastDelayed ~= 0) then
-                Castbar.Time:SetFormattedText("%.1fs/%.1fs |cffff0000%s%.2f|r", Duration, Total, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
+                Castbar.Time:SetFormattedText("%.1fs |cffff0000%s%.2f|r", Duration, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
             else
-                Castbar.Time:SetFormattedText("%.1fs/%.1fs", Duration, Total)
+                Castbar.Time:SetFormattedText("%.1fs", Duration)
             end
         end
     end
@@ -380,6 +446,9 @@ function NP:ResetCastBar(Castbar)
     Castbar.NotInterruptible = nil
     Castbar.CastID = nil
     Castbar.SpellID = nil
+    Castbar.SpellTarget = nil
+    Castbar.TargetName = nil
+    Castbar.TargetClass = nil
 
     if (Castbar.StagePips) then
         for _, Pip in ipairs(Castbar.StagePips) do
@@ -408,7 +477,7 @@ function NP:CreateCastBar(Frame)
     CastbarIcon:Size(36, 26)
     CastbarIcon:Point("LEFT", Castbar, "RIGHT", 4, 3)
     UI:KeepAspectRatio(CastbarIcon, CastbarIcon)
-    
+
     local IconOverlay = CreateFrame("Frame", nil, Castbar)
     IconOverlay:SetInside(CastbarIcon)
     IconOverlay:SetTemplate()
@@ -418,15 +487,21 @@ function NP:CreateCastBar(Frame)
     local InvisFrameCastbar = CreateFrame("Frame", nil, Castbar)
     InvisFrameCastbar:SetFrameLevel(Castbar:GetFrameLevel() + 10)
     InvisFrameCastbar:SetInside()
-    
+
     local CastbarTime = InvisFrameCastbar:CreateFontString(nil, "OVERLAY", nil, 7)
-    CastbarTime:Point("RIGHT", Castbar, -2, -8)
+    CastbarTime:Point("RIGHT", Castbar, -4, -8)
     CastbarTime:SetFontTemplate("Default")
 
     local CastbarText = InvisFrameCastbar:CreateFontString(nil, "OVERLAY", nil, 7)
-    CastbarText:Point("LEFT", Castbar, 2, -8)
+    CastbarText:Point("LEFT", Castbar, 4, -8)
+    CastbarText:Point("RIGHT", CastbarTime, "LEFT", -4, 0)
     CastbarText:SetFontTemplate("Default")
-    
+    CastbarText:SetJustifyH("LEFT")
+    CastbarText:SetJustifyV("MIDDLE")
+    CastbarText:SetWordWrap(false)
+    CastbarText:SetNonSpaceWrap(false)
+    CastbarText:SetMaxLines(1)
+
     Frame.Castbar = Castbar
     Frame.Castbar.Icon = CastbarIcon
     Frame.Castbar.Time = CastbarTime

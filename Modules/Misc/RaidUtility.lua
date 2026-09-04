@@ -1,7 +1,7 @@
 local UI, DB, Media, Language = select(2, ...):Call()
 
 -- Call Modules
-local RaidUtility = UI:RegisterModule("RaidUtility")
+local RU = UI:RegisterModule("RaidUtility")
 
 -- Lib Globals
 local _G = _G
@@ -17,7 +17,7 @@ local UnitInRaid = UnitInRaid
 local UnitIsGroupLeader = UnitIsGroupLeader
 local UnitIsGroupAssistant = UnitIsGroupAssistant
 
-function RaidUtility:CreateButton(Name, Parent, Template, Width, Height, Point, RelativeTo, RelativePoint, X, Y, Text)
+function RU:CreateButton(Name, Parent, Template, Width, Height, Point, RelativeTo, RelativePoint, X, Y, Text)
     local Button = CreateFrame("Button", Name, Parent, Template)
     Button:Size(Width, Height)
     Button:Point(Point, RelativeTo, RelativePoint, X, Y)
@@ -33,25 +33,25 @@ function RaidUtility:CreateButton(Name, Parent, Template, Width, Height, Point, 
     return Button
 end
 
-function RaidUtility:CheckRaidStatus()
+function RU:CheckRaidStatus()
     local InInstance, InstanceType = IsInInstance()
 
     if (InInstance and (InstanceType == "pvp" or InstanceType == "arena")) then
         return false
     end
 
-    if (IsInGroup() and not IsInRaid()) then
-        return true
-    end
-
     if (IsInRaid()) then
         return UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")
+    end
+
+    if (IsInGroup()) then
+        return UnitIsGroupLeader("player")
     end
 
     return false
 end
 
-function RaidUtility:UpdateVisibility()
+function RU:UpdateVisibility()
     if InCombatLockdown() then
         self:RegisterEvent("PLAYER_REGEN_ENABLED", "UpdateVisibility")
         return
@@ -66,27 +66,27 @@ function RaidUtility:UpdateVisibility()
     RaidUtilityPanel:SetShown(Expanded)
 end
 
-function RaidUtility:ShowPanel()
+function RU:ShowPanel()
     RaidUtilityPanel.toggled = true
 end
 
-function RaidUtility:ClosePanel()
+function RU:ClosePanel()
     RaidUtilityPanel.toggled = false
 end
 
-function RaidUtility:DisbandGroup()
+function RU:DisbandGroup()
     StaticPopup_Show("DISBAND_RAID")
 end
 
-function RaidUtility:StartRoleCheck()
+function RU:StartRoleCheck()
     InitiateRolePoll()
 end
 
-function RaidUtility:StartReadyCheck()
+function RU:StartReadyCheck()
     DoReadyCheck()
 end
 
-function RaidUtility:ConvertGroup()
+function RU:ConvertGroup()
     if (UnitInRaid("player")) then
         C_PartyInfo.ConvertToParty()
     elseif (UnitInParty("player")) then
@@ -94,13 +94,13 @@ function RaidUtility:ConvertGroup()
     end
 end
 
-function RaidUtility:StartCountdown()
+function RU:StartCountdown()
     if (C_PartyInfo.DoCountdown) then
         C_PartyInfo.DoCountdown(10)
     end
 end
 
-function RaidUtility:CreateButtons()
+function RU:CreateButtons()
     local Anchor = CreateFrame("Frame", "RaidUtilityAnchor", _G.UIParent)
     Anchor:Size(124, 25)
     Anchor:Point("TOPLEFT", _G.UIParent, 6, -6)
@@ -132,7 +132,7 @@ function RaidUtility:CreateButtons()
         panel:Show()
     ]=])
     RaidUtilityShowButton:SetScript("OnMouseUp", function()
-        RaidUtility:ShowPanel()
+        RU:ShowPanel()
     end)
 
     -- Show Button Background
@@ -151,42 +151,42 @@ function RaidUtility:CreateButtons()
         self:GetFrameRef("RaidUtilityShowButton"):Show()
     ]=])
     RaidUtilityCloseButton:SetScript("OnMouseUp", function()
-        RaidUtility:ClosePanel()
+        RU:ClosePanel()
     end)
 
     -- Actions
     RaidUtilityDisbandButton:SetScript("OnClick", function()
-        RaidUtility:DisbandGroup()
+        RU:DisbandGroup()
     end)
 
     RaidUtilityRoleButton:SetScript("OnClick", function()
-        RaidUtility:StartRoleCheck()
+        RU:StartRoleCheck()
     end)
 
     RaidUtilityReadyCheckButton:SetScript("OnClick", function()
-        RaidUtility:StartReadyCheck()
+        RU:StartReadyCheck()
     end)
 
     RaidUtilityConvertButton:SetScript("OnClick", function()
-        RaidUtility:ConvertGroup()
+        RU:ConvertGroup()
     end)
 
     RaidUtilityRaidCountdownButton:SetScript("OnClick", function()
-        RaidUtility:StartCountdown()
+        RU:StartCountdown()
     end)
 end
 
-function RaidUtility:OnEvent()
+function RU:OnEvent()
     self:UpdateVisibility()
 end
 
-function RaidUtility:RegisterEvents()
+function RU:RegisterEvents()
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
     self:RegisterEvent("GROUP_ROSTER_UPDATE")
     self:SetScript("OnEvent", self.OnEvent)
 end
 
-function RaidUtility:Initialize()
+function RU:Initialize()
     self:CreateButtons()
     self:RegisterEvents()
 end

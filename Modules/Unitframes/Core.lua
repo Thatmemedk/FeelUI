@@ -62,9 +62,12 @@ local CheckInteractDistance = CheckInteractDistance
 local IsInInstance = IsInInstance
 local HasLFGRestrictions = HasLFGRestrictions
 local IsResting = IsResting
-local C_IncomingSummon = _G.C_IncomingSummon
+
+-- WoW Globals
 local C_Spell = _G.C_Spell
 local C_Timer = _G.C_Timer
+local C_IncomingSummon = _G.C_IncomingSummon
+local C_ClassColor_GetClassColor = _G.C_ClassColor.GetClassColor
 
 -- WoW Globals
 local PLAYER_OFFLINE = _G.PLAYER_OFFLINE
@@ -522,32 +525,6 @@ function UF:UpdateName(Frame, Unit, TypeFrame)
 
     local Name = UnitName(Unit) or ""
     local Text
-    local R, G, B = 1, 1, 1
-
-    if (DB.Global.UnitFrames.ClassColor) then
-        R, G, B = 1, 1, 1
-    else
-        if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
-            local _, Class = UnitClass(Unit)
-
-            if (not UI:IsSecretValue(Class)) then
-                if (Class) then
-                    local Color = UI.Colors.Class[Class]
-
-                    if (Color) then
-                        R, G, B = Color.r, Color.g, Color.b
-                    end
-                end
-            end
-        else
-            local Reaction = UnitReaction(Unit, "player") or 5
-            local Color = UI.Colors.Reaction[Reaction]
-
-            if (Color) then
-                R, G, B = Color.r, Color.g, Color.b
-            end
-        end
-    end
 
     if (TypeFrame == "Raid") then
         Text = UI:UTF8Sub(Name, 8)
@@ -555,10 +532,38 @@ function UF:UpdateName(Frame, Unit, TypeFrame)
         Text = UI:UTF8Sub(Name, 12)
     else
         Text = Name
-    end 
+    end
+
+    if (DB.Global.UnitFrames.ClassColor) then
+        Frame.Name:SetTextColor(1, 1, 1)
+    else
+        if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or (UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit))) then
+            local _, Class = UnitClass(Unit)
+
+            if (Unit == "targettarget") then
+                local ClassColor = C_ClassColor_GetClassColor(Class)
+
+                if (ClassColor) then
+                    Text = ClassColor:WrapTextInColorCode(Name)
+                end
+            elseif (not UI:IsSecretValue(Class)) then
+                local ClassColor = UI.Colors.Class[Class]
+
+                if (ClassColor) then
+                    Frame.Name:SetTextColor(ClassColor.r, ClassColor.g, ClassColor.b)
+                end
+            end
+        else
+            local Reaction = UnitReaction(Unit, "player")
+            local ReactionColor = UI.Colors.Reaction[Reaction]
+
+            if (ReactionColor) then
+                Frame.Name:SetTextColor(ReactionColor.r, ReactionColor.g, ReactionColor.b)
+            end
+        end
+    end
 
     Frame.Name:SetText(Text)
-    Frame.Name:SetTextColor(R, G, B)
 end
 
 --- UPDATE NAME & LEVEL

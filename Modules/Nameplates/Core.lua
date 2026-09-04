@@ -376,7 +376,6 @@ function NP:RefreshPlayerGuildCache()
     NP.PlayerGuildCache.GuildName = InGuild and GetGuildInfo("player") or nil
 end
 
-
 -- ICONS
 
 function NP:UpdateRaidIcon(Frame, Unit)
@@ -685,72 +684,11 @@ function NP:NameplateAdded(Unit)
         return
     end
 
-    local IsFriend = UnitIsFriend("player", Unit)
+    local IsEnemy = UnitCanAttack("player", Unit)
     local FriendlyFrame = Plate.FriendlyNP
     local EnemyFrame = Plate.EnemyNP
 
-    if (IsFriend) then
-        -- HIDE ENEMY
-        if (EnemyFrame) then
-            NP:ClearFrames(EnemyFrame, self.EnemyFrames)
-        end
-
-        -- CREATE FRIENDLY
-        if (not FriendlyFrame) then
-            FriendlyFrame = CreateFrame("Frame", "FeelUI_FriendlyNP" .. Plate:GetName(), Plate, "PingableUnitFrameTemplate")
-            FriendlyFrame:EnableMouse(false)
-            FriendlyFrame:Size(unpack(DB.Global.Nameplates.Size))
-            FriendlyFrame:Point("CENTER", Plate, 0, 0)
-
-            Plate.FriendlyNP = FriendlyFrame
-
-            Plate.UnitFrame.SoftTargetFrame:SetParent(Plate)
-            Plate.UnitFrame.WidgetContainer:SetParent(Plate)
-            Plate.UnitFrame.WidgetContainer:SetPoint("TOP", Plate, "BOTTOM")
-        end
-
-        -- REMOVE STALE CACHE ENTRY
-        local OldUnit = FriendlyFrame.unit
-
-        if (OldUnit and OldUnit ~= Unit and self.FriendlyFrames[OldUnit] == FriendlyFrame) then
-            self.FriendlyFrames[OldUnit] = nil
-        end
-
-        -- WIDGETS
-        if (UnitNameplateShowsWidgetsOnly(Unit) or UnitIsGameObject(Unit)) then
-            NP:ClearFrames(FriendlyFrame, self.FriendlyFrames)
-
-            return
-        end
-
-        -- HIT TEST
-        if (Plate.HitTestFrame ~= FriendlyFrame) then
-            Plate:ClearAllHitTestPoints()
-            Plate:SetAllHitTestPoints(FriendlyFrame)
-
-            Plate.HitTestFrame = FriendlyFrame
-        end
-
-        -- SET UNIT
-        FriendlyFrame.unit = Unit
-        FriendlyFrame:SetAttribute("unit", Unit)
-
-        self.FriendlyFrames[Unit] = FriendlyFrame
-
-        -- ELEMENTS
-        if (not FriendlyFrame.IsCreated) then
-            NP:CreateFriendlyElements(FriendlyFrame)
-
-            FriendlyFrame.IsCreated = true
-        end
-
-        -- SHOW
-        FriendlyFrame:Show()
-
-        -- REFRESH
-        NP:RefreshUnit(FriendlyFrame, Unit)
-
-    else
+    if (IsEnemy) then
         -- HIDE FRIENDLY
         if (FriendlyFrame) then
             NP:ClearFrames(FriendlyFrame, self.FriendlyFrames)
@@ -811,6 +749,66 @@ function NP:NameplateAdded(Unit)
         -- REFRESH
         NP:RefreshUnit(EnemyFrame, Unit)
         NP:RefreshUnitAuras(EnemyFrame, Unit)
+    else
+        -- HIDE ENEMY
+        if (EnemyFrame) then
+            NP:ClearFrames(EnemyFrame, self.EnemyFrames)
+        end
+
+        -- CREATE FRIENDLY
+        if (not FriendlyFrame) then
+            FriendlyFrame = CreateFrame("Frame", "FeelUI_FriendlyNP" .. Plate:GetName(), Plate, "PingableUnitFrameTemplate")
+            FriendlyFrame:EnableMouse(false)
+            FriendlyFrame:Size(unpack(DB.Global.Nameplates.Size))
+            FriendlyFrame:Point("CENTER", Plate, 0, 0)
+
+            Plate.FriendlyNP = FriendlyFrame
+
+            Plate.UnitFrame.SoftTargetFrame:SetParent(Plate)
+            Plate.UnitFrame.WidgetContainer:SetParent(Plate)
+            Plate.UnitFrame.WidgetContainer:SetPoint("TOP", Plate, "BOTTOM")
+        end
+
+        -- REMOVE STALE CACHE ENTRY
+        local OldUnit = FriendlyFrame.unit
+
+        if (OldUnit and OldUnit ~= Unit and self.FriendlyFrames[OldUnit] == FriendlyFrame) then
+            self.FriendlyFrames[OldUnit] = nil
+        end
+
+        -- WIDGETS
+        if (UnitNameplateShowsWidgetsOnly(Unit) or UnitIsGameObject(Unit)) then
+            NP:ClearFrames(FriendlyFrame, self.FriendlyFrames)
+
+            return
+        end
+
+        -- HIT TEST
+        if (Plate.HitTestFrame ~= FriendlyFrame) then
+            Plate:ClearAllHitTestPoints()
+            Plate:SetAllHitTestPoints(FriendlyFrame)
+
+            Plate.HitTestFrame = FriendlyFrame
+        end
+
+        -- SET UNIT
+        FriendlyFrame.unit = Unit
+        FriendlyFrame:SetAttribute("unit", Unit)
+
+        self.FriendlyFrames[Unit] = FriendlyFrame
+
+        -- ELEMENTS
+        if (not FriendlyFrame.IsCreated) then
+            NP:CreateFriendlyElements(FriendlyFrame)
+
+            FriendlyFrame.IsCreated = true
+        end
+
+        -- SHOW
+        FriendlyFrame:Show()
+
+        -- REFRESH
+        NP:RefreshUnit(FriendlyFrame, Unit)
     end
 end
 

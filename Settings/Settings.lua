@@ -107,6 +107,13 @@ DB.Global = {
 		Enable = true,
 	},
 
+	DamageMeters = {
+		BarHeight = 18,
+		BarSpacing = 2,
+		IconSize = { 28, 18 },
+
+	},
+
 	DataBars = {
 		ExperienceBar = true,
 		ReputationBar = false,

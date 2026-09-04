@@ -31,7 +31,6 @@ function AB:StyleActionButton(Button, Icon, Name)
     local HotKey = _G[Name.."HotKey"]
     local MacroName = _G[Name.."Name"]
     local KeybindTex = Button.QuickKeybindHighlightTexture
-    local SpellHighlightTexture = Button.SpellHighlightTexture
     local IconMask = Button.IconMask
     local SlotArt = Button.SlotArt
     local SlotBG = Button.SlotBackground
@@ -73,14 +72,17 @@ function AB:StyleActionButton(Button, Icon, Name)
 
             SpellAnimTexture.Fill.InnerGlowTexture:SetInside(Button, 1, 1)
             SpellAnimTexture.Fill.InnerGlowTexture:SetTexture(Media.Global.Texture)
-            SpellAnimTexture.Fill.InnerGlowTexture:SetTexCoord(unpack(UI.TexCoords))
+            UI:KeepAspectRatio(Button, SpellAnimTexture.Fill.InnerGlowTexture)
+
+            SpellAnimTexture.Fill.InnerGlowTexture:SetVertexColor(unpack(DB.Global.ActionBars.OverlayGlowColor))
         end
     end
 
     if (ReticleBase) then
         ReticleBase:SetInside(Button, 1, 1)
         ReticleBase:SetTexture(Media.Global.Texture)
-        ReticleBase:SetTexCoord(unpack(UI.TexCoords))
+        UI:KeepAspectRatio(Button, ReticleBase)
+
         ReticleBase:SetVertexColor(unpack(DB.Global.ActionBars.OverlayGlowColor))
     end
 
@@ -92,7 +94,8 @@ function AB:StyleActionButton(Button, Icon, Name)
         if (InterruptBase.Base) then
             InterruptBase.Base:SetInside(Button, 1, 1)
             InterruptBase.Base:SetTexture(Media.Global.Texture)
-            InterruptBase.Base:SetTexCoord(unpack(UI.TexCoords))
+            UI:KeepAspectRatio(Button, InterruptBase.Base)
+
             InterruptBase.Base:SetVertexColor(unpack(DB.Global.ActionBars.OverlayGlowColor))
         end
     end

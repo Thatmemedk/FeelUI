@@ -124,8 +124,8 @@ end
 
 function Status:UpdateStatusFrameZone()
     local ZoneText = GetRealZoneText() or _G.UNKNOWN
-    local r, g, b = self:GetLocTextColor()
-    self.Frame.Zone:SetFormattedText("Current Zone: |cff%02x%02x%02x%s", r * 255, g * 255, b * 255, ZoneText)
+    local R, G, B = self:GetLocTextColor()
+    self.Frame.Zone:SetFormattedText("Current Zone: |cff%02x%02x%02x%s", R * 255, B * 255, B * 255, ZoneText)
 end
 
 function Status:GetClient()

@@ -37,6 +37,7 @@ function UI:CreateColor(R, G, B, A)
     local R255 = floor(color.r * 255 + 0.5)
     local G255 = floor(color.g * 255 + 0.5)
     local B255 = floor(color.b * 255 + 0.5)
+    
     color.hex = format("ff%02x%02x%02x", R255, G255, B255)
 
     return color

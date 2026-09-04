@@ -8,22 +8,28 @@ local _G = _G
 local unpack = unpack
 local select = select
 
--- Locals
-local MaxRows = 8
-local RowHeight = 18
-local BarSpacing = 2
-local IconWidth = 28
-local IconHeight = 18
+-- Tables
+DM.Rows = {}
 
 -- Locals
-local DropdownWidth = 202
-local DropdownRowHeight = 18
-local DropdownPadding = 4
+DM.MaxRows = 8
 
 -- Locals
-local R, G, B = unpack(UI.GetClassColors)
+DM.SessionID = nil
 
--- TABLES
+-- Locals
+DM.ScrollMax = 0
+DM.ScrollOffset = 0
+DM.ScrollRows = 7
+
+-- Locals
+DM.TimerElapsed = 0
+DM.CombatStartTime = nil
+
+-- Local
+DM.AbbreviateConfig = nil
+
+-- TYPES
 
 local DamageTypes = {
     Enum.DamageMeterType.DamageDone,
@@ -51,10 +57,20 @@ local DamageTypeNames = {
     [Enum.DamageMeterType.Deaths] = DAMAGE_METER_TYPE_DEATHS,
 }
 
-local SessionTypeNames = {
-    [Enum.DamageMeterSessionType.Current] = DAMAGE_METER_CURRENT_SESSION,
-    [Enum.DamageMeterSessionType.Overall] = DAMAGE_METER_OVERALL_SESSION,
+-- ABBREV HELPERS
+
+local AbbreviateConfig = {
+    config = CreateAbbreviateConfig({
+        { breakpoint = 1000000000, abbreviation = "B", significandDivisor = 10000000, fractionDivisor = 100, abbreviationIsGlobal = false, },
+        { breakpoint = 1000000, abbreviation = "M", significandDivisor = 10000, fractionDivisor = 100, abbreviationIsGlobal = false, },
+        { breakpoint = 1000, abbreviation = "K", significandDivisor = 100, fractionDivisor = 10, abbreviationIsGlobal = false, },
+        { breakpoint = 1, abbreviation = "", significandDivisor = 1, fractionDivisor = 1, abbreviationIsGlobal = false, },
+    }),
 }
+
+function DM:AbbreviateNumber(Value)
+    return AbbreviateNumbers(Value, AbbreviateConfig)
+end
 
 -- HELPERS
 
@@ -72,160 +88,51 @@ function DM:GetClassColor(ClassFilename)
     return Color.r, Color.g, Color.b
 end
 
+function DM:StripRealm(Name)
+    if (not Name) then 
+        return "Unknown" 
+    end
+
+    if (Ambiguate) then 
+        return Ambiguate(Name, "short") or Name 
+    end
+
+    return Name
+end
+
 function DM:FormatCombatTime(Seconds)
     Seconds = math.max(Seconds or 0, 0)
     local Minutes = math.floor(Seconds / 60)
     local Secs = math.floor(Seconds % 60)
-    return string.format("|cffffffff[|r%d:%02d|cffffffff]|r", Minutes, Secs)
-end
-
--- DROPDOWN
-
-local function CreateDropdown()
-    local ClickCatcher = CreateFrame("Button", nil, _G.UIParent)
-    ClickCatcher:SetFrameStrata("DIALOG")
-    ClickCatcher:SetFrameLevel(99)
-    ClickCatcher:EnableMouse(true)
-    ClickCatcher:SetClampedToScreen(true)
-    ClickCatcher:SetAllPoints(_G.UIParent)
-    ClickCatcher:Hide()
-
-    local Dropdown = CreateFrame("Frame", nil, _G.UIParent, "LibBackdropTemplate")
-    Dropdown:SetFrameStrata("DIALOG")
-    Dropdown:SetFrameLevel(100)
-    Dropdown:SetClampedToScreen(true)
-    Dropdown:EnableMouse(true)
-    Dropdown:Width(DropdownWidth)
-    Dropdown:CreateBackdrop()
-    Dropdown:CreateShadow()
-    Dropdown:Hide()
-
-    Dropdown.Buttons = {}
-    Dropdown.Count = 0
-
-    function Dropdown:HideDropdown()
-        self:Hide()
-        ClickCatcher:Hide()
-    end
-
-    function Dropdown:ClearButtons()
-        self.Count = 0
-
-        for _, Button in ipairs(self.Buttons) do
-            Button:Hide()
-        end
-    end
-
-    function Dropdown:AddButton(Text, Checked, OnClick)
-        self.Count = self.Count + 1
-
-        local Index = self.Count
-        local Button = self.Buttons[Index]
-
-        if (not Button) then
-            Button = CreateFrame("Button", nil, self)
-            Button:Height(DropdownRowHeight)
-
-            -- Text
-            Button.Text = Button:CreateFontString(nil, "OVERLAY")
-            Button.Text:Point("LEFT", Button, "LEFT", 6, 0)
-            Button.Text:Point("RIGHT", Button, "RIGHT", -26, 0)
-            Button.Text:SetJustifyH("LEFT")
-            Button.Text:SetWordWrap(false)
-            Button.Text:SetFontTemplate("Default")
-
-            -- Checkbox
-            Button.Check = CreateFrame("StatusBar", nil, Button)
-            Button.Check:Size(14, 14)
-            Button.Check:Point("RIGHT", Button, "RIGHT", -6, 0)
-            Button.Check:SetStatusBarTexture(Media.Global.Texture)
-
-            Button.CheckOverlay = CreateFrame("Frame", nil, Button)
-            Button.CheckOverlay:SetFrameLevel(Button.Check:GetFrameLevel() - 1)
-            Button.CheckOverlay:SetInside(Button.Check)
-            Button.CheckOverlay:CreateBackdrop()
-            Button.CheckOverlay:CreateShadow()
-
-            Button.CheckHighlight = Button.Check:CreateTexture(nil, "OVERLAY")
-            Button.CheckHighlight:SetInside(Button.Check, 1, 1)
-            Button.CheckHighlight:SetTexture(Media.Global.Texture)
-            Button.CheckHighlight:SetVertexColor(1, 1, 1, 0.25)
-            Button.CheckHighlight:Hide()
-
-            -- Highlight
-            Button.Highlight = Button:CreateTexture(nil, "BACKGROUND")
-            Button.Highlight:SetInside(Button, 1, 1)
-            Button.Highlight:SetTexture(Media.Global.Highlight)
-            Button.Highlight:SetVertexColor(R, G, B, 0.50)
-            Button.Highlight:Hide()
-
-            Button:SetScript("OnEnter", function(self)
-                self.Highlight:Show()
-                self.CheckHighlight:Show()
-            end)
-
-            Button:SetScript("OnLeave", function(self)
-                self.Highlight:Hide()
-                self.CheckHighlight:Hide()
-            end)
-
-            self.Buttons[Index] = Button
-        end
-
-        Button.Text:SetText(Text)
-
-        if (Checked == true) then
-            Button.Check:SetStatusBarColor(R, G, B)
-        else
-            Button.Check:SetStatusBarColor(0.25, 0.25, 0.25, 0.5)
-        end
-
-        Button:SetScript("OnClick", function()
-            Dropdown:HideDropdown()
-
-            if (OnClick) then
-                OnClick()
-            end
-        end)
-
-        Button:ClearAllPoints()
-        Button:Width(self:GetWidth() - DropdownPadding * 2)
-        Button:Point("TOPLEFT", self, "TOPLEFT", DropdownPadding, -DropdownPadding - ((Index - 1) * DropdownRowHeight))
-        Button:Show()
-    end
-
-    function Dropdown:ShowDropdown(Owner, X, Y)
-        self:ClearAllPoints()
-        self:Height((self.Count * DropdownRowHeight) + DropdownPadding * 2)
-        self:Point("BOTTOMLEFT", Owner, "TOPLEFT", X or 0, Y or 0)
-        self:Show()
-        self:Raise()
-
-        ClickCatcher:Show()
-    end
-
-    ClickCatcher:SetScript("OnClick", function()
-        Dropdown:HideDropdown()
-    end)
-
-    return Dropdown
+    return string.format("[|cffffd200%d:%02d|r]", Minutes, Secs)
 end
 
 -- WINDOW
 
-function DM:CreateWindow()
+function DM:CreateDamageMeters()
+    -- Types
+    self.DamageMeterType = Enum.DamageMeterType.DamageDone
+    self.SessionType = Enum.DamageMeterSessionType.Current
+
+    -- Main Frame
     local Frame = CreateFrame("Frame", "FeelUI_DamageMeters", _G.UIParent, "BackdropTemplate")
     Frame:Size(414, 190)
     Frame:Point("BOTTOMRIGHT", _G.UIParent, -6, 6)
 
+    -- Header (Damage Done etc.)
     local Header = CreateFrame("Button", nil, Frame)
-    Header:Size(120, 18)
+    Header:Size(180, 18)
     Header:Point("TOPLEFT", Frame, 6, 0)
+
+    -- Header OnClick
     Header:SetScript("OnClick", function()
-        if (DM.DamageTypeDropdown:IsShown()) then
+        if (DM.DamageTypeDropdown and DM.DamageTypeDropdown:IsShown()) then
             DM.DamageTypeDropdown:HideDropdown()
         else
-            DM.SessionDropdown:HideDropdown()
+            if (DM.SessionDropdown) then
+                DM.SessionDropdown:HideDropdown()
+            end
+
             DM:OpenDamageTypeMenu(Header)
         end
     end)
@@ -234,21 +141,20 @@ function DM:CreateWindow()
     Header.Text:Point("LEFT", Header, 0, 0)
     Header.Text:SetFontTemplate("Default")
 
-    Header.Timer = Header:CreateFontString(nil, "OVERLAY")
-    Header.Timer:Point("LEFT", Header.Text, "RIGHT", 6, 0)
-    Header.Timer:SetFontTemplate("Default")
-    Header.Timer:SetText("|cffffffff[|r0:00|cffffffff]|r")
-    Header.Timer:SetTextColor(1, 0.82, 0)
-    Header.Timer:Hide()
-
+    -- Session (Current/Overall etc.)
     local Session = CreateFrame("Button", nil, Frame)
     Session:Size(18, 18)
     Session:Point("TOPRIGHT", Frame, -8, 0)
+
+    -- Session OnClick
     Session:SetScript("OnClick", function()
-        if (DM.SessionDropdown:IsShown()) then
+        if (DM.SessionDropdown and DM.SessionDropdown:IsShown()) then
             DM.SessionDropdown:HideDropdown()
         else
-            DM.DamageTypeDropdown:HideDropdown()
+            if (DM.DamageTypeDropdown) then
+                DM.DamageTypeDropdown:HideDropdown()
+            end
+
             DM:OpenSessionMenu(Session)
         end
     end)
@@ -259,9 +165,12 @@ function DM:CreateWindow()
     Session.Icon:SetAtlas("GM-icon-settings-hover")
     Session.Icon:SetDesaturated(true)
 
+    -- Reset
     local Reset = CreateFrame("Button", nil, Frame)
     Reset:Size(18, 18)
     Reset:Point("LEFT", Session, -24, 0)
+
+    -- Reset OnClick
     Reset:SetScript("OnClick", function()
         DM:ResetDamageMeter()
     end)
@@ -272,33 +181,21 @@ function DM:CreateWindow()
     Reset.Icon:SetAtlas("talents-button-undo")
     Reset.Icon:SetDesaturated(true)
 
+    -- Content
     local Content = CreateFrame("Frame", nil, Frame)
     Content:Point("TOPLEFT", Frame, 6, -28)
     Content:Point("BOTTOMRIGHT", Frame, -6, 6)
+    Content:EnableMouseWheel(true)
 
-    self.Frame = Frame
-    self.Header = Header
-    self.Session = Session
-    self.Reset = Reset
-    self.Content = Content
-    self.Rows = {}
-
-    self.DamageTypeDropdown = CreateDropdown()
-    self.SessionDropdown = CreateDropdown()
-
-    self.DamageTypeDropdown:Hide()
-    self.SessionDropdown:Hide()
-
-    self.DamageMeterType = Enum.DamageMeterType.DamageDone
-    self.SessionType = Enum.DamageMeterSessionType.Current
-    self.SessionID = nil
+    -- Content OnMouseWheel
+    Content:SetScript("OnMouseWheel", function(_, Delta)
+        local NewOffset = self.ScrollOffset - Delta
+        self.ScrollOffset = math.max(0, math.min(NewOffset, self.ScrollMax))
+        self:Refresh()
+    end)
 
     -- Combat Timer
-    self.CombatStartTime = nil
-    self.TimerElapsed = 0
-
-    local TimerFrame = CreateFrame("Frame", nil, Frame)
-    TimerFrame:SetScript("OnUpdate", function(_, Elapsed)
+    DM:SetScript("OnUpdate", function(_, Elapsed)
         if (not self.CombatStartTime) then
             return
         end
@@ -309,94 +206,91 @@ function DM:CreateWindow()
             return
         end
 
+        local CombatTime = GetTime() - self.CombatStartTime
+        self:UpdateHeader(CombatTime)
+
         self.TimerElapsed = 0
-        self.Header.Timer:SetText(self:FormatCombatTime(GetTime() - self.CombatStartTime))
     end)
 
-    self.TimerFrame = TimerFrame
+    -- Create Bars
+    for Index = 1, self.MaxRows do
+        local Bar = CreateFrame("Button", nil, Content)
+        Bar:Height(DB.Global.DamageMeters.BarHeight)
+        Bar:Point("TOPLEFT", Content, "TOPLEFT", 0, -(Index - 1) * (DB.Global.DamageMeters.BarHeight + DB.Global.DamageMeters.BarSpacing))
+        Bar:Point("RIGHT", Content, "RIGHT")
 
-    for Index = 1, MaxRows do
-        self:CreateBars(Index)
+        -- StatusBar
+        Bar.StatusBar = CreateFrame("StatusBar", nil, Bar)
+        Bar.StatusBar:SetInside()
+        Bar.StatusBar:SetMinMaxValues(0, 1)
+        Bar.StatusBar:SetValue(0)
+        Bar.StatusBar:SetStatusBarTexture(Media.Global.Texture)
+        Bar.StatusBar:CreateBackdrop()
+        Bar.StatusBar:CreateShadow()
+
+        Bar.InvisFrame = CreateFrame("Frame", nil, Bar)
+        Bar.InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
+        Bar.InvisFrame:SetInside()
+
+        -- Icon
+        Bar.Icon = Bar.InvisFrame:CreateTexture(nil, "ARTWORK")
+        Bar.Icon:Size(unpack(DB.Global.DamageMeters.IconSize))
+        Bar.Icon:Point("LEFT", 0, 0)
+
+        Bar.IconOverlay = CreateFrame("Frame", nil, Bar)
+        Bar.IconOverlay:SetFrameLevel(Bar:GetFrameLevel() + 10)
+        Bar.IconOverlay:SetInside(Bar.Icon)
+        Bar.IconOverlay:SetTemplate()
+        Bar.IconOverlay:CreateShadow()
+        Bar.IconOverlay:SetShadowOverlay()
+
+        -- Rank + Name
+        Bar.Text = Bar.InvisFrame:CreateFontString(nil, "OVERLAY")
+        Bar.Text:Point("LEFT", Bar.Icon, "RIGHT", 6, 0)
+        Bar.Text:SetFontTemplate("Default")
+
+        -- Damage Values
+        Bar.Value = Bar.InvisFrame:CreateFontString(nil, "OVERLAY")
+        Bar.Value:Point("RIGHT", Bar, "RIGHT", -6, 0)
+        Bar.Value:SetFontTemplate("Default")
+
+        Bar:SetScript("OnClick", function()
+            local Source = Bar.Source
+
+            if (not Source) then
+                return
+            end
+
+            local SourceWindow = self.SourceWindow
+
+            if (not SourceWindow) then
+                return
+            end
+
+            SourceWindow:SetSource(Source)
+            SourceWindow:SetDamageMeterType(self.DamageMeterType)
+            SourceWindow:SetSession(self.SessionType, self.SessionID)
+            SourceWindow:Show()
+        end)
+
+        self.Rows[Index] = Bar
     end
 
+    -- Cache
+    self.Frame = Frame
+    self.Header = Header
+    self.Session = Session
+    self.Reset = Reset
+    self.Content = Content
+
+    -- Update
     self:UpdateHeader()
 end
 
 -- BARS
 
-function DM:CreateBars(Index)
-    local Bar = CreateFrame("Button", nil, self.Content)
-    Bar:Height(RowHeight)
-
-    Bar.StatusBar = CreateFrame("StatusBar", nil, Bar)
-    Bar.StatusBar:SetInside()
-    Bar.StatusBar:SetMinMaxValues(0, 1)
-    Bar.StatusBar:SetValue(0)
-    Bar.StatusBar:SetStatusBarTexture(Media.Global.Texture)
-    Bar.StatusBar:CreateBackdrop()
-    Bar.StatusBar:CreateShadow()
-
-    Bar.InvisFrame = CreateFrame("Frame", nil, Bar)
-    Bar.InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
-    Bar.InvisFrame:SetInside()
-
-    Bar.Icon = Bar.InvisFrame:CreateTexture(nil, "ARTWORK")
-    Bar.Icon:Size(IconWidth, IconHeight)
-    Bar.Icon:Point("LEFT", 0, 0)
-
-    Bar.IconOverlay = CreateFrame("Frame", nil, Bar)
-    Bar.IconOverlay:SetFrameLevel(Bar:GetFrameLevel() + 11)
-    Bar.IconOverlay:SetInside(Bar.Icon)
-    Bar.IconOverlay:SetTemplate()
-    Bar.IconOverlay:CreateShadow()
-    Bar.IconOverlay:SetShadowOverlay()
-
-    Bar.Rank = Bar.InvisFrame:CreateFontString(nil, "OVERLAY")
-    Bar.Rank:Point("LEFT", Bar.Icon, "RIGHT", 3, 0)
-    Bar.Rank:Width(18)
-    Bar.Rank:SetJustifyH("LEFT")
-    Bar.Rank:SetFontTemplate("Default")
-
-    Bar.Name = Bar.InvisFrame:CreateFontString(nil, "OVERLAY")
-    Bar.Name:Point("LEFT", Bar.Rank, "RIGHT", 2, 0)
-    Bar.Name:Point("RIGHT", Bar, "RIGHT", -105, 0)
-    Bar.Name:SetJustifyH("LEFT")
-    Bar.Name:SetWordWrap(false)
-    Bar.Name:SetFontTemplate("Default")
-
-    Bar.Value = Bar.InvisFrame:CreateFontString(nil, "OVERLAY")
-    Bar.Value:Point("RIGHT", Bar, "RIGHT", -4, 0)
-    Bar.Value:SetJustifyH("RIGHT")
-    Bar.Value:SetFontTemplate("Default")
-
-    Bar:SetScript("OnClick", function()
-        local Source = Bar.Source
-
-        if (not Source) then
-            return
-        end
-
-        local SourceWindow = self.SourceWindow
-
-        if (not SourceWindow) then
-            return
-        end
-
-        SourceWindow:SetSource(Source)
-        SourceWindow:SetDamageMeterType(self.DamageMeterType)
-        SourceWindow:SetSession(self.SessionType, self.SessionID)
-        SourceWindow:Show()
-    end)
-
-    self.Rows[Index] = Bar
-end
-
-function DM:UpdateBars(Bar, Source, Index, MaxAmount)
+function DM:UpdateBars(Bar, Source, Rank, MaxAmount)
     Bar.Source = Source
-
-    Bar:ClearAllPoints()
-    Bar:Point("TOPLEFT", self.Content, "TOPLEFT", 0, -(Index - 1) * (RowHeight + BarSpacing))
-    Bar:Point("RIGHT", self.Content, "RIGHT")
     Bar:Show()
 
     local ClassFilename = Source.classFilename
@@ -404,11 +298,11 @@ function DM:UpdateBars(Bar, Source, Index, MaxAmount)
     local SpecIconID = Source.specIconID
 
     if (type(SpecIconID) == "number" and SpecIconID ~= 0) then
-        Bar.Icon:Size(IconWidth, IconHeight)
+        Bar.Icon:Size(unpack(DB.Global.DamageMeters.IconSize))
         Bar.Icon:SetTexture(SpecIconID)
         UI:KeepAspectRatio(Bar.Icon, Bar.Icon)
     else
-        Bar.Icon:Size(IconWidth, IconHeight)
+        Bar.Icon:Size(unpack(DB.Global.DamageMeters.IconSize))
         Bar.Icon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
 
         local ClassIconCoords = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[ClassFilename]
@@ -420,60 +314,58 @@ function DM:UpdateBars(Bar, Source, Index, MaxAmount)
         end
     end
 
-    if (ClassR) then
-        Bar.StatusBar:SetStatusBarColor(ClassR, ClassG, ClassB)
-    else
-        Bar.StatusBar:SetStatusBarColor(0.15, 0.55, 1, 0.35)
-    end
-
+    Bar.StatusBar:SetStatusBarColor(ClassR, ClassG, ClassB)
     Bar.StatusBar:SetMinMaxValues(0, MaxAmount, UI.SmoothBars)
     Bar.StatusBar:SetValue(Source.totalAmount, UI.SmoothBars)
 
-    -- Name
-    if (UI:IsSecretValue(Source.name)) then
-        Bar.Name:SetText(Source.name)
-    else
-        Bar.Name:SetText(Source.name or UNKNOWN)
-    end
-
     -- Rank
-    Bar.Rank:SetText(Index .. ".")
+    Bar.Text:SetText(Rank .. ". " .. DM:StripRealm(Source.name))
 
     -- Value
-    Bar.Value:SetFormattedText("%s | %s", AbbreviateNumbers(Source.totalAmount), AbbreviateNumbers(Source.amountPerSecond))
+    Bar.Value:SetFormattedText("%s | %s", DM:AbbreviateNumber(Source.totalAmount), DM:AbbreviateNumber(Source.amountPerSecond))
 end
 
-function DM:ClearBars(FromIndex)
-    for Index = FromIndex or 1, MaxRows do
-        local Bar = self.Rows[Index]
+function DM:ClearBar(Bar)
+    if (not Bar) then
+        for Index = 1, self.MaxRows do
+            self:ClearBar(self.Rows[Index])
+        end
 
-        Bar.Source = nil
-        Bar.Name:SetText("")
-        Bar.Rank:SetText("")
-        Bar.Value:SetText("")
-        Bar.StatusBar:SetMinMaxValues(0, 1)
-        Bar.StatusBar:SetValue(0)
-        Bar:Hide()
+        return
     end
+
+    Bar.Source = nil
+    Bar.Text:SetText("")
+    Bar.StatusBar:SetMinMaxValues(0, 1)
+    Bar.StatusBar:SetValue(0)
+    Bar:Hide()
 end
 
 -- UPDATE
 
-function DM:UpdateHeader()
-    self.Header.Text:SetText(DamageTypeNames[self.DamageMeterType] or DAMAGE_METER_TYPE_DAMAGE_DONE)
+function DM:UpdateHeader(CombatTime)
+    local HeaderText = DamageTypeNames[self.DamageMeterType] or DAMAGE_METER_TYPE_DAMAGE_DONE
+
+    if (self.CombatStartTime) then
+        CombatTime = CombatTime or (GetTime() - self.CombatStartTime)
+        HeaderText = HeaderText .. " " .. self:FormatCombatTime(CombatTime)
+    end
+
+    self.Header.Text:SetText(HeaderText)
 end
 
--- MENU
+-- DROPDOWN
 
 function DM:OpenDamageTypeMenu(Owner)
-    local Dropdown = self.DamageTypeDropdown
-    Dropdown:ClearButtons()
+    local Dropdown = UI:CreateDropdown(222, Owner, -6, -18)
+
+    self.DamageTypeDropdown = Dropdown
 
     for _, DamageMeterType in ipairs(DamageTypes) do
         local Name = DamageTypeNames[DamageMeterType]
 
         if (Name) then
-            Dropdown:AddButton(Name, self.DamageMeterType == DamageMeterType, function()
+            Dropdown:AddDropdownButton(Name, self.DamageMeterType == DamageMeterType, function()
                 self.DamageMeterType = DamageMeterType
                 self.SessionID = nil
                 self.SessionType = Enum.DamageMeterSessionType.Current
@@ -482,22 +374,21 @@ function DM:OpenDamageTypeMenu(Owner)
             end)
         end
     end
-
-    Dropdown:ShowDropdown(Owner, -6, -18)
 end
 
 function DM:OpenSessionMenu(Owner)
-    local Dropdown = self.SessionDropdown
-    Dropdown:ClearButtons()
+    local Dropdown = UI:CreateDropdown(252, Owner, -228, -18)
 
-    Dropdown:AddButton(DAMAGE_METER_CURRENT_SESSION, not self.SessionID and self.SessionType == Enum.DamageMeterSessionType.Current, function()
+    self.SessionDropdown = Dropdown
+
+    Dropdown:AddDropdownButton(DAMAGE_METER_CURRENT_SESSION, not self.SessionID and self.SessionType == Enum.DamageMeterSessionType.Current, function()
         self.SessionType = Enum.DamageMeterSessionType.Current
         self.SessionID = nil
         self:UpdateHeader()
         self:Refresh()
     end)
 
-    Dropdown:AddButton(DAMAGE_METER_OVERALL_SESSION, not self.SessionID and self.SessionType == Enum.DamageMeterSessionType.Overall, function()
+    Dropdown:AddDropdownButton(DAMAGE_METER_OVERALL_SESSION, not self.SessionID and self.SessionType == Enum.DamageMeterSessionType.Overall, function()
         self.SessionType = Enum.DamageMeterSessionType.Overall
         self.SessionID = nil
         self:UpdateHeader()
@@ -516,7 +407,7 @@ function DM:OpenSessionMenu(Owner)
                 Name = string.format("%s (%d:%02d)", Name, Minutes, Seconds)
             end
 
-            Dropdown:AddButton(Name, self.SessionID == Session.sessionID, function()
+            Dropdown:AddDropdownButton(Name, self.SessionID == Session.sessionID, function()
                 self.SessionID = Session.sessionID
                 self.SessionType = nil
                 self:UpdateHeader()
@@ -524,30 +415,9 @@ function DM:OpenSessionMenu(Owner)
             end)
         end
     end
-
-    Dropdown:ShowDropdown(Owner, -179, -18)
 end
 
--- REFRESH
-
-function DM:ResetDamageMeter()
-    self.SessionID = nil
-    self.SessionType = Enum.DamageMeterSessionType.Current
-    self.CombatStartTime = nil
-    self.Header.Timer:SetText("|cffffffff[|r 0:00 |cffffffff]|r")
-    self.Header.Timer:Hide()
-
-    self:ClearBars()
-
-    self.DamageTypeDropdown:HideDropdown()
-    self.SessionDropdown:HideDropdown()
-
-    if (C_DamageMeter and C_DamageMeter.ResetAllCombatSessions) then
-        C_DamageMeter.ResetAllCombatSessions()
-    end
-
-    self:UpdateHeader()
-end
+-- SESSION
 
 function DM:GetCombatSession()
     if (self.SessionID) then
@@ -559,6 +429,24 @@ function DM:GetCombatSession()
     end
 end
 
+-- RESET
+
+function DM:ResetDamageMeter()
+    self.SessionID = nil
+    self.SessionType = Enum.DamageMeterSessionType.Current
+    self.CombatStartTime = nil
+    self.TimerElapsed = 0
+
+    if (C_DamageMeter and C_DamageMeter.ResetAllCombatSessions) then
+        C_DamageMeter.ResetAllCombatSessions()
+    end
+
+    self:ClearBar()
+    self:UpdateHeader()
+end
+
+-- REFRESH
+
 function DM:Refresh()
     if (not self.Frame) then
         return
@@ -568,27 +456,73 @@ function DM:Refresh()
     local CombatSources = CombatSession and CombatSession.combatSources
 
     if (not CombatSources or not CombatSources[1]) then
-        self:ClearBars()
+        self:ClearBar()
+        self.ScrollOffset = 0
+        self.ScrollMax = 0
 
         return
     end
 
     local MaxAmount = CombatSources[1].totalAmount
-    local Count = math.min(#CombatSources, MaxRows)
+    local SourceCount = #CombatSources
 
-    for Index = 1, Count do
-        local Source = CombatSources[Index]
-        local Bar = self.Rows[Index]
+    self.ScrollMax = math.max(0, SourceCount - self.ScrollRows)
+    self.ScrollOffset = math.max(0, math.min(self.ScrollOffset, self.ScrollMax))
 
-        if (Source) then
-            self:UpdateBars(Bar, Source, Index, MaxAmount)
-        else
-            Bar.Source = nil
-            Bar:Hide()
+    local PlayerSource
+    local PlayerRank
+
+    for Rank, Source in ipairs(CombatSources) do
+        if (Source.isLocalPlayer) then
+            PlayerSource = Source
+            PlayerRank = Rank
+
+            break
         end
     end
 
-    self:ClearBars(Count + 1)
+    for RowIndex = 1, self.ScrollRows do
+        local Bar = self.Rows[RowIndex]
+        local SourceIndex = self.ScrollOffset + RowIndex
+        local Source = CombatSources[SourceIndex]
+
+        if (Source) then
+            self:UpdateBars(Bar, Source, SourceIndex, MaxAmount)
+        else
+            self:ClearBar(Bar)
+        end
+    end
+
+    local LastBar = self.Rows[self.MaxRows]
+
+    if (PlayerSource and PlayerRank > self.MaxRows) then
+        self:UpdateBars(LastBar, PlayerSource, PlayerRank, MaxAmount)
+    else
+        local SourceIndex = self.ScrollOffset + self.MaxRows
+        local Source = CombatSources[SourceIndex]
+
+        if (Source) then
+            self:UpdateBars(LastBar, Source, SourceIndex, MaxAmount)
+        else
+            self:ClearBar(LastBar)
+        end
+    end
+end
+
+-- ON EVENT
+
+function DM:OnEvent(event)
+    self:Refresh()
+
+    if (event == "PLAYER_REGEN_DISABLED") then
+        self.CombatStartTime = GetTime()
+        self.TimerElapsed = 0
+        self:UpdateHeader()
+    elseif (event == "PLAYER_REGEN_ENABLED") then
+        self.CombatStartTime = nil
+        self.TimerElapsed = 0
+        self:UpdateHeader()
+    end
 end
 
 -- REGISTER EVENTS
@@ -599,19 +533,7 @@ function DM:RegisterEvents()
     self:RegisterEvent("DAMAGE_METER_RESET")
     self:RegisterEvent("PLAYER_REGEN_DISABLED")
     self:RegisterEvent("PLAYER_REGEN_ENABLED")
-
-    self:SetScript("OnEvent", function(_, Event)
-        if (Event == "PLAYER_REGEN_DISABLED") then
-            self.CombatStartTime = GetTime()
-            self.Header.Timer:SetText("|cffffffff[|r 0:00 |cffffffff]|r")
-            self.Header.Timer:Show()
-        elseif (Event == "PLAYER_REGEN_ENABLED") then
-            self.CombatStartTime = nil
-            self.Header.Timer:Hide()
-        end
-
-        self:Refresh()
-    end)
+    self:SetScript("OnEvent", self.OnEvent)
 end
 
 -- SET CVARS
@@ -624,7 +546,7 @@ end
 
 function DM:Initialize()
     self:SetCVarOnLogin()
-    self:CreateWindow()
+    self:CreateDamageMeters()
     self:RegisterEvents()
     self:Refresh()
 end

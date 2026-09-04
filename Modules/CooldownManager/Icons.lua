@@ -14,6 +14,9 @@ local UtilityCooldownViewer = _G.UtilityCooldownViewer
 local BuffIconCooldownViewer = _G.BuffIconCooldownViewer
 local GetAuraDispelTypeColor = _G.C_UnitAuras.GetAuraDispelTypeColor
 
+-- Locals
+local R, G, B = unpack(UI.GetClassColors)
+
 function CDM:StripTextureMasks(Frame)
 	if (not Frame or not Frame.GetMaskTexture) then 
 		return 
@@ -52,7 +55,7 @@ function CDM:SkinIcons(Button, ButtonSize)
 	Button:CreateShadow()
 	Button:SetShadowOverlay()
 
-	-- Diable Tooltip
+	-- Disable Tooltip
 	Button:HookScript("OnEnter", function()
 		_G.GameTooltip_Hide()
 	end)
@@ -65,14 +68,15 @@ function CDM:SkinIcons(Button, ButtonSize)
 	InvisFrame:SetFrameLevel(Button:GetFrameLevel() + 10)
 	InvisFrame:SetInside()
 
-    if (BorderTex) then
-    	BorderTex:SetAlpha(0)
-    end
+	if (BorderTex) then
+		BorderTex:SetAlpha(0)
+	end
 
-   	if (Border) then
+	if (Border) then
 		Border:SetAlpha(0)
 	end
 
+	-- Icon
 	if (Icon) then
 		Icon:ClearAllPoints()
 		Icon:SetInside()
@@ -87,32 +91,83 @@ function CDM:SkinIcons(Button, ButtonSize)
 	if (Cooldown) then
 		Cooldown:SetSwipeTexture(Media.Global.Blank)
 		Cooldown:ClearAllPoints()
-		Cooldown:SetInside(Button, 1, 1)
+		Cooldown:SetInside()
 		Cooldown:SetReverse(true)
+
+		UI:UpdateCooldownText(Cooldown, Button, 0, -8, true)
 	end
 
 	if (CooldownFlash) then
 		CooldownFlash:ClearAllPoints()
-		CooldownFlash:SetInside(Button, 1, 1)
+		CooldownFlash:SetInside()
 	end
 
 	if (OutOfRange) then
 		OutOfRange:ClearAllPoints()
-		OutOfRange:SetInside(Button, 1, 1)
+		OutOfRange:SetInside()
 	end
- 
+
 	if (Charges) then
-    	Charges:ClearAllPoints()
-    	Charges:Point("TOP", Button, 0, 6)
-    	Charges:SetFontTemplate("Default", 12)
+		Charges:ClearAllPoints()
+		Charges:Point("TOP", Button, 0, 6)
+		Charges:SetFontTemplate("Default", 12)
 	end
 
 	if (Count) then
 		Count:SetParent(InvisFrame)
-    	Count:ClearAllPoints()
-    	Count:Point("TOP", Button, 0, 6)
-    	Count:SetFontTemplate("Default", 14)
-    end
+		Count:ClearAllPoints()
+		Count:Point("TOP", Button, 0, 6)
+		Count:SetFontTemplate("Default", 14)
+	end
+
+	-- Pandemic
+	if (not Button.CDMPandemic) then
+		local NewPandemic = CreateFrame("Frame", nil, Button)
+		NewPandemic:SetFrameLevel(Button:GetFrameLevel() -1)
+		NewPandemic:SetInside()
+		NewPandemic:CreateGlow(2, 3, 1, 0, 0, 1)
+		NewPandemic:Hide()
+
+		local Animation = NewPandemic:CreateAnimationGroup()
+		Animation:SetLooping("BOUNCE")
+
+		Animation.FadeOut = Animation:CreateAnimation("Alpha")
+		Animation.FadeOut:SetFromAlpha(1)
+		Animation.FadeOut:SetToAlpha(0)
+		Animation.FadeOut:SetDuration(0.5)
+		Animation.FadeOut:SetSmoothing("IN_OUT")
+
+		Button.CDMPandemic = NewPandemic
+		Button.CDMPandemicAnimation = Animation
+
+		if (Button.ShowPandemicStateFrame) then
+			hooksecurefunc(Button, "ShowPandemicStateFrame", function()
+				if (Button.PandemicIcon) then
+					Button.PandemicIcon:Hide()
+					Button.PandemicIcon:SetAlpha(0)
+				end
+
+				if (not Button.CDMPandemicAnimation:IsPlaying()) then
+			        Button.CDMPandemic:Show()
+			        Button.CDMPandemicAnimation:Play()
+			    end
+			end)
+		end
+
+		if (Button.HidePandemicStateFrame) then
+			hooksecurefunc(Button, "HidePandemicStateFrame", function()
+				if (Button.PandemicIcon) then
+					Button.PandemicIcon:Hide()
+					Button.PandemicIcon:SetAlpha(0)
+				end
+
+			    if (Button.CDMPandemicAnimation and Button.CDMPandemicAnimation:IsPlaying()) then
+			    	Button.CDMPandemic:Hide()
+			        Button.CDMPandemicAnimation:Stop()
+			    end
+			end)
+		end
+	end
 
 	Button.CDMIsSkinned = true
 end

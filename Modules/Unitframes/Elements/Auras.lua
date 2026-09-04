@@ -153,6 +153,7 @@ function UF:CreateRaidDebuffs(Frame)
         CandidateFilters = {
             includeSpellIDs = UF.AuraFilter.Whitelist,
             excludeSpellIDs = UF.AuraFilter.Blacklist,
+            --isBossOrRoleAura = true,
         },
     })
 

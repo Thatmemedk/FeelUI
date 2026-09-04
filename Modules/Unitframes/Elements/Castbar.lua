@@ -18,6 +18,9 @@ local UnitEmpoweredStagePercentages = UnitEmpoweredStagePercentages
 local GetUnitEmpowerHoldAtMaxTime = GetUnitEmpowerHoldAtMaxTime
 
 -- WoW Globals
+local C_ClassColor_GetClassColor = _G.C_ClassColor.GetClassColor
+
+-- WoW Globals
 local FAILED = _G.FAILED or "Failed"
 local INTERRUPTED = _G.INTERRUPTED or "Interrupted"
 
@@ -91,6 +94,66 @@ function UF:SetupEmpowerPips(Castbar, StagePercentages)
     end
 end
 
+function UF:GetInterruptedText(Castbar, InterruptedBy)
+    local InterrupterName = InterruptedBy and UnitNameFromGUID(InterruptedBy)
+
+    if (not InterrupterName) then
+        return string.format("%s", INTERRUPTED)
+    end
+
+    local _, ClassFilename = UnitClassFromGUID(InterruptedBy)
+    local ClassColor = C_ClassColor_GetClassColor(ClassFilename)
+
+    if (ClassColor) then
+        InterrupterName = ClassColor:WrapTextInColorCode(InterrupterName)
+    end
+
+    return string.format("%s - %s", INTERRUPTED, InterrupterName)
+end
+
+function UF:UpdateCastTarget(Castbar, Unit)
+    local _, CastingInfoText = UnitCastingInfo(Unit)
+    local _, ChannelInfoText = UnitChannelInfo(Unit)
+
+    if (not CastingInfoText or ChannelInfoText) then
+        Castbar.TargetName = nil
+        Castbar.TargetClass = nil
+
+        if (Castbar.Text) then
+            Castbar.Text:SetText(Castbar.SpellName or "")
+        end
+
+        return
+    end
+
+    if (UnitSpellTargetName) then
+        Castbar.TargetName = UnitSpellTargetName(Unit)
+        Castbar.TargetClass = UnitSpellTargetClass(Unit)
+    else
+        Castbar.TargetName = UnitName(Unit .. "target")
+        Castbar.TargetClass = UnitClassBase(Unit .. "target")
+    end
+
+    if (not Castbar.Text) then
+        return
+    end
+
+    local Text = Castbar.SpellName or ""
+
+    if (Castbar.TargetName) then
+        local Target = Castbar.TargetName
+        local Color = C_ClassColor_GetClassColor(Castbar.TargetClass)
+
+        if (Color) then
+            Target = Color:WrapTextInColorCode(Target)
+        end
+
+        Text = string.format("%s - %s", Text, Target)
+    end
+
+    Castbar.Text:SetText(Text)
+end
+
 function UF:CastStarted(Event, Unit)
     local Castbar = self.Frames[Unit] and self.Frames[Unit].Castbar
 
@@ -153,6 +216,7 @@ function UF:CastStarted(Event, Unit)
             Castbar.Text:SetText(UI:UTF8Sub(Text, 22, true))
         else
             Castbar.Text:SetText(Text)
+            UF:UpdateCastTarget(Castbar, Unit)
         end
     end
 
@@ -250,7 +314,7 @@ function UF:CastStopped(Event, Unit, _, _, ...)
 
     if (InterruptedBy) then
         -- Set Text
-        Castbar.Text:SetText(INTERRUPTED)
+        Castbar.Text:SetText(self:GetInterruptedText(Castbar, InterruptedBy))
 
         -- Set Values
         Castbar:SetMinMaxValues(0, 1)
@@ -315,7 +379,7 @@ function UF:CastInterrupted(Event, Unit, _, _, ...)
     end
 
     -- Set Text
-    Castbar.Text:SetText(INTERRUPTED)
+    Castbar.Text:SetText(self:GetInterruptedText(Castbar, InterruptedBy))
 
     -- Set Values
     Castbar:SetMinMaxValues(0, 1)
@@ -411,9 +475,9 @@ function UF.CastBarOnUpdate(Castbar)
             local Total = DurationObject:GetTotalDuration()
 
             if (Castbar.CastDelayed ~= 0) then
-                Castbar.Time:SetFormattedText("%.1fs/%.1fs |cffff0000%s%.2f|r", Duration, Total, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
+                Castbar.Time:SetFormattedText("%.1fs |cffff0000%s%.2f|r", Duration, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
             else
-                Castbar.Time:SetFormattedText("%.1fs/%.1fs", Duration, Total)
+                Castbar.Time:SetFormattedText("%.1fs", Duration)
             end
         end
     end
@@ -560,7 +624,13 @@ function UF:CreateTargetCastbar(Frame)
 
     local CastbarText = Castbar:CreateFontString(nil, "OVERLAY", nil, 7)
     CastbarText:Point("LEFT", Castbar, 4, 0)
+    CastbarText:Point("RIGHT", CastbarTime, "LEFT", -4, 0)
     CastbarText:SetFontTemplate("Default")
+    CastbarText:SetJustifyH("LEFT")
+    CastbarText:SetJustifyV("MIDDLE")
+    CastbarText:SetWordWrap(false)
+    CastbarText:SetNonSpaceWrap(false)
+    CastbarText:SetMaxLines(1)
     
     Frame.Castbar = Castbar
     Frame.Castbar.Icon = CastbarIcon
@@ -598,8 +668,14 @@ function UF:CreatePetCastbar(Frame)
     CastbarTime:SetFontTemplate("Default")
 
     local CastbarText = Castbar:CreateFontString(nil, "OVERLAY", nil, 7)
-    CastbarText:Point("LEFT", Castbar, 4, 0)
+    CastbarText:Point("LEFT", Castbar, 2, -8)
+    CastbarText:Point("RIGHT", CastbarTime, "LEFT", -4, 0)
     CastbarText:SetFontTemplate("Default")
+    CastbarText:SetJustifyH("LEFT")
+    CastbarText:SetJustifyV("MIDDLE")
+    CastbarText:SetWordWrap(false)
+    CastbarText:SetNonSpaceWrap(false)
+    CastbarText:SetMaxLines(1)
   
     Frame.Castbar = Castbar
     Frame.Castbar.Icon = CastbarIcon
@@ -676,8 +752,14 @@ function UF:CreateBossCastbar(Frame)
     CastbarTime:SetFontTemplate("Default")
 
     local CastbarText = Castbar:CreateFontString(nil, "OVERLAY", nil, 7)
-    CastbarText:Point("LEFT", Castbar, 4, 0)
+    CastbarText:Point("LEFT", Castbar, 2, -8)
+    CastbarText:Point("RIGHT", CastbarTime, "LEFT", -4, 0)
     CastbarText:SetFontTemplate("Default")
+    CastbarText:SetJustifyH("LEFT")
+    CastbarText:SetJustifyV("MIDDLE")
+    CastbarText:SetWordWrap(false)
+    CastbarText:SetNonSpaceWrap(false)
+    CastbarText:SetMaxLines(1)
 
     Frame.Castbar = Castbar
     Frame.Castbar.Icon = CastbarIcon
