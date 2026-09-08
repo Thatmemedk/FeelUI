@@ -363,6 +363,26 @@ function UI:KeepAspectRatio(Button, Icon, Base)
 	Icon:SetTexCoord(Left, Right, Top, Bottom)
 end
 
+function UI:KeepPortraitAspectRatio(Portrait, Base)
+    if (not Portrait) then
+        return
+    end
+
+    local BaseLeft, BaseRight, BaseTop, BaseBottom = unpack(Base or {0.15, 0.85, 0.15, 0.85})
+    local Zoom = unpack(DB.Global.General.IconZoom)
+    local CenterH = (BaseLeft + BaseRight) * 0.5
+    local CenterV = (BaseTop + BaseBottom) * 0.5
+    local SpanH = BaseRight - BaseLeft
+    local SpanV = BaseBottom - BaseTop
+
+    Zoom = math.max(Zoom or 1, 1)
+
+    local HalfH = SpanH / Zoom * 0.5
+    local HalfV = SpanV / Zoom * 0.5
+
+	Portrait:SetTexCoord(CenterH - HalfH, CenterH + HalfH, CenterV - HalfV, CenterV + HalfV)
+end
+
 -- Pulse Function
 function UI:CreatePulse(Frame)
 	if (not Frame) then

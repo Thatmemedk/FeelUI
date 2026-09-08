@@ -179,30 +179,41 @@ function UF:UpdateHealthTextPer(Frame, Unit)
     Frame.HealthTextPer:SetFormattedText("%d%%", Percent or 0)
 end
 
+function UF:UpdateHealthColorStatus(Frame, Unit)
+    if (not Frame or not Unit or not Frame.Health) then
+        return
+    end
+
+    if (UnitIsDead(Unit)) then
+        Frame.Health:SetStatusBarColor(0.25, 0, 0)
+        Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
+    elseif (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit)) then
+        Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
+        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
+    end
+end
+
 function UF:UpdateHealthColor(Frame, Unit)
     if (not Frame or not Unit or not Frame.Health) then
         return
     end
 
-    if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsDead(Unit) or UnitIsGhost(Unit)) then
-        Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
-        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
-
-        return
-    end
-
     if (DB.Global.UnitFrames.ClassColor) then
-        local Color
-
         if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or (UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit))) then
             local _, Class = UnitClass(Unit)
-            Color = UI.Colors.Class[Class]
+            local ClassColor = UI.Colors.Class[Class]
+
+            if (ClassColor) then
+                Frame.Health:SetStatusBarColor(ClassColor.r, ClassColor.g, ClassColor.b, 0.7)
+            end
         else
             local Reaction = UnitReaction(Unit, "player")
-            Color = UI.Colors.Reaction[Reaction]
-        end
+            local ReactionColor = UI.Colors.Reaction[Reaction]
 
-        Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.7)
+            if (ReactionColor) then
+                Frame.Health:SetStatusBarColor(ReactionColor.r, ReactionColor.g, ReactionColor.b, 0.7)
+            end
+        end
     else
         Frame.Health:SetStatusBarColor(unpack(DB.Global.UnitFrames.HealthBarColor))
 
@@ -222,6 +233,7 @@ function UF:UpdateHealthAll(Frame, Unit)
     self:UpdateHealthTextCur(Frame, Unit)
     self:UpdateHealthTextPer(Frame, Unit)
     self:UpdateHealthColor(Frame, Unit)
+    self:UpdateHealthColorStatus(Frame, Unit)
 end
 
 function UF:UpdateStatusIcon(Frame, Unit)
@@ -636,11 +648,7 @@ function UF:UpdatePortrait(Frame, Unit)
             Frame.Portrait:SetUnit(Unit)
         end
     else
-        if (not UnitIsVisible(Unit) or not UnitIsConnected(Unit)) then
-            Frame.Portrait:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-        else
-            SetPortraitTexture(Frame.Portrait, Unit)
-        end
+        SetPortraitTexture(Frame.Portrait, Unit)
     end
 end
 

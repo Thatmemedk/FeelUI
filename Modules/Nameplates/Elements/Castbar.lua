@@ -198,7 +198,6 @@ function NP:CastStarted(Event, Unit)
     Castbar.CastID = CastID
     Castbar.SpellID = SpellID
     Castbar.SpellName = Text
-    Castbar.SpellTarget = UnitSpellTargetName(Unit)
     Castbar.CastDelayed = 0
 
     -- Set Values
@@ -214,7 +213,6 @@ function NP:CastStarted(Event, Unit)
 
     -- Text
     if (Castbar.Text) then
-        Castbar.Text:SetText(Text)
         NP:UpdateCastTarget(Castbar, Unit)
     end
 

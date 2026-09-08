@@ -198,6 +198,7 @@ function UF:CastStarted(Event, Unit)
     Castbar.SpellID = SpellID
     Castbar.SpellName = Text
     Castbar.CastDelayed = 0
+    Castbar.Unit = Unit
 
     -- Set Values
     Castbar:SetTimerDuration(Duration, UI.SmoothBars, Direction)
@@ -215,7 +216,6 @@ function UF:CastStarted(Event, Unit)
         if (Unit == "player") then
             Castbar.Text:SetText(UI:UTF8Sub(Text, 22, true))
         else
-            Castbar.Text:SetText(Text)
             UF:UpdateCastTarget(Castbar, Unit)
         end
     end
@@ -474,10 +474,18 @@ function UF.CastBarOnUpdate(Castbar)
             local Duration = DurationObject:GetElapsedDuration()
             local Total = DurationObject:GetTotalDuration()
 
-            if (Castbar.CastDelayed ~= 0) then
-                Castbar.Time:SetFormattedText("%.1fs |cffff0000%s%.2f|r", Duration, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
+            if (Castbar.Unit == "player") then
+                if (Castbar.CastDelayed ~= 0) then
+                    Castbar.Time:SetFormattedText("%.1fs/%.1fs |cffff0000%s%.2f|r", Duration, Total, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
+                else
+                    Castbar.Time:SetFormattedText("%.1fs/%.1fs", Duration, Total)
+                end
             else
-                Castbar.Time:SetFormattedText("%.1fs", Duration)
+                if (Castbar.CastDelayed ~= 0) then
+                    Castbar.Time:SetFormattedText("%.1fs |cffff0000%s%.2f|r", Duration, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
+                else
+                    Castbar.Time:SetFormattedText("%.1fs", Duration)
+                end
             end
         end
     end
@@ -491,6 +499,7 @@ function UF:ResetCastBar(Castbar)
     Castbar.NotInterruptible = nil
     Castbar.CastID = nil
     Castbar.SpellID = nil
+    Castbar.Unit = nil
 
     if (Castbar.StagePips) then
         for _, Pip in ipairs(Castbar.StagePips) do
@@ -752,7 +761,7 @@ function UF:CreateBossCastbar(Frame)
     CastbarTime:SetFontTemplate("Default")
 
     local CastbarText = Castbar:CreateFontString(nil, "OVERLAY", nil, 7)
-    CastbarText:Point("LEFT", Castbar, 2, -8)
+    CastbarText:Point("LEFT", Castbar, 2, 0)
     CastbarText:Point("RIGHT", CastbarTime, "LEFT", -4, 0)
     CastbarText:SetFontTemplate("Default")
     CastbarText:SetJustifyH("LEFT")

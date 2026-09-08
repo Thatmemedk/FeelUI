@@ -101,29 +101,47 @@ function NP:UpdateHealthText(Frame, Unit)
     Frame.HealthText:SetFormattedText("%d%%", Percent or 0)
 end
 
+function NP:UpdateHealthColorStatus(Frame, Unit)
+    if (not Frame or not Unit or not Frame.Health) then
+        return
+    end
+
+    if (UnitIsDead(Unit)) then
+        Frame.Health:SetStatusBarColor(0.25, 0, 0)
+        Frame.Health:SetBackdropColorTemplate(0.25, 0, 0, 0.7)
+    elseif (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsGhost(Unit)) then
+        Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
+        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
+    end
+end
+
 function NP:UpdateHealthColor(Frame, Unit)
     if (not Frame or not Unit or not Frame.Health) then
         return
     end
 
-    if (not UnitIsConnected(Unit) or UnitIsTapDenied(Unit) or UnitIsDead(Unit) or UnitIsGhost(Unit)) then
-        Frame.Health:SetStatusBarColor(0.25, 0.25, 0.25)
-        Frame.Health:SetBackdropColorTemplate(0.25, 0.25, 0.25, 0.7)
-
-        return
-    end
-
     if (DB.Global.Nameplates.ReactionColor) then
-        local Reaction = UnitReaction(Unit, "player")
-        local Color = UI.Colors.Reaction[Reaction]
+        if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or (UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit))) then
+            local _, Class = UnitClass(Unit)
+            local ClassColor = UI.Colors.Class[Class]
 
-        Frame.Health:SetStatusBarColor(Color.r, Color.g, Color.b, 0.70)
+            if (ClassColor) then
+                Frame.Health:SetStatusBarColor(ClassColor.r, ClassColor.g, ClassColor.b, 0.7)
+            end
+        else
+            local Reaction = UnitReaction(Unit, "player")
+            local ReactionColor = UI.Colors.Reaction[Reaction]
+
+            if (ReactionColor) then
+                Frame.Health:SetStatusBarColor(ReactionColor.r, ReactionColor.g, ReactionColor.b, 0.7)
+            end
+        end
     elseif (DB.Global.Nameplates.UnitColors) then
         local IsCaster = UnitCastingInfo(Unit) or UnitChannelInfo(Unit)
-        local UnitClassifColor = NP:GetUnitColor(Unit, IsCaster and true)
+        local UnitColor = NP:GetUnitColor(Unit, IsCaster and true)
 
-        if (UnitClassifColor) then
-            Frame.Health:SetStatusBarColor(UnitClassifColor.r, UnitClassifColor.g, UnitClassifColor.b, 0.70)
+        if (UnitColor) then
+            Frame.Health:SetStatusBarColor(UnitColor.r, UnitColor.g, UnitColor.b, 0.70)
         end
     else
         Frame.Health:SetStatusBarColor(unpack(DB.Global.Nameplates.HealthBarColor))
@@ -143,6 +161,7 @@ function NP:UpdateHealthAll(Frame, Unit)
     self:UpdateHealth(Frame, Unit)
     self:UpdateHealthText(Frame, Unit)
     self:UpdateHealthColor(Frame, Unit)
+    self:UpdateHealthColorStatus(Frame, Unit)
 end
 
 -- HEAL PRED

@@ -85,7 +85,7 @@ function DM:GetClassColor(ClassFilename)
         return nil
     end
 
-    return Color.r, Color.g, Color.b
+    return { Color.r, Color.g, Color.b }
 end
 
 function DM:StripRealm(Name)
@@ -110,6 +110,10 @@ end
 -- WINDOW
 
 function DM:CreateDamageMeters()
+    if (DM.IsCreated) then
+        return
+    end
+
     -- Types
     self.DamageMeterType = Enum.DamageMeterType.DamageDone
     self.SessionType = Enum.DamageMeterSessionType.Current
@@ -285,6 +289,8 @@ function DM:CreateDamageMeters()
 
     -- Update
     self:UpdateHeader()
+
+    DM.IsCreated = true
 end
 
 -- BARS
@@ -293,8 +299,8 @@ function DM:UpdateBars(Bar, Source, Rank, MaxAmount)
     Bar.Source = Source
     Bar:Show()
 
-    local ClassFilename = Source.classFilename
-    local ClassR, ClassG, ClassB = self:GetClassColor(ClassFilename)
+    local ClassFileName = Source.classFilename
+    local ClassColor = self:GetClassColor(ClassFileName)
     local SpecIconID = Source.specIconID
 
     if (type(SpecIconID) == "number" and SpecIconID ~= 0) then
@@ -305,7 +311,7 @@ function DM:UpdateBars(Bar, Source, Rank, MaxAmount)
         Bar.Icon:Size(unpack(DB.Global.DamageMeters.IconSize))
         Bar.Icon:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
 
-        local ClassIconCoords = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[ClassFilename]
+        local ClassIconCoords = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[ClassFileName]
 
         if (ClassIconCoords) then
             UI:KeepAspectRatio(Bar.Icon, Bar.Icon, ClassIconCoords)
@@ -314,7 +320,12 @@ function DM:UpdateBars(Bar, Source, Rank, MaxAmount)
         end
     end
 
-    Bar.StatusBar:SetStatusBarColor(ClassR, ClassG, ClassB)
+    if (ClassColor) then
+        Bar.StatusBar:SetStatusBarColor(unpack(ClassColor))
+    else
+        Bar.StatusBar:SetStatusBarColor(1, 0.82, 0)
+    end
+
     Bar.StatusBar:SetMinMaxValues(0, MaxAmount, UI.SmoothBars)
     Bar.StatusBar:SetValue(Source.totalAmount, UI.SmoothBars)
 
@@ -322,7 +333,7 @@ function DM:UpdateBars(Bar, Source, Rank, MaxAmount)
     Bar.Text:SetText(Rank .. ". " .. DM:StripRealm(Source.name))
 
     -- Value
-    Bar.Value:SetFormattedText("%s | %s", DM:AbbreviateNumber(Source.totalAmount), DM:AbbreviateNumber(Source.amountPerSecond))
+    Bar.Value:SetFormattedText("%s (%s)", DM:AbbreviateNumber(Source.totalAmount), DM:AbbreviateNumber(Source.amountPerSecond))
 end
 
 function DM:ClearBar(Bar)

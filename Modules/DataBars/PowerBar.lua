@@ -268,7 +268,14 @@ function PowerBar:GlidingState()
 end
 
 function PowerBar:CheckDragonflying()
-    C_Timer.NewTicker(0.2, function()
+    if (self.DragonflyingTicker) then
+        return
+    end
+
+    self.IsFlying = false
+    self:GlidingState()
+
+    self.DragonflyingTicker = C_Timer.NewTicker(0.2, function()
         self:GlidingState()
     end)
 end

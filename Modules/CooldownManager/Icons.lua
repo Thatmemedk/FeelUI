@@ -79,7 +79,7 @@ function CDM:SkinIcons(Button, ButtonSize)
 	-- Icon
 	if (Icon) then
 		Icon:ClearAllPoints()
-		Icon:SetInside()
+		Icon:SetInside(Button, 0, 0)
 
 		-- Keep Aspect Ratio
 		UI:KeepAspectRatio(Button, Icon)
@@ -91,7 +91,7 @@ function CDM:SkinIcons(Button, ButtonSize)
 	if (Cooldown) then
 		Cooldown:SetSwipeTexture(Media.Global.Blank)
 		Cooldown:ClearAllPoints()
-		Cooldown:SetInside()
+		Cooldown:SetInside(Button, 0, 0)
 		Cooldown:SetReverse(true)
 
 		UI:UpdateCooldownText(Cooldown, Button, 0, -8, true)
@@ -99,12 +99,12 @@ function CDM:SkinIcons(Button, ButtonSize)
 
 	if (CooldownFlash) then
 		CooldownFlash:ClearAllPoints()
-		CooldownFlash:SetInside()
+		CooldownFlash:SetInside(Button, 0, 0)
 	end
 
 	if (OutOfRange) then
 		OutOfRange:ClearAllPoints()
-		OutOfRange:SetInside()
+		OutOfRange:SetInside(Button, 0, 0)
 	end
 
 	if (Charges) then

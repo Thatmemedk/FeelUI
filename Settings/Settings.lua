@@ -174,7 +174,7 @@ DB.Global = {
 
 	Nameplates = {
 		Enable = true,
-		Size = { 182, 12 },
+		Size = { 192, 12 },
 		-- Colors
 		HealthBarColor = { 0.5, 0.4, 1, 0.7 },
 		UnitColors = true,
@@ -200,6 +200,7 @@ DB.Global = {
 		CastBarSucceededColor = { 0, 0.67, 0, 0.70 },
 		-- Portraits
 		Portraits = false,
+		PortraitStyle = "3D",
 		-- Icons
 		RoleIcons = false,
 		-- Points Settings
