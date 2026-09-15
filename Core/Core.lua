@@ -10,12 +10,12 @@ local min, max = math.min, math.max
 local floor = math.floor
 
 -- WoW Globals
-local GetAddOnEnableState = C_AddOns.GetAddOnEnableState
-local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
+local GetAddOnEnableState = _G.C_AddOns.GetAddOnEnableState
+local IsAddOnLoaded = _G.C_AddOns.IsAddOnLoaded
 local GetPhysicalScreenSize = GetPhysicalScreenSize
 local Resolution = select(1, GetPhysicalScreenSize()).."x"..select(2, GetPhysicalScreenSize())
 local PixelPerfectScale = 768 / match(Resolution, "%d+x(%d+)")
-local SetCVar = C_CVar.SetCVar
+local SetCVar = _G.C_CVar.SetCVar
 
 -- Tables
 UI.Modules = {}
@@ -23,6 +23,7 @@ UI.ModuleQueue = {}
 UI.ModuleQueueIndex = 0
 
 -- LIBS
+
 do
 	UI.Libs = {}
 	UI.LibsMinor = {}
@@ -43,6 +44,7 @@ do
 end
 
 -- REGISTER MODULE
+
 function UI:RegisterModule(Name)
 	local Module = self:CallModule(Name)
 
@@ -61,6 +63,7 @@ function UI:RegisterModule(Name)
 end
 
 -- CALL MODULE
+
 function UI:CallModule(Name)
 	if (self.Modules[Name]) then
 		return self.Modules[Name]
@@ -68,6 +71,7 @@ function UI:CallModule(Name)
 end
 
 -- LOAD MODULE
+
 function UI:LoadModules()
 	for Index = 1, #self.ModuleQueue do
 		if (self.ModuleQueue[Index].Initialize and not self.ModuleQueue[Index].Initialized) then
@@ -78,6 +82,7 @@ function UI:LoadModules()
 end
 
 -- ADDON LOADED
+
 function UI:ADDON_LOADED(event, addon)
 	if (addon ~= "FeelUI" and addon ~= "FeelUI_Options") then
 		return
@@ -88,6 +93,7 @@ function UI:ADDON_LOADED(event, addon)
 end
 
 -- PLAYER LOGIN
+
 function UI:PLAYER_LOGIN(event)
 	local Scale = max(DB.Global.General.UIScaleMin, min(1.15, DB.Global.General.UIScaleMax))
 
@@ -112,12 +118,15 @@ function UI:PLAYER_LOGIN(event)
 	self:UnregisterEvent(event)
 end
 
+-- PIXEL PERFECT
+
 function UI:Scale(x)
 	local Mult = PixelPerfectScale / GetCVar("uiScale")
 	return Mult * floor(x / Mult + 0.5)
 end
 
 -- ON EVENT
+
 function UI:OnEvent(event, ...)
 	if (self[event]) then
 		self[event](self, event, ...)

@@ -369,6 +369,8 @@ function NP:UpdateName(Frame, Unit)
     Frame.Name:SetTextColor(R, G, B)
 end
 
+-- GUILD UPDATE
+
 function NP:UpdateGuild(Frame, Unit)
     if (not Frame or not Unit or not Frame.Guild) then
         return

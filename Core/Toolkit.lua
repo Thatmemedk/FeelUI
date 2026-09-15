@@ -166,7 +166,7 @@ end
 --------------------
 
 local function SetFontTemplate(self, FontTemplate, FontSize, ShadowOffsetX, ShadowOffsetY, ShadowColor)
-	if not (self or self:IsForbidden()) then
+	if (not self or self:IsForbidden()) then
 		return
 	end
 
@@ -211,7 +211,7 @@ local function DisablePixelSnap(self)
 end
 
 function UI:PointsRestricted(self)
-	if self and not pcall(self.GetPoint, self) then
+	if (self and not pcall(self.GetPoint, self)) then
 		return true
 	end
 end
@@ -243,7 +243,7 @@ local function SetOutside(self, Anchor, OffsetX, OffsetY, Anchor2)
 	OffsetY = OffsetY or 0
 	Anchor = Anchor or self:GetParent()
 
-	if UI:PointsRestricted(self) or self:GetPoint() then
+	if (UI:PointsRestricted(self) or self:GetPoint()) then
 		self:ClearAllPoints()
 	end
 	
@@ -257,7 +257,7 @@ local function SetInside(self, Anchor, OffsetX, OffsetY, Anchor2)
 	OffsetY = OffsetY or 0
 	Anchor = Anchor or self:GetParent()
 
-	if UI:PointsRestricted(self) or self:GetPoint() then
+	if (UI:PointsRestricted(self) or self:GetPoint()) then
 		self:ClearAllPoints()
 	end
 
@@ -718,8 +718,6 @@ local function HandleButton(self, Strip)
 	if (self.HandleButtonIsSkinned) then
 		return 
 	end
-
-	local ButtonName = self.GetName and self:GetName()
 
 	if self.SetNormalTexture then self:SetNormalTexture(UI.ClearTexture) end
 	if self.SetHighlightTexture then self:SetHighlightTexture(UI.ClearTexture) end

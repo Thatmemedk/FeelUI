@@ -149,11 +149,11 @@ function Install:CreateInstall()
 end
 
 function Install:Toggle()
-	if InCombatLockdown() then
+	if (InCombatLockdown()) then
 		return
 	end
 
-	if self.Frame:IsShown() then
+	if (self.Frame:IsShown()) then
 		self.Frame.FadeOut:Play()
 	else
 		self.Frame:Show()
@@ -162,7 +162,7 @@ function Install:Toggle()
 end
 
 function Install:PLAYER_REGEN_DISABLED()
-	if self.Frame:IsShown() then
+	if (self.Frame:IsShown()) then
 		self.Frame:SetAlpha(0)
 		self.Frame:Hide()
 		self.Frame.CombatClosed = true
@@ -170,7 +170,7 @@ function Install:PLAYER_REGEN_DISABLED()
 end
 
 function Install:PLAYER_REGEN_ENABLED()
-	if self.Frame.CombatClosed then
+	if (self.Frame.CombatClosed) then
 		self.Frame:Show()
 		self.Frame:SetAlpha(1)
 		self.Frame.CombatClosed = false
@@ -179,7 +179,7 @@ end
 
 function Install:OnEvent(event)
 	if (event == "PLAYER_ENTERING_WORLD") then
-		if not (FeelDB[Realm][Name].Install.Done) then
+		if (not FeelDB[Realm][Name].Install.Done) then
 			Install:Toggle()
 			
 			FeelDB[Realm][Name].Install.Done = true

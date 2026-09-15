@@ -12,9 +12,9 @@ local select = select
 local EssentialCooldownViewer = _G.EssentialCooldownViewer
 local UtilityCooldownViewer = _G.UtilityCooldownViewer
 local BuffIconCooldownViewer = _G.BuffIconCooldownViewer
-local SetCVar = C_CVar.SetCVar
-local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-local LoadAddOn = C_AddOns.LoadAddOn
+local SetCVar = _G.C_CVar.SetCVar
+local IsAddOnLoaded = _G.C_AddOns.IsAddOnLoaded
+local LoadAddOn = _G.C_AddOns.LoadAddOn
 
 -- Locals
 CDM.Anchors = {}
@@ -42,6 +42,5 @@ function CDM:Initialize()
 	
 	self:UpdateLayout()
 	self:UpdateIcons()
-	--self:UpdateTracker()
 	self:SetCVarOnLogin()
 end

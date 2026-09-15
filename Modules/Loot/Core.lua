@@ -39,7 +39,57 @@ local LOOT_SLOT_MONEY = _G.LOOT_SLOT_MONEY
 -- Locals
 Loot.IconWidth = 36
 Loot.IconHeight = 22
-Loot.Slots = {} 
+Loot.Slots = {}
+
+-- DISABLE
+
+function Loot:DisableBlizzard()
+	if (_G.LootFrame and _G.LootFrame.UnregisterAllEvents) then
+		_G.LootFrame:UnregisterAllEvents()
+	end
+end
+
+-- CREATE FRAME
+
+function Loot:CreateFrames()
+	-- Frame
+	Frame = CreateFrame("Button", "FeelUI_LootFrame", _G.UIParent)
+	Frame:Size(198, 58)
+	Frame:SetClampedToScreen(true)
+	Frame:SetToplevel(true)
+	Frame:SetAlpha(0)
+	Frame:Hide()
+	Frame:SetScript("OnHide", function()
+		StaticPopup_Hide("CONFIRM_LOOT_DISTRIBUTION")
+		CloseLoot()
+	end)
+
+	-- Invs Frame
+	Frame.InvisFrame = CreateFrame("Frame", nil, Frame)
+	Frame.InvisFrame:SetFrameLevel(Frame:GetFrameLevel() + 10)
+	Frame.InvisFrame:SetInside()
+
+	-- Overlay
+	Frame.Overlay = CreateFrame("Frame", nil, Frame)
+	Frame.Overlay:Size(214, 28)
+	Frame.Overlay:Point("TOP", Frame, -16, 22)
+	Frame.Overlay:CreateBackdrop()
+	Frame.Overlay:CreateShadow()
+
+	-- Title
+	Frame.Title = Frame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
+	Frame.Title:Point("CENTER", Frame.Overlay, 0, 0)
+	Frame.Title:SetFontTemplate("Default")
+	Frame.Title:SetTextColor(1, 0.82, 0)
+
+	-- Insert
+	tinsert(_G.UISpecialFrames, "FeelUI_LootFrame")
+
+	-- Cache
+	self.Frame = Frame
+end
+
+-- SLOT FUNCTIONS
 
 function Loot:OnEnter()
 	if (not self.Highlight) then 
@@ -54,7 +104,10 @@ function Loot:OnEnter()
 	if (LootSlotHasItem(SlotID)) then
 		_G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 		_G.GameTooltip:SetLootItem(SlotID)
-		_G.CursorUpdate(self)
+
+		if (CursorUpdate) then
+			CursorUpdate(self)
+		end
 	end
 end
 
@@ -64,23 +117,50 @@ function Loot:OnLeave()
 		self.Highlight:Hide()
 	end
 
-	_G.GameTooltip_Hide()
-	_G.ResetCursor()
+	if (_G.GameTooltip and _G.GameTooltip:IsOwned(self)) then
+		_G.GameTooltip:Hide()
+	end
+
+	if (ResetCursor) then
+		ResetCursor()
+	end
 end
 
 function Loot:OnClick()
 	local ID = self:GetID()
-	LootFrame.selectedQuality = self.Quality
-	LootFrame.selectedItemName = self.Name:GetText()
-	LootFrame.selectedSlot = ID
-	LootFrame.selectedLootButton = self:GetName()
-	LootFrame.selectedTexture = self.Icon and self.Icon:GetTexture()
+
+	if (not LootSlotHasItem(ID)) then
+		return
+	end
+
+	if (_G.LootFrame) then
+		_G.LootFrame.selectedSlot = ID
+		_G.LootFrame.selectedQuality = self.Quality
+		_G.LootFrame.selectedItemName = self.Name:GetText()
+		_G.LootFrame.selectedLootButton = self:GetName()
+		_G.LootFrame.selectedTexture = self.Icon and self.Icon:GetTexture()
+	end
 
 	if (IsModifiedClick()) then
-		HandleModifiedItemClick(GetLootSlotLink(ID))
+		local Link = GetLootSlotLink(ID)
+
+		if (Link) then
+			HandleModifiedItemClick(Link)
+		end
 	else
 		StaticPopup_Hide("CONFIRM_LOOT_DISTRIBUTION")
 		LootSlot(ID)
+	end
+end
+
+function Loot:OnShow()
+	if (_G.GameTooltip and _G.GameTooltip:IsOwned(self)) then
+		_G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		_G.GameTooltip:SetLootItem(self:GetID())
+
+		if (CursorOnUpdate) then
+			CursorOnUpdate(self)
+		end
 	end
 end
 
@@ -92,24 +172,8 @@ function Loot:OnShow()
 	end
 end
 
-function Loot:AnchorSlots()
-	local ShownLootSlots = 0
-
-	for i = 1, #self.Slots do
-		local Frames = self.Slots[i]
-
-		if (Frames:IsShown()) then
-			ShownLootSlots = ShownLootSlots + 1
-
-			Frames:Point("TOP", FeelUILootFrame, 0, (-20 + self.IconWidth) - (ShownLootSlots * (self.IconHeight + 2)))
-		end
-	end
-
-	FeelUILootFrame:Height(max(self.IconWidth, ShownLootSlots * self.IconHeight))
-end
-
 function Loot:CreateSlot(ID)
-	local Frame = CreateFrame("Button", "FeelUILootSlot"..ID, FeelUILootFrame)
+	local Frame = CreateFrame("Button", "FeelUI_LootSlot"..ID, self.Frame)
 	Frame:Height(self.IconHeight)
 	Frame:Point("LEFT", 14, 0)
 	Frame:Point("RIGHT", -8, 0)
@@ -123,6 +187,11 @@ function Loot:CreateSlot(ID)
 	Frame:SetScript("OnClick", self.OnClick)
 	Frame:SetScript("OnShow", self.OnShow)
 
+	local InvisFrame = CreateFrame("Frame", nil, Frame)
+	InvisFrame:SetFrameLevel(Frame:GetFrameLevel() + 10)
+	InvisFrame:SetInside()
+
+	-- Icon
 	local IconFrame = CreateFrame("Frame", nil, Frame)
 	IconFrame:Size(self.IconWidth, self.IconHeight)
 	IconFrame:Point("RIGHT", Frame, "LEFT", -2, 0)
@@ -134,28 +203,28 @@ function Loot:CreateSlot(ID)
 	Icon:SetInside()
 	UI:KeepAspectRatio(IconFrame, Icon)
 
-	local InvisFrame = CreateFrame("Frame", nil, Frame)
-	InvisFrame:SetFrameLevel(Frame:GetFrameLevel() + 10)
-	InvisFrame:SetInside()
-
+	-- Count
 	local Count = IconFrame:CreateFontString(nil, "OVERLAY", nil, 7)
 	Count:SetJustifyH("RIGHT")
 	Count:Point("BOTTOMRIGHT", IconFrame, -2, 4)
 	Count:SetFontTemplate("Default")
 	Count:SetText("1")
 
+	-- Name
 	local Name = InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
 	Name:SetJustifyH("LEFT")
 	Name:Point("LEFT", Frame, 4, 0)
 	Name:SetNonSpaceWrap(true)
 	Name:SetFontTemplate("Default")
 
+	-- Highlight
 	local Highlight = CreateFrame("StatusBar", nil, Frame)
 	Highlight:SetFrameLevel(Frame:GetFrameLevel() + 2)
 	Highlight:SetInside(Frame, 1, 1)
 	Highlight:SetStatusBarTexture(Media.Global.Blank)
 	Highlight:SetStatusBarColor(0, 0, 0, 0)
 
+	-- Cache
 	Frame.IconFrame = IconFrame
 	Frame.Icon = Icon
 	Frame.Count = Count
@@ -167,9 +236,31 @@ function Loot:CreateSlot(ID)
 	return Frame
 end
 
+function Loot:AnchorSlots()
+	if (not self.Frame) then
+		return
+	end
+
+	local ShownLootSlots = 0
+
+	for i = 1, #self.Slots do
+		local Frames = self.Slots[i]
+
+		if (Frames:IsShown()) then
+			ShownLootSlots = ShownLootSlots + 1
+
+			Frames:Point("TOP", self.Frame, 0, (-20 + self.IconWidth) - (ShownLootSlots * (self.IconHeight + 2)))
+		end
+	end
+
+	self.Frame:Height(max(self.IconWidth, ShownLootSlots * self.IconHeight))
+end
+
+-- EVENTS
+
 function Loot:LOOT_SLOT_CLEARED(_, Slot)
-	if (not CustomLootFrame or not CustomLootFrame:IsShown()) then 
-		return 
+	if (not self.Frame or not self.Frame:IsShown()) then
+		return
 	end
 
 	if (self.Slots[Slot]) then
@@ -180,51 +271,59 @@ function Loot:LOOT_SLOT_CLEARED(_, Slot)
 end
 
 function Loot:LOOT_CLOSED()
-	StaticPopup_Hide("LOOT_BIND")
-
-	if (FeelUILootFrame) then 
-		FeelUILootFrame:Hide() 
+	if (not self.Frame) then
+		return
 	end
 
-	for _, Frames in pairs(self.Slots) do
-		if (Frames and Frames.Hide) then 
-			Frames:Hide() 
+	StaticPopup_Hide("LOOT_BIND")
+
+	UI:UIFrameFadeOut(self.Frame, 1, self.Frame:GetAlpha(), 0)
+	UI:Delay("LootClosed", 1, function()
+		self.Frame:Hide()
+	end)
+
+	for i = 1, #self.Slots do
+		local Frames = self.Slots[i]
+
+		if (Frames:IsShown()) then
+			Frames:Hide()
 		end
 	end
 end
 
 function Loot:LOOT_OPENED(_, AutoLootFlag)
-	if (not FeelUILootFrame) then 
-		return 
+	if (not self.Frame) then
+		return
 	end
 
-	FeelUILootFrame:Show()
+	UI:UIFrameFadeIn(self.Frame, 0.25, self.Frame:GetAlpha(), 1)
+	self.Frame:Show()
 
-	if (not FeelUILootFrame:IsShown()) then
+	if (not self.Frame:IsShown()) then
 		CloseLoot(not AutoLootFlag)
 	end
 
 	if (IsFishingLoot()) then
-		FeelUILootFrame.Title:SetText("Fishing Loot")
+		self.Frame.Title:SetText("Fishing Loot")
 	elseif (not UnitIsFriend("player", "target") and UnitIsDead("target")) then
-		FeelUILootFrame.Title:SetText(UnitName("target"))
+		self.Frame.Title:SetText(UnitName("target"))
 	else
-		FeelUILootFrame.Title:SetText(LOOT)
+		self.Frame.Title:SetText(LOOT)
 	end
 
 	if (GetCVarBool("lootUnderMouse")) then
 		local OffsetX, OffsetY = GetCursorPosition()
-		local Scale = FeelUILootFrame:GetEffectiveScale() or 1
+		local Scale = self.Frame:GetEffectiveScale() or 1
 
 		OffsetX = (OffsetX / Scale) - 40
 		OffsetY = (OffsetY / Scale) + 20
 
-		FeelUILootFrame:ClearAllPoints()
-		FeelUILootFrame:Point("TOPLEFT", _G.UIParent, "BOTTOMLEFT", OffsetX, OffsetY)
-		FeelUILootFrame:Raise()
+		self.Frame:ClearAllPoints()
+		self.Frame:Point("TOPLEFT", _G.UIParent, "BOTTOMLEFT", OffsetX, OffsetY)
+		self.Frame:Raise()
 	else
-		FeelUILootFrame:ClearAllPoints()
-		FeelUILootFrame:Point("LEFT", _G.UIParent, 102, 0)
+		self.Frame:ClearAllPoints()
+		self.Frame:Point("LEFT", _G.UIParent, 102, 0)
 	end
 
 	local Items = GetNumLootItems()
@@ -266,7 +365,6 @@ function Loot:LOOT_OPENED(_, AutoLootFlag)
 			SlotFrame.Quality = Quality
 			SlotFrame.Name:SetText(UI:UTF8Sub(Item or LOOT, 24, true))
 			SlotFrame.Icon:SetTexture(Texture)
-
 			SlotFrame:Enable()
 			SlotFrame:Show()
 		end
@@ -282,7 +380,6 @@ function Loot:LOOT_OPENED(_, AutoLootFlag)
 
 		SlotFrame.Icon:SetTexture([[Interface\Icons\INV_Misc_Herb_AncientLichen]])
 		SlotFrame.Count:Hide()
-
 		SlotFrame:Disable()
 		SlotFrame:Show()
 	end
@@ -290,52 +387,20 @@ function Loot:LOOT_OPENED(_, AutoLootFlag)
 	self:AnchorSlots()
 end
 
-function Loot:CreateFrames()
-	FeelUILootFrame = CreateFrame("Button", "FeelUILootFrame", _G.UIParent)
-	FeelUILootFrame:Size(198, 58)
-	FeelUILootFrame:SetClampedToScreen(true)
-	FeelUILootFrame:SetToplevel(true)
-	FeelUILootFrame:Hide()
-
-	FeelUILootFrame:SetScript("OnHide", function()
-		StaticPopup_Hide("CONFIRM_LOOT_DISTRIBUTION")
-		CloseLoot()
-	end)
-
-	FeelUILootFrame.Overlay = CreateFrame("Frame", nil, FeelUILootFrame)
-	FeelUILootFrame.Overlay:Size(214, 28)
-	FeelUILootFrame.Overlay:Point("TOP", FeelUILootFrame, -16, 22)
-	FeelUILootFrame.Overlay:CreateBackdrop()
-	FeelUILootFrame.Overlay:CreateShadow()
-
-	FeelUILootFrame.InvisFrame = CreateFrame("Frame", nil, FeelUILootFrame)
-	FeelUILootFrame.InvisFrame:SetFrameLevel(FeelUILootFrame:GetFrameLevel() + 10)
-	FeelUILootFrame.InvisFrame:SetInside()
-
-	FeelUILootFrame.Title = FeelUILootFrame.InvisFrame:CreateFontString(nil, "OVERLAY", nil, 7)
-	FeelUILootFrame.Title:Point("CENTER", FeelUILootFrame.Overlay, 0, 0)
-	FeelUILootFrame.Title:SetFontTemplate("Default")
-	FeelUILootFrame.Title:SetTextColor(1, 0.82, 0)
-
-	tinsert(_G.UISpecialFrames, "FeelUILootFrame")
-end
-
-function Loot:DisableBlizzard()
-	if (_G.LootFrame and _G.LootFrame.UnregisterAllEvents) then
-		_G.LootFrame:UnregisterAllEvents()
-	end
-end
+-- REGISTER EVENTS
 
 function Loot:RegisterEvents()
 	self:RegisterEvent("LOOT_OPENED")
 	self:RegisterEvent("LOOT_SLOT_CLEARED")
 	self:RegisterEvent("LOOT_CLOSED")
 	self:SetScript("OnEvent", function(self, event, ...)
-		if self[event] then
+		if (self[event]) then
 			return self[event](self, event, ...)
 		end
 	end)
 end
+
+-- INITIALIZE
 
 function Loot:Initialize()
 	if (not DB.Global.Loot.Enable) then 

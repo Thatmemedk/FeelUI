@@ -50,12 +50,17 @@ function UI:UpdateCooldownText(CD, Parent, OffsetX, OffsetY, DynamicFontSize)
     
     CD:SetCountdownFormatter(UI:BuildRuleDurationFormatter())
 
+    CD.InvisFrame = CreateFrame("Frame", nil, CD)
+    CD.InvisFrame:SetFrameLevel(CD:GetFrameLevel() + 10)
+    CD.InvisFrame:SetInside()
+
     for i = 1, CD:GetNumRegions() do
         local Region = select(i, CD:GetRegions())
 
         if (Region and Region.GetText) then
             local FontSize = DynamicFontSize and UI:GetCooldownFontScale(CD)
 
+            Region:SetParent(CD.InvisFrame)
             Region:ClearAllPoints()
             Region:Point("CENTER", Parent, OffsetX or 0, OffsetY or 0)
             Region:SetFontTemplate("Default", FontSize or 12)

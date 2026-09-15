@@ -25,6 +25,7 @@ DM.ScrollRows = 7
 -- Locals
 DM.TimerElapsed = 0
 DM.CombatStartTime = nil
+DM.InEncounter = false
 
 -- Local
 DM.AbbreviateConfig = nil
@@ -150,7 +151,6 @@ function DM:CreateDamageMeters()
     Session:Size(18, 18)
     Session:Point("TOPRIGHT", Frame, -8, 0)
 
-    -- Session OnClick
     Session:SetScript("OnClick", function()
         if (DM.SessionDropdown and DM.SessionDropdown:IsShown()) then
             DM.SessionDropdown:HideDropdown()
@@ -164,26 +164,45 @@ function DM:CreateDamageMeters()
     end)
 
     Session.Icon = Session:CreateTexture(nil, "OVERLAY", nil)
-    Session.Icon:Size(36, 36)
+    Session.Icon:Size(40, 40)
     Session.Icon:Point("CENTER", Session, 0, 0)
     Session.Icon:SetAtlas("GM-icon-settings-hover")
+    Session.Icon:SetVertexColor(0.55, 0.55, 0.55)
     Session.Icon:SetDesaturated(true)
+
+    -- Session highlight
+    Session:SetScript("OnEnter", function()
+        Session.Icon:SetVertexColor(0.8, 0.8, 0.8)
+    end)
+
+    Session:SetScript("OnLeave", function()
+        Session.Icon:SetVertexColor(0.55, 0.55, 0.55)
+    end)
 
     -- Reset
     local Reset = CreateFrame("Button", nil, Frame)
     Reset:Size(18, 18)
     Reset:Point("LEFT", Session, -24, 0)
 
-    -- Reset OnClick
     Reset:SetScript("OnClick", function()
         DM:ResetDamageMeter()
     end)
 
     Reset.Icon = Reset:CreateTexture(nil, "OVERLAY", nil)
-    Reset.Icon:Size(18, 18)
+    Reset.Icon:Size(22, 22)
     Reset.Icon:Point("CENTER", Reset, 0, 0)
     Reset.Icon:SetAtlas("talents-button-undo")
+    Reset.Icon:SetVertexColor(0.55, 0.55, 0.55)
     Reset.Icon:SetDesaturated(true)
+
+    -- Reset highlight
+    Reset:SetScript("OnEnter", function()
+        Reset.Icon:SetVertexColor(0.8, 0.8, 0.8)
+    end)
+
+    Reset:SetScript("OnLeave", function()
+        Reset.Icon:SetVertexColor(0.55, 0.55, 0.55)
+    end)
 
     -- Content
     local Content = CreateFrame("Frame", nil, Frame)
@@ -223,6 +242,11 @@ function DM:CreateDamageMeters()
         Bar:Point("TOPLEFT", Content, "TOPLEFT", 0, -(Index - 1) * (DB.Global.DamageMeters.BarHeight + DB.Global.DamageMeters.BarSpacing))
         Bar:Point("RIGHT", Content, "RIGHT")
 
+        -- Invs Frame
+        Bar.InvisFrame = CreateFrame("Frame", nil, Bar)
+        Bar.InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
+        Bar.InvisFrame:SetInside()
+
         -- StatusBar
         Bar.StatusBar = CreateFrame("StatusBar", nil, Bar)
         Bar.StatusBar:SetInside()
@@ -232,9 +256,12 @@ function DM:CreateDamageMeters()
         Bar.StatusBar:CreateBackdrop()
         Bar.StatusBar:CreateShadow()
 
-        Bar.InvisFrame = CreateFrame("Frame", nil, Bar)
-        Bar.InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
-        Bar.InvisFrame:SetInside()
+        -- Higlight
+        Bar.HighlightTexture = Bar.InvisFrame:CreateTexture(nil, "BACKGROUND")
+        Bar.HighlightTexture:SetInside(Bar.StatusBar, 1, 1)
+        Bar.HighlightTexture:SetTexture(Media.Global.Texture)
+        Bar.HighlightTexture:SetVertexColor(unpack(DB.Global.ActionBars.HighlightColor))
+        Bar.HighlightTexture:Hide()
 
         -- Icon
         Bar.Icon = Bar.InvisFrame:CreateTexture(nil, "ARTWORK")
@@ -275,6 +302,14 @@ function DM:CreateDamageMeters()
             SourceWindow:SetDamageMeterType(self.DamageMeterType)
             SourceWindow:SetSession(self.SessionType, self.SessionID)
             SourceWindow:Show()
+        end)
+
+        Bar:HookScript("OnEnter", function(self)
+            self.HighlightTexture:Show()
+        end)
+        
+        Bar:HookScript("OnLeave", function(self) 
+            self.HighlightTexture:Hide()
         end)
 
         self.Rows[Index] = Bar
@@ -522,14 +557,32 @@ end
 
 -- ON EVENT
 
-function DM:OnEvent(event)
+function DM:OnEvent(event, ...)
     self:Refresh()
 
     if (event == "PLAYER_REGEN_DISABLED") then
-        self.CombatStartTime = GetTime()
-        self.TimerElapsed = 0
-        self:UpdateHeader()
+        if (not self.CombatStartTime) then
+            self.CombatStartTime = GetTime()
+            self.TimerElapsed = 0
+            self:UpdateHeader()
+        end
     elseif (event == "PLAYER_REGEN_ENABLED") then
+        if (not self.InEncounter) then
+            self.CombatStartTime = nil
+            self.TimerElapsed = 0
+            self:UpdateHeader()
+        end
+    elseif (event == "ENCOUNTER_START") then
+        self.InEncounter = true
+
+        if (not self.CombatStartTime) then
+            self.CombatStartTime = GetTime()
+            self.TimerElapsed = 0
+        end
+
+        self:UpdateHeader()
+    elseif (event == "ENCOUNTER_END") then
+        self.InEncounter = false
         self.CombatStartTime = nil
         self.TimerElapsed = 0
         self:UpdateHeader()
@@ -544,6 +597,8 @@ function DM:RegisterEvents()
     self:RegisterEvent("DAMAGE_METER_RESET")
     self:RegisterEvent("PLAYER_REGEN_DISABLED")
     self:RegisterEvent("PLAYER_REGEN_ENABLED")
+    self:RegisterEvent("ENCOUNTER_START")
+    self:RegisterEvent("ENCOUNTER_END")
     self:SetScript("OnEvent", self.OnEvent)
 end
 

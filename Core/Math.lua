@@ -38,12 +38,14 @@ local tonumber = tonumber
 -- cffc5b358 (Gold)
 -- cff049ffe (Blue)
 
--- Colors
+-- COLORS
+
 function UI:RGBToHex(R, G, B, Header, Ending)
 	R = R <= 1 and R >= 0 and R or 1
 	G = G <= 1 and G >= 0 and G or 1
 	B = B <= 1 and B >= 0 and B or 1
-	return format("%s%02x%02x%02x%s", Header or "|cff", R*255, G*255, B*255, Ending or "")
+
+	return format("%s%02x%02x%02x%s", Header or "|cff", R * 255, G * 255, B * 255, Ending or "")
 end
 
 function UI:HexToRGB(Hex)
@@ -89,7 +91,7 @@ function UI:ColorGradientText(Perc, ...)
 
 	if (Perc >= 1) then
 		return select(Value - 2, ...)
-	elseif Perc <= 0 then
+	elseif (Perc <= 0) then
 		return ...
 	end
 
@@ -100,11 +102,13 @@ function UI:ColorGradientText(Perc, ...)
 	return R1+(R2-R1)*RelPerc, G1+(G2-G1)*RelPerc, B1+(B2-B1)*RelPerc
 end
 
--- Round Numbers
+-- FORMATTING
+
 function UI:Round(Number, Decimals)
-	if not (Decimals) then
+	if (not Decimals) then
 		Decimals = 0
 	end
+
 	return format(format("%%.%df", Decimals), Number)
 end
 
@@ -138,7 +142,6 @@ function UI:FormatTimeShort(Seconds)
 	end
 end
 
--- Full Numbers
 function UI:FormatTime(Seconds)
 	local Day, Hour, Minutes = 0, 0, 0
 	
@@ -170,7 +173,6 @@ function UI:FormatTime(Seconds)
 	end
 end
 
--- Money Formats
 function UI:FormatMoney(Value, TextOnly)
     local Amount = abs(Value)
     local GOLD = floor(Amount / 10000)

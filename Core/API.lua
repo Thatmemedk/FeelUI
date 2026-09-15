@@ -62,7 +62,14 @@ UI.DirectionElapsed = Enum.StatusBarTimerDirection.ElapsedTime
 UI.DirectionRemaining = Enum.StatusBarTimerDirection.RemainingTime
 UI.CurvePercent = CurveConstants.ScaleTo100
 
--- Secret Values
+-- PRINT
+
+function UI:Print(...)
+	print("|CFF00AAFF" .. "FeelUI" .. "|r:", ...)
+end
+
+-- SECRET VALUES
+
 function UI:IsSecretUnit(Unit)
 	local Pass, Value = pcall(UnitSecret, Unit)
 
@@ -132,6 +139,7 @@ function UI:UnitIsUnit(Unit1, Unit2)
 end
 
 -- UFT8
+
 function UI:UTF8Sub(Text, Index, Dots)
     if (not (Text) or UI:IsSecretValue(Text))  then 
         return 
@@ -171,7 +179,8 @@ function UI:UTF8Sub(Text, Index, Dots)
     end
 end
 
--- NameAbbrev
+-- NAME ABBREV
+
 function UI:NameAbbrev(Text)
     local Letters, LastWord = "", strmatch(Text, ".+%s(.+)$")
     
@@ -190,7 +199,8 @@ function UI:NameAbbrev(Text)
     return Text
 end
 
--- Delay
+-- DELAY
+
 function UI:Delay(Key, Delay, Func)
     if (type(Delay) ~= "number" or type(Func) ~= "function") then
         return false
@@ -212,12 +222,8 @@ function UI:Delay(Key, Delay, Func)
     return true
 end
 
--- Print
-function UI:Print(...)
-	print("|CFF00AAFF" .. "FeelUI" .. "|r:", ...)
-end
+-- SLASH COMMANDS
 
--- Register Commands
 function UI:RegisterChatCommand(Command, Func)
 	local Name = Command:upper()
 	
@@ -241,18 +247,12 @@ function UI:RegisterChatCommand(Command, Func)
 				else
 					UI:Print("|CFF00AAFFFeelUI|r_Options is |CFFFF3333Disabled|r")
 				end
-			elseif (Func == "Move") then
-				--local Move = UI:CallModule("Move")
-				-- TO BE WORKED ON.
 			elseif (Func == "Status") then
 				local Status = UI:CallModule("Status")
 				Status:Toggle()
 			elseif (Func == "ResetUI") then
 				local Install = UI:CallModule("Install")
 				Install:Toggle()
-			elseif (Func == "Grid") then
-				local Align = UI:CallModule("Align")
-				Align:Toggle()
 			end
 		end
 	end
@@ -276,7 +276,6 @@ function UI:AddCommand(Name, Keys, Func)
 	end
 end
 
--- Load Commands
 function FeelUI:LoadCommands()
 	-- Dev Console
 	UI:AddCommand("DEVCON", "/devcon", function()
@@ -320,10 +319,10 @@ function FeelUI:LoadCommands()
 	UI:RegisterChatCommand("fhelp", "Help")
 	UI:RegisterChatCommand("fstatus", "Status")
 	UI:RegisterChatCommand("freset", "ResetUI")
-	UI:RegisterChatCommand("fgrid", "Grid")
 end
 
--- Keep Aspect Ratio
+-- KEEP ASPECT RATIO
+
 function UI:KeepAspectRatio(Button, Icon, Base)
 	if (not Button or not Icon) then
 		return
@@ -383,7 +382,8 @@ function UI:KeepPortraitAspectRatio(Portrait, Base)
 	Portrait:SetTexCoord(CenterH - HalfH, CenterH + HalfH, CenterV - HalfV, CenterV + HalfV)
 end
 
--- Pulse Function
+-- PULSE FUNCTION
+
 function UI:CreatePulse(Frame)
 	if (not Frame) then
 		return
@@ -413,7 +413,8 @@ function UI:CreatePulse(Frame)
 	end)
 end
 
--- GetMouseFocus
+-- GET MOUSE FOCUS
+
 function UI:GetMouseFocus()
 	if (GetMouseFoci) then
 		local GMF = GetMouseFoci()
@@ -423,12 +424,12 @@ function UI:GetMouseFocus()
 	end
 end
 
--- Update Fonts
+-- UPDATE FONTS
+
 function FeelUI:UpdateMedia()
 	UI:UpdateBlizzardFonts()
 end
 
--- Update LibSharedMedia
 do
 	local function LSMCallback() 
 		FeelUI:UpdateMedia() 
@@ -437,7 +438,8 @@ do
 	LSM.RegisterCallback(UI, "LibSharedMedia_Registered", LSMCallback)
 end
 
--- FeelUI GameMenu
+-- FEELUI GAME MENU
+
 function FeelUI:CreateGameMenu()
 	if (self.FeelUIGameMenuIsCreated) then
 		return
@@ -501,7 +503,7 @@ function FeelUI:CreateGameMenu()
 
     -- HOOKS
 	GameMenuFrame:HookScript("OnShow", function()
-		if Frame:IsShown() then
+		if (Frame:IsShown()) then
 			Frame.FadeOut:Play()
 		else
 			Frame:Show()
@@ -510,7 +512,7 @@ function FeelUI:CreateGameMenu()
 	end)
 	
 	GameMenuFrame:HookScript("OnHide", function()
-		if Frame:IsShown() then
+		if (Frame:IsShown()) then
 			Frame.FadeOut:Play()
 		end
 	end)
@@ -518,7 +520,8 @@ function FeelUI:CreateGameMenu()
 	self.FeelUIGameMenuIsCreated = true
 end
 
--- Initialize The Core
+-- INITIALIZE
+
 function FeelUI:Initialize()
 	self:UpdateMedia()
 	self:LoadCommands()

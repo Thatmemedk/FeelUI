@@ -203,7 +203,7 @@ function BR:CreateBattleRess()
 	Cooldown:SetHideCountdownNumbers(true)
 
 	-- Cooldown text
-	UI:UpdateCooldownText(Cooldown, Icon, 0, -8,true)
+	UI:UpdateCooldownText(Cooldown, Icon, 0, -8, true)
 
 	-- Cache
 	self.Frame = Frame

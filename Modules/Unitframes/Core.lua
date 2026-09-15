@@ -678,13 +678,15 @@ function UF:UpdateRestingIcon(Frame)
     local Resting = IsResting()
 
     if (Resting) then
+        UI:UIFrameFadeIn(Frame.RestingIcon, 0.5, Frame.RestingIcon:GetAlpha(), 1)
+        
         if (not Frame.RestingIcon.Animation:IsPlaying()) then
-            UI:UIFrameFadeIn(Frame.RestingIcon, 2, Frame.RestingIcon:GetAlpha(), 1)
             Frame.RestingIcon.Animation:Play()
         end
     else
+        UI:UIFrameFadeOut(Frame.RestingIcon, 0.5, Frame.RestingIcon:GetAlpha(), 0)
+
         if (Frame.RestingIcon.Animation:IsPlaying()) then
-            UI:UIFrameFadeOut(Frame.RestingIcon, 2, Frame.RestingIcon:GetAlpha(), 0)
             Frame.RestingIcon.Animation:Stop()
         end
     end
@@ -698,9 +700,9 @@ function UF:UpdateCombatIcon(Frame)
     local InCombat = UnitAffectingCombat("player")
 
     if (InCombat) then
-        Frame.CombatIcon:Show()
+        UI:UIFrameFadeIn(Frame.CombatIcon, 0.5, Frame.CombatIcon:GetAlpha(), 1)
     else
-        Frame.CombatIcon:Hide()
+        UI:UIFrameFadeOut(Frame.CombatIcon, 0.5, Frame.CombatIcon:GetAlpha(), 0)
     end
 end
 

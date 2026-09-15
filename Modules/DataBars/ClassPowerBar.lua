@@ -220,7 +220,7 @@ function ClassPowerBar:Update()
                     Segment:SetValue(Elapsed, UI.SmoothBars)
                     Segment:SetScript("OnUpdate", self.OnUpdate)
 
-                    UI:UIFrameFadeOut(Segment, 0.25, Segment:GetAlpha(), 0.7)
+                    UI:UIFrameFadeOut(Segment, 0.25, Segment:GetAlpha(), 0.5)
                 end
             end
         elseif (IsMaelstrom) then

@@ -18,7 +18,8 @@ local GetRealmName = GetRealmName
 local UnitFactionGroup = UnitFactionGroup
 local GetLocale = GetLocale
 
--- Build The Engine
+-- BUILD FEELUI
+
 local AddOnName, Engine = ...
 
 Engine[1] = CreateFrame("Frame", nil, _G.UIParent)
@@ -26,15 +27,11 @@ Engine[2] = {} -- DB
 Engine[3] = {} -- Media
 Engine[4] = {} -- Language
 
--- FeelUI
 Engine[1].Title = GetAddOnMetadata(AddOnName, "Title")
 Engine[1].Version = GetAddOnMetadata(AddOnName, "Version")
--- System
 Engine[1].ScreenWidth, Engine[1].ScreenHeight = GetPhysicalScreenSize()
 Engine[1].ScreenResolution = Resolution or (Windowed and GetCVar("gxWindowedResolution")) or GetCVar("gxFullscreenResolution")
--- WoW Patches
 Engine[1].WoWPatch, Engine[1].WoWBuild, Engine[1].WoWPatchReleaseDate, Engine[1].TocVersion = GetBuildInfo()
--- Player
 Engine[1].MyName = UnitName("player")
 Engine[1].MyClass = select(2, UnitClass("player"))
 Engine[1].MyLocalizedRace, Engine[1].MyRace = UnitRace("player")
@@ -43,7 +40,8 @@ Engine[1].MyRealm = GetRealmName()
 Engine[1].MyFaction = select(2, UnitFactionGroup("player"))
 Engine[1].MyRegion = GetLocale()
 
--- Load Engine
+-- LOAD ENGINE
+
 function Engine:Call()
 	return self[1], self[2], self[3], self[4]
 end

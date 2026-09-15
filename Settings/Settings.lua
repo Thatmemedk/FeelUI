@@ -200,7 +200,7 @@ DB.Global = {
 		CastBarSucceededColor = { 0, 0.67, 0, 0.70 },
 		-- Portraits
 		Portraits = false,
-		PortraitStyle = "3D",
+		PortraitStyle = "2D",
 		-- Icons
 		RoleIcons = false,
 		-- Points Settings

@@ -129,11 +129,11 @@ function Status:UpdateStatusFrameZone()
 end
 
 function Status:GetClient()
-	if IsWindowsClient() then
+	if (IsWindowsClient()) then
 		return "Windows"
-	elseif IsMacClient() then
+	elseif (IsMacClient()) then
 		return "Mac"
-	elseif IsLinuxClient() then
+	elseif (IsLinuxClient()) then
 		return "Linux"
 	else
 		return "Unknown"
@@ -164,7 +164,7 @@ function Status:GetNumLoadedAddOns()
 	local NumLoaded = 0
 	
 	for i = 1, GetNumAddOns() do
-		if IsAddOnLoaded(i) then
+		if (IsAddOnLoaded(i)) then
 			NumLoaded = NumLoaded + 1
 		end
 	end
@@ -298,12 +298,12 @@ function Status:CreateStatus()
 end
 
 function Status:Toggle()
-	if InCombatLockdown() then
+	if (InCombatLockdown()) then
 		UI:Print("You can't access |CFF00AAFFFeelUI|r_Status while in combat.")
 		return
 	end
 
-	if self.Frame:IsShown() then
+	if (self.Frame:IsShown()) then
 		self.Frame.FadeOut:Play()
 	else
 		self.Frame:Show()
@@ -312,7 +312,7 @@ function Status:Toggle()
 end
 
 function Status:PLAYER_REGEN_DISABLED()
-	if self.Frame:IsShown() then
+	if (self.Frame:IsShown()) then
 		self.Frame:SetAlpha(0)
 		self.Frame:Hide()
 		self.Frame.CombatClosed = true
@@ -320,7 +320,7 @@ function Status:PLAYER_REGEN_DISABLED()
 end
 
 function Status:PLAYER_REGEN_ENABLED()
-	if self.Frame.CombatClosed then
+	if (self.Frame.CombatClosed) then
 		self.Frame:Show()
 		self.Frame:SetAlpha(1)
 		self.Frame.CombatClosed = false

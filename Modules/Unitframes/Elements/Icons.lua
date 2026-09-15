@@ -17,7 +17,7 @@ function UF:CreateCombatIcon(Frame)
     CombatIcon:Size(24, 24)
     CombatIcon:Point("CENTER", Frame, 0, 0)
     CombatIcon:SetAtlas("UI-HUD-UnitFrame-Player-CombatIcon")
-    CombatIcon:Hide()
+    CombatIcon:SetAlpha(0)
 
     Frame.CombatIcon = CombatIcon
 end
