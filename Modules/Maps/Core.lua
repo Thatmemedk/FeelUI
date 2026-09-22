@@ -19,17 +19,6 @@ local MinimapZoneTextButton = _G.MinimapZoneTextButton
 local MapsZoomIn = _G.Minimap.ZoomIn
 local MapsZoomOut = _G.Minimap.ZoomOut
 local TimeManagerClockButton = _G.TimeManagerClockButton
-local ExpansionMinimapButton = _G.ExpansionLandingPageMinimapButton
-
-function Maps:PositionExpansionButton()
-	if (not ExpansionMinimapButton) then
-		return
-	end
-
-	ExpansionMinimapButton:SetScale(0.8)
-	ExpansionMinimapButton:ClearAllPoints()
-	ExpansionMinimapButton:Point("CENTER", Minimap, "LEFT", 0, 0)
-end
 
 function Maps:Style()
 	local MinimapBG = CreateFrame("Frame", nil, Minimap)
@@ -62,16 +51,6 @@ function Maps:Style()
 	Minimap.Location:SetJustifyH("CENTER")
 	Minimap.Location:SetJustifyV("MIDDLE")
 	Minimap.Location:SetFontTemplate("Default", 12)
-
-	if (QueueStatusButton) then
-		local MapsQueueStatus = CreateFrame("Frame", "FeelUIQueueStatus", _G.UIParent)
-		MapsQueueStatus:SetFrameLevel(10)
-		MapsQueueStatus:Size(32)
-		MapsQueueStatus:Point("BOTTOMLEFT", Minimap, 4, 2)
-
-		hooksecurefunc(QueueStatusButton, "SetParent", Maps.QueueStatusSetParent)
-		hooksecurefunc(QueueStatusButton, "SetPoint", Maps.QueueStatusSetPoint)
-	end
  	
  	if (MapsInstanceDifficulty) then
 		MapsInstanceDifficulty:ClearAllPoints()
@@ -121,6 +100,14 @@ function Maps:Disable()
 		MapsCluster.BorderTop:Hide()
 	end
 
+	if (MapsCluster.DielFrame) then
+		MapsCluster.DielFrame:Hide()
+	end
+
+	if (MapsCluster.MinimapContainer.PlayerCoords) then
+		MapsCluster.MinimapContainer.PlayerCoords:Hide()
+	end
+
     if (MapsCluster.Tracking) then
         MapsCluster.Tracking:SetAlpha(0)
         MapsCluster.Tracking:SetScale(0.0001)
@@ -153,21 +140,6 @@ function Maps:Disable()
     end
 end
 
-function Maps:QueueStatusSetPoint(_, Anchor)
-	if (Anchor ~= FeelUIQueueStatus) then
-		self:ClearAllPoints()
-		self:Point("CENTER", FeelUIQueueStatus)
-	end
-
-	self:SetScale(0.6)
-end
-
-function Maps:QueueStatusSetParent(Parent)
-	if (Parent ~= FeelUIQueueStatus) then
-		self:SetParent(FeelUIQueueStatus)
-	end
-end
-
 function Maps:OnMouseDown(Button)
 	if (Button == "RightButton") then
 		local TrackingButton = _G.MinimapCluster.Tracking.Button
@@ -185,7 +157,7 @@ function Maps:EnableClick()
 end
 
 function Maps:GetLocTextColor()
-	local Info = GetZonePVPInfo()
+	local Info = C_PvP.GetZonePVPInfo
 
 	if (Info == "friendly") then
 		return 0.1, 1.0, 0.1
@@ -204,7 +176,6 @@ end
 
 function Maps:OnEvent()
 	local Text = GetMinimapZoneText()
-
 	Minimap.Location:SetText(Text)
 	Minimap.Location:SetTextColor(Maps:GetLocTextColor())
 end
@@ -217,14 +188,9 @@ function Maps:RegisterEvents()
 	self:SetScript("OnEvent", self.OnEvent)
 end
 
-function Maps:AddHooks()
-	hooksecurefunc(ExpansionMinimapButton, "UpdateIcon", Maps.PositionExpansionButton)
-end
-
 function Maps:Initialize()
 	self:Disable()
 	self:Style()
 	self:EnableClick()
 	self:RegisterEvents()
-	self:AddHooks()
 end

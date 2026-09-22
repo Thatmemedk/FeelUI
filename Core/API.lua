@@ -480,12 +480,12 @@ function FeelUI:CreateGameMenu()
 	-- FEELUI LOGO
 	Frame.Logo = Frame.InvisFrame:CreateTexture(nil, "OVERLAY")
 	Frame.Logo:Size(228, 228)
-	Frame.Logo:Point("TOP", GameMenuFrame, 0, 182)
+	Frame.Logo:Point("TOP", GameMenuFrame, 0, 202)
 	Frame.Logo:SetTexture(Media.Global.Logo)
 
 	-- TEXT
     Frame.FeedbackText = Frame.InvisFrame:CreateFontString(nil, "OVERLAY")
-    Frame.FeedbackText:Point("TOP", GameMenuFrame, 0, 32)
+    Frame.FeedbackText:Point("TOP", GameMenuFrame, 0, 52)
     Frame.FeedbackText:SetFontTemplate("Default", 16)
     Frame.FeedbackText:SetText("Need help or info? Join the |cff00aaffFeelUI|r Discord!")
 
@@ -501,7 +501,7 @@ function FeelUI:CreateGameMenu()
 
     -- HOOKS
 	GameMenuFrame:HookScript("OnShow", function()
-		if Frame:IsShown() then
+		if (Frame:IsShown()) then
 			Frame.FadeOut:Play()
 		else
 			Frame:Show()
@@ -510,7 +510,7 @@ function FeelUI:CreateGameMenu()
 	end)
 	
 	GameMenuFrame:HookScript("OnHide", function()
-		if Frame:IsShown() then
+		if (Frame:IsShown()) then
 			Frame.FadeOut:Play()
 		end
 	end)

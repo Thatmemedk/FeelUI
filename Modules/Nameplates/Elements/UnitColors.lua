@@ -24,12 +24,13 @@ function NP:GetUnitColor(Unit, IsCaster)
     end
 
     local InInstance, InstanceType = IsInInstance()
-    local Reaction = UnitReaction(Unit, "player") or 5
+    local Reaction = UnitReaction(Unit, "player")
     local Classif = UnitClassification(Unit)
     local Level = UnitEffectiveLevel(Unit)
     local _, PowerType = UnitPowerType(Unit)
-    local Class = select(2, UnitClass(Unit))
+    local PlayerLevel = UnitLevel("player")
 
+    -- Outside party instances, use reaction color.
     if (not InInstance or InstanceType ~= "party") then
         return UI.Colors.Reaction[Reaction]
     end
@@ -46,29 +47,22 @@ function NP:GetUnitColor(Unit, IsCaster)
         return UI.Colors.Classification.RARE
     end
 
-    if (not UnitAffectingCombat(Unit) and UnitReaction(Unit, "player") == 4) then
+    if (not UnitAffectingCombat(Unit) and Reaction == 4) then
         return UI.Colors.Reaction[Reaction]
     end
 
     if (Classif == "elite") then
-        if (Level >= UnitLevel("player") + 2) then
+        if (Level >= PlayerLevel + 2) then
             return UI.Colors.Classification.BOSS
-        end
-
-        if (Level == UnitLevel("player") + 1) then
+        elseif (Level == PlayerLevel + 1) then
             return UI.Colors.Classification.RARE
-        end
-
-        if (Level <= UnitLevel("player") and PowerType == Enum.PowerType.Mana) then
+        elseif (Level <= PlayerLevel and PowerType == Enum.PowerType.Mana) then
             return UI.Colors.Classification.CASTER
-        end
-
-        if (Level == UnitLevel("player")) then
+        elseif (Level == PlayerLevel) then
             return UI.Colors.Classification.ELITE
         end
-    elseif (Classif == "normal" or Classif == "trivial") then
-        return UI.Colors.Reaction[Reaction]
-    else
-        return UI.Colors.Reaction[Reaction]
     end
+
+    -- Guaranteed fallback.
+    return UI.Colors.Reaction[Reaction]
 end

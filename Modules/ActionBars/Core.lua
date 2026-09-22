@@ -53,6 +53,8 @@ function AB:DisableBlizzard()
 		_G.HelpMicroButton,
 		_G.StoreMicroButton,
 		_G.HousingMicroButton,
+		_G.TalentMicroButton,
+		_G.LegacyMicroButton,
 	}) do
 		if (Frames) then
 			Frames:SetParent(UI.HiddenParent)
@@ -64,7 +66,9 @@ function AB:DisableBlizzard()
         _G.MultiBarRight.QuickKeybindGlow,
         _G.MultiBarLeft.QuickKeybindGlow,
         _G.MultiBarBottomRight.QuickKeybindGlow,
-        _G.MultiBarBottomLeft.QuickKeybindGlow
+        _G.MultiBarBottomLeft.QuickKeybindGlow,
+        _G.MicroMenu.BackgroundArt,
+        _G.MicroMenu.BorderArt,
     }
 
     for _, Frames in ipairs(Glows) do
@@ -211,4 +215,5 @@ function AB:Initialize()
 	self:CreateGlow()
 	self:CreateRange()
 	self:CreateFlyout()
+	--self:CreateTotemBar()
 end

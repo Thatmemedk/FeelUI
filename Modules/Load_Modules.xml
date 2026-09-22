@@ -18,6 +18,7 @@
 	<Script file="ActionBars\ToggleButtons.lua"/>
 	<Script file="ActionBars\Range.lua"/>
 	<Script file="ActionBars\Glow.lua"/>
+	<Script file="ActionBars\Totems.lua"/>
 	<!-- Auras -->
 	<Script file="Auras\Core.lua"/>
 	<!-- Chat -->
@@ -39,7 +40,6 @@
 	<Script file="DataBars\ExperienceBar.lua"/>
 	<Script file="DataBars\PowerBar.lua"/>
 	<Script file="DataBars\TotemBar.lua"/>
-	<Script file="DataBars\VigorBar.lua"/>
 	<!-- DataTexts -->
 	<Script file="DataTexts\Date.lua"/>
 	<Script file="DataTexts\Durability.lua"/>
@@ -71,8 +71,6 @@
 	<Script file="Skins\Blizzard\Bubbles.lua"/>
 	<Script file="Skins\Blizzard\DeathRecap.lua"/>
 	<Script file="Skins\Blizzard\DropDown.lua"/>
-	<Script file="Skins\Blizzard\EncounterWarnings.lua"/>
-	<Script file="Skins\Blizzard\EncounterTimeline.lua"/>
 	<Script file="Skins\Blizzard\GameMenu.lua"/>
 	<Script file="Skins\Blizzard\GhostFrame.lua"/>
 	<Script file="Skins\Blizzard\ReadyCheck.lua"/>

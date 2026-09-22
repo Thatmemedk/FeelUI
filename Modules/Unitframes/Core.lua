@@ -580,46 +580,78 @@ end
 
 --- UPDATE NAME & LEVEL
 
+function UF:GetClassicLevelColor(Level)
+    local PlayerLevel = UnitLevel("player")
+    local LevelDifference = Level - PlayerLevel
+
+    if (LevelDifference >= 5) then
+        return 1, 0.1, 0.1
+    elseif (LevelDifference >= 3) then
+        return 1, 0.5, 0.25
+    elseif (LevelDifference >= -2) then
+        return 1, 0.82, 0
+    end
+
+    local GrayLevel
+
+    if (PlayerLevel <= 5) then
+        GrayLevel = 0
+    elseif (PlayerLevel <= 39) then
+        GrayLevel = PlayerLevel - 5 - math.floor(PlayerLevel / 10)
+    else
+        GrayLevel = PlayerLevel - 1 - math.floor(PlayerLevel / 5)
+    end
+
+    if (Level <= GrayLevel) then
+        return 0.5, 0.5, 0.5
+    end
+
+    return 0.25, 0.75, 0.25
+end
 function UF:UpdateTargetNameLevel(Frame, Unit)
     if (not Frame or not Unit or not Frame.NameLevel) then
         return
     end
 
     local Name = UnitName(Unit) or ""
-    local Level = UnitLevel(Unit) or -1
+    local Level = UnitLevel(Unit)
     local NameColor, LevelColor, LevelText
 
     if (DB.Global.UnitFrames.ClassColor) then
-        NameColor = format("|cff%02x%02x%02x", 1*255, 1*255, 1*255)
+        NameColor = "|cffffffff"
     else
         if (UnitIsPlayer(Unit) or UnitInPartyIsAI(Unit) or UnitPlayerControlled(Unit) and not UnitIsPlayer(Unit)) then
             local _, Class = UnitClass(Unit)
 
             if (not UI:IsSecretValue(Class)) then
                 local Color = UI.Colors.Class[Class]
-                NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
+
+                if (Color) then
+                    NameColor = format("|cff%02x%02x%02x", Color.r * 255, Color.g * 255, Color.b * 255)
+                end
             end
         else
             local Reaction = UnitReaction(Unit, "player") or 5
             local Color = UI.Colors.Reaction[Reaction]
-            NameColor = format("|cff%02x%02x%02x", Color.r*255, Color.g*255, Color.b*255)
+
+            if (Color) then
+                NameColor = format("|cff%02x%02x%02x", Color.r * 255, Color.g * 255, Color.b * 255)
+            end
         end
     end
 
-    if (Level < 0) then
-        LevelColor = "|cffff0000"
-    elseif (Level == 0) then
+    if (not Level or UI:IsSecretValue(Level)) then
         LevelColor = "|cffcccccc"
-    else
-        local DiffColor = GetQuestDifficultyColor(Level)
-        LevelColor = format("|cff%02x%02x%02x", DiffColor.r*255, DiffColor.g*255, DiffColor.b*255)
-    end
-
-    if (Level < 0) then
+        LevelText = "?"
+    elseif (Level < 0) then
+        LevelColor = "|cffff0000"
         LevelText = "??"
     elseif (Level == 0) then
+        LevelColor = "|cffcccccc"
         LevelText = "?"
     else
+        local R, G, B = UF:GetClassicLevelColor(Level)
+        LevelColor = format("|cff%02x%02x%02x", R * 255, G * 255, B * 255)
         LevelText = tostring(Level)
     end
 

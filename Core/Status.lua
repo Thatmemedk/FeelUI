@@ -16,8 +16,8 @@ local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local GetCVarBool = C_CVar.GetCVarBool
 local GetLocale = GetLocale
 local GetRealZoneText = GetRealZoneText
-local GetSpecialization = GetSpecialization
-local GetSpecializationInfo = GetSpecializationInfo
+local GetSpecialization = C_SpecializationInfo.GetSpecialization
+local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
@@ -33,10 +33,6 @@ local ClassNames = {
 	DRUID = "Druid",
 	SHAMAN = "Shaman",
 	WARRIOR = "Warrior",
-	DEATHKNIGHT = "Death Knight",
-	MONK = "Monk",
-	DEMONHUNTER = "Demon Hunter",
-	EVOKER = "Evoker",
 }
 
 -- Class Tables
@@ -78,26 +74,10 @@ local SpecNames = {
 	[71] = "Arms",
 	[72] = "Fury",
 	[73] = "Protection",
-	-- Death Knight
-	[250] = "Blood",
-	[251] = "Frost",
-	[252] = "Unholy",
-	-- Monk
-	[268] = "Brewmaster",
-	[269] = "Windwalker",
-	[270] = "Mistweaver",
-	-- Demon Hunter
-	[577] = "Havoc",
-	[581] = "Vengeance",
-	[1480] = "Devourer",
-	-- Evoker
-	[1467] = "Devastation",
-	[1468] = "Preservation",
-	[1473] = "Augmentation",
 }
 
 function Status:GetLocTextColor()
-	local GetZonePVPInfo = GetZonePVPInfo()
+	local GetZonePVPInfo = C_PvP.GetZonePVPInfo
 
 	if (GetZonePVPInfo == "friendly") then
 		return 0.1, 1.0, 0.1

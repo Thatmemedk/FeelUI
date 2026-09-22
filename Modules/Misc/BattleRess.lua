@@ -245,10 +245,10 @@ function BR:RegisterEvents()
 end
 
 function BR:Initialize()
-	self:CreateBattleRess()
-	self:RegisterEvents()
-	self:RefreshEncounterState()
-	self:RefreshChallengeState()
-	self:UpdateVisibility()
-	self:UpdateCharges()
+	--self:CreateBattleRess()
+	--self:RegisterEvents()
+	--self:RefreshEncounterState()
+	--self:RefreshChallengeState()
+	--self:UpdateVisibility()
+	--self:UpdateCharges()
 end

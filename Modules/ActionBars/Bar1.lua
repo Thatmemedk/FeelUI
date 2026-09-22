@@ -36,11 +36,6 @@ function AB:CreateBar1()
     -- Update All Buttons
     self:UpdateMainBarButtons()
 
-    -- Set Frame References For Secure Execution
-    for i = 1, _G.NUM_ACTIONBAR_BUTTONS do
-        Bar:SetFrameRef("ActionButton"..i, _G["ActionButton"..i])
-    end
-
     -- Setup Paging Conditions
     local VehicleBar = format("[vehicleui][possessbar] %d;", GetVehicleBarIndex())
     local OverrideBar = format("[overridebar] %d;", GetOverrideBarIndex())
@@ -51,7 +46,7 @@ function AB:CreateBar1()
         ["ROGUE"] = "[bonusbar:1] 7;",
         ["WARRIOR"] = "[bonusbar:1] 7; [bonusbar:2] 8; [bonusbar:3] 9;",
         ["PRIEST"] = "[bonusbar:1] 7;",
-        ["DEFAULT"] = ShapeshiftBar .. VehicleBar .. OverrideBar .. "[bar:2] 2; [bar:3] 3; [bar:4] 4; [bar:5] 5; [bar:6] 6; [bonusbar:5] 11;"
+        ["DEFAULT"] = ShapeshiftBar..VehicleBar..OverrideBar.."[bar:2] 2; [bar:3] 3; [bar:4] 4; [bar:5] 5; [bar:6] 6; [bonusbar:5] 11;"
     }
 
     function AB:GetPages()
@@ -60,42 +55,11 @@ function AB:CreateBar1()
         local Page = Bar.Page[Class]
 
         if (Page) then
-            PageDefault = PageDefault .. " " .. Page
+            PageDefault = PageDefault.." "..Page
         end
 
-        PageDefault = PageDefault .. " [form] 1; 1"
-
-        return PageDefault
+        return PageDefault.." [form] 1; 1"
     end
-
-    -- Prepare Secure Table For Buttons
-    Bar:Execute([[
-        Button = table.new()
-        for i = 1, 12 do
-            table.insert(Button, self:GetFrameRef("ActionButton"..i))
-        end
-    ]])
-
-    -- Handle Action Page State Changes
-    Bar:SetAttribute("_onstate-page", [[
-        if newstate == "possess" or newstate == "11" then
-            if HasVehicleActionBar() then
-                newstate = GetVehicleBarIndex()
-            elseif HasOverrideActionBar() then
-                newstate = GetOverrideBarIndex()
-            elseif HasTempShapeshiftActionBar() then
-                newstate = GetTempShapeshiftBarIndex()
-            elseif HasBonusActionBar() then
-                newstate = GetBonusBarIndex()
-            else
-                newstate = 12
-            end
-        end
-
-        for i, Button in ipairs(Button) do
-            Button:SetAttribute("actionpage", tonumber(newstate))
-        end
-    ]])
 
     -- Register State Driver
     RegisterStateDriver(Bar, "page", self:GetPages())

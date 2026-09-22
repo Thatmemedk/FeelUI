@@ -476,13 +476,13 @@ function UF.CastBarOnUpdate(Castbar)
 
             if (Castbar.Unit == "player") then
                 if (Castbar.CastDelayed ~= 0) then
-                    Castbar.Time:SetFormattedText("%.1fs/%.1fs |cffff0000%s%.2f|r", Duration, Total, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
+                    Castbar.Time:SetFormattedText("%.1fs/%.1fs |cffff0000(%s%.2f)|r", Duration, Total, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
                 else
                     Castbar.Time:SetFormattedText("%.1fs/%.1fs", Duration, Total)
                 end
             else
                 if (Castbar.CastDelayed ~= 0) then
-                    Castbar.Time:SetFormattedText("%.1fs |cffff0000%s%.2f|r", Duration, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
+                    Castbar.Time:SetFormattedText("%.1fs |cffff0000(%s%.2f)|r", Duration, Castbar.Channel and "-" or "+", Castbar.CastDelayed)
                 else
                     Castbar.Time:SetFormattedText("%.1fs", Duration)
                 end

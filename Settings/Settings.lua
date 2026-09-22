@@ -50,6 +50,9 @@ DB.Global = {
 		OverlayGlowColor = { R, G, B, 0.80 },
 		-- Points Settings
 		Bar1Point = { "BOTTOM", _G.UIParent, 0, 122 }, -- "BOTTOM", _G.UIParent, 0, 42
+		-- Totems
+		TotemButtonSize = { 36, 18 },
+		TotemButtonSpacing = 3,
 	},
 
 	Auras = {
@@ -111,7 +114,6 @@ DB.Global = {
 		BarHeight = 18,
 		BarSpacing = 2,
 		IconSize = { 28, 18 },
-
 	},
 
 	DataBars = {
@@ -119,7 +121,7 @@ DB.Global = {
 		ReputationBar = false,
 		ClassPowerBar = true,
 		PowerBar = true,
-		TotemBar = false,
+		TotemBar = true,
 		-- Points Settings
 		PowerBarPoint = { "CENTER", _G.UIParent, 0, -204 },
 		ClassPowerPoint = { "CENTER", _G.UIParent, 0, -192 },

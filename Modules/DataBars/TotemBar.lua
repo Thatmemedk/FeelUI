@@ -26,9 +26,9 @@ function TotemBar:CreateBar()
         Totem:SetAlpha(0)
 
         if (i == 1) then
-            Totem:Point("CENTER", _G.UIParent, -353, -246)
+            Totem:Point("CENTER", _G.UIParent, 0, -172)
         else
-            Totem:Point("LEFT", self.Buttons[i-1], "RIGHT", 2, 0)
+            Totem:Point("LEFT", self.Buttons[i-1], "RIGHT", 3, 0)
         end
 
         local Icon = Totem:CreateTexture(nil, "OVERLAY")

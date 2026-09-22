@@ -61,19 +61,6 @@ function PowerBar:CreateBar(Name)
 	Bar.Text:SetFontTemplate("Default", 16)
 	Bar.Text:Point("CENTER", Bar, 0, 6)
 
-	-- ANIMATION
-    Bar.Fade = UI:CreateAnimationGroup(Bar)
-
-    Bar.FadeIn = UI:CreateAnimation(Bar.Fade, "Fade")
-    Bar.FadeIn:SetDuration(0.25)
-    Bar.FadeIn:SetChange(1)
-    Bar.FadeIn:SetEasing("In-SineEase")
-
-    Bar.FadeOut = UI:CreateAnimation(Bar.Fade, "Fade")
-    Bar.FadeOut:SetDuration(0.25)
-    Bar.FadeOut:SetChange(0)
-    Bar.FadeOut:SetEasing("Out-SineEase")
-    
     return Bar
 end
 
@@ -84,24 +71,13 @@ function PowerBar:PowerUpdate()
     	return
     end
 
-    if (Class == "MAGE" or Class == "WARLOCK") then
-        Bar:Hide()
-    elseif (Class == "PALADIN" and (GetSpecialization == 2 or GetSpecialization == 3)) then
-        Bar:Hide()
-    elseif (Class == "SHAMAN" and (GetSpecialization == 2)) then
-    	Bar:Hide()
-    elseif (Class == "EVOKER" and (GetSpecialization == 1 or GetSpecialization == 3)) then
-    	Bar:Hide()
-    else
-        Bar:Show()
-    end
-
 	local PowerType, PowerToken = UnitPowerType("player")
 	local Min, Max = UnitPower("player", PowerType), UnitPowerMax("player", PowerType)
 	local Percent = UnitPowerPercent("player", PowerType, false, UI.CurvePercent)
 	local PowerColor = UI.Colors.Power[PowerToken]
 
 	-- Set Values
+	Bar:Show()
 	Bar:SetMinMaxValues(0, Max)
 	Bar:SetValue(Min, UI.SmoothBars)
 
@@ -121,164 +97,22 @@ function PowerBar:PowerUpdate()
 	end
 end
 
-function PowerBar:StaggerUpdate()
-	local Bar = self.Stagger
-
-    if (not Bar) then
-    	return
-    end
-
-    if (GetSpecialization == 1) then
-    	Bar:Show()
-    else
-       	Bar:Hide()
-    end
-
-	local Min, Max = UnitStagger("player"), UnitHealthMax("player")
-	local Percent = Min/Max
-
-	-- Set Values
-	Bar:SetMinMaxValues(0, Max)
-	Bar:SetValue(Min, UI.SmoothBars)
-
-	-- Set Text
-	Bar.Text:SetText(AbbreviateNumbers(Min))
-
-	-- Set Colors
-	if (Percent >= STAGGER_RED_TRANSITION) then
-		Bar:SetStatusBarColor(1, 0.52, 0.52)
-		Bar.Backdrop:SetStatusBarColor(1 * 0.5, 0.52 * 0.5, 0.52 * 0.5, 0.7)
-	elseif (Percent > STAGGER_YELLOW_TRANSITION) then
-		Bar:SetStatusBarColor(1, 0.82, 0.52)
-		Bar.Backdrop:SetStatusBarColor(1 * 0.5, 0.82 * 0.5, 0.52 * 0.5, 0.7)
-	else
-		Bar:SetStatusBarColor(0.52, 1, 0.52)
-		Bar.Backdrop:SetStatusBarColor(0.52 * 0.5, 1 * 0.5, 0.52 * 0.5, 0.7)
-	end
-end
-
-function PowerBar:SoulFragmentsUpdate()
-	local Bar = self.SoulFragments
-
-    if (not Bar) then
-    	return
-    end
-
-    if (GetSpecialization == 3) then
-    	Bar:Show()
-    else
-    	Bar:Hide()
-    end
-
-    local Aura = GetPlayerAuraBySpellID(1225789) or GetPlayerAuraBySpellID(1227702)
-    local Min = Aura and Aura.applications or 0
-    local Max = 50
-
-    -- Set Values
-    Bar:SetMinMaxValues(0, Max)
-    Bar:SetValue(Min, UI.SmoothBars)
-
-    -- Set Text
-    Bar.Text:SetText(Min)
-
-    -- Set Colors
-    Bar:SetStatusBarColor(0.55, 0.25, 1)
-    Bar.Backdrop:SetStatusBarColor(0.55 * 0.5, 0.25 * 0.5, 1 * 0.5, 0.5)
-end
 function PowerBar:OnEvent(event)
    	self:PowerUpdate()
-   	self:StaggerUpdate()
-   	self:SoulFragmentsUpdate()
 end
 
 function PowerBar:RegisterEvents()
 	-- PLAYER
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
-	self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-    self:RegisterEvent("PLAYER_TALENT_UPDATE")
     -- UNIT
-	self:RegisterEvent("UNIT_AURA", "player")
-	self:RegisterEvent("UNIT_SPELLCAST_START", "player")
 	self:RegisterEvent("UNIT_POWER_FREQUENT", "player")
 	self:RegisterEvent("UNIT_MAXPOWER", "player")
 	self:RegisterEvent("UNIT_POWER_UPDATE", "player")
 	self:RegisterEvent("UNIT_DISPLAYPOWER", "player")
-	-- SPELLS
-    self:RegisterEvent("SPELLS_CHANGED")
     -- ON EVENT
 	self:SetScript("OnEvent", self.OnEvent)
 end
 
-function PowerBar:GlidingState()
-    local IsGliding = C_PlayerInfo.GetGlidingInfo()
-
-    if (IsGliding and not self.IsFlying) then
-    	self.IsFlying = true
-
-    	if (self.Power) then
-	        if (self.Power.FadeIn:IsPlaying()) then
-	            self.Power.FadeIn:Stop()
-	        end
-
-	        self.Power.FadeOut:Play()
-	    end
-
-        if (self.Stagger) then
-	        if (self.Stagger.FadeIn:IsPlaying()) then
-	            self.Stagger.FadeIn:Stop()
-	        end
-
-	        self.Stagger.FadeOut:Play()
-	    end
-
-        if (self.SoulFragments) then
-	        if (self.SoulFragments.FadeIn:IsPlaying()) then
-	            self.SoulFragments.FadeIn:Stop()
-	        end
-
-	        self.SoulFragments.FadeOut:Play()
-	    end
-    elseif (not IsGliding and self.IsFlying) then
-    	self.IsFlying = false
-
-    	if (self.Power) then
-	        if (self.Power.FadeOut:IsPlaying()) then
-	            self.Power.FadeOut:Stop()
-	        end
-
-	        self.Power.FadeIn:Play()
-	    end
-
-        if (self.Stagger) then
-	        if (self.Stagger.FadeOut:IsPlaying()) then
-	            self.Stagger.FadeOut:Stop()
-	        end
-
-	        self.Stagger.FadeIn:Play()
-	    end
-
-        if (self.SoulFragments) then
-	        if (self.SoulFragments.FadeOut:IsPlaying()) then
-	            self.SoulFragments.FadeOut:Stop()
-	        end
-
-	        self.SoulFragments.FadeIn:Play()
-	    end
-    end
-end
-
-function PowerBar:CheckDragonflying()
-    if (self.DragonflyingTicker) then
-        return
-    end
-
-    self.IsFlying = false
-    self:GlidingState()
-
-    self.DragonflyingTicker = C_Timer.NewTicker(0.2, function()
-        self:GlidingState()
-    end)
-end
 
 function PowerBar:CreatePowerBar()
     if (not DB.Global.DataBars.PowerBar) then
@@ -288,26 +122,7 @@ function PowerBar:CreatePowerBar()
 	self.Power = self:CreateBar("PowerBar")
 end
 
-function PowerBar:CreateStaggerBar()
-	if (Class ~= "MONK") then
-		return
-	end
-
-	self.Stagger = self:CreateBar("StaggerBar")
-end
-
-function PowerBar:CreateSoulFragmentsBar()
-    if (Class ~= "DEMONHUNTER") then
-        return
-    end
-
-	self.SoulFragments = self:CreateBar("SoulFragmentsBar")
-end
-
 function PowerBar:Initialize()
     self:CreatePowerBar()
-    self:CreateStaggerBar()
-    self:CreateSoulFragmentsBar()
     self:RegisterEvents()
-    self:CheckDragonflying()
 end

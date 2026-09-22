@@ -106,7 +106,7 @@ function GameMenu:Skin()
 	end
 
 	local GameMenuFrameNew = CreateFrame("Frame", nil, GameMenuFrame)
-	GameMenuFrameNew:Size(162, 296)
+	GameMenuFrameNew:Size(162, 262)
 	GameMenuFrameNew:Point("CENTER", GameMenuFrame, 0, -7)
 	GameMenuFrameNew:CreateBackdrop()
 	GameMenuFrameNew:CreateShadow()

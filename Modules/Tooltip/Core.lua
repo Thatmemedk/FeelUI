@@ -157,39 +157,67 @@ function TT:FormatGuildInfo(Unit, Player)
     end
 end
 
+function TT:GetClassicLevelColor(Level)
+    local PlayerLevel = UnitLevel("player")
+    local LevelDifference = Level - PlayerLevel
+
+    if (LevelDifference >= 5) then
+        return 1, 0.1, 0.1
+    elseif (LevelDifference >= 3) then
+        return 1, 0.5, 0.25
+    elseif (LevelDifference >= -2) then
+        return 1, 0.82, 0
+    end
+
+    local GrayLevel
+
+    if (PlayerLevel <= 5) then
+        GrayLevel = 0
+    elseif (PlayerLevel <= 39) then
+        GrayLevel = PlayerLevel - 5 - math.floor(PlayerLevel / 10)
+    else
+        GrayLevel = PlayerLevel - 1 - math.floor(PlayerLevel / 5)
+    end
+
+    if (Level <= GrayLevel) then
+        return 0.5, 0.5, 0.5
+    end
+
+    return 0.25, 0.75, 0.25
+end
+
 function TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Race, CreatureType, ClassificationUnit, Level)
-    if (Player and not UI:IsSecretUnit(Unit)) then
+    if (Unit and not UI:IsSecretUnit(Unit)) then
         local ClassColor = UI.Colors.Class[ClassFile]
-        local DiffColor = GetQuestDifficultyColor(Level)
-        local LevelColor
+
+        local LevelR, LevelG, LevelB
 
         if (Level == -1 or ClassificationUnit == "worldboss") then
-            LevelColor = { r = 1, g = 0, b = 0 }
+            LevelR, LevelG, LevelB = 1, 0, 0
         else
-            LevelColor = DiffColor
+            LevelR, LevelG, LevelB = TT:GetClassicLevelColor(Level)
         end
 
         for i = 2, NumLines do
             local Line = _G["GameTooltipTextLeft" .. i]
             local Text = Line and Line:GetText()
-            local LowerText = Text:lower()
 
             if (not Text) then
                 break
             end
 
-            if (Player and ClassName and LowerText:find(ClassName:lower()) and not LowerText:find("alliance") and not LowerText:find("horde")) then
-                local SpecText = Text:gsub(ClassName, ""):trim()
-                Line:SetFormattedText("|cFFFFFFFF%s |cff%02x%02x%02x%s|r", SpecText, ClassColor[1]*255, ClassColor[2]*255, ClassColor[3]*255, ClassName)
-            end
+            local LowerText = Text:lower()
 
             if (LowerText:find(LEVEL1) or LowerText:find(LEVEL2)) then
                 if (Player) then
-                    Line:SetFormattedText("Level |cff%02x%02x%02x%s|r %s", DiffColor.r * 255, DiffColor.g * 255, DiffColor.b * 255, Level > 0 and Level or "??", Race or "")
+                    Line:SetFormattedText("Level |cff%02x%02x%02x%s|r %s |cff%02x%02x%02x%s|r", LevelR * 255, LevelG * 255, LevelB * 255, Level > 0 and Level or "??", Race or "", ClassColor[1] * 255, ClassColor[2] * 255, ClassColor[3] * 255, ClassName or "")
                 else
                     local ClassText = ClassificationText[ClassificationUnit] or ""
-                    Line:SetFormattedText("Level |cff%02x%02x%02x%s|r %s%s", LevelColor.r * 255, LevelColor.g * 255, LevelColor.b * 255, Level > 0 and Level or "??", ClassText, CreatureType or "")
+                    Line:SetFormattedText("Level |cff%02x%02x%02x%s|r %s%s", LevelR * 255, LevelG * 255, LevelB * 255, Level > 0 and Level or "??", ClassText, CreatureType or "")
                 end
+            elseif (Player and ClassName and LowerText:find(ClassName:lower(), 1, true)) then
+                Line:SetText("")
+                Line:Hide()
             end
 
             if (Text == CreatureType or Text == _G.FACTION_HORDE or Text == _G.FACTION_ALLIANCE or Text == _G.PVP) then
@@ -199,7 +227,6 @@ function TT:ProcessTooltipLines(Unit, NumLines, Player, ClassName, ClassFile, Ra
         end
     end
 end
-
 function TT:GetDisplayedUnit(tt)
     if (not tt.GetPrimaryTooltipData) then
         return

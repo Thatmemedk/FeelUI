@@ -120,6 +120,6 @@ function NPA:RegisterEvents()
 end
 
 function NPA:Initialize()
-    self:Create()
-    self:RegisterEvents()
+    --self:Create()
+    --self:RegisterEvents()
 end

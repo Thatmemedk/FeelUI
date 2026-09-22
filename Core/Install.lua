@@ -199,6 +199,6 @@ function Install:RegisterEvents()
 end
 
 function Install:Initialize()	
-	self:CreateInstall()
-	self:RegisterEvents()
+	--self:CreateInstall()
+	--self:RegisterEvents()
 end

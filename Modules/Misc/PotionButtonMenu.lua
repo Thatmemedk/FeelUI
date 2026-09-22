@@ -266,7 +266,7 @@ function PBM:RegisterEvents()
 end
 
 function PBM:Initialize()
-    self:CreateHolder()
-    self:CreateExtraButtons()
-    self:RegisterEvents()
+    --self:CreateHolder()
+    --self:CreateExtraButtons()
+    --self:RegisterEvents()
 end
