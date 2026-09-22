@@ -9,15 +9,16 @@ local unpack = unpack
 local select = select
 
 -- WoW Globals
-local GetAddOnEnableState = C_AddOns.GetAddOnEnableState
-local GetAddOnInfo = C_AddOns.GetAddOnInfo
-local GetNumAddOns = C_AddOns.GetNumAddOns
-local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-local GetCVarBool = C_CVar.GetCVarBool
+local GetAddOnEnableState = _G.C_AddOns.GetAddOnEnableState
+local GetAddOnInfo = _G.C_AddOns.GetAddOnInfo
+local GetNumAddOns = _G.C_AddOns.GetNumAddOns
+local IsAddOnLoaded = _G.C_AddOns.IsAddOnLoaded
+local GetCVarBool = _G.C_CVar.GetCVarBool
 local GetLocale = GetLocale
 local GetRealZoneText = GetRealZoneText
-local GetSpecialization = GetSpecialization
-local GetSpecializationInfo = GetSpecializationInfo
+local GetSpecialization = _G.C_SpecializationInfo.GetSpecialization
+local GetSpecializationInfo = _G.C_SpecializationInfo.GetSpecializationInfo
+local GetZonePVPInfo = _G.C_PvP.GetZonePVPInfo
 
 -- Locals
 local R, G, B = unpack(UI.GetClassColors)
@@ -97,17 +98,17 @@ local SpecNames = {
 }
 
 function Status:GetLocTextColor()
-	local GetZonePVPInfo = GetZonePVPInfo()
+	local Info = GetZonePVPInfo
 
-	if (GetZonePVPInfo == "friendly") then
+	if (Info == "friendly") then
 		return 0.1, 1.0, 0.1
-	elseif (GetZonePVPInfo == "hostile") then
+	elseif (Info == "hostile") then
 		return 1.0, 0.1, 0.1
-	elseif (GetZonePVPInfo == "contested") then
+	elseif (Info == "contested") then
 		return 1.0, 0.7, 0.0
-	elseif (GetZonePVPInfo == "sanctuary") then
+	elseif (Info == "sanctuary") then
 		return 0.41, 0.8, 0.94
-	elseif (GetZonePVPInfo == "arena") then
+	elseif (Info == "arena") then
 		return 1.0, 0.1, 0.1
 	else
 		return 1, 0.82, 0

@@ -10,6 +10,7 @@ local select = select
 
 -- WoW Globals
 local C_Container = _G.C_Container
+local C_Currency = _G.C_CurrencyInfo
 local C_Item = _G.C_Item
 local C_NewItems = _G.C_NewItems
 local C_TradeSkillUI = _G.C_TradeSkillUI
@@ -17,31 +18,32 @@ local ColorManager = _G.ColorManager
 local GameTooltip = _G.GameTooltip
 
 -- WoW Globals
+local GetBackpackCurrencyInfo = C_Currency.GetBackpackCurrencyInfo
 local GetItemInfo = C_Item.GetItemInfo
 local GetItemNameByID = C_Item.GetItemNameByID
 local GetItemSpell = C_Item.GetItemSpell
 local IsNewItem = C_NewItems.IsNewItem
 
 -- WoW Globals
-local PickupBagFromSlot = _G.PickupBagFromSlot
-local PutItemInBag = _G.PutItemInBag
-local PutItemInBackpack = _G.PutItemInBackpack
 local GetInventoryItemTexture = _G.GetInventoryItemTexture
+local PickupBagFromSlot = _G.PickupBagFromSlot
+local PutItemInBackpack = _G.PutItemInBackpack
+local PutItemInBag = _G.PutItemInBag
 local ToggleBackpack = _G.ToggleBackpack
 
 -- WoW Globals
+local CalculateTotalNumberOfFreeBagSlots = C_Container.CalculateTotalNumberOfFreeBagSlots
 local ContainerIDToInventoryID = C_Container.ContainerIDToInventoryID
+local GetColorDataForItemQuality = ColorManager.GetColorDataForItemQuality
+local GetContainerItemCooldown = C_Container.GetContainerItemCooldown
 local GetContainerItemInfo = C_Container.GetContainerItemInfo
 local GetContainerItemQuestInfo = C_Container.GetContainerItemQuestInfo
-local GetContainerItemCooldown = C_Container.GetContainerItemCooldown
 local GetContainerNumSlots = C_Container.GetContainerNumSlots
 local PickupContainerItem = C_Container.PickupContainerItem
 local SetInsertItemsLeftToRight = C_Container.SetInsertItemsLeftToRight
 local SetItemSearch = C_Container.SetItemSearch
 local SetSortBagsRightToLeft = C_Container.SetSortBagsRightToLeft
 local UseContainerItem = C_Container.UseContainerItem
-local GetColorDataForItemQuality = ColorManager.GetColorDataForItemQuality
-local CalculateTotalNumberOfFreeBagSlots = C_Container.CalculateTotalNumberOfFreeBagSlots
 
 -- WoW Globals
 local GetItemReagentQualityInfo = C_TradeSkillUI.GetItemReagentQualityInfo
@@ -57,20 +59,25 @@ B.SeparatorHeight = 22
 B.SearchBoxHeight = 22
 B.SearchBoxPadding = 12
 
--- BagBar
+-- Locals
 B.BagButtonWidth = 36
 B.BagButtonHeight = 22
 B.BagButtonSpacing = 4
 B.BagBarPadding = 6
 
--- Locals
-B.PendingBagUpdate = false
-B.ItemNameCache = {}
-B.BagSlots = {}
-B.ReagentSlots = {}
+-- Tables
 B.BagHolders = {}
 B.BagButtons = {}
+B.BagSlots = {}
+B.ReagentSlots = {}
+
+-- Tables
+B.ItemNameCache = {}
+B.CurrencyButtons = {}
+
+-- Locals
 B.ReplaceBags = 0
+B.PendingBagUpdate = false
 
 -- Locals
 local SlotTables = {
@@ -109,11 +116,29 @@ function B:DisableBlizzard()
     end
 
     hooksecurefunc(_G.ContainerFrameCombinedBags, "Show", function()
-        B:ToggleStandaloneBag()
-
         _G.ContainerFrameCombinedBags:UnregisterAllEvents()
         _G.ContainerFrameCombinedBags:Hide()
     end)
+end
+
+function B:GetRowHeight()
+    return self.ButtonHeight + self.ButtonSpacing
+end
+
+function B:GetContainerWidth()
+    return (self.SideMargin * 2) + (self.ButtonsPerRow * self.ButtonWidth) + ((self.ButtonsPerRow - 1) * self.ButtonSpacing)
+end
+
+function B:GetRowY(Row, ExtraOffset)
+    return -self.TopMargin - (Row * self:GetRowHeight()) - (ExtraOffset or 0)
+end
+
+function B:NumRows(SlotCount)
+    if (SlotCount <= 0) then
+        return 0
+    end
+
+    return math.ceil(SlotCount / self.ButtonsPerRow)
 end
 
 function B:GetCachedItemName(ItemID)
@@ -151,6 +176,39 @@ end
 
 function B:GetContainerItemQuestInfo(BagID, SlotID)
     return GetContainerItemQuestInfo and GetContainerItemQuestInfo(BagID, SlotID)
+end
+
+function B:GetBackpackCurrencies()
+    local Currencies = {}
+    local Index = 1
+
+    while true do
+        local Info = GetBackpackCurrencyInfo(Index)
+
+        if (not Info) then
+            break
+        end
+
+        Currencies[Index] = Info
+
+        Index = Index + 1
+    end
+
+    return Currencies
+end
+
+function B:TryEquipBag(self)
+    if (self.BagID == Enum.BagIndex.Backpack) then
+        return false
+    end
+
+    local InventoryID = C_Container.ContainerIDToInventoryID(self.BagID)
+
+    if (InventoryID) then
+        return PutItemInBag(InventoryID)
+    end
+
+    return false
 end
 
 function B:GetQualityColor(Quality)
@@ -213,26 +271,6 @@ function B:UpdateCooldown(Button)
     end
 end
 
-function B:GetRowHeight()
-    return self.ButtonHeight + self.ButtonSpacing
-end
-
-function B:GetContainerWidth()
-    return (self.SideMargin * 2) + (self.ButtonsPerRow * self.ButtonWidth) + ((self.ButtonsPerRow - 1) * self.ButtonSpacing)
-end
-
-function B:GetRowY(Row, ExtraOffset)
-    return -self.TopMargin - (Row * self:GetRowHeight()) - (ExtraOffset or 0)
-end
-
-function B:NumRows(SlotCount)
-    if (SlotCount <= 0) then
-        return 0
-    end
-
-    return math.ceil(SlotCount / self.ButtonsPerRow)
-end
-
 function B:CreateContainer()
     local Container = CreateFrame("Frame", "FeelUI_Bag", _G.UIParent)
     Container:SetFrameStrata("HIGH")
@@ -246,14 +284,16 @@ function B:CreateContainer()
     Container:Hide()
 
     -- CLOSE BUTTON
+    --[[
     local CloseButton = CreateFrame("Button", nil, Container)
     CloseButton:Size(22, 22)
     CloseButton:Point("TOPRIGHT", Container)
-    CloseButton:HandleCloseButton(-6, -8, 16)
+    CloseButton:HandleCloseButton(-12, -8, 16)
     CloseButton:SetScript("OnMouseUp", function()
         B:CloseAllBags()
         PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE)
     end)
+    --]]
 
     -- SEARCH BOX
     local SearchBox = CreateFrame("EditBox", nil, Container)
@@ -342,7 +382,7 @@ function B:CreateContainer()
 
     -- GOLD TEXT
     local MoneyText = Container:CreateFontString(nil, "OVERLAY")
-    MoneyText:Point("TOPLEFT", Container, "TOPLEFT", 10, -12)
+    MoneyText:Point("TOPLEFT", Container, "TOPLEFT", 12, -12)
     MoneyText:SetFontTemplate("Default")
 
     -- SEPARATOR
@@ -354,8 +394,8 @@ function B:CreateContainer()
 
     -- TOGGLE BAGS CONTAINER
     local ToggleBagsContainer = CreateFrame("Button", nil, Container)
-    ToggleBagsContainer:Size(26, 16)
-    ToggleBagsContainer:Point("TOPRIGHT", CloseButton, -36, -11)
+    ToggleBagsContainer:Size(30, 16)
+    ToggleBagsContainer:Point("TOPRIGHT", Container, "TOPRIGHT", -12, -12)
     ToggleBagsContainer:StyleButton()
     ToggleBagsContainer:SetScript("OnClick", function()
         if (self.ReplaceBags == 0) then
@@ -388,11 +428,95 @@ function B:CreateContainer()
 
     -- Cache
     self.Container = Container
-    self.Container.CloseButton = CloseButton
+    --self.Container.CloseButton = CloseButton
     self.Container.SearchBox = SearchBox
     self.Container.MoneyText = MoneyText
     self.Container.Separator = Separator
     self.Container.ToggleBagsContainer = ToggleBagsContainer
+end
+
+function B:CreateCurrencyButton(Index)
+    local Button = CreateFrame("Button", nil, self.Container)
+    Button:Size(30, 16)
+    Button:SetTemplate()
+    Button:CreateShadow()
+    Button:StyleButton()
+    Button:SetShadowOverlay()
+
+    local InvisFrame = CreateFrame("Frame", nil, Button)
+    InvisFrame:SetFrameLevel(Button:GetFrameLevel() + 10)
+    InvisFrame:SetInside()
+
+    -- Icon
+    Button.Icon = Button:CreateTexture(nil, "ARTWORK")
+    Button.Icon:SetInside()
+    UI:KeepAspectRatio(Button, Button.Icon)
+
+    -- Count
+    Button.Count = InvisFrame:CreateFontString(nil, "OVERLAY")
+    Button.Count:Point("CENTER", Button, 2, -6)
+    Button.Count:SetFontTemplate("Default")
+
+    -- OnEnter
+    Button:SetScript("OnEnter", function(self)
+        if (GameTooltip:IsForbidden()) then
+            return
+        end
+ 
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+ 
+        if (self.CurrencyID) then
+            GameTooltip:SetCurrencyByID(self.CurrencyID)
+        end
+ 
+        GameTooltip:Show()
+    end)
+ 
+    -- OnLeave
+    Button:SetScript("OnLeave", function()
+        if (GameTooltip:IsForbidden()) then
+            return
+        end
+ 
+        GameTooltip:Hide()
+    end)
+
+    -- Cache
+    self.CurrencyButtons[Index] = Button
+
+    return Button
+end
+
+function B:UpdateCurrencies()
+    if (not self.Container) then
+        return
+    end
+
+    local Currencies = self:GetBackpackCurrencies()
+
+    if (not Currencies) then
+        return
+    end
+
+    for Index, Info in ipairs(Currencies) do
+        local Button = self.CurrencyButtons[Index]
+
+        if (not Button) then
+            Button = self:CreateCurrencyButton(Index)
+        end
+
+        Button.CurrencyID = Info.currencyTypesID
+        Button.Icon:SetTexture(Info.iconFileID)
+        Button.Count:SetText(AbbreviateNumbers(Info.quantity or 0))
+
+        Button:ClearAllPoints()
+        Button:Point("RIGHT", self.Container.ToggleBagsContainer, "LEFT", -4 - ((Index - 1) * (Button:GetWidth() + self.ButtonSpacing)), 0)
+        Button:Show()
+    end
+
+    for Index = #Currencies + 1, #self.CurrencyButtons do
+        self.CurrencyButtons[Index]:Hide()
+    end
 end
 
 function B:CreateBagBar()
@@ -415,7 +539,6 @@ function B:CreateBagButton(BagID, Index)
     Button:RegisterForDrag("LeftButton")
     Button:StripTexture()
     Button:CreateButtonBackdrop()
-    Button:SetTemplate()
     Button:CreateShadow()
     Button:StyleButton()
     Button:SetShadowOverlay()
@@ -441,31 +564,19 @@ function B:CreateBagButton(BagID, Index)
         Button.Count:SetFontTemplate("Default")
     end
 
-    local function TryEquipBag(self)
-        if (self.BagID == Enum.BagIndex.Backpack) then
-            return false
-        end
-
-        local InventoryID = C_Container.ContainerIDToInventoryID(self.BagID)
-
-        if (InventoryID) then
-            return PutItemInBag(InventoryID)
-        end
-
-        return false
-    end
-
     -- OnClick
     Button:SetScript("OnClick", function(self)
-        if (TryEquipBag(self)) then
+        if (B:TryEquipBag(self)) then
             return
         end
 
+        --[[
         if (self.BagID == Enum.BagIndex.Backpack) then
             B:ToggleStandaloneBag()
         elseif (C_Container.OpenBag) then
             C_Container.OpenBag(self.BagID)
         end
+        --]]
     end)
 
     -- OnDragStart
@@ -483,7 +594,7 @@ function B:CreateBagButton(BagID, Index)
 
     -- OnReceiveDrag
     Button:SetScript("OnReceiveDrag", function(self)
-        TryEquipBag(self)
+        B:TryEquipBag(self)
     end)
 
     -- OnEnter
@@ -526,13 +637,44 @@ function B:UpdateBagButton(Button)
     local InventoryID = C_Container.ContainerIDToInventoryID(Button.BagID)
     local Texture = InventoryID and GetInventoryItemTexture("player", InventoryID)
 
-    Button.Icon:SetTexture(Texture)
-    Button.Icon:SetShown(Texture ~= nil)
-    Button.EmptyIcon:SetShown(Texture == nil)
+    if (Button.BagID == Enum.BagIndex.Backpack) then
+        Button.Icon:Hide()
+        Button.BackpackIcon:Show()
+    else
+        -- Normal bag slots
+        Button.BackpackIcon:Hide()
+        Button.Icon:SetTexture(Texture)
+        Button.Icon:SetShown(Texture ~= nil)
+    end
+    
+    Button.Quality = nil
 
     if (Button.Count) then
         Button.Count:SetText(C_Container.CalculateTotalNumberOfFreeBagSlots())
     end
+
+    if (InventoryID and Texture) then
+        local ItemLink = GetInventoryItemLink("player", InventoryID)
+
+        if (ItemLink) then
+            local _, _, Quality = GetItemInfo(ItemLink)
+            Button.Quality = Quality
+        end
+    end
+
+    if (Button.Quality) then
+        if (not Button.IsPanelCreated) then
+            Button:CreateButtonPanel(true)
+            Button.IsPanelCreated = true
+        end
+    else
+        if (not Button.IsSkinned) then
+            Button:SetTemplate()
+            Button.IsSkinned = true
+        end
+    end
+
+    self:UpdateBorderColors(Button)
 end
 
 function B:UpdateBagBar()
@@ -622,6 +764,12 @@ function B:CreateItemSlot(Frame, BagID, SlotID)
     Button.ReagentQualityTexture:Size(14, 14)
     Button.ReagentQualityTexture:Hide()
 
+    -- Item Level
+    Button.ItemLevel = Button:CreateFontString(nil, "OVERLAY")
+    Button.ItemLevel:Point("TOPLEFT", Button, "TOPLEFT", 2, -2)
+    Button.ItemLevel:SetFontTemplate("Default")
+    Button.ItemLevel:Hide()
+
     return Button
 end
 
@@ -672,24 +820,41 @@ function B:UpdateItemSlots(BagID, TableIndex, PositionIndex, SlotTable, ParentFr
                 Button.Count:Hide()
             end
 
-            Button.ReagentQualityTexture:Hide()
-
             if (Button.ItemLink) then
-                local ItemName, _, ItemQuality, _, _, ItemType = GetItemInfo(Button.ItemLink)
+                local ItemName, _, ItemQuality, ItemLevel, _, ItemType = GetItemInfo(Button.ItemLink)
                 local ReagentInfo = GetItemReagentQualityInfo(Button.ItemLink)
                 local _, SpellID = GetItemSpell(Button.ItemLink)
+
+                Button.Name = ItemName
+                Button.Quality = Info.quality or ItemQuality
+                Button.ItemLevelValue = ItemLevel
+                Button.Type = ItemType
+                Button.SpellID = SpellID
+
+                if (ItemLevel and (ItemType == ARMOR or ItemType == WEAPON)) then
+                    Button.ItemLevel:SetText(ItemLevel)
+                    Button.ItemLevel:Show()
+
+                    local Color = self:GetQualityColor(Button.Quality)
+
+                    if (Color) then
+                        Button.ItemLevel:SetTextColor(Color.r, Color.g, Color.b)
+                    else
+                        Button.ItemLevel:SetTextColor(1, 1, 1)
+                    end
+                else
+                    Button.ItemLevel:Hide()
+                end
 
                 if (ReagentInfo and ReagentInfo.iconInventory) then
                     Button.ReagentQualityTexture:SetAtlas(ReagentInfo.iconInventory, true)
                     Button.ReagentQualityTexture:Show()
+                else
+                    Button.ReagentQualityTexture:Hide()
                 end
-
-                Button.Name = ItemName
-                Button.Quality = Info.quality or ItemQuality
-                Button.Type = ItemType
-                Button.SpellID = SpellID
             else
                 Button.Quality = Info.quality
+                Button.ItemLevelValue = nil
             end
         else
             if (not Button.IsSkinned) then
@@ -699,6 +864,7 @@ function B:UpdateItemSlots(BagID, TableIndex, PositionIndex, SlotTable, ParentFr
 
             Button.Icon:SetTexture(nil)
             Button.Count:Hide()
+            Button.ItemLevel:Hide()
             Button.ReagentQualityTexture:Hide()
         end
 
@@ -739,7 +905,6 @@ function B:UpdateItemSlots(BagID, TableIndex, PositionIndex, SlotTable, ParentFr
 
         -- Update Cooldown
         self:UpdateCooldown(Button)
-
 
         -- Update Positions
         local Row = math.floor((PositionIndex - 1) / self.ButtonsPerRow)
@@ -839,7 +1004,7 @@ end
 function B:ToggleStandaloneBag()
     if (self.Container:IsShown()) then
         UI:UIFrameFadeOut(self.Container, 0.5, self.Container:GetAlpha(), 0)
-        UI:Delay("CloseBackPack", 1, function()
+        UI:Delay("CloseBackPack", 0.5, function()
             self.Container:Hide()
         end)
     else
@@ -855,7 +1020,7 @@ end
 
 function B:CloseAllBags()
     UI:UIFrameFadeOut(self.Container, 0.5, self.Container:GetAlpha(), 0)
-    UI:Delay("CloseAllBags", 1, function()
+    UI:Delay("CloseAllBags", 0.5, function()
         self.Container:Hide()
     end)
 end
@@ -867,6 +1032,7 @@ end
 function B:OnEvent(event, ...)
     if (event == "PLAYER_ENTERING_WORLD") then
         self:UpdateMoneyText()
+        self:UpdateCurrencies()
         self:UpdateBagBar()
         self:UpdateBags()
     elseif (event == "BAG_UPDATE" or event == "BAG_UPDATE_DELAYED") then
@@ -874,36 +1040,21 @@ function B:OnEvent(event, ...)
         self:UpdateBags()
     elseif (event == "BAG_CONTAINER_UPDATE") then
         self:UpdateBagBar()
-        self:UpdateBags()
+        self:UpdateBags() 
     elseif (event == "PLAYER_MONEY" or event == "PLAYER_TRADE_MONEY" or event == "TRADE_MONEY_CHANGED") then
         self:UpdateMoneyText()
+    elseif (event == "CURRENCY_DISPLAY_UPDATE") then
+        self:UpdateCurrencies()
     end
 end
 
 function B:OpenCloseBags()
-    _G.OpenAllBags = function()
-        B:ToggleStandaloneBag()
-    end
-
-    _G.OpenBackpack = function()
-        B:ToggleStandaloneBag()
-    end
-
-    _G.ToggleBackpack = function()
-        B:ToggleStandaloneBag()
-    end
-
-    _G.ToggleAllBags = function()
-        B:ToggleStandaloneBag()
-    end
-
-    _G.CloseBackpack = function()
-        B:CloseAllBags()
-    end
-
-    _G.CloseAllBags = function()
-        B:CloseAllBags()
-    end
+    _G.OpenAllBags = function() B:ToggleStandaloneBag() end
+    _G.OpenBackpack = function() B:ToggleStandaloneBag() end
+    _G.ToggleBackpack = function() B:ToggleStandaloneBag() end
+    _G.ToggleAllBags = function() B:ToggleStandaloneBag() end
+    _G.CloseBackpack = function() B:CloseAllBags() end
+    _G.CloseAllBags = function() B:CloseAllBags() end
 end
 
 function B:RegisterEvents()
@@ -914,7 +1065,7 @@ function B:RegisterEvents()
     self:RegisterEvent("PLAYER_MONEY")
     self:RegisterEvent("PLAYER_TRADE_MONEY")
     self:RegisterEvent("TRADE_MONEY_CHANGED")
-
+    self:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
     self:SetScript("OnEvent", function(_, event, ...)
         self:OnEvent(event, ...)
     end)
@@ -923,6 +1074,12 @@ end
 function B:SortBags()
     SetSortBagsRightToLeft(false)
     SetInsertItemsLeftToRight(false)
+end
+
+function B:CurrencyTracking()
+    hooksecurefunc(C_Currency, "SetCurrencyBackpack", function()
+        B:UpdateCurrencies()
+    end)
 end
 
 function B:Initialize()
@@ -936,4 +1093,5 @@ function B:Initialize()
     self:RegisterEvents()
     self:OpenCloseBags()
     self:SortBags()
+    self:CurrencyTracking()
 end
