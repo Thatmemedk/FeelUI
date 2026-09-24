@@ -58,7 +58,7 @@ end
 function AF:Create()
     local Frame = CreateFrame("Frame", "FeelUI_AlertFrameHolder", _G.UIParent)
     Frame:Size(180, 20)
-    Frame:Point("TOP", _G.UIParent, "TOP", 0, -52)
+    Frame:Point("TOP", _G.UIParent, 0, -62)
 
     self.Frame = Frame
 end

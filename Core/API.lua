@@ -324,16 +324,38 @@ function FeelUI:LoadCommands()
 end
 
 -- Keep Aspect Ratio
-function UI:KeepAspectRatio(Button, Icon, Base)
+function UI:KeepAspectRatio(Button, Icon, Base, BaseRight, BaseTop, BaseBottom)
 	if (not Button or not Icon) then
 		return
 	end
 
-	local BaseLeft, BaseRight, BaseTop, BaseBottom = unpack(Base or UI.TexCoords)
+	local BaseLeft
+
+	if (type(Base) == "table") then
+		if (Base.left ~= nil) then
+			-- Named coordinates
+			BaseLeft = Base.left
+			BaseRight = Base.right
+			BaseTop = Base.top
+			BaseBottom = Base.bottom
+		else
+			-- Numeric coordinates in a table
+			BaseLeft, BaseRight, BaseTop, BaseBottom = unpack(Base)
+		end
+	elseif (type(Base) == "number") then
+		-- Individual coordinates
+		BaseLeft = Base
+	else
+		-- Default coordinates
+		BaseLeft, BaseRight, BaseTop, BaseBottom = unpack(UI.TexCoords)
+	end
+
 	local Width, Height = Button:GetWidth(), Button:GetHeight()
 	local Aspect = Width / Height
-	local Left, Right = BaseLeft, BaseRight
-	local Top, Bottom = BaseTop, BaseBottom
+	local Left = BaseLeft
+	local Right = BaseRight
+	local Top = BaseTop
+	local Bottom = BaseBottom
 	local SpanH = Right - Left
 	local SpanV = Bottom - Top
 	local Trim = 0

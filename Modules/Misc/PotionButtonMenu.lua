@@ -8,11 +8,16 @@ local _G = _G
 local unpack = unpack
 local select = select
 
+-- WoW Globals
+local GetItemInfo = _G.C_Item.GetItemInfo
+local GetItemIconByID = C_Item.GetItemIconByID
+local GetItemCooldown = C_Item.GetItemCooldown
+
 -- Tables
 PBM.ItemID = {
-    Healthstone = { 5512, 224464 },
-    HealingPotions = { 241304, 241305, 271883, 271884 }, -- Silvermoon Health Potion
-    Potions = { 241308, 241309, 241288, 241289 }, -- Light's Potential & Potion of Recklessness
+    Healthstone = { 5512 },
+    HealingPotions = { 118, 858, 929, 1710, 3928, 13446 },
+    Potions = { 250943 }, 
 }
 
 -- Locals
@@ -151,7 +156,7 @@ function PBM:UpdateButton(Button)
     end
 
     if (CurrentItem and CurrentItem ~= ItemID) then
-        local Start, Duration = C_Item.GetItemCooldown(CurrentItem)
+        local Start, Duration = GetItemCooldown(CurrentItem)
 
         if (Start and Duration and Start > 0 and Duration > 0) then
             ItemID = CurrentItem
@@ -177,7 +182,7 @@ function PBM:UpdateButton(Button)
     end
 
     if (Button.Icon) then
-        local Texture = C_Item.GetItemIconByID(ItemID)
+        local Texture = GetItemIconByID(ItemID)
         Button.Icon:SetTexture(Texture)
 
         if (Count > 0) then
@@ -238,7 +243,6 @@ function PBM:OnEvent(event, ...)
                 end
             end
         end
-
     elseif (event == "ENCOUNTER_END") then
         local EncounterID, EncounterName, DifficultyID, GroupSize, Success = ...
 
@@ -248,7 +252,6 @@ function PBM:OnEvent(event, ...)
         else
             self:UpdateAll()
         end
-
     else
         self:UpdateAll()
     end
@@ -266,7 +269,11 @@ function PBM:RegisterEvents()
 end
 
 function PBM:Initialize()
-    --self:CreateHolder()
-    --self:CreateExtraButtons()
-    --self:RegisterEvents()
+    if (not DB.Global.PotionButtonMenu.Enable) then
+        return
+    end
+
+    self:CreateHolder()
+    self:CreateExtraButtons()
+    self:RegisterEvents()
 end

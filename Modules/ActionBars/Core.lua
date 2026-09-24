@@ -215,5 +215,5 @@ function AB:Initialize()
 	self:CreateGlow()
 	self:CreateRange()
 	self:CreateFlyout()
-	--self:CreateTotemBar()
+	self:CreateTotemBar()
 end

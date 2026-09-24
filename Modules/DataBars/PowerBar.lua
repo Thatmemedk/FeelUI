@@ -14,16 +14,6 @@ local floor = math.floor
 local UnitPower = UnitPower
 local UnitPowerMax = UnitPowerMax
 local UnitPowerType = UnitPowerType
-local UnitStagger = UnitStagger
-local UnitHealthMax = UnitHealthMax
-
--- WoW Globals
-local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
-local GetSpecialization = C_SpecializationInfo.GetSpecialization()
-
--- WoW Globals
-local STAGGER_YELLOW_TRANSITION =  _G.STAGGER_YELLOW_TRANSITION or 0.3
-local STAGGER_RED_TRANSITION = _G.STAGGER_RED_TRANSITION or 0.6
 
 -- Locals
 local Class = select(2, UnitClass("player"))
@@ -73,7 +63,7 @@ function PowerBar:PowerUpdate()
 
 	local PowerType, PowerToken = UnitPowerType("player")
 	local Min, Max = UnitPower("player", PowerType), UnitPowerMax("player", PowerType)
-	local Percent = UnitPowerPercent("player", PowerType, false, UI.CurvePercent)
+	local Percent = UnitPowerPercent("player", PowerType, true, UI.CurvePercent)
 	local PowerColor = UI.Colors.Power[PowerToken]
 
 	-- Set Values
@@ -92,8 +82,8 @@ function PowerBar:PowerUpdate()
 
 	-- Set Color
 	if (PowerColor) then
-		Bar:SetStatusBarColor(unpack(PowerColor))
-		Bar.Backdrop:SetStatusBarColor(PowerColor[1] * 0.5, PowerColor[2] * 0.5, PowerColor[3] * 0.5, 0.7)
+		Bar:SetStatusBarColor(R, G, B)
+		Bar.Backdrop:SetStatusBarColor(R * 0.25, G * 0.25, B * 0.25, 0.7)
 	end
 end
 

@@ -187,6 +187,6 @@ function RU:RegisterEvents()
 end
 
 function RU:Initialize()
-    self:CreateButtons()
-    self:RegisterEvents()
+    --self:CreateButtons()
+    --self:RegisterEvents()
 end

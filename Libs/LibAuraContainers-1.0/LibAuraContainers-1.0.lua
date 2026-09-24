@@ -314,7 +314,7 @@ function UI:AddAura(Container, Options)
         layout = {
             elementSpacing = Options.Spacing or UI:Scale(3),
             lineSpacing = Options.LineSpacing or UI:Scale(8),
-            groupSpacing = Options.GroupSpacing or UI:Scale(4),
+            groupSpacing = Options.GroupSpacing or 0,
             groupLineSpacing = Options.GroupLineSpacing or UI:Scale(3),
         },
     })
@@ -332,6 +332,7 @@ function UI:AddAura(Container, Options)
 
         Container:SetItemEnchantmentLayout({
             placement = CustomAuraContainerItemEnchantmentPlacement.BeforeAuraGroups,
+            elementSpacing = Options.Spacing or UI:Scale(3),
         })
 
         Container:SetItemEnchantmentSortMethod(AuraContainerItemEnchantmentSortMethod.Slot, AuraContainerSortDirection.Normal)

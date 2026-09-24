@@ -19,7 +19,7 @@ function TotemBar:CreateBar()
     for i = 1, _G.MAX_TOTEMS do
         local Totem = CreateFrame("Frame", nil, _G.UIParent)
         Totem:SetID(i)
-        Totem:Size(36, 12)
+        Totem:Size(36, 18)
         Totem:SetTemplate()
         Totem:CreateShadow()
         Totem:SetShadowOverlay()

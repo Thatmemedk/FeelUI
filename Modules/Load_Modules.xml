@@ -32,7 +32,6 @@
 	<Script file="CooldownManager\Core.lua"/>
 	<Script file="CooldownManager\Icons.lua"/>
 	<Script file="CooldownManager\Layout.lua"/>
-	<Script file="CooldownManager\Tracker.lua"/>
 	<!-- Damage Meters -->
 	<Script file="DamageMeters\Core.lua"/>
 	<!-- DataBars -->
@@ -55,14 +54,12 @@
 	<Script file="Maps\MinimapButtonsBar.lua"/>
 	<!-- Misc -->
 	<Script file="Misc\Alerts.lua"/>
-	<Script file="Misc\BattleRess.lua"/>
 	<Script file="Misc\Blizzard.lua"/>
 	<Script file="Misc\CombatText.lua"/>
 	<Script file="Misc\ErrorFilter.lua"/>
 	<Script file="Misc\LossControl.lua"/>
 	<Script file="Misc\Merchant.lua"/>
 	<Script file="Misc\MirrorTimers.lua"/>
-	<Script file="Misc\NoPetAlert.lua"/>
 	<Script file="Misc\ObjectiveTracker.lua"/>
 	<Script file="Misc\PotionButtonMenu.lua"/>
 	<Script file="Misc\RaidUtility.lua"/>
@@ -76,7 +73,6 @@
 	<Script file="Skins\Blizzard\ReadyCheck.lua"/>
 	<Script file="Skins\Blizzard\StackSplitFrame.lua"/>
 	<Script file="Skins\Blizzard\StaticPopups.lua"/>
-	<Script file="Skins\Blizzard\TalkingHead.lua"/>
 	<!-- Tooltip -->
 	<Script file="Tooltip\Core.lua"/>
 	<!-- NamePlates -->

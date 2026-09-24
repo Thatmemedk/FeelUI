@@ -28,6 +28,8 @@ Media.Global = {
 	CloseTexture = M..[[Textures\Close.tga]],
 	ArrowLeft = M..[[Textures\ArrowLeft.tga]],
 	ArrowRight = M..[[Textures\ArrowRight.tga]],
+	ArrowBottom = M..[[Textures\ArrowBottom.tga]],
+	ArrowTop = M..[[Textures\ArrowTop.tga]],
 	ExitVehicle = M..[[Textures\ExitVehicle.tga]],
 	-- Logo
 	Logo = M..[[Logo\Logo.blp]],

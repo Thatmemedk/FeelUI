@@ -51,6 +51,7 @@ DB.Global = {
 		-- Points Settings
 		Bar1Point = { "BOTTOM", _G.UIParent, 0, 122 }, -- "BOTTOM", _G.UIParent, 0, 42
 		-- Totems
+		TotemBar = true,
 		TotemButtonSize = { 36, 18 },
 		TotemButtonSpacing = 3,
 	},
@@ -101,9 +102,10 @@ DB.Global = {
 	},
 
 	PotionButtonMenu = {
+		Enable = false,
 		ButtonSize = { 36, 18 },
 		ButtonSpacing = 2,
-		Point = { "BOTTOMLEFT", _G.UIParent, 482, 282 },
+		Point = { "BOTTOMLEFT", _G.UIParent, 482, 282 }, -- "BOTTOMLEFT", _G.UIParent, 482, 282 -- "BOTTOMLEFT", _G.UIParent, 482, 212
 	},
 
 	ScrollingCombatText = {
@@ -121,7 +123,7 @@ DB.Global = {
 		ReputationBar = false,
 		ClassPowerBar = true,
 		PowerBar = true,
-		TotemBar = true,
+		TotemBar = false,
 		-- Points Settings
 		PowerBarPoint = { "CENTER", _G.UIParent, 0, -204 },
 		ClassPowerPoint = { "CENTER", _G.UIParent, 0, -192 },
