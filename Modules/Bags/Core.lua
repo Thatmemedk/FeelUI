@@ -546,17 +546,17 @@ function B:CreateBagButton(BagID, Index)
     Button.BagID = BagID
 
     -- Backpack Icon
-    Button.EmptyIcon = Button:CreateTexture(nil, "ARTWORK")
-    Button.EmptyIcon:SetInside()
-    Button.EmptyIcon:SetTexture("Interface/ICONS/INV_Misc_Bag_08")
-    Button.EmptyIcon:Hide()
-    UI:KeepAspectRatio(Button, Button.EmptyIcon)
+    Button.BackpackIcon = Button:CreateTexture(nil, "ARTWORK")
+    Button.BackpackIcon:SetInside()
+    Button.BackpackIcon:SetTexture("Interface/ICONS/INV_Misc_Bag_08")
+    Button.BackpackIcon:Hide()
+    UI:KeepAspectRatio(Button, Button.BackpackIcon)
 
     -- Icons
     Button.Icon = Button:CreateTexture(nil, "ARTWORK")
     Button.Icon:SetInside()
     UI:KeepAspectRatio(Button, Button.Icon)
-
+    
     -- Count
     if (Index == 1) then
         Button.Count = Button:CreateFontString(nil, "OVERLAY")
