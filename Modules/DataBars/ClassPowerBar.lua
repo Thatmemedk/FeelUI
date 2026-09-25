@@ -225,7 +225,7 @@ function ClassPowerBar:Update()
             end
         elseif (IsMaelstrom) then
             Segment:SetStatusBarColor(R, G, B)
-            Backdrop:SetStatusBarColor(0, 0, 0, 0)
+            Backdrop:SetStatusBarColor(R * 0.2, G * 0.2, B * 0.2, 0.7)
             
             if (i <= Min) then 
                 UI:UIFrameFadeIn(Segment, 0.25, Segment:GetAlpha(), 1) 
