@@ -26,7 +26,7 @@ function TotemBar:CreateBar()
         Totem:SetAlpha(0)
 
         if (i == 1) then
-            Totem:Point("CENTER", _G.UIParent, 0, -172)
+            Totem:Point("CENTER", _G.UIParent, 0, -154)
         else
             Totem:Point("LEFT", self.Buttons[i-1], "RIGHT", 3, 0)
         end
@@ -89,7 +89,7 @@ function TotemBar:RegisterEvents()
 end
 
 function TotemBar:Initialize()
-	if (not DB.Global.DataBars.TotemBar) then
+	if (not DB.Global.DataBars.TotemBar or Class ~= "SHAMAN") then
 		return
 	end
 

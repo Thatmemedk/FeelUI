@@ -25,6 +25,9 @@ local CloseButton = _G.MultiCastFlyoutFrameCloseButton
 local TotemButtonSize = DB.Global.ActionBars.TotemButtonSize
 local TotemButtonSpacing = DB.Global.ActionBars.TotemButtonSpacing
 
+-- Locals
+local Class = select(2, UnitClass("player"))
+
 -- Tables
 local SLOT_BORDER_COLORS = {
 	summon = { r = 1, g = 0.82, b = 0, a = 1 },
@@ -353,6 +356,10 @@ function AB:UpdateTotemBar()
 end
 
 function AB:CreateTotemBar()
+	if (not DB.Global.ActionBars.TotemBar or Class ~= "SHAMAN") then
+		return
+	end
+
 	self:CreateAnchor()
 	self:SkinTotemButtons()
 	self:UpdateTotemBar()

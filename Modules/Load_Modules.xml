@@ -39,6 +39,7 @@
 	<Script file="DataBars\ExperienceBar.lua"/>
 	<Script file="DataBars\PowerBar.lua"/>
 	<Script file="DataBars\TotemBar.lua"/>
+	<Script file="DataBars\SwingBar.lua"/>
 	<!-- DataTexts -->
 	<Script file="DataTexts\Date.lua"/>
 	<Script file="DataTexts\Durability.lua"/>

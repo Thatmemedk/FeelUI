@@ -266,7 +266,7 @@ function NP:CastStopped(Event, Unit, _, _, ...)
         Castbar.Text:SetText(self:GetInterruptedText(Castbar, InterruptedBy))
 
         -- Set Values
-        Castbar:SetMinMaxValues(0, 1)
+        Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
         Castbar:SetValue(1, UI.SmoothBars)
         Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
     end
@@ -300,7 +300,7 @@ function NP:CastFailed(Event, Unit, _, _, ...)
     Castbar.Text:SetText(FAILED)
 
     -- Set Values
-    Castbar:SetMinMaxValues(0, 1)
+    Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
     Castbar:SetValue(1, UI.SmoothBars)
     Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
 
@@ -333,7 +333,7 @@ function NP:CastInterrupted(Event, Unit, _, _, ...)
     Castbar.Text:SetText(self:GetInterruptedText(Castbar, InterruptedBy))
 
     -- Set Values
-    Castbar:SetMinMaxValues(0, 1)
+    Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
     Castbar:SetValue(1, UI.SmoothBars)
     Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
 

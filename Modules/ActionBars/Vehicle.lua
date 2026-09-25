@@ -24,8 +24,8 @@ function AB:CreateVehicleExitButton(Anchor, OffsetX)
     Button:CreateShadow()
     Button:SetShadowOverlay()
     Button:SetAlpha(0)
-    Button:RegisterForClicks("AnyUp")
 
+    -- Icons
     Button:SetNormalTexture(Media.Global.ExitVehicle)
     UI:KeepAspectRatio(Button, Button:GetNormalTexture())
     Button:GetNormalTexture():SetInside()
@@ -34,6 +34,7 @@ function AB:CreateVehicleExitButton(Anchor, OffsetX)
     UI:KeepAspectRatio(Button, Button:GetHighlightTexture())
     Button:GetHighlightTexture():SetInside()
 
+    -- OnEvents
     Button:RegisterEvent("PLAYER_ENTERING_WORLD")
     Button:RegisterEvent("UPDATE_BONUS_ACTIONBAR")
     Button:RegisterEvent("UPDATE_MULTI_CAST_ACTIONBAR")
@@ -41,7 +42,7 @@ function AB:CreateVehicleExitButton(Anchor, OffsetX)
     Button:RegisterEvent("UNIT_EXITED_VEHICLE")
     Button:RegisterEvent("VEHICLE_UPDATE")
     Button:SetScript("OnEvent", function(self)
-        if CanExitVehicle() then
+        if (CanExitVehicle()) then
             UI:UIFrameFadeIn(self, 0.25, self:GetAlpha(), 1)
         else
             UI:UIFrameFadeOut(self, 0.25, self:GetAlpha(), 0)
@@ -49,33 +50,27 @@ function AB:CreateVehicleExitButton(Anchor, OffsetX)
         end
     end)
 
+    -- OnClick
+    Button:RegisterForClicks("AnyUp")
+    Button:SetScript("OnClick", function()
+        if (UnitOnTaxi("player")) then
+            TaxiRequestEarlyLanding()
+        else
+            VehicleExit()
+        end
+
+        AB.VehicleExitButtonLeft:SetColorTemplate(1, 0, 0)
+        AB.VehicleExitButtonRight:SetColorTemplate(1, 0, 0)
+    end)
+
     return Button
 end
 
 function AB:CreateVehicleExitButtons()
-    local VehicleExitButtonLeft = self:CreateVehicleExitButton("LEFT", -52)
-    local VehicleExitButtonRight = self:CreateVehicleExitButton("RIGHT", 52)
+    local VehicleExitButtonLeft = self:CreateVehicleExitButton("LEFT", -68)
+    local VehicleExitButtonRight = self:CreateVehicleExitButton("RIGHT", 68)
 
-    VehicleExitButtonLeft:SetScript("OnClick", function(self)
-        if UnitOnTaxi("player") then
-            TaxiRequestEarlyLanding()
-        else
-            VehicleExit()
-        end
-        self:SetColorTemplate(1, 0, 0)
-        VehicleExitButtonRight:SetColorTemplate(1, 0, 0)
-    end)
-
-    VehicleExitButtonRight:SetScript("OnClick", function(self)
-        if UnitOnTaxi("player") then
-            TaxiRequestEarlyLanding()
-        else
-            VehicleExit()
-        end
-        self:SetColorTemplate(1, 0, 0)
-        VehicleExitButtonLeft:SetColorTemplate(1, 0, 0)
-    end)
-
+    -- Cache
     self.VehicleExitButtonLeft = VehicleExitButtonLeft
     self.VehicleExitButtonRight = VehicleExitButtonRight
 end

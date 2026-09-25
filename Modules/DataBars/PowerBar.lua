@@ -2,13 +2,11 @@ local UI, DB, Media, Language = select(2, ...):Call()
 
 -- Call Modules
 local PowerBar = UI:RegisterModule("PowerBar")
-local PP = UI:CallModule("PowerPrediction")
 
 -- Lib Globals
 local _G = _G
 local unpack = unpack
 local select = select
-local floor = math.floor
 
 -- WoW Globals
 local UnitPower = UnitPower
@@ -16,21 +14,12 @@ local UnitPowerMax = UnitPowerMax
 local UnitPowerType = UnitPowerType
 
 -- Locals
-local Class = select(2, UnitClass("player"))
-
--- Locals
 local R, G, B = unpack(UI.GetClassColors)
 
 function PowerBar:CreateBar(Name)
 	local Bar = CreateFrame("StatusBar", "FeelUI_" .. Name, _G.UIParent)
 	Bar:Size(263, 8)
-
-	if (Name == "PowerBar") then
-		Bar:Point(unpack(DB.Global.DataBars.PowerBarPoint))
-	else
-		Bar:Point(unpack(DB.Global.DataBars.ClassPowerPoint))
-	end
-
+	Bar:Point(unpack(DB.Global.DataBars.PowerBarPoint))
 	Bar:SetStatusBarTexture(Media.Global.Texture)
 	Bar:Hide()
 	
@@ -49,7 +38,7 @@ function PowerBar:CreateBar(Name)
 
 	Bar.Text = Bar.InvisFrame:CreateFontString(nil, "OVERLAY")
 	Bar.Text:SetFontTemplate("Default", 16)
-	Bar.Text:Point("CENTER", Bar, 0, 6)
+	Bar.Text:Point("CENTER", Bar, 1, 6)
 
     return Bar
 end
@@ -102,7 +91,6 @@ function PowerBar:RegisterEvents()
     -- ON EVENT
 	self:SetScript("OnEvent", self.OnEvent)
 end
-
 
 function PowerBar:CreatePowerBar()
     if (not DB.Global.DataBars.PowerBar) then

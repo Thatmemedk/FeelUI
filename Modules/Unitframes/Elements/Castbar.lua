@@ -350,7 +350,7 @@ function UF:CastFailed(Event, Unit, _, _, ...)
     Castbar.Text:SetText(FAILED)
 
     -- Set Values
-    Castbar:SetMinMaxValues(0, 1)
+    Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
     Castbar:SetValue(1, UI.SmoothBars)
     Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
 
@@ -382,7 +382,7 @@ function UF:CastInterrupted(Event, Unit, _, _, ...)
     Castbar.Text:SetText(self:GetInterruptedText(Castbar, InterruptedBy))
 
     -- Set Values
-    Castbar:SetMinMaxValues(0, 1)
+    Castbar:SetMinMaxValues(0, 1, UI.SmoothBars)
     Castbar:SetValue(1, UI.SmoothBars)
     Castbar:SetStatusBarColor(unpack(DB.Global.UnitFrames.CastBarInterruptColor))
 

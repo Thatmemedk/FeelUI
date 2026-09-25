@@ -16,26 +16,13 @@ function UF:SetupGroupFrame(Frame, Type, Unit)
     -- SET UNIT
     Frame.unit = Unit
 
-    -- SET SIZE
-    if (Type == "party") then
-        Frame:SetSize(202, 36)
-    else
-        Frame:SetSize(79, 42)
-    end
-
     -- SET ATTRIBUTES
     if (not InCombatLockdown()) then
         Frame:SetAttribute("unit", Unit)
-
-        -- CLICK BEHAVIOR
+        Frame:RegisterForClicks("AnyUp")
         Frame:SetAttribute("type1", "target")
         Frame:SetAttribute("type2", "togglemenu")
-
-        -- VEHICLE SUPPORT
         Frame:SetAttribute("toggleForVehicle", true)
-
-        -- REGISTER CLICKS
-        Frame:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     end
 
     -- REGISTER UNIT WATCH
@@ -128,18 +115,19 @@ function UF:SpawnGroupHeader(Type)
     -- STORE TYPE
     Header.GroupType = Type
 
-    -- CHILD TEMPLATE
     Header:SetAttribute("template", "SecureUnitButtonTemplate, SecureHandlerStateTemplate, SecureHandlerEnterLeaveTemplate, PingableUnitFrameTemplate")
+    Header:SetAttribute("initialConfigFunction", [[
+        self:SetWidth(self:GetParent():GetAttribute("initial-width"))
+        self:SetHeight(self:GetParent():GetAttribute("initial-height"))
+    ]])
 
     if (Type == "party") then
         -- PARTY SETTINGS
         Header:SetAttribute("showPlayer", false)
         Header:SetAttribute("showParty", true)
         Header:SetAttribute("showRaid", false)
-
         Header:SetAttribute("initial-width", 202)
         Header:SetAttribute("initial-height", 36)
-
         Header:SetAttribute("point", "TOP")
         Header:SetAttribute("yOffset", -22)
         Header:SetAttribute("columnAnchorPoint", "BOTTOM")
@@ -148,15 +136,12 @@ function UF:SpawnGroupHeader(Type)
         Header:SetAttribute("showRaid", true)
         Header:SetAttribute("showParty", true)
         Header:SetAttribute("showPlayer", true)
-
         Header:SetAttribute("initial-width", 79)
         Header:SetAttribute("initial-height", 42)
-
         Header:SetAttribute("point", "LEFT")
         Header:SetAttribute("xOffset", 4)
         Header:SetAttribute("yOffset", -4)
         Header:SetAttribute("columnAnchorPoint", "TOP")
-
         Header:SetAttribute("unitsPerColumn", 5)
         Header:SetAttribute("maxColumns", 8)
         Header:SetAttribute("columnSpacing", 4)
@@ -186,8 +171,8 @@ function UF:SpawnGroupHeader(Type)
         -- Process children that already exist.
         UF:UpdateGroupChildren(self)
 
-        -- Queue another pass after the SecureGroupHeader
-        -- has had a chance to update/rebuild its children.
+        -- Queue another pass after the SecureGroupHeader has
+        -- had a chance to update/rebuild its children.
         UF:QueueUpdateForGroups(self)
     end)
 

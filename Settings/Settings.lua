@@ -123,7 +123,8 @@ DB.Global = {
 		ReputationBar = false,
 		ClassPowerBar = true,
 		PowerBar = true,
-		TotemBar = false,
+		TotemBar = true,
+		SwingBar = true,
 		-- Points Settings
 		PowerBarPoint = { "CENTER", _G.UIParent, 0, -204 },
 		ClassPowerPoint = { "CENTER", _G.UIParent, 0, -192 },
