@@ -58,7 +58,20 @@ function PowerBar:CreateBar(Name)
 	Bar.Text = Bar.InvisFrame:CreateFontString(nil, "OVERLAY")
 	Bar.Text:SetFontTemplate("Default", 16)
 	Bar.Text:Point("CENTER", Bar, 0, 6)
-    
+
+	-- ANIMATION
+    Bar.Fade = UI:CreateAnimationGroup(Bar)
+
+    Bar.FadeIn = UI:CreateAnimation(Bar.Fade, "Fade")
+    Bar.FadeIn:SetDuration(0.25)
+    Bar.FadeIn:SetChange(1)
+    Bar.FadeIn:SetEasing("In-SineEase")
+
+    Bar.FadeOut = UI:CreateAnimation(Bar.Fade, "Fade")
+    Bar.FadeOut:SetDuration(0.25)
+    Bar.FadeOut:SetChange(0)
+    Bar.FadeOut:SetEasing("Out-SineEase")
+
     return Bar
 end
 
