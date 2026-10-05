@@ -32,6 +32,7 @@ function UF:CreateRestingIcon(Frame)
     RestingIcon:Point("TOP", Frame, 12, 22)
     RestingIcon:SetAtlas("UI-HUD-UnitFrame-Player-Rest-Flipbook")
     RestingIcon:SetAlpha(0)
+    RestingIcon:SetDesaturated(true)
 
     RestingIcon.Animation = RestingIcon:CreateAnimationGroup()
     RestingIcon.Animation:SetLooping("REPEAT")

@@ -36,6 +36,15 @@ function UI:UpdateBlizzardFonts()
 	_G.STANDARD_TEXT_FONT = Media.Global.Font
 	_G.DAMAGE_TEXT_FONT = Media.Global.CombatFont
 
+	-- Nameplates
+	--[[
+	SetFont(_G.SystemFont_NamePlate,			  12, "THINOUTLINE", 2, 2)
+	SetFont(_G.SystemFont_NamePlateFixed,		  12, "THINOUTLINE", 2, 2)
+	SetFont(_G.SystemFont_NamePlateCastBar,		  12, "THINOUTLINE", 2, 2)
+	SetFont(_G.SystemFont_NamePlate_Outlined,	  12, "THINOUTLINE, SLUG", 2, 2)
+	SetFont(_G.SystemFont_LargeNamePlate,		  12, "THINOUTLINE", 2, 2)
+	SetFont(_G.SystemFont_LargeNamePlateFixed,	  12, "THINOUTLINE", 2, 2)
+	--]]
 	-- Chat Bubble
 	SetFont(_G.ChatBubbleFont,                     14, "THINOUTLINE", 1, 1)
 	-- Game System Alerts Fonts	
@@ -112,7 +121,6 @@ function UI:UpdateBlizzardFonts()
 	SetFont(_G.Number18FontWhite,                   22, "THINOUTLINE", 1, 1)
 	-- Character Panel Texts
 	SetFont(_G.CharacterLevelText,                  16, "THINOUTLINE", 1, 1)
-	SetFont(_G.CharacterFrameTitleText,             18, "THINOUTLINE", 1, 1, unpack(UI.GetClassColors))
 	-- Objective Tracker
 	SetFont(_G.ObjectiveTrackerLineFont,       12, "THINOUTLINE", 1, 1)
 	SetFont(_G.ObjectiveTrackerHeaderFont,     16, "THINOUTLINE", 1, 1)

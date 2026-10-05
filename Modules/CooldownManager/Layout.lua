@@ -23,7 +23,6 @@ function CDM:CreateContainers(Frame, Point, Anchor, X, Y, IconSpacing)
     if (not AnchorFrame) then
         AnchorFrame = CreateFrame("Frame", nil, _G.UIParent, "SecureHandlerStateTemplate")
         AnchorFrame:Size(36, 18)
-        AnchorFrame:ClearAllPoints()
         AnchorFrame:Point(Point, Anchor, X or 0, Y or 0)
     end
 
@@ -31,11 +30,6 @@ function CDM:CreateContainers(Frame, Point, Anchor, X, Y, IconSpacing)
         Frame = AnchorFrame,
         IconSpacing = IconSpacing
     }
-
-    -- The anchor used by the Dragonflying visibility handler.
-    if (Frame == EssentialCooldownViewer) then
-        self.AnchorFrame = AnchorFrame
-    end
 
     return AnchorFrame
 end
@@ -81,8 +75,6 @@ function CDM:HookViewer(Viewer)
         return
     end
 
-    self.ViewerHooks[Viewer] = true
-
     hooksecurefunc(Container, "RefreshLayout", function(self)
         if (not self or self:IsForbidden() or UI:IsSecretValue(self)) then
             return
@@ -103,6 +95,8 @@ function CDM:HookViewer(Viewer)
     
         CDM:UpdateAnchors()
     end)
+
+    self.ViewerHooks[Viewer] = true
 end
 
 function CDM:UpdateHooks()

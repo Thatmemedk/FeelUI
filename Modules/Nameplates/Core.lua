@@ -600,43 +600,51 @@ function NP:UnitThreat(Unit)
     end
 end
 
+function NP:FindFrameForUnit(FrameTable, TargetUnit)
+    for _, Frame in next, FrameTable do
+        if (Frame.unit and UnitIsUnit(Frame.unit, TargetUnit)) then
+            return Frame
+        end
+    end
+ 
+    return nil
+end
+ 
 function NP:UnitTargetChanged()
     local NewFrame = nil
-
+ 
     if (UnitExists("target")) then
-        local Plate = GetNamePlateForUnit("target")
-        NewFrame = Plate and (Plate.EnemyNP or Plate.FriendlyNP)
+        NewFrame = NP:FindFrameForUnit(self.EnemyFrames, "target") or NP:FindFrameForUnit(self.FriendlyFrames, "target")
     end
-
+ 
     if (self.CurrentTargetFrame and self.CurrentTargetFrame ~= NewFrame) then
         self:UpdateTargetIndicator(self.CurrentTargetFrame, self.CurrentTargetFrame.unit)
         self:UpdateHighlight(self.CurrentTargetFrame, self.CurrentTargetFrame.unit)
     end
-
+ 
     if (NewFrame) then
         self:UpdateTargetIndicator(NewFrame, NewFrame.unit)
         self:UpdateHighlight(NewFrame, NewFrame.unit)
     end
-
+ 
     self.CurrentTargetFrame = NewFrame
 end
-
+ 
 function NP:UnitMouseOver()
     local NewFrame = nil
-
+ 
     if (UnitExists("mouseover")) then
-        local Plate = GetNamePlateForUnit("mouseover")
-        NewFrame = Plate and Plate.EnemyNP
+        NewFrame = NP:FindFrameForUnit(self.EnemyFrames, "mouseover")
     end
-
+ 
     if (self.CurrentMouseoverFrame and self.CurrentMouseoverFrame ~= NewFrame) then
         self:UpdateHighlightMouseOver(self.CurrentMouseoverFrame, self.CurrentMouseoverFrame.unit)
     end
-
+ 
     if (NewFrame) then
         self:UpdateHighlightMouseOver(NewFrame, NewFrame.unit)
     end
-
+ 
     self.CurrentMouseoverFrame = NewFrame
 end
 
@@ -877,10 +885,6 @@ function NP:NameplatePlayerTargetChanged()
     end
 end
 
-local function IsNamePlateUnit(Unit)
-    return Unit ~= nil and Unit:sub(1, 9) == "nameplate"
-end
-
 local NamePlateLifecycleEvents = {
     NAME_PLATE_UNIT_ADDED = function(unit)
         NP:NameplateAdded(unit)
@@ -931,8 +935,12 @@ local CastEvents = {
     UNIT_SPELLCAST_NOT_INTERRUPTIBLE = function(unit, event) NP:CastNonInterruptable(event, unit) end,
 }
 
+function NP:IsNamePlateUnit(Unit)
+    return Unit ~= nil and Unit:sub(1, 9) == "nameplate"
+end
+
 function NP:OnEvent(event, unit, ...)
-    if (unit and not IsNamePlateUnit(unit)) then
+    if (unit and not NP:IsNamePlateUnit(unit)) then
         return
     end
 
@@ -1020,7 +1028,7 @@ function NP:SetCVarOnLogin()
     SetCVar("nameplateShowAll", 1)
     -- Friendly
     SetCVar("nameplateShowFriends", 1)
-    SetCVar("nameplateShowFriendlyNPCs", 0)
+    SetCVar("nameplateShowFriendlyNPCs", 1)
     SetCVar("nameplateShowFriendlyPets", 0)
     SetCVar("nameplateShowFriendlyTotems", 0)
     SetCVar("nameplateShowFriendlyMinions", 0)
@@ -1039,8 +1047,8 @@ end
 -- INITIALIZE
 
 function NP:Initialize()
-    if (not DB.Global.Nameplates.Enable) then 
-        return 
+    if (not DB.Global.Nameplates.Enable) then
+        return
     end
 
     self:DisableBlizzard()

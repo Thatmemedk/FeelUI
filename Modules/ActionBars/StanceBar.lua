@@ -80,6 +80,10 @@ function AB:UpdateStanceBar(event)
 	else
 		AB.StanceBar:SetAlpha(1)
 	end
+
+	if (not DB.Global.ActionBars.StanceBar) then
+		AB.StanceBar:SetAlpha(0)
+	end
 end
 
 function AB:CreateBarStance()

@@ -21,6 +21,7 @@ function PowerBar:CreateBar(Name)
 	Bar:Size(263, 8)
 	Bar:Point(unpack(DB.Global.DataBars.PowerBarPoint))
 	Bar:SetStatusBarTexture(Media.Global.Texture)
+	Bar:CreateSpark()
 	Bar:Hide()
 	
     Bar.Backdrop = CreateFrame("StatusBar", nil, Bar)
@@ -38,7 +39,7 @@ function PowerBar:CreateBar(Name)
 
 	Bar.Text = Bar.InvisFrame:CreateFontString(nil, "OVERLAY")
 	Bar.Text:SetFontTemplate("Default", 16)
-	Bar.Text:Point("CENTER", Bar, 1, 6)
+	Bar.Text:Point("CENTER", Bar, 0, 6)
 
     return Bar
 end

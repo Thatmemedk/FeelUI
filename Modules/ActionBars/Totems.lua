@@ -50,6 +50,7 @@ function AB:SkinMultiCastSpellButton(Button, Icon, Cooldown, NormalTexture)
 	end
 
 	local Highlight = _G[Button:GetName().."Highlight"]
+	local LossControlCD = Button.lossOfControlCooldown
 
 	Button:SetParent(self.TotemHolder)
 	Button:Size(unpack(TotemButtonSize))
@@ -72,6 +73,11 @@ function AB:SkinMultiCastSpellButton(Button, Icon, Cooldown, NormalTexture)
 		Cooldown:ClearAllPoints()
 		Cooldown:SetInside(Button, 1, 1)
 		UI:UpdateCooldownText(Cooldown, 0, 0, true)
+	end
+
+	if (LossControlCD) then
+		LossControlCD:ClearAllPoints()
+		LossControlCD:SetInside(Button, 1, 1)
 	end
 
 	if (Highlight) then
@@ -198,8 +204,9 @@ function AB:UpdateTotemFlyoutOpen(Button, Type, Parent)
 	end
 end
 
-function AB:CreateAnchor()
+function AB:CreateTotemAnchor()
 	local TotemHolder = CreateFrame("Frame", "FeelUI_Totems", _G.UIParent)
+	TotemHolder:SetFrameStrata("LOW")
 	TotemHolder:Size(100, 100)
 	TotemHolder:Point("CENTER", _G.UIParent, -322, -178)
 
@@ -360,7 +367,7 @@ function AB:CreateTotemBar()
 		return
 	end
 
-	self:CreateAnchor()
+	self:CreateTotemAnchor()
 	self:SkinTotemButtons()
 	self:UpdateTotemBar()
 end

@@ -55,6 +55,7 @@
 	<Script file="Maps\MinimapButtonsBar.lua"/>
 	<!-- Misc -->
 	<Script file="Misc\Alerts.lua"/>
+	<Script file="Misc\AutoInvite.lua"/>
 	<Script file="Misc\Blizzard.lua"/>
 	<Script file="Misc\CombatText.lua"/>
 	<Script file="Misc\ErrorFilter.lua"/>
@@ -65,8 +66,10 @@
 	<Script file="Misc\PotionButtonMenu.lua"/>
 	<Script file="Misc\RaidUtility.lua"/>
 	<Script file="Misc\TimeTrackers.lua"/>
+	<Script file="Misc\Toasts.lua"/>
 	<!-- Skins Blizzard -->
 	<Script file="Skins\Blizzard\Bubbles.lua"/>
+	<Script file="Skins\Blizzard\CharacterFrame.lua"/>
 	<Script file="Skins\Blizzard\DeathRecap.lua"/>
 	<Script file="Skins\Blizzard\DropDown.lua"/>
 	<Script file="Skins\Blizzard\GameMenu.lua"/>

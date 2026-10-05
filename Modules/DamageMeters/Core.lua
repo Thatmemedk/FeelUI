@@ -90,15 +90,11 @@ function DM:GetClassColor(ClassFilename)
 end
 
 function DM:StripRealm(Name)
-    if (not Name) then 
-        return "Unknown" 
+    if (not Name) then
+        return "Unknown"
     end
 
-    if (Ambiguate) then 
-        return Ambiguate(Name, "short") or Name 
-    end
-
-    return Name
+    return Ambiguate(Name, "short") or Name
 end
 
 function DM:FormatCombatTime(Seconds)

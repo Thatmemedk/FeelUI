@@ -106,6 +106,9 @@ UF.Frames.Hidden = {}
 UF.ActiveRangeFrames = {}
 
 -- Tables
+UF.PortraitCache = {}
+
+-- Tables
 UF.ValidUnits = {
     player = true,
     target = true,
@@ -608,6 +611,7 @@ function UF:GetClassicLevelColor(Level)
 
     return 0.25, 0.75, 0.25
 end
+
 function UF:UpdateTargetNameLevel(Frame, Unit)
     if (not Frame or not Unit or not Frame.NameLevel) then
         return
@@ -661,14 +665,35 @@ end
 -- UPDATE PORTRAITS
 
 function UF:UpdatePortrait(Frame, Unit)
-    if (not Frame or not Unit or not UI:UnitIsUnit(Frame.unit, Unit) or not Frame.Portrait) then
+    if (not Frame or not Unit or not Frame.Portrait) then
         return
+    end
+
+    if (not UI:UnitIsUnit(Frame.unit, Unit)) then
+        return
+    end
+
+    local Data = UF.PortraitCache[Frame]
+
+    if (not Data) then
+        Data = {}
+        UF.PortraitCache[Frame] = Data
+    end
+
+    local IsActive = UnitIsConnected(Unit) and UnitIsVisible(Unit)
+    local GUID = UnitGUID(Unit)
+    local NeedsUpdate
+
+    if (Data.IsActive ~= IsActive) then
+        NeedsUpdate = true
+    elseif (not UI:IsSecretValue(GUID) and not UI:IsSecretValue(Data.GUID)) then
+        NeedsUpdate = Data.GUID ~= GUID
     end
 
     if (Frame.Portrait:IsObjectType("PlayerModel")) then
         Frame.Portrait:ClearModel()
 
-        if (not UnitIsVisible(Unit) or not UnitIsConnected(Unit)) then
+        if (not IsActive) then
             Frame.Portrait:SetCamDistanceScale(1)
             Frame.Portrait:SetPortraitZoom(1)
             Frame.Portrait:SetPosition(0, 0, 0.20)
@@ -679,9 +704,10 @@ function UF:UpdatePortrait(Frame, Unit)
             Frame.Portrait:SetPosition(0, 0, 0)
             Frame.Portrait:SetUnit(Unit)
         end
-    else
-        SetPortraitTexture(Frame.Portrait, Unit)
     end
+
+    Data.GUID = GUID
+    Data.IsActive = IsActive
 end
 
 function UF:UpdatePlayerPortrait()

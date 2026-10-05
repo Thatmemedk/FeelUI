@@ -38,7 +38,7 @@ DB.Global = {
 		Bar3 = false,
 		Bar4 = true,
 		Bar5 = true,
-		StanceBar = true,
+		StanceBar = false,
 		-- Misc
 		HotKey = false,
 		AddNewSpells = false,
@@ -53,7 +53,7 @@ DB.Global = {
 		-- Totems
 		TotemBar = true,
 		TotemButtonSize = { 36, 18 },
-		TotemButtonSpacing = 3,
+		TotemButtonSpacing = 2,
 	},
 
 	Auras = {
@@ -94,9 +94,9 @@ DB.Global = {
 		BuffViewerButtonSize = { 38, 18 },
 		EssentialViewerButtonSize = { 32, 18 },
 		UtilityViewerButtonSize = { 32, 18 },
-		ButtonSpacing = 3,
+		ButtonSpacing = 2,
 		-- Points Settings
-		BuffViewerPoint = { "CENTER", _G.UIParent, 0, -170 },
+		BuffViewerPoint = { "CENTER", _G.UIParent, 0, -156 },
 		EssentialViewerPoint = { "CENTER", _G.UIParent, 0, -222 },
 		UtilityViewerPoint = { "CENTER", _G.UIParent, 0, -246 },
 	},
@@ -205,7 +205,6 @@ DB.Global = {
 		CastBarSucceededColor = { 0, 0.67, 0, 0.70 },
 		-- Portraits
 		Portraits = false,
-		PortraitStyle = "3D",
 		-- Icons
 		RoleIcons = false,
 		-- Points Settings

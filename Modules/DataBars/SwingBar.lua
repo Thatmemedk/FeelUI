@@ -13,8 +13,10 @@ local C_SwingTimer = _G.C_SwingTimer
 local C_DurationUtil = _G.C_DurationUtil
 local GetTime = _G.GetTime
 local UnitAttackSpeed = _G.UnitAttackSpeed
+local IsSecretValue = _G.issecretvalue
 local MainHand = Enum.PlayerSwingType.MainHand
 local OffHand = Enum.PlayerSwingType.OffHand
+local Ranged = Enum.PlayerSwingType.Ranged
 local ElapsedTime = Enum.StatusBarTimerDirection.ElapsedTime
 local RemainingTime = Enum.StatusBarTimerDirection.RemainingTime
 
@@ -23,12 +25,18 @@ SwingBar.UpdateElapsed = 0
 SwingBar.UpdateInterval = 0.05
 SwingBar.EndMH = 0
 SwingBar.EndOH = 0
+SwingBar.EndRanged = 0
 SwingBar.DurationMH = 0
 SwingBar.DurationOH = 0
+SwingBar.DurationRanged = 0
 SwingBar.ActiveMH = false
 SwingBar.ActiveOH = false
+SwingBar.ActiveRanged = false
 SwingBar.IsShown = false
 SwingBar.HasOffHand = false
+SwingBar.SameSpeed = false
+SwingBar.MainHandSpeed = nil
+SwingBar.OffHandSpeed = nil
 
 function SwingBar:Create()
     local BarMH = CreateFrame("StatusBar", "FeelUI_SwingBar", _G.UIParent)
@@ -71,9 +79,11 @@ function SwingBar:Create()
     self.SwingTimerOH = SwingTimerOH
     self.DurationObjMH = C_DurationUtil.CreateDuration()
     self.DurationObjOH = C_DurationUtil.CreateDuration()
+    self.DurationObjRanged = C_DurationUtil.CreateDuration()
 
     self:ParkSwingSide(MainHand)
     self:ParkSwingSide(OffHand)
+    self:ParkSwingSide(Ranged)
 end
 
 function SwingBar.OnUpdate(_, Elapsed)
@@ -87,8 +97,9 @@ function SwingBar.OnUpdate(_, Elapsed)
 
     SwingBar:UpdateSwingSide(Now, MainHand)
     SwingBar:UpdateSwingSide(Now, OffHand)
+    SwingBar:UpdateSwingSide(Now, Ranged)
 
-    if (not SwingBar.ActiveMH and not SwingBar.ActiveOH) then
+    if (not SwingBar.ActiveMH and not SwingBar.ActiveOH and not SwingBar.ActiveRanged) then
         SwingBar:HideBar()
     end
 
@@ -98,15 +109,18 @@ end
 function SwingBar:GetSwingSide(SwingType)
     if (SwingType == MainHand) then
         return self.Frame, self.SwingTimerMH, "EndMH", "DurationMH", "ActiveMH", "DurationObjMH"
-    else
+    elseif (SwingType == OffHand) then
         return self.OffHand, self.SwingTimerOH, "EndOH", "DurationOH", "ActiveOH", "DurationObjOH"
+    elseif (SwingType == Ranged) then
+        return self.Frame, self.SwingTimerMH, "EndRanged", "DurationRanged", "ActiveRanged", "DurationObjRanged"
     end
 end
 
 function SwingBar:ParkSwingSide(SwingType)
     local Bar, _, _, _, _, DurationObjKey = self:GetSwingSide(SwingType)
     local DurationObj = self[DurationObjKey]
-    DurationObj:SetTimeFromStart(GetTime() -1, 1)
+
+    DurationObj:SetTimeFromStart(GetTime() - 1, 1)
     Bar:SetTimerDuration(DurationObj, UI.SmoothBars, RemainingTime)
     Bar:SetValue(0, UI.SmoothBars)
 end
@@ -155,6 +169,10 @@ function SwingBar:HideBar()
 end
 
 function SwingBar:StartSwing(SwingType, Duration)
+    if (UI:IsSecretValue(SwingType) or UI:IsSecretValue(Duration)) then
+        return
+    end
+
     if (not Duration or Duration <= 0) then
         return
     end
@@ -169,7 +187,6 @@ function SwingBar:StartSwing(SwingType, Duration)
     local DurationObj = self[DurationObjKey]
     DurationObj:SetTimeFromStart(Now, Duration)
     Bar:SetTimerDuration(DurationObj, UI.SmoothBars, ElapsedTime)
-
     Timer:SetFormattedText("%.1f", Duration)
 
     self:ShowBar()
@@ -178,13 +195,17 @@ end
 function SwingBar:ResetSwing()
     self:ParkSwingSide(MainHand)
     self:ParkSwingSide(OffHand)
+    self:ParkSwingSide(Ranged)
 
     self.EndMH = 0
     self.EndOH = 0
+    self.EndRanged = 0
     self.DurationMH = 0
     self.DurationOH = 0
+    self.DurationRanged = 0
     self.ActiveMH = false
     self.ActiveOH = false
+    self.ActiveRanged = false
     self.SwingTimerMH:SetText("")
     self.SwingTimerOH:SetText("")
     self:HideBar()
@@ -197,7 +218,7 @@ function SwingBar:UpdateRange(SwingType, IsInRange, ChecksRange)
 
     local Color = IsInRange and 0.5 or 0.4
 
-    if (SwingType == MainHand) then
+    if (SwingType == MainHand or SwingType == Ranged) then
         self.Frame:SetStatusBarColor(Color, Color, Color)
     elseif (SwingType == OffHand) then
         self.OffHand:SetStatusBarColor(Color, Color, Color, 0.50)
@@ -215,38 +236,77 @@ function SwingBar:UpdateCurrentRange(SwingType)
 end
 
 function SwingBar:UpdateBar()
-    local _, OffHandSpeed = UnitAttackSpeed("player")
-    local HasOffHand = (OffHandSpeed or 0) > 0
+    local MainHandSpeed, OffHandSpeed = UnitAttackSpeed("player")
 
-    if (HasOffHand) then
+    if (not UI:IsSecretValue(MainHandSpeed) and type(MainHandSpeed) == "number") then
+        self.MainHandSpeed = MainHandSpeed
+    end
+
+    if (not UI:IsSecretValue(OffHandSpeed) and type(OffHandSpeed) == "number") then
+        self.OffHandSpeed = OffHandSpeed
+
+        if (OffHandSpeed > 0) then
+            self.HasOffHand = true
+
+            if (not UI:IsSecretValue(MainHandSpeed) and type(MainHandSpeed) == "number") then
+                self.SameSpeed = math.abs(MainHandSpeed - OffHandSpeed) < 0.01
+            end
+        else
+            self.HasOffHand = false
+            self.SameSpeed = false
+        end
+    elseif (not UI:IsSecretValue(OffHandSpeed)) then
+        self.OffHandSpeed = nil
+        self.HasOffHand = false
+        self.SameSpeed = false
+    end
+
+    -- Same MH/OH speed:
+    -- Only use the main-hand visual bar.
+    -- OH swings are still tracked internally.
+    if (self.HasOffHand and self.SameSpeed) then
+        self.SwingTimerMH:ClearAllPoints()
+        self.SwingTimerMH:Point("CENTER", self.Frame, 0, 6)
+
+        self.SwingTimerOH:SetText("")
+        self.SwingTimerOH:Hide()
+
+        self.OffHand:Hide()
+
+    elseif (self.HasOffHand) then
+        -- Different speeds:
+        -- Show separate MH/OH visuals.
         self.SwingTimerMH:ClearAllPoints()
         self.SwingTimerMH:Point("LEFT", self.Frame, 6, 6)
+
         self.SwingTimerOH:ClearAllPoints()
         self.SwingTimerOH:Point("RIGHT", self.OffHand, -6, 6)
 
-        if (not self.HasOffHand) then
-            self.HasOffHand = true
-            self.OffHand:Show()
-        end
+        self.OffHand:Show()
+        self.SwingTimerOH:Show()
+
     else
+        -- No off-hand.
         self.SwingTimerMH:ClearAllPoints()
         self.SwingTimerMH:Point("CENTER", self.Frame, 0, 6)
+
         self.SwingTimerOH:SetText("")
+        self.SwingTimerOH:Hide()
+
         self.EndOH = 0
         self.DurationOH = 0
         self.ActiveOH = false
-        self:ParkSwingSide(OffHand)
 
-        if (self.HasOffHand) then
-            self.HasOffHand = false
-            self.OffHand:Hide()
-        end
+        self:ParkSwingSide(OffHand)
+        self.OffHand:Hide()
     end
 
     C_SwingTimer.EnableRangeCheck(MainHand, true)
     C_SwingTimer.EnableRangeCheck(OffHand, self.HasOffHand)
+    C_SwingTimer.EnableRangeCheck(Ranged, true)
 
     self:UpdateCurrentRange(MainHand)
+    self:UpdateCurrentRange(Ranged)
 
     if (self.HasOffHand) then
         self:UpdateCurrentRange(OffHand)
@@ -264,6 +324,7 @@ function SwingBar:OnEvent(event, ...)
         self:UpdateRange(SwingType, IsInRange, ChecksRange)
     elseif (event == "PLAYER_TARGET_CHANGED") then
         self:UpdateCurrentRange(MainHand)
+        self:UpdateCurrentRange(Ranged)
 
         if (self.HasOffHand) then
             self:UpdateCurrentRange(OffHand)

@@ -51,15 +51,9 @@ function Maps:Style()
 	Minimap.Location:SetJustifyH("CENTER")
 	Minimap.Location:SetJustifyV("MIDDLE")
 	Minimap.Location:SetFontTemplate("Default", 12)
- 	
-	if (QueueStatusButton) then
-		local MapsQueueStatus = CreateFrame("Frame", "FeelUIQueueStatus", _G.UIParent)
-		MapsQueueStatus:SetFrameLevel(10)
-		MapsQueueStatus:Size(32)
-		MapsQueueStatus:Point("BOTTOMLEFT", Minimap, 4, 2)
 
-		hooksecurefunc(QueueStatusButton, "SetParent", Maps.QueueStatusSetParent)
-		hooksecurefunc(QueueStatusButton, "SetPoint", Maps.QueueStatusSetPoint)
+	if (QueueStatusButton) then
+		QueueStatusButton:SetScale(0.6)
 	end
  	
  	if (MapsInstanceDifficulty) then
@@ -148,21 +142,6 @@ function Maps:Disable()
             end
         end
     end
-end
-
-function Maps:QueueStatusSetPoint(_, Anchor)
-	if (Anchor ~= FeelUIQueueStatus) then
-		self:ClearAllPoints()
-		self:Point("CENTER", FeelUIQueueStatus)
-	end
-
-	self:SetScale(0.6)
-end
-
-function Maps:QueueStatusSetParent(Parent)
-	if (Parent ~= FeelUIQueueStatus) then
-		self:SetParent(FeelUIQueueStatus)
-	end
 end
 
 function Maps:OnMouseDown(Button)

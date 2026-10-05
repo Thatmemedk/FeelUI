@@ -48,7 +48,6 @@ function UF:CreateDebuffsTarget(Frame)
         DebuffIndicator = false,
         Filter = "HARMFUL",
         MaxAuras = 7,
-        HideTooltipInCombat = true,
     })
 
     Frame.Debuffs = Debuffs

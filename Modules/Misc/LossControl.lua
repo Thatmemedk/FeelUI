@@ -33,7 +33,7 @@ function LossControl:UpdateSetUpDisplay()
 	end
 end
 
-function LossControl:Update()
+function LossControl:Skin()
 	LossOfControlFrame:StripTexture()
 	
 	LossOfControlFrame.IconOverlay = CreateFrame("Frame", nil, LossOfControlFrame)
@@ -45,11 +45,13 @@ function LossControl:Update()
 
 	LossOfControlFrame.Icon:Size(48, 28)
 	UI:KeepAspectRatio(LossOfControlFrame.Icon, LossOfControlFrame.Icon)
+end
 
-	-- Hook Secure
+function LossControl:Update()
 	hooksecurefunc(LossOfControlFrame, "SetUpDisplay", self.UpdateSetUpDisplay)
 end
 
 function LossControl:Initialize()
+	self:Skin()
 	self:Update()
 end

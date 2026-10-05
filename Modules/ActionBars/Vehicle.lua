@@ -67,8 +67,8 @@ function AB:CreateVehicleExitButton(Anchor, OffsetX)
 end
 
 function AB:CreateVehicleExitButtons()
-    local VehicleExitButtonLeft = self:CreateVehicleExitButton("LEFT", -68)
-    local VehicleExitButtonRight = self:CreateVehicleExitButton("RIGHT", 68)
+    local VehicleExitButtonLeft = self:CreateVehicleExitButton("LEFT", -82)
+    local VehicleExitButtonRight = self:CreateVehicleExitButton("RIGHT", 82)
 
     -- Cache
     self.VehicleExitButtonLeft = VehicleExitButtonLeft
