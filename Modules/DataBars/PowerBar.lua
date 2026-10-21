@@ -21,17 +21,10 @@ function PowerBar:CreateBar(Name)
 	Bar:Size(263, 8)
 	Bar:Point(unpack(DB.Global.DataBars.PowerBarPoint))
 	Bar:SetStatusBarTexture(Media.Global.Texture)
+    Bar:CreateBackdrop()
+	Bar:CreateShadow()
 	Bar:CreateSpark()
 	Bar:Hide()
-	
-    Bar.Backdrop = CreateFrame("StatusBar", nil, Bar)
-    Bar.Backdrop:SetFrameStrata(Bar:GetFrameStrata())
-    Bar.Backdrop:SetFrameLevel(Bar:GetFrameLevel() - 1)
-    Bar.Backdrop:Size(263, 8)
-    Bar.Backdrop:Point("CENTER", Bar, 0, 0)
-    Bar.Backdrop:SetStatusBarTexture(Media.Global.Texture)
-    Bar.Backdrop:SetTemplate()
-	Bar.Backdrop:CreateShadow()
 
 	Bar.InvisFrame = CreateFrame("Frame", nil, Bar)
 	Bar.InvisFrame:SetFrameLevel(Bar:GetFrameLevel() + 10)
@@ -72,8 +65,8 @@ function PowerBar:PowerUpdate()
 
 	-- Set Color
 	if (PowerColor) then
-		Bar:SetStatusBarColor(R, G, B)
-		Bar.Backdrop:SetStatusBarColor(R * 0.25, G * 0.25, B * 0.25, 0.7)
+		Bar:SetStatusBarColor(PowerColor.r, PowerColor.g, PowerColor.b)
+		Bar:SetBackdropColorTemplate(PowerColor.r * 0.25, PowerColor.g * 0.25, PowerColor.b * 0.25, 0.7)
 	end
 end
 
@@ -82,14 +75,11 @@ function PowerBar:OnEvent(event)
 end
 
 function PowerBar:RegisterEvents()
-	-- PLAYER
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    -- UNIT
 	self:RegisterEvent("UNIT_POWER_FREQUENT", "player")
 	self:RegisterEvent("UNIT_MAXPOWER", "player")
 	self:RegisterEvent("UNIT_POWER_UPDATE", "player")
 	self:RegisterEvent("UNIT_DISPLAYPOWER", "player")
-    -- ON EVENT
 	self:SetScript("OnEvent", self.OnEvent)
 end
 

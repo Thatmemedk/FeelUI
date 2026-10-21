@@ -102,7 +102,7 @@ DB.Global = {
 	},
 
 	PotionButtonMenu = {
-		Enable = false,
+		Enable = true,
 		ButtonSize = { 36, 18 },
 		ButtonSpacing = 2,
 		Point = { "BOTTOMLEFT", _G.UIParent, 482, 282 }, -- "BOTTOMLEFT", _G.UIParent, 482, 282 -- "BOTTOMLEFT", _G.UIParent, 482, 212
@@ -123,7 +123,7 @@ DB.Global = {
 		ReputationBar = false,
 		ClassPowerBar = true,
 		PowerBar = true,
-		TotemBar = true,
+		TotemBar = false,
 		SwingBar = true,
 		-- Points Settings
 		PowerBarPoint = { "CENTER", _G.UIParent, 0, -204 },

@@ -15,18 +15,7 @@ local UnitPowerMax = UnitPowerMax
 local UnitPowerType = UnitPowerType
 
 -- WoW Globals
-local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
-local GetSpecialization = C_SpecializationInfo.GetSpecialization()
-
--- WoW Globals
 local SPELL_POWER_COMBO_POINTS = Enum.PowerType.ComboPoints
-local SPELL_POWER_ENERGY = Enum.PowerType.Energy
-local SPELL_POWER_SOUL_SHARDS = Enum.PowerType.SoulShards
-local SPELL_POWER_HOLY_POWER = Enum.PowerType.HolyPower
-local SPELL_POWER_CHI = Enum.PowerType.Chi
-local SPELL_POWER_ARCANE_CHARGES = Enum.PowerType.ArcaneCharges
-local SPELL_POWER_ESSENCE = Enum.PowerType.Essence
-local SPELL_POWER_MAELSTROM = Enum.PowerType.Maelstrom
 
 -- Locals
 local Class = select(2, UnitClass("player"))
@@ -64,16 +53,6 @@ end
 function ClassPowerBar:GetClassPowerType()
     if (Class == "ROGUE" or Class == "DRUID") then
         return SPELL_POWER_COMBO_POINTS
-    elseif (Class == "WARLOCK") then
-        return SPELL_POWER_SOUL_SHARDS
-    elseif (Class == "PALADIN") then
-        return SPELL_POWER_HOLY_POWER
-    elseif (Class == "MONK") then
-        return SPELL_POWER_CHI
-    elseif (Class == "MAGE") then
-        return SPELL_POWER_ARCANE_CHARGES
-    elseif (Class == "EVOKER") then
-        return SPELL_POWER_ESSENCE
     end
 end
 
@@ -198,14 +177,11 @@ function ClassPowerBar:OnEvent(event)
 end
 
 function ClassPowerBar:RegisterEvents()
-    -- PLAYER
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    -- UNIT EVENTS
     self:RegisterEvent("UNIT_DISPLAYPOWER", "player")
     self:RegisterEvent("UNIT_MAXPOWER", "player")
     self:RegisterEvent("UNIT_POWER_FREQUENT", "player")
     self:RegisterEvent("UNIT_POWER_UPDATE", "player")
-    -- ON EVENT
     self:SetScript("OnEvent", self.OnEvent)
 end
 

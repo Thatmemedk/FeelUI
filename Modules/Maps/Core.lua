@@ -78,12 +78,6 @@ function Maps:Disable()
 		"GameTimeFrame",
 	}
 
-    local DisableBG = {
-        MapsInstanceDifficulty.Default,
-        MapsInstanceDifficulty.ChallengeMode,
-        MapsInstanceDifficulty.Guild,
-    }
-
 	if (MapsZoomIn) then
 		MapsZoomIn:Kill()
 	end
@@ -108,6 +102,10 @@ function Maps:Disable()
 		MapsCluster.DielFrame:Hide()
 	end
 
+	if (MapsCluster.ZoneTextButton.StateTexture) then
+		MapsCluster.ZoneTextButton.StateTexture:Hide()
+	end
+
 	if (MapsCluster.MinimapContainer.PlayerCoords) then
 		MapsCluster.MinimapContainer.PlayerCoords:Hide()
 	end
@@ -130,18 +128,6 @@ function Maps:Disable()
 			end
 		end
 	end
-
-    for _, Frames in ipairs(DisableBG) do
-        if (Frames) then
-            if (Frames.Background) then 
-            	Frames.Background:Hide()
-            end
-
-            if (Frames.Border) then 
-            	Frames.Border:Hide() 
-            end
-        end
-    end
 end
 
 function Maps:OnMouseDown(Button)
