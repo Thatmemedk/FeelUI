@@ -10,29 +10,40 @@ local select = select
 
 -- Tables
 DM.Rows = {}
+DM.SourceRows = {}
 
 -- Locals
 DM.MaxRows = 8
+DM.SourceMaxRows = 10
 
 -- Locals
 DM.SessionID = nil
+DM.SourceData = nil
+DM.SourceSessionID = nil
+DM.SourceMeterType = nil
+DM.SourceSessionType = nil
 
 -- Locals
 DM.ScrollMax = 0
 DM.ScrollOffset = 0
 DM.ScrollRows = 7
+DM.SourceScrollOffset = 0
+DM.SourceScrollMax = 0
 
 -- Locals
 DM.TimerElapsed = 0
 DM.CombatStartTime = nil
 DM.InEncounter = false
+DM.SourceThrottle = 0.25
+DM.Pending = false
 
 -- Local
 DM.AbbreviateConfig = nil
+DM.SourceFallBackIcon = 134400
 
 -- TYPES
 
-local DamageTypes = {
+DM.Types = {
     Enum.DamageMeterType.DamageDone,
     Enum.DamageMeterType.Dps,
     Enum.DamageMeterType.DamageTaken,
@@ -45,7 +56,7 @@ local DamageTypes = {
     Enum.DamageMeterType.Deaths,
 }
 
-local DamageTypeNames = {
+DM.TypeNames = {
     [Enum.DamageMeterType.DamageDone] = DAMAGE_METER_TYPE_DAMAGE_DONE,
     [Enum.DamageMeterType.Dps] = DAMAGE_METER_TYPE_DPS,
     [Enum.DamageMeterType.DamageTaken] = DAMAGE_METER_TYPE_DAMAGE_TAKEN,
@@ -56,6 +67,11 @@ local DamageTypeNames = {
     [Enum.DamageMeterType.Interrupts] = DAMAGE_METER_TYPE_INTERRUPTS,
     [Enum.DamageMeterType.Dispels] = DAMAGE_METER_TYPE_DISPELS,
     [Enum.DamageMeterType.Deaths] = DAMAGE_METER_TYPE_DEATHS,
+}
+
+DM.CountTypes = {
+    [Enum.DamageMeterType.Interrupts] = true,
+    [Enum.DamageMeterType.Dispels] = true,
 }
 
 -- ABBREV HELPERS
@@ -106,6 +122,26 @@ function DM:FormatCombatTime(Seconds)
     local Minutes = math.floor(Seconds / 60)
     local Secs = math.floor(Seconds % 60)
     return string.format("[|cffffd200%d:%02d|r]", Minutes, Secs)
+end
+
+-- Death time, e.g. "3m 22s". -1 means Overall session (no timestamp)
+function DM:FormatDeathTime(Seconds)
+    if (not Seconds or UI:IsSecretValue(Seconds) or Seconds < 0) then
+        return ""
+    end
+
+    local Minutes = math.floor(Seconds / 60)
+    local Secs = math.floor(Seconds % 60)
+
+    if (Minutes > 0) then
+        return string.format("%dm %ds", Minutes, Secs)
+    end
+
+    return string.format("%ds", Secs)
+end
+
+function DM:IsDeathSource(Source)
+    return Source and Source.deathRecapID and Source.deathRecapID ~= 0
 end
 
 -- WINDOW
@@ -292,16 +328,16 @@ function DM:CreateDamageMeters()
                 return
             end
 
-            local SourceWindow = self.SourceWindow
+            -- Deaths: Blizzard opens the death recap UI instead of a source window
+            if (DM:IsDeathSource(Source)) then
+                if (OpenDeathRecapUI) then
+                    OpenDeathRecapUI(Source.deathRecapID)
+                end
 
-            if (not SourceWindow) then
                 return
             end
 
-            SourceWindow:SetSource(Source)
-            SourceWindow:SetDamageMeterType(self.DamageMeterType)
-            SourceWindow:SetSession(self.SessionType, self.SessionID)
-            SourceWindow:Show()
+            DM:OpenSourceWindow(Source, self.DamageMeterType, self.SessionType, self.SessionID)
         end)
 
         Bar:HookScript("OnEnter", function(self)
@@ -361,6 +397,17 @@ function DM:UpdateBars(Bar, Source, Rank, MaxAmount)
         Bar.StatusBar:SetStatusBarColor(1, 0.82, 0)
     end
 
+    -- Deaths: full bar, name only, value is time of death (same as Blizzard)
+    if (self:IsDeathSource(Source)) then
+        Bar.StatusBar:SetMinMaxValues(0, 1)
+        Bar.StatusBar:SetValue(1)
+
+        Bar.Text:SetText(DM:StripRealm(Source.name))
+        Bar.Value:SetText(self:FormatDeathTime(Source.deathTimeSeconds))
+
+        return
+    end
+
     Bar.StatusBar:SetMinMaxValues(0, MaxAmount, UI.SmoothBars)
     Bar.StatusBar:SetValue(Source.totalAmount, UI.SmoothBars)
 
@@ -368,7 +415,11 @@ function DM:UpdateBars(Bar, Source, Rank, MaxAmount)
     Bar.Text:SetText(Rank .. ". " .. DM:StripRealm(Source.name))
 
     -- Value
-    Bar.Value:SetFormattedText("%s (%s)", DM:AbbreviateNumber(Source.totalAmount), DM:AbbreviateNumber(Source.amountPerSecond))
+    if (self.CountTypes[self.DamageMeterType]) then
+        Bar.Value:SetText(DM:AbbreviateNumber(Source.totalAmount))
+    else
+        Bar.Value:SetFormattedText("%s (%s)", DM:AbbreviateNumber(Source.totalAmount), DM:AbbreviateNumber(Source.amountPerSecond))
+    end
 end
 
 function DM:ClearBar(Bar)
@@ -382,6 +433,7 @@ function DM:ClearBar(Bar)
 
     Bar.Source = nil
     Bar.Text:SetText("")
+    Bar.Value:SetText("")
     Bar.StatusBar:SetMinMaxValues(0, 1)
     Bar.StatusBar:SetValue(0)
     Bar:Hide()
@@ -390,7 +442,7 @@ end
 -- UPDATE
 
 function DM:UpdateHeader(CombatTime)
-    local HeaderText = DamageTypeNames[self.DamageMeterType] or DAMAGE_METER_TYPE_DAMAGE_DONE
+    local HeaderText = self.TypeNames[self.DamageMeterType] or DAMAGE_METER_TYPE_DAMAGE_DONE
 
     if (self.CombatStartTime) then
         CombatTime = CombatTime or (GetTime() - self.CombatStartTime)
@@ -407,8 +459,8 @@ function DM:OpenDamageTypeMenu(Owner)
 
     self.DamageTypeDropdown = Dropdown
 
-    for _, DamageMeterType in ipairs(DamageTypes) do
-        local Name = DamageTypeNames[DamageMeterType]
+    for _, DamageMeterType in ipairs(DM.Types) do
+        local Name = self.TypeNames[DamageMeterType]
 
         if (Name) then
             Dropdown:AddDropdownButton(Name, self.DamageMeterType == DamageMeterType, function()
@@ -613,6 +665,7 @@ end
 function DM:Initialize()
     self:SetCVarOnLogin()
     self:CreateDamageMeters()
+    self:CreateSourceWindow()
     self:RegisterEvents()
     self:Refresh()
 end

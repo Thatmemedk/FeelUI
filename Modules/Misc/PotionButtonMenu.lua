@@ -162,7 +162,7 @@ function PBM:UpdateButton(Button)
         Button.ItemID = ItemID
     end
 
-    local _, ItemLink = GetItemInfo(ItemID)
+    local _, ItemLink = C_Item.GetItemInfo(ItemID)
 
     if (not ItemLink) then
         C_Item.RequestLoadItemDataByID(ItemID)

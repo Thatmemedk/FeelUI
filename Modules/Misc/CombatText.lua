@@ -1,5 +1,6 @@
 local UI, DB, Media, Language = select(2, ...):Call()
 
+-- Call Modules
 local SCT = UI:RegisterModule("SCT")
 
 -- Lib Globals
@@ -7,69 +8,74 @@ local _G = _G
 local unpack = unpack
 local select = select
 
+-- WoW Globals
+local ENTERING_COMBAT = _G.ENTERING_COMBAT
+local LEAVING_COMBAT = _G.LEAVING_COMBAT
+
 function SCT:Create()
     local Frame = CreateFrame("Frame", "FeelUI_SCT", _G.UIParent)
-    Frame:Size(26, 26)
-    Frame:Point("CENTER", _G.UIParent, 0, 0)
-    Frame:SetAlpha(0)
+    Frame:Size(200, 30)
+    Frame:Point("CENTER", _G.UIParent, 0, 102)
+    Frame:SetFrameStrata("HIGH")
+    Frame:SetFrameLevel(60)
+    Frame:EnableMouse(false)
+    Frame:Hide()
 
     -- TEXT
     local Text = Frame:CreateFontString(nil, "OVERLAY")
-    Text:Point("CENTER", Frame, 0, 0)
-    Text:SetFontTemplate("CombatText", 18)
+    Text:Point("CENTER", Frame, "CENTER", 0, 0)
+    Text:SetFontTemplate("Default", 22, 2, 2)
 
     -- ANIMATION
     local Animation = Frame:CreateAnimationGroup()
 
-    -- MOVE
-    local Move = Animation:CreateAnimation("Translation")
-    Move:SetDuration(2)
-    Move:SetSmoothing("OUT")
-
-    -- FADE IN
     local FadeIn = Animation:CreateAnimation("Alpha")
     FadeIn:SetFromAlpha(0)
     FadeIn:SetToAlpha(1)
-    FadeIn:SetDuration(0.25)
+    FadeIn:SetDuration(0.20)
+    FadeIn:SetOrder(1)
 
-    -- FADE OUT
+    local Hold = Animation:CreateAnimation("Alpha")
+    Hold:SetFromAlpha(1)
+    Hold:SetToAlpha(1)
+    Hold:SetDuration(1.5)
+    Hold:SetOrder(2)
+
     local FadeOut = Animation:CreateAnimation("Alpha")
     FadeOut:SetFromAlpha(1)
     FadeOut:SetToAlpha(0)
-    FadeOut:SetStartDelay(1)
     FadeOut:SetDuration(0.5)
-    FadeOut:SetSmoothing("OUT")
+    FadeOut:SetOrder(3)
 
-    -- ON PLAY
-    Animation:SetScript("OnPlay", function()
-        self.LastDirection = -self.LastDirection
+    Animation:SetScript("OnFinished", function()
+        Frame:Hide()
+    end)
 
-        local X = math.random(25, 45) * self.LastDirection
-        local Y = math.random(70, 95)
-
-        Move:SetOffset(X, Y)
-        Move:SetDuration(math.random(120,150) / 100)
+    Frame:SetScript("OnHide", function()
+        Animation:Stop()
     end)
 
     -- CACHE
     self.Frame = Frame
     self.Text = Text
     self.Animation = Animation
-    self.LastDirection = 1
+end
+
+function SCT:Play(Message, R, G, B)
+    self.Animation:Stop()
+    self.Text:SetText(Message)
+    self.Text:SetTextColor(R, G, B)
+    self.Frame:SetAlpha(1)
+    self.Frame:Show()
+    self.Animation:Play()
 end
 
 function SCT:EnteringCombat()
-    self.Text:SetText(_G.ENTERING_COMBAT)
-    self.Text:SetTextColor(1, 0.25, 0.25)
-    self.Animation:Stop()
-    self.Animation:Play()
+    self:Play("+"..ENTERING_COMBAT, 1, 0.25, 0.25)
 end
 
 function SCT:LeavingCombat()
-    self.Text:SetText(_G.LEAVING_COMBAT)
-    self.Text:SetTextColor(0.25, 1, 0.25)
-    self.Animation:Stop()
-    self.Animation:Play()
+    self:Play("-"..LEAVING_COMBAT, 0.25, 1, 0.25)
 end
 
 function SCT:OnEvent(event)

@@ -9,11 +9,11 @@ local unpack = unpack
 local select = select
 
 -- WoW Globals
-local GetContainerNumSlots = C_Container and C_Container.GetContainerNumSlots or GetContainerNumSlots
-local GetContainerItemLink = C_Container and C_Container.GetContainerItemLink or GetContainerItemLink
-local GetContainerItemInfo = C_Container and C_Container.GetContainerItemInfo or GetContainerItemInfo
-local UseContainerItem = C_Container and C_Container.UseContainerItem or UseContainerItem
-local GetItemInfo = GetItemInfo
+local GetContainerNumSlots = C_Container.GetContainerNumSlots
+local GetContainerItemLink = C_Container.GetContainerItemLink
+local GetContainerItemInfo = C_Container.GetContainerItemInfo
+local UseContainerItem = C_Container.UseContainerItem
+local GetItemInfo = C_Item.GetItemInfo
 local PickupMerchantItem = PickupMerchantItem
 local CanMerchantRepair = CanMerchantRepair
 local GetRepairAllCost = GetRepairAllCost

@@ -48,6 +48,10 @@ local UseContainerItem = C_Container.UseContainerItem
 -- WoW Globals
 local GetItemReagentQualityInfo = C_TradeSkillUI.GetItemReagentQualityInfo
 
+-- WoW Globals
+local BACKPACKCLOSE = _G.SOUNDKIT.IG_BACKPACK_CLOSE
+local BACKPACKOPEN = _G.SOUNDKIT.IG_BACKPACK_OPEN
+
 -- Locals
 B.ButtonWidth = 36
 B.ButtonHeight = 22
@@ -1001,12 +1005,22 @@ function B:UpdateBags()
     self:UpdateBagBar()
 end
 
+function B:OpenSound()
+    PlaySound(BACKPACKOPEN)
+end
+
+function B:CloseSound()
+    PlaySound(BACKPACKCLOSE)
+end
+
 function B:ToggleStandaloneBag()
     if (self.Container:IsShown()) then
         UI:UIFrameFadeOut(self.Container, 0.5, self.Container:GetAlpha(), 0)
         UI:Delay("CloseBackPack", 0.5, function()
             self.Container:Hide()
         end)
+
+        self:OpenSound()
     else
         self:UpdateBagBar()
         self:UpdateBags()
@@ -1023,6 +1037,8 @@ function B:CloseAllBags()
     UI:Delay("CloseAllBags", 0.5, function()
         self.Container:Hide()
     end)
+
+    self:CloseSound()
 end
 
 function B:UpdateMoneyText()

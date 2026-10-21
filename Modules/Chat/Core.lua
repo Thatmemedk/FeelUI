@@ -148,6 +148,14 @@ function CH:AddChatMenu()
 	end)
 end
 
+function CH:EnableTimestamps()
+	local Format = "|cff7f7f7f" .. "[%H:%M:%S]" .. "|r "
+ 
+	if (_G.C_CVar.GetCVar("showTimestamps") ~= Format) then
+		_G.C_CVar.SetCVar("showTimestamps", Format)
+	end
+end
+
 function CH:Initialize()
 	if (not DB.Global.Chat.Enable) then
 		return
@@ -156,6 +164,8 @@ function CH:Initialize()
 	self:SetupChat()
 	self:AddChatMenu()
 	self:AddHooks()
+	self:EnableTimestamps()
+	self:EnableIcons()
 	self:StyleCombatLog()
 	self:EnableCopyURL()
 	self:CreateChatCopy()

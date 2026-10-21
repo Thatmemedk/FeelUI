@@ -117,6 +117,10 @@ function Maps:Disable()
         MapsCluster.ZoneTextButton:EnableMouse(false)
     end
 
+    if (MapsCluster.MinimapContainer.PlayerCoords) then
+    	MapsCluster.MinimapContainer.PlayerCoords:Hide()
+    end
+
 	if (MapsCluster.BorderTop) then
 		MapsCluster.BorderTop:Hide()
 	end
@@ -185,7 +189,7 @@ function Maps:EnableClick()
 end
 
 function Maps:GetLocTextColor()
-	local Info = GetZonePVPInfo()
+	local Info = C_PvP.GetZonePVPInfo
 
 	if (Info == "friendly") then
 		return 0.1, 1.0, 0.1
